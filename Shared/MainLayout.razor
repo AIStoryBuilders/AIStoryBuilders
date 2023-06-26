@@ -1,0 +1,31 @@
+﻿@using AIStoryBuilders.Models;
+@inherits LayoutComponentBase
+@inject AppMetadata _AppMetadata
+<PageTitle>AIStoryBuilders.com</PageTitle>
+
+<main>
+    <div class="top-row px-4">
+        <a href="https://BlazorHelpWebsite.com/" target="_blank">BlazorHelpWebsite.com</a>
+    </div>
+
+    <article class="content px-4">
+        @Body
+    </article>
+</main>
+<RadzenFooter>
+    <div class="row justify-content-start align-items-center px-2 pt-2 p-3 mb-2 bg-light text-dark">
+        <div class="col-12 d-flex align-items-left">
+            &copy; @year - Version: @version
+        </div>
+    </div>
+</RadzenFooter>
+
+@code {
+    private string version = "";
+    private string year = DateTime.Now.Year.ToString();
+
+    protected override void OnInitialized()
+    {
+        version = _AppMetadata.Version;
+    }
+}

@@ -1,0 +1,25 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.6.33815.320
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AIStoryBuilders", "AIStoryBuilders.csproj", "{FD1685A6-7BF6-4C8C-86B1-CB08F0C3B592}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{FD1685A6-7BF6-4C8C-86B1-CB08F0C3B592}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{FD1685A6-7BF6-4C8C-86B1-CB08F0C3B592}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{FD1685A6-7BF6-4C8C-86B1-CB08F0C3B592}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{FD1685A6-7BF6-4C8C-86B1-CB08F0C3B592}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {E515768B-A6EE-4BDC-9F17-B5418296C313}
+	EndGlobalSection
+EndGlobal

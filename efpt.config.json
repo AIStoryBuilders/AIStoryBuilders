@@ -1,0 +1,81 @@
+﻿{
+   "CodeGenerationMode": 3,
+   "ContextClassName": "AIStoryBuildersContext",
+   "ContextNamespace": null,
+   "DefaultDacpacSchema": null,
+   "FilterSchemas": false,
+   "IncludeConnectionString": false,
+   "ModelNamespace": null,
+   "OutputContextPath": null,
+   "OutputPath": "Models",
+   "PreserveCasingWithRegex": true,
+   "ProjectRootNamespace": "AIStoryBuilders",
+   "Schemas": null,
+   "SelectedHandlebarsLanguage": 0,
+   "SelectedToBeGenerated": 0,
+   "Tables": [
+      {
+         "Name": "[dbo].[Chapter]",
+         "ObjectType": 0
+      },
+      {
+         "Name": "[dbo].[Character]",
+         "ObjectType": 0
+      },
+      {
+         "Name": "[dbo].[Character_CharacterBackgroundParagraph]",
+         "ObjectType": 0
+      },
+      {
+         "Name": "[dbo].[CharacterBackgroundParagraph]",
+         "ObjectType": 0
+      },
+      {
+         "Name": "[dbo].[CharacterBackgroundParagraphVectorData]",
+         "ObjectType": 0
+      },
+      {
+         "Name": "[dbo].[Location]",
+         "ObjectType": 0
+      },
+      {
+         "Name": "[dbo].[Paragraph]",
+         "ObjectType": 0
+      },
+      {
+         "Name": "[dbo].[Paragraph_Character]",
+         "ObjectType": 0
+      },
+      {
+         "Name": "[dbo].[Paragraph_Location]",
+         "ObjectType": 0
+      },
+      {
+         "Name": "[dbo].[ParagraphVectorData]",
+         "ObjectType": 0
+      },
+      {
+         "Name": "[dbo].[Story]",
+         "ObjectType": 0
+      }
+   ],
+   "UiHint": "michael-home.AIStoryBuilders.dbo",
+   "UncountableWords": null,
+   "UseBoolPropertiesWithoutDefaultSql": false,
+   "UseDatabaseNames": false,
+   "UseDateOnlyTimeOnly": false,
+   "UseDbContextSplitting": false,
+   "UseFluentApiOnly": true,
+   "UseHandleBars": false,
+   "UseHierarchyId": false,
+   "UseInflector": false,
+   "UseLegacyPluralizer": false,
+   "UseManyToManyEntity": false,
+   "UseNoDefaultConstructor": false,
+   "UseNoObjectFilter": false,
+   "UseNodaTime": false,
+   "UseNullableReferences": false,
+   "UseSchemaFolders": false,
+   "UseSpatial": false,
+   "UseT4": false
+}
