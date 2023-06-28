@@ -1,0 +1,46 @@
+﻿@using AIStoryBuilders.Models;
+@inject DialogService dialogService
+@if (@Message != "")
+{
+    <h4 style="color:red">@Message</h4>
+}
+<div>
+    <p>
+        <b>Story Name:</b> <RadzenTextBox @bind-Value=StoryName style="width: 100%;" />
+    </p>
+</div>
+<br />
+<div class="row">
+    <div class="col">
+        <RadzenButton Text="Save" ButtonStyle="ButtonStyle.Success"
+                      Click="Save"
+                      Style="margin-bottom: 10px; width: 150px" />
+    </div>
+</div>
+@code {
+    string Message = "";
+    string StoryName = "";
+
+    private void Save()
+    {
+        try
+        {
+            Message = "";
+
+            if (StoryName.Length < 1)
+            {
+                Message = "Story Name is required";
+                return;
+            }
+
+            Story objStory = new Story() { Title = StoryName };
+
+            dialogService.Close(objStory);
+
+        }
+        catch (Exception ex)
+        {
+            Message = ex.Message;
+        }
+    }
+}

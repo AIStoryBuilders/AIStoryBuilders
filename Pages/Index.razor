@@ -1,5 +1,6 @@
 ﻿@page "/"
 @using AIStoryBuilders.Models;
+@using AIStoryBuilders.Pages.Controls;
 @using AIStoryBuilders.Services;
 @inject IConfiguration _configuration
 @inject DialogService dialogService
@@ -12,12 +13,16 @@
     We access AIStoryBuildersService using @Service
 *@
 @inherits OwningComponentBase<AIStoryBuildersService>
-<PageTitle>Index</PageTitle>
-
+<PageTitle>AI Story Builders</PageTitle>
+<RadzenButton Click=@(() => NewStory()) Text="New Story" ButtonStyle="ButtonStyle.Success" />
+<br />
+<p>@objStory.Title</p>
+<br />
 <h4>@Status</h4>
 @code {
     string Status = "";
     List<Story> colStorys = new List<Story>();
+    Story objStory = new Story();
 
     string Organization = "";
     string ApiKey = "";
@@ -36,4 +41,34 @@
 
         Status = $"Loaded {colStorys.Count} Storys";
     }
+
+    private async void NewStory()
+    {
+        Status = "";
+
+        var result = await dialogService.OpenAsync<NewStory>($"New Story",
+            null,
+            new DialogOptions() { Width = "650px" });
+
+        if (result != null)
+        {
+            objStory = (Story)result;
+            StateHasChanged();
+        }
+    }
+
+    //    async Task DeleteUserDialog() => await dialogService
+    //.OpenAsync("Delete User", ds =>
+    //@<RadzenCard Style="padding: 20px;">
+    //    <p Style="margin-bottom: 10px;">Confirm?</p>
+    //    <div class="row">
+    //        <div class="col-md-12">
+    //            <RadzenButton Text="Yes" Click="DeleteUser"
+    //                      Style="margin-bottom: 10px; width: 150px" />
+    //            <RadzenButton Text="No" Click="()=> ds.Close(false)"
+    //                      ButtonStyle="ButtonStyle.Secondary"
+    //                      Style="margin-bottom: 10px; width: 150px" />
+    //        </div>
+    //    </div>
+    //</RadzenCard>);
 }
