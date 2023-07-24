@@ -46,13 +46,24 @@
     {
         Status = "";
 
-        var result = await dialogService.OpenAsync<NewStory>($"New Story",
+        var NewStoryResult = await dialogService.OpenAsync<NewStory>($"New Story",
             null,
             new DialogOptions() { Width = "650px" });
 
-        if (result != null)
+        if (NewStoryResult != null)
         {
-            objStory = (Story)result;
+            objStory = (Story)NewStoryResult;
+
+            if (objStory != null)
+            {
+                var parms = new Dictionary<string, object>();
+                parms.Add("Story", objStory);
+
+                var EditStoryResult = await dialogService.OpenAsync<EditStory>($"Edit Story",
+                parms,
+                new DialogOptions() { Height = "600px", Width = "800px" });
+            }
+
             StateHasChanged();
         }
     }
