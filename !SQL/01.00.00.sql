@@ -214,6 +214,7 @@ GO
 IF NOT EXISTS (SELECT * FROM sys.foreign_keys WHERE object_id = OBJECT_ID(N'[dbo].[FK_Chapter_Story]') AND parent_object_id = OBJECT_ID(N'[dbo].[Chapter]'))
 ALTER TABLE [dbo].[Chapter]  WITH CHECK ADD  CONSTRAINT [FK_Chapter_Story] FOREIGN KEY([StoryId])
 REFERENCES [dbo].[Story] ([Id])
+ON DELETE CASCADE
 GO
 IF  EXISTS (SELECT * FROM sys.foreign_keys WHERE object_id = OBJECT_ID(N'[dbo].[FK_Chapter_Story]') AND parent_object_id = OBJECT_ID(N'[dbo].[Chapter]'))
 ALTER TABLE [dbo].[Chapter] CHECK CONSTRAINT [FK_Chapter_Story]
@@ -221,6 +222,7 @@ GO
 IF NOT EXISTS (SELECT * FROM sys.foreign_keys WHERE object_id = OBJECT_ID(N'[dbo].[FK_Character_CharacterBackgroundParagraph_Character]') AND parent_object_id = OBJECT_ID(N'[dbo].[Character_CharacterBackgroundParagraph]'))
 ALTER TABLE [dbo].[Character_CharacterBackgroundParagraph]  WITH CHECK ADD  CONSTRAINT [FK_Character_CharacterBackgroundParagraph_Character] FOREIGN KEY([CharacterId])
 REFERENCES [dbo].[Character] ([Id])
+ON DELETE CASCADE
 GO
 IF  EXISTS (SELECT * FROM sys.foreign_keys WHERE object_id = OBJECT_ID(N'[dbo].[FK_Character_CharacterBackgroundParagraph_Character]') AND parent_object_id = OBJECT_ID(N'[dbo].[Character_CharacterBackgroundParagraph]'))
 ALTER TABLE [dbo].[Character_CharacterBackgroundParagraph] CHECK CONSTRAINT [FK_Character_CharacterBackgroundParagraph_Character]
@@ -228,6 +230,7 @@ GO
 IF NOT EXISTS (SELECT * FROM sys.foreign_keys WHERE object_id = OBJECT_ID(N'[dbo].[FK_Character_CharacterBackgroundParagraph_CharacterBackgroundParagraph]') AND parent_object_id = OBJECT_ID(N'[dbo].[Character_CharacterBackgroundParagraph]'))
 ALTER TABLE [dbo].[Character_CharacterBackgroundParagraph]  WITH CHECK ADD  CONSTRAINT [FK_Character_CharacterBackgroundParagraph_CharacterBackgroundParagraph] FOREIGN KEY([CharacterBackgroundParagraphId])
 REFERENCES [dbo].[CharacterBackgroundParagraph] ([Id])
+ON DELETE CASCADE
 GO
 IF  EXISTS (SELECT * FROM sys.foreign_keys WHERE object_id = OBJECT_ID(N'[dbo].[FK_Character_CharacterBackgroundParagraph_CharacterBackgroundParagraph]') AND parent_object_id = OBJECT_ID(N'[dbo].[Character_CharacterBackgroundParagraph]'))
 ALTER TABLE [dbo].[Character_CharacterBackgroundParagraph] CHECK CONSTRAINT [FK_Character_CharacterBackgroundParagraph_CharacterBackgroundParagraph]
@@ -235,6 +238,7 @@ GO
 IF NOT EXISTS (SELECT * FROM sys.foreign_keys WHERE object_id = OBJECT_ID(N'[dbo].[FK_CharacterBackgroundParagraphVectorData_CharacterBackgroundParagraph]') AND parent_object_id = OBJECT_ID(N'[dbo].[CharacterBackgroundParagraphVectorData]'))
 ALTER TABLE [dbo].[CharacterBackgroundParagraphVectorData]  WITH CHECK ADD  CONSTRAINT [FK_CharacterBackgroundParagraphVectorData_CharacterBackgroundParagraph] FOREIGN KEY([ChracterBackgroundParagraphId])
 REFERENCES [dbo].[CharacterBackgroundParagraph] ([Id])
+ON DELETE CASCADE
 GO
 IF  EXISTS (SELECT * FROM sys.foreign_keys WHERE object_id = OBJECT_ID(N'[dbo].[FK_CharacterBackgroundParagraphVectorData_CharacterBackgroundParagraph]') AND parent_object_id = OBJECT_ID(N'[dbo].[CharacterBackgroundParagraphVectorData]'))
 ALTER TABLE [dbo].[CharacterBackgroundParagraphVectorData] CHECK CONSTRAINT [FK_CharacterBackgroundParagraphVectorData_CharacterBackgroundParagraph]
@@ -242,6 +246,7 @@ GO
 IF NOT EXISTS (SELECT * FROM sys.foreign_keys WHERE object_id = OBJECT_ID(N'[dbo].[FK_Paragraph_Chapter]') AND parent_object_id = OBJECT_ID(N'[dbo].[Paragraph]'))
 ALTER TABLE [dbo].[Paragraph]  WITH CHECK ADD  CONSTRAINT [FK_Paragraph_Chapter] FOREIGN KEY([ChapterId])
 REFERENCES [dbo].[Chapter] ([Id])
+ON DELETE CASCADE
 GO
 IF  EXISTS (SELECT * FROM sys.foreign_keys WHERE object_id = OBJECT_ID(N'[dbo].[FK_Paragraph_Chapter]') AND parent_object_id = OBJECT_ID(N'[dbo].[Paragraph]'))
 ALTER TABLE [dbo].[Paragraph] CHECK CONSTRAINT [FK_Paragraph_Chapter]
@@ -249,6 +254,7 @@ GO
 IF NOT EXISTS (SELECT * FROM sys.foreign_keys WHERE object_id = OBJECT_ID(N'[dbo].[FK_Paragraph_Character_Character]') AND parent_object_id = OBJECT_ID(N'[dbo].[Paragraph_Character]'))
 ALTER TABLE [dbo].[Paragraph_Character]  WITH CHECK ADD  CONSTRAINT [FK_Paragraph_Character_Character] FOREIGN KEY([CharacterId])
 REFERENCES [dbo].[Character] ([Id])
+ON DELETE CASCADE
 GO
 IF  EXISTS (SELECT * FROM sys.foreign_keys WHERE object_id = OBJECT_ID(N'[dbo].[FK_Paragraph_Character_Character]') AND parent_object_id = OBJECT_ID(N'[dbo].[Paragraph_Character]'))
 ALTER TABLE [dbo].[Paragraph_Character] CHECK CONSTRAINT [FK_Paragraph_Character_Character]
@@ -256,6 +262,7 @@ GO
 IF NOT EXISTS (SELECT * FROM sys.foreign_keys WHERE object_id = OBJECT_ID(N'[dbo].[FK_Paragraph_Character_Paragraph]') AND parent_object_id = OBJECT_ID(N'[dbo].[Paragraph_Character]'))
 ALTER TABLE [dbo].[Paragraph_Character]  WITH CHECK ADD  CONSTRAINT [FK_Paragraph_Character_Paragraph] FOREIGN KEY([ParagraphId])
 REFERENCES [dbo].[Paragraph] ([Id])
+ON DELETE CASCADE
 GO
 IF  EXISTS (SELECT * FROM sys.foreign_keys WHERE object_id = OBJECT_ID(N'[dbo].[FK_Paragraph_Character_Paragraph]') AND parent_object_id = OBJECT_ID(N'[dbo].[Paragraph_Character]'))
 ALTER TABLE [dbo].[Paragraph_Character] CHECK CONSTRAINT [FK_Paragraph_Character_Paragraph]
@@ -263,6 +270,7 @@ GO
 IF NOT EXISTS (SELECT * FROM sys.foreign_keys WHERE object_id = OBJECT_ID(N'[dbo].[FK_Paragraph_Location_Location]') AND parent_object_id = OBJECT_ID(N'[dbo].[Paragraph_Location]'))
 ALTER TABLE [dbo].[Paragraph_Location]  WITH CHECK ADD  CONSTRAINT [FK_Paragraph_Location_Location] FOREIGN KEY([LocationId])
 REFERENCES [dbo].[Location] ([Id])
+ON DELETE CASCADE
 GO
 IF  EXISTS (SELECT * FROM sys.foreign_keys WHERE object_id = OBJECT_ID(N'[dbo].[FK_Paragraph_Location_Location]') AND parent_object_id = OBJECT_ID(N'[dbo].[Paragraph_Location]'))
 ALTER TABLE [dbo].[Paragraph_Location] CHECK CONSTRAINT [FK_Paragraph_Location_Location]
@@ -270,6 +278,7 @@ GO
 IF NOT EXISTS (SELECT * FROM sys.foreign_keys WHERE object_id = OBJECT_ID(N'[dbo].[FK_Paragraph_Location_Paragraph]') AND parent_object_id = OBJECT_ID(N'[dbo].[Paragraph_Location]'))
 ALTER TABLE [dbo].[Paragraph_Location]  WITH CHECK ADD  CONSTRAINT [FK_Paragraph_Location_Paragraph] FOREIGN KEY([ParagraphId])
 REFERENCES [dbo].[Paragraph] ([Id])
+ON DELETE CASCADE
 GO
 IF  EXISTS (SELECT * FROM sys.foreign_keys WHERE object_id = OBJECT_ID(N'[dbo].[FK_Paragraph_Location_Paragraph]') AND parent_object_id = OBJECT_ID(N'[dbo].[Paragraph_Location]'))
 ALTER TABLE [dbo].[Paragraph_Location] CHECK CONSTRAINT [FK_Paragraph_Location_Paragraph]
@@ -277,6 +286,7 @@ GO
 IF NOT EXISTS (SELECT * FROM sys.foreign_keys WHERE object_id = OBJECT_ID(N'[dbo].[FK_ParagragraphVectorData_Paragraph]') AND parent_object_id = OBJECT_ID(N'[dbo].[ParagraphVectorData]'))
 ALTER TABLE [dbo].[ParagraphVectorData]  WITH CHECK ADD  CONSTRAINT [FK_ParagragraphVectorData_Paragraph] FOREIGN KEY([ParagraphId])
 REFERENCES [dbo].[Paragraph] ([Id])
+ON DELETE CASCADE
 GO
 IF  EXISTS (SELECT * FROM sys.foreign_keys WHERE object_id = OBJECT_ID(N'[dbo].[FK_ParagragraphVectorData_Paragraph]') AND parent_object_id = OBJECT_ID(N'[dbo].[ParagraphVectorData]'))
 ALTER TABLE [dbo].[ParagraphVectorData] CHECK CONSTRAINT [FK_ParagragraphVectorData_Paragraph]

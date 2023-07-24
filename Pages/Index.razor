@@ -37,12 +37,12 @@
     protected override async Task OnInitializedAsync()
     {
         // Get the Storys from the database
-        colStorys = await @Service.GetStorysAsync();
+        colStorys = await Service.GetStorysAsync();
 
         Status = $"Loaded {colStorys.Count} Storys";
     }
 
-    private async void NewStory()
+    private async Task NewStory()
     {
         Status = "";
 
@@ -56,11 +56,13 @@
 
             if (objStory != null)
             {
-                var parms = new Dictionary<string, object>();
-                parms.Add("Story", objStory);
+                // Save Story to the database
+                var objSavedStory = await Service.AddStoryAsync(objStory);
 
-                var EditStoryResult = await dialogService.OpenAsync<EditStory>($"Edit Story",
-                parms,
+                var parms = new Dictionary<string, object>();
+                parms.Add("Story", objSavedStory);
+
+                var EditStoryResult = await dialogService.OpenAsync<EditStory>($"Edit Story", parms,
                 new DialogOptions() { Height = "600px", Width = "800px" });
             }
 
