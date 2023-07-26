@@ -5,10 +5,25 @@
 {
     <h4 style="color:red">@Message</h4>
 }
-<div>
-    <p>
-        <b>Story Name:</b> <RadzenTextBox @bind-Value=StoryName style="width: 100%;" />
-    </p>
+<div Class="rz-p-0 rz-p-md-12">
+    <RadzenRow Gap="1rem">
+        <RadzenColumn Size="12" SizeSM="12">
+            <RadzenStack>
+                <RadzenFormField Text="Story Title:" Variant="@variant">
+                    <RadzenTextBox @bind-Value="@objStory.Title" />
+                </RadzenFormField>
+                <RadzenFormField Text="Style:" Variant="@variant">
+                    <RadzenDropDown Data=@colStyles @bind-Value="@objStory.Style" />
+                </RadzenFormField>
+                <RadzenFormField Text="Theme:" Variant="@variant">
+                    <RadzenTextArea @bind-Value="@objStory.Theme" />
+                </RadzenFormField>
+                <RadzenFormField Text="Synopsis:" Variant="@variant">
+                    <RadzenTextArea @bind-Value="@objStory.Synopsis" />
+                </RadzenFormField>
+            </RadzenStack>
+        </RadzenColumn>        
+    </RadzenRow>
 </div>
 <br />
 <div class="row">
@@ -19,8 +34,28 @@
     </div>
 </div>
 @code {
+    Story objStory = new Story();
+    IEnumerable<string> colStyles;
     string Message = "";
-    string StoryName = "";
+    Variant variant = Variant.Outlined;
+
+    protected override void OnInitialized()
+    {
+        // Add sample data to the Styles dropdown
+        colStyles = new List<string>() 
+        { 
+            "General Fiction",
+            "Science Fiction",
+            "Fantasy",
+            "Horror", 
+            "Mystery", 
+            "Romance", 
+            "Thriller", 
+            "Western" 
+        };
+
+        objStory.Style = "General Fiction";
+    }
 
     private void Save()
     {
@@ -28,13 +63,11 @@
         {
             Message = "";
 
-            if (StoryName.Length < 1)
+            if (objStory.Title.Length < 1)
             {
-                Message = "Story Name is required";
+                Message = "Story Title is required";
                 return;
             }
-
-            Story objStory = new Story() { Title = StoryName };
 
             dialogService.Close(objStory);
 
