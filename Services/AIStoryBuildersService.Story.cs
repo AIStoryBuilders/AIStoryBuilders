@@ -11,6 +11,7 @@ namespace AIStoryBuilders.Services
             // Get Storys including Chapters           
             return await _context.Story
                 .Include(story => story.Chapter)
+                .OrderBy(story => story.Title)
                 .AsNoTracking().ToListAsync();
         }
 

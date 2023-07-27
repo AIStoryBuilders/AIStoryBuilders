@@ -4,6 +4,7 @@
 @using AIStoryBuilders.Services;
 @inject IConfiguration _configuration
 @inject DialogService dialogService
+@inject NotificationService NotificationService
 @*
     Using OwningComponentBase ensures that the service and related services
     that share its scope are disposed with the component.
@@ -16,11 +17,26 @@
 <PageTitle>AI Story Builders</PageTitle>
 <RadzenButton Click=@(() => NewStory()) Text="New Story" ButtonStyle="ButtonStyle.Success" />
 <br />
-<p>@objStory.Title</p>
 <br />
-<h4>@Status</h4>
-@code {
-    string Status = "";
+<RadzenDataList AllowVirtualization=@allowVirtualization Style="height:400px;overflow:auto;"
+                WrapItems="@(!allowVirtualization)" AllowPaging="@(!allowVirtualization)"
+                Data="@colStorys" TItem="Story" PageSize="5" PagerHorizontalAlign="HorizontalAlign.Left"
+                ShowPagingSummary="true">
+    <Template Context="story">
+        <RadzenCard Style="width: 100%; padding: 5;">
+            <RadzenRow Gap="0">
+                <RadzenButton Text="Select" Click=@(() => EditStory(story))
+                    ButtonStyle="ButtonStyle.Light" Style="width: 150px;height: 20px" />
+                &nbsp;&nbsp;&nbsp;&nbsp;
+                <RadzenText TextStyle="TextStyle.DisplayH4" TagName="TagName.H4"
+                            class="rz-color-secondary">@(story.Title)</RadzenText>&nbsp;&nbsp;
+                </RadzenRow>
+            </RadzenCard>
+        </Template>
+    </RadzenDataList>
+    <br />
+    @code {
+    bool allowVirtualization = true;
     List<Story> colStorys = new List<Story>();
     Story objStory = new Story();
 
@@ -36,52 +52,83 @@
 
     protected override async Task OnInitializedAsync()
     {
-        // Get the Storys from the database
-        colStorys = await Service.GetStorysAsync();
-
-        Status = $"Loaded {colStorys.Count} Storys";
+        try
+        {
+            // Get the Storys from the database
+            colStorys = await Service.GetStorysAsync();
+        }
+        catch (Exception ex)
+        {
+            NotificationService.Notify(new NotificationMessage
+                {
+                    Severity = NotificationSeverity.Error,
+                    Summary = "Error",
+                    Detail = ex.Message,
+                    Duration = 4000
+                });
+        }
     }
 
     private async Task NewStory()
     {
-        Status = "";
-
-        var NewStoryResult = await dialogService.OpenAsync<NewStory>($"New Story",
-            null,
-            new DialogOptions() { Width = "650px" });
-
-        if (NewStoryResult != null)
+        try
         {
-            objStory = (Story)NewStoryResult;
+            var NewStoryResult = await dialogService.OpenAsync<NewStory>($"New Story",
+                null,
+                new DialogOptions() { Width = "650px" });
 
-            if (objStory != null)
+            if (NewStoryResult != null)
             {
-                // Save Story to the database
-                var objSavedStory = await Service.AddStoryAsync(objStory);
+                objStory = (Story)NewStoryResult;
 
-                var parms = new Dictionary<string, object>();
-                parms.Add("Story", objSavedStory);
+                if (objStory != null)
+                {
+                    // Save Story to the database
+                    var objSavedStory = await Service.AddStoryAsync(objStory);
 
-                var EditStoryResult = await dialogService.OpenAsync<EditStory>($"Edit Story", parms,
-                new DialogOptions() { Height = "600px", Width = "800px" });
+                    var parms = new Dictionary<string, object>();
+                    parms.Add("Story", objSavedStory);
+
+                    var EditStoryResult = await dialogService.OpenAsync<EditStory>($"Edit Story", parms,
+                    new DialogOptions() { Height = "600px", Width = "800px" });
+                }
+
+                colStorys = await Service.GetStorysAsync();
+
+                StateHasChanged();
             }
-
-            StateHasChanged();
+        }
+        catch (Exception ex)
+        {
+            NotificationService.Notify(new NotificationMessage
+                {
+                    Severity = NotificationSeverity.Error,
+                    Summary = "Error",
+                    Detail = ex.Message,
+                    Duration = 4000
+                });
         }
     }
 
-    //    async Task DeleteUserDialog() => await dialogService
-    //.OpenAsync("Delete User", ds =>
-    //@<RadzenCard Style="padding: 20px;">
-    //    <p Style="margin-bottom: 10px;">Confirm?</p>
-    //    <div class="row">
-    //        <div class="col-md-12">
-    //            <RadzenButton Text="Yes" Click="DeleteUser"
-    //                      Style="margin-bottom: 10px; width: 150px" />
-    //            <RadzenButton Text="No" Click="()=> ds.Close(false)"
-    //                      ButtonStyle="ButtonStyle.Secondary"
-    //                      Style="margin-bottom: 10px; width: 150px" />
-    //        </div>
-    //    </div>
-    //</RadzenCard>);
+    private async Task EditStory(Story paramStory)
+    {
+        try
+        {
+            var parms = new Dictionary<string, object>();
+            parms.Add("Story", paramStory);
+
+            var EditStoryResult = await dialogService.OpenAsync<EditStory>($"Edit Story", parms,
+            new DialogOptions() { Height = "600px", Width = "800px" });
+        }
+        catch (Exception ex)
+        {
+            NotificationService.Notify(new NotificationMessage
+                {
+                    Severity = NotificationSeverity.Error,
+                    Summary = "Error",
+                    Detail = ex.Message,
+                    Duration = 4000
+                });
+        }
+    }
 }

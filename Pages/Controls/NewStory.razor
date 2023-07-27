@@ -1,5 +1,6 @@
 ﻿@using AIStoryBuilders.Models;
 @inject DialogService dialogService
+@inject NotificationService NotificationService
 
 @if (@Message != "")
 {
@@ -22,7 +23,7 @@
                     <RadzenTextArea @bind-Value="@objStory.Synopsis" />
                 </RadzenFormField>
             </RadzenStack>
-        </RadzenColumn>        
+        </RadzenColumn>
     </RadzenRow>
 </div>
 <br />
@@ -42,19 +43,25 @@
     protected override void OnInitialized()
     {
         // Add sample data to the Styles dropdown
-        colStyles = new List<string>() 
-        { 
-            "General Fiction",
-            "Science Fiction",
+        colStyles = new List<string>()
+        {
+            "Drama",
+            "Sci-Fi",
+            "Romance",
+            "Comedy",
             "Fantasy",
-            "Horror", 
-            "Mystery", 
-            "Romance", 
-            "Thriller", 
-            "Western" 
+            "Mystery",
+            "Thriller",
+            "Chidren",
+            "Young Adult",
+            "Action",
+            "Crime",
+            "Dystopian",
+            "Horror",
+            "Erotica",
         };
 
-        objStory.Style = "General Fiction";
+        objStory.Style = "Drama";
     }
 
     private void Save()
@@ -63,9 +70,31 @@
         {
             Message = "";
 
-            if (objStory.Title.Length < 1)
+            if (objStory.Title != null)
             {
-                Message = "Story Title is required";
+                if (objStory.Title.Length < 1)
+                {
+                    NotificationService.Notify(
+                        new NotificationMessage
+                            {
+                                Severity = NotificationSeverity.Error,
+                                Summary = "Error",
+                                Detail = "Story Title is required",
+                                Duration = 4000
+                            });
+                    return;
+                }
+            }
+            else
+            {
+                NotificationService.Notify(
+                    new NotificationMessage
+                        {
+                            Severity = NotificationSeverity.Error,
+                            Summary = "Error",
+                            Detail = "Story Title is required",
+                            Duration = 4000
+                        });
                 return;
             }
 
