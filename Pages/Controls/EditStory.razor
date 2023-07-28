@@ -3,6 +3,7 @@
 @using AIStoryBuilders.Services;
 @inject IConfiguration _configuration
 @inject DialogService dialogService
+@inject NotificationService NotificationService
 @*
     Using OwningComponentBase ensures that the service and related services
     that share its scope are disposed with the component.
@@ -12,11 +13,29 @@
     We access AIStoryBuildersService using @Service
 *@
 @inherits OwningComponentBase<AIStoryBuildersService>
-<PageTitle>Edit Story</PageTitle>
+<PageTitle>@Story.Title</PageTitle>
 
-<p>@Story.Title</p>
+<RadzenTabs Change=@OnChange TabPosition=TabPosition.Top RenderMode="TabRenderMode.Client">
+    <Tabs>
+        <RadzenTabsItem Text="Details">
+
+        </RadzenTabsItem>
+        <RadzenTabsItem Text="Characters">
+
+        </RadzenTabsItem>
+        <RadzenTabsItem Text="Locations">
+
+        </RadzenTabsItem>
+        <RadzenTabsItem Text="Chapters">
+
+        </RadzenTabsItem>
+        <RadzenTabsItem Text="AI Log">
+
+        </RadzenTabsItem>
+    </Tabs>
+</RadzenTabs>
 @code {
-[Parameter] public Story Story { get; set; }
+    [Parameter] public Story Story { get; set; }
     string Status = "";
     string Organization = "";
     string ApiKey = "";
@@ -30,8 +49,25 @@
 
     protected override async Task OnInitializedAsync()
     {
-        // Get the Story from the database
-        //colStorys = await @Service.GetStorysAsync();
+        try
+        {
+            // Get data from the database
+        }
+        catch (Exception ex)
+        {
+            NotificationService.Notify(new NotificationMessage
+                {
+                    Severity = NotificationSeverity.Error,
+                    Summary = "Error",
+                    Detail = ex.Message,
+                    Duration = 4000
+                });
+        }
+    }
+
+    void OnChange(int index)
+    {
+        //console.Log($"Tab with index {index} was selected.");
     }
 
     //    async Task DeleteUserDialog() => await dialogService
