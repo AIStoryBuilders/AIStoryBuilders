@@ -87,16 +87,16 @@
                     // Save Story to the database
                     var objSavedStory = await Service.AddStoryAsync(objStory);
 
-                    colStorys = await Service.GetStorysAsync();
-
-                    StateHasChanged();
-
                     var parms = new Dictionary<string, object>();
                     parms.Add("Story", objSavedStory);
 
                     var EditStoryResult = await dialogService.OpenAsync<EditStory>($"{objSavedStory.Title}", parms,
                     new DialogOptions() { Height = "600px", Width = "800px" });
                 }
+
+                colStorys = await Service.GetStorysAsync();
+
+                StateHasChanged();
             }
         }
         catch (Exception ex)
