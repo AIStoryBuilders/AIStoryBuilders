@@ -48,7 +48,6 @@ public partial class AIStoryBuildersContext : DbContext
 
             entity.HasOne(d => d.Story).WithMany(p => p.Chapter)
                 .HasForeignKey(d => d.StoryId)
-                .OnDelete(DeleteBehavior.ClientSetNull)
                 .HasConstraintName("FK_Chapter_Story");
         });
 
@@ -63,6 +62,11 @@ public partial class AIStoryBuildersContext : DbContext
             entity.Property(e => e.Goals)
                 .IsRequired()
                 .HasMaxLength(4000);
+
+            entity.HasOne(d => d.Story).WithMany(p => p.Character)
+                .HasForeignKey(d => d.StoryId)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("FK_Character_Story");
         });
 
         modelBuilder.Entity<CharacterBackgroundParagraph>(entity =>
@@ -87,7 +91,6 @@ public partial class AIStoryBuildersContext : DbContext
 
             entity.HasOne(d => d.ChracterBackgroundParagraph).WithMany(p => p.CharacterBackgroundParagraphVectorData)
                 .HasForeignKey(d => d.ChracterBackgroundParagraphId)
-                .OnDelete(DeleteBehavior.ClientSetNull)
                 .HasConstraintName("FK_CharacterBackgroundParagraphVectorData_CharacterBackgroundParagraph");
         });
 
@@ -97,12 +100,10 @@ public partial class AIStoryBuildersContext : DbContext
 
             entity.HasOne(d => d.CharacterBackgroundParagraph).WithMany(p => p.CharacterCharacterBackgroundParagraph)
                 .HasForeignKey(d => d.CharacterBackgroundParagraphId)
-                .OnDelete(DeleteBehavior.ClientSetNull)
                 .HasConstraintName("FK_Character_CharacterBackgroundParagraph_CharacterBackgroundParagraph");
 
             entity.HasOne(d => d.Character).WithMany(p => p.CharacterCharacterBackgroundParagraph)
                 .HasForeignKey(d => d.CharacterId)
-                .OnDelete(DeleteBehavior.ClientSetNull)
                 .HasConstraintName("FK_Character_CharacterBackgroundParagraph_Character");
         });
 
@@ -116,6 +117,11 @@ public partial class AIStoryBuildersContext : DbContext
                 .IsRequired()
                 .HasMaxLength(4000);
             entity.Property(e => e.StartDate).HasColumnType("datetime");
+
+            entity.HasOne(d => d.Story).WithMany(p => p.Location)
+                .HasForeignKey(d => d.StoryId)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("FK_Location_Story");
         });
 
         modelBuilder.Entity<Paragraph>(entity =>
@@ -132,7 +138,6 @@ public partial class AIStoryBuildersContext : DbContext
 
             entity.HasOne(d => d.Chapter).WithMany(p => p.Paragraph)
                 .HasForeignKey(d => d.ChapterId)
-                .OnDelete(DeleteBehavior.ClientSetNull)
                 .HasConstraintName("FK_Paragraph_Chapter");
         });
 
@@ -142,12 +147,10 @@ public partial class AIStoryBuildersContext : DbContext
 
             entity.HasOne(d => d.Character).WithMany(p => p.ParagraphCharacter)
                 .HasForeignKey(d => d.CharacterId)
-                .OnDelete(DeleteBehavior.ClientSetNull)
                 .HasConstraintName("FK_Paragraph_Character_Character");
 
             entity.HasOne(d => d.Paragraph).WithMany(p => p.ParagraphCharacter)
                 .HasForeignKey(d => d.ParagraphId)
-                .OnDelete(DeleteBehavior.ClientSetNull)
                 .HasConstraintName("FK_Paragraph_Character_Paragraph");
         });
 
@@ -157,12 +160,10 @@ public partial class AIStoryBuildersContext : DbContext
 
             entity.HasOne(d => d.Location).WithMany(p => p.ParagraphLocation)
                 .HasForeignKey(d => d.LocationId)
-                .OnDelete(DeleteBehavior.ClientSetNull)
                 .HasConstraintName("FK_Paragraph_Location_Location");
 
             entity.HasOne(d => d.Paragraph).WithMany(p => p.ParagraphLocation)
                 .HasForeignKey(d => d.ParagraphId)
-                .OnDelete(DeleteBehavior.ClientSetNull)
                 .HasConstraintName("FK_Paragraph_Location_Paragraph");
         });
 
@@ -175,7 +176,6 @@ public partial class AIStoryBuildersContext : DbContext
 
             entity.HasOne(d => d.Paragraph).WithMany(p => p.ParagraphVectorData)
                 .HasForeignKey(d => d.ParagraphId)
-                .OnDelete(DeleteBehavior.ClientSetNull)
                 .HasConstraintName("FK_ParagragraphVectorData_Paragraph");
         });
 

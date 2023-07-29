@@ -9,6 +9,8 @@ public partial class Character
 {
     public int Id { get; set; }
 
+    public int StoryId { get; set; }
+
     public string CharacterName { get; set; }
 
     public string Description { get; set; }
@@ -18,4 +20,6 @@ public partial class Character
     public virtual ICollection<CharacterCharacterBackgroundParagraph> CharacterCharacterBackgroundParagraph { get; set; } = new List<CharacterCharacterBackgroundParagraph>();
 
     public virtual ICollection<ParagraphCharacter> ParagraphCharacter { get; set; } = new List<ParagraphCharacter>();
+
+    public virtual Story Story { get; set; }
 }
