@@ -86,6 +86,19 @@ namespace AIStoryBuilders.Services
 
         public async Task<Character> AddCharacterAsync(Character character)
         {
+            // Ensure no duplicate CharacterName
+            var duplicateCharacter = await _context.Character
+                .AsNoTracking()
+                .Where(c => c.StoryId == character.StoryId)
+                .Where(c => c.CharacterName == character.CharacterName)
+                .FirstOrDefaultAsync();
+
+            if (duplicateCharacter != null)
+            {
+                // Throw exception
+                throw new Exception("Duplicate CharacterName");
+            }
+
             // Add Character
 
             Character newCharacter = new Character();
