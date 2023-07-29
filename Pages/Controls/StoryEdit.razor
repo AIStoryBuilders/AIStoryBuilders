@@ -31,7 +31,9 @@
     </div>
 </div>
 @code {
-    Story objStory = new Story();
+    [Parameter] public Story objStory { get; set; }
+    [Parameter] public EventCallback<Story> StoryChanged { get; set; }
+
     IEnumerable<string> colStyles;
     string Message = "";
     Variant variant = Variant.Outlined;
@@ -60,7 +62,7 @@
         objStory.Style = "Drama";
     }
 
-    private void Save()
+    private async Task Save()
     {
         try
         {
@@ -94,12 +96,19 @@
                 return;
             }
 
-            dialogService.Close(objStory);
+            await StoryChangedEvent(objStory);
 
         }
         catch (Exception ex)
         {
             Message = ex.Message;
         }
+    }
+
+    private async Task StoryChangedEvent(Story paramItem)
+    {
+        // Notify parent component to
+        // Remove the Task from the collection
+        await StoryChanged.InvokeAsync(paramItem);
     }
 }
