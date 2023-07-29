@@ -1,6 +1,6 @@
 ﻿@using AIStoryBuilders.Models;
 @inject NotificationService NotificationService
-
+@inject DialogService DialogService
 <div Class="rz-p-0 rz-p-md-12">
     <RadzenRow Gap="1rem">
         <RadzenColumn Size="12" SizeSM="12">
@@ -25,13 +25,16 @@
 <div class="row">
     <div class="col">
         <RadzenButton Text="Save" ButtonStyle="ButtonStyle.Success"
-                      Click="Save"
-                      Style="margin-bottom: 10px; width: 150px" />
+                      Click="StorySave"
+                      Style="margin-bottom: 10px; width: 150px" />&nbsp;&nbsp;
+        <RadzenButton Text="Delete" ButtonStyle="ButtonStyle.Danger"
+                      Click="StoryDelete" />
     </div>
 </div>
 @code {
     [Parameter] public Story objStory { get; set; }
-    [Parameter] public EventCallback<Story> StoryChanged { get; set; }
+    [Parameter] public EventCallback<Story> StoryUpdated { get; set; }
+    [Parameter] public EventCallback<Story> StoryDeleted { get; set; }
 
     IEnumerable<string> colStyles;
     string Message = "";
@@ -64,7 +67,7 @@
         }
     }
 
-    private async Task Save()
+    private async Task StorySave()
     {
         try
         {
@@ -98,8 +101,8 @@
                 return;
             }
 
-            await StoryChangedEvent(objStory);
-
+            // Notify parent component
+            await StoryUpdated.InvokeAsync(objStory);
         }
         catch (Exception ex)
         {
@@ -107,10 +110,16 @@
         }
     }
 
-    private async Task StoryChangedEvent(Story paramItem)
+    protected async Task StoryDelete()
     {
-        // Notify parent component to
-        // Remove the Task from the collection
-        await StoryChanged.InvokeAsync(paramItem);
+        // Ask for confirmation:
+        var confirmResult = await DialogService.Confirm("Are you sure?", "Delete Story",
+                  new ConfirmOptions() { OkButtonText = "Yes", CancelButtonText = "No" });
+
+        if (confirmResult.HasValue && confirmResult.Value)
+        {
+            // Notify parent component
+            await StoryDeleted.InvokeAsync(objStory);
+        }
     }
 }

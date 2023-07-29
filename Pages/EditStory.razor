@@ -15,10 +15,10 @@
 @inherits OwningComponentBase<AIStoryBuildersService>
 <PageTitle>@objStory.Title</PageTitle>
 
-<RadzenTabs Change=@OnChange TabPosition=TabPosition.Top RenderMode="TabRenderMode.Client">
+<RadzenTabs Change=@OnTabChange TabPosition=TabPosition.Top RenderMode="TabRenderMode.Client">
     <Tabs>
         <RadzenTabsItem Text="Details">
-            <AIStoryBuilders.Pages.Controls.StoryEdit objStory="objStory" StoryChanged="SaveStory" />
+            <AIStoryBuilders.Pages.Controls.StoryEdit objStory="objStory" StoryUpdated="SaveStory" StoryDeleted="DeleteStory" />
         </RadzenTabsItem>
         <RadzenTabsItem Text="Characters">
 
@@ -93,7 +93,28 @@
         }
     }
 
-    void OnChange(int index)
+    private async Task DeleteStory()
+    {
+        try
+        {
+            // Delete the Story from the database
+            await Service.DeleteStoryAsync(objStory.Id);
+
+            dialogService.Close(null);
+        }
+        catch (Exception ex)
+        {
+            NotificationService.Notify(new NotificationMessage
+                {
+                    Severity = NotificationSeverity.Error,
+                    Summary = "Error",
+                    Detail = ex.Message,
+                    Duration = 4000
+                });
+        }
+    }
+
+    void OnTabChange(int index)
     {
         //console.Log($"Tab with index {index} was selected.");
     }

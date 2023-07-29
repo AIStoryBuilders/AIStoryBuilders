@@ -20,21 +20,21 @@
 <br />
 <br />
 <div style="height:500px">
-<RadzenDataList AllowVirtualization=false Style="height:100%;overflow:auto;"
-                WrapItems=true AllowPaging=false
-                Data="@colStorys" TItem="Story">
-    <Template Context="story">
-        <RadzenCard Style="width: 100%; padding: 1;">
-            <RadzenRow Gap="0">
-                <RadzenButton Text="Select" Click=@(() => EditStory(story))
-                              ButtonStyle="ButtonStyle.Light" Style="width: 150px;height: 20px" />
-                &nbsp;&nbsp;&nbsp;&nbsp;
-                <RadzenText TextStyle="TextStyle.DisplayH5"
-                            class="rz-color-secondary">@(story.Title)</RadzenText>&nbsp;&nbsp;
-                </RadzenRow>
-            </RadzenCard>
-        </Template>
-    </RadzenDataList>
+    <RadzenDataList AllowVirtualization=false Style="height:100%;overflow:auto;"
+                    WrapItems=true AllowPaging=false
+                    Data="@colStorys" TItem="Story">
+        <Template Context="story">
+            <RadzenCard Style="width: 100%; padding: 1;">
+                <RadzenRow Gap="0">
+                    <RadzenButton Text="Select" Click=@(() => EditStory(story))
+                                  ButtonStyle="ButtonStyle.Light" Style="width: 150px;height: 20px" />
+                    &nbsp;&nbsp;&nbsp;&nbsp;
+                    <RadzenText TextStyle="TextStyle.DisplayH5"
+                                class="rz-color-secondary">@(story.Title)</RadzenText>&nbsp;&nbsp;
+                    </RadzenRow>
+                </RadzenCard>
+            </Template>
+        </RadzenDataList>
     </div>
     @code {
     List<Story> colStorys = new List<Story>();
@@ -119,6 +119,10 @@
 
             var EditStoryResult = await dialogService.OpenAsync<EditStory>($"{paramStory.Title}", parms,
             new DialogOptions() { Height = "700px", Width = "800px" });
+
+            colStorys = await Service.GetStorysAsync();
+
+            StateHasChanged();
         }
         catch (Exception ex)
         {
