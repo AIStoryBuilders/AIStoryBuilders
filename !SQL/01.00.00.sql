@@ -25,6 +25,7 @@ IF NOT EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[dbo].[Ch
 BEGIN
 CREATE TABLE [dbo].[Character](
 	[Id] [int] IDENTITY(1,1) NOT NULL,
+	[StoryId] [int] NOT NULL,
 	[CharacterName] [nvarchar](4000) NOT NULL,
 	[Description] [nvarchar](4000) NOT NULL,
 	[Goals] [nvarchar](4000) NOT NULL,
@@ -97,6 +98,7 @@ IF NOT EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[dbo].[Lo
 BEGIN
 CREATE TABLE [dbo].[Location](
 	[Id] [int] IDENTITY(1,1) NOT NULL,
+	[StoryId] [int] NOT NULL,
 	[LocationName] [nvarchar](4000) NOT NULL,
 	[Description] [nvarchar](4000) NOT NULL,
 	[StartDate] [datetime] NULL,
@@ -219,6 +221,13 @@ GO
 IF  EXISTS (SELECT * FROM sys.foreign_keys WHERE object_id = OBJECT_ID(N'[dbo].[FK_Chapter_Story]') AND parent_object_id = OBJECT_ID(N'[dbo].[Chapter]'))
 ALTER TABLE [dbo].[Chapter] CHECK CONSTRAINT [FK_Chapter_Story]
 GO
+IF NOT EXISTS (SELECT * FROM sys.foreign_keys WHERE object_id = OBJECT_ID(N'[dbo].[FK_Character_Story]') AND parent_object_id = OBJECT_ID(N'[dbo].[Character]'))
+ALTER TABLE [dbo].[Character]  WITH CHECK ADD  CONSTRAINT [FK_Character_Story] FOREIGN KEY([StoryId])
+REFERENCES [dbo].[Story] ([Id])
+GO
+IF  EXISTS (SELECT * FROM sys.foreign_keys WHERE object_id = OBJECT_ID(N'[dbo].[FK_Character_Story]') AND parent_object_id = OBJECT_ID(N'[dbo].[Character]'))
+ALTER TABLE [dbo].[Character] CHECK CONSTRAINT [FK_Character_Story]
+GO
 IF NOT EXISTS (SELECT * FROM sys.foreign_keys WHERE object_id = OBJECT_ID(N'[dbo].[FK_Character_CharacterBackgroundParagraph_Character]') AND parent_object_id = OBJECT_ID(N'[dbo].[Character_CharacterBackgroundParagraph]'))
 ALTER TABLE [dbo].[Character_CharacterBackgroundParagraph]  WITH CHECK ADD  CONSTRAINT [FK_Character_CharacterBackgroundParagraph_Character] FOREIGN KEY([CharacterId])
 REFERENCES [dbo].[Character] ([Id])
@@ -242,6 +251,13 @@ ON DELETE CASCADE
 GO
 IF  EXISTS (SELECT * FROM sys.foreign_keys WHERE object_id = OBJECT_ID(N'[dbo].[FK_CharacterBackgroundParagraphVectorData_CharacterBackgroundParagraph]') AND parent_object_id = OBJECT_ID(N'[dbo].[CharacterBackgroundParagraphVectorData]'))
 ALTER TABLE [dbo].[CharacterBackgroundParagraphVectorData] CHECK CONSTRAINT [FK_CharacterBackgroundParagraphVectorData_CharacterBackgroundParagraph]
+GO
+IF NOT EXISTS (SELECT * FROM sys.foreign_keys WHERE object_id = OBJECT_ID(N'[dbo].[FK_Location_Story]') AND parent_object_id = OBJECT_ID(N'[dbo].[Location]'))
+ALTER TABLE [dbo].[Location]  WITH CHECK ADD  CONSTRAINT [FK_Location_Story] FOREIGN KEY([StoryId])
+REFERENCES [dbo].[Story] ([Id])
+GO
+IF  EXISTS (SELECT * FROM sys.foreign_keys WHERE object_id = OBJECT_ID(N'[dbo].[FK_Location_Story]') AND parent_object_id = OBJECT_ID(N'[dbo].[Location]'))
+ALTER TABLE [dbo].[Location] CHECK CONSTRAINT [FK_Location_Story]
 GO
 IF NOT EXISTS (SELECT * FROM sys.foreign_keys WHERE object_id = OBJECT_ID(N'[dbo].[FK_Paragraph_Chapter]') AND parent_object_id = OBJECT_ID(N'[dbo].[Paragraph]'))
 ALTER TABLE [dbo].[Paragraph]  WITH CHECK ADD  CONSTRAINT [FK_Paragraph_Chapter] FOREIGN KEY([ChapterId])
