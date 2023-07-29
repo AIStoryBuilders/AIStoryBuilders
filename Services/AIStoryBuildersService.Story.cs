@@ -67,6 +67,64 @@ namespace AIStoryBuilders.Services
         }
         #endregion
 
+        #region *** Character ***
+        public async Task<List<Character>> GetCharactersAsync(Story story)
+        {
+            // Get Characters including CharacterCharacterBackgroundParagraph
+            return await _context.Character
+                .Include(character => character.CharacterCharacterBackgroundParagraph)
+                .OrderBy(character => character.CharacterName)
+                .Where(character => character.StoryId == story.Id)
+                .AsNoTracking().ToListAsync();
+        }
+
+        public async Task<Character> GetCharacterAsync(int id)
+        {
+            // Get Character
+            return await _context.Character.FindAsync(id);
+        }
+
+        public async Task<Character> AddCharacterAsync(Character character)
+        {
+            // Add Character
+
+            Character newCharacter = new Character();
+            newCharacter.StoryId = character.StoryId;
+            newCharacter.CharacterName = character.CharacterName ?? "";
+            newCharacter.Description = character.Description ?? "";
+            newCharacter.Goals = character.Goals ?? "";
+
+            _context.Character.Add(newCharacter);
+            await _context.SaveChangesAsync();
+            return newCharacter;
+        }
+
+        public async Task<Character> UpdateCharacterAsync(Character character)
+        {
+            // Get Character
+            var characterToUpdate = await _context.Character.FindAsync(character.Id);
+
+            // Update each value
+            characterToUpdate.CharacterName = character.CharacterName ?? "";
+            characterToUpdate.Description = character.Description ?? "";
+            characterToUpdate.Goals = character.Goals ?? "";
+
+            _context.Character.Update(characterToUpdate);
+            await _context.SaveChangesAsync();
+
+            return characterToUpdate;
+        }
+
+        public async Task<Character> DeleteCharacterAsync(int id)
+        {
+            // Delete Character
+            var character = await _context.Character.FindAsync(id);
+            _context.Character.Remove(character);
+            await _context.SaveChangesAsync();
+            return character;
+        }
+        #endregion
+
         #region *** Chapter ***
         public async Task<Chapter> GetChapterAsync(int id)
         {
@@ -99,6 +157,5 @@ namespace AIStoryBuilders.Services
             return chapter;
         }
         #endregion
-
     }
 }

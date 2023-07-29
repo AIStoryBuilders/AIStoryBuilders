@@ -1,8 +1,9 @@
 ﻿@using AIStoryBuilders.Models;
+@using AIStoryBuilders.Pages.Controls
 @inject DialogService dialogService
 @inject NotificationService NotificationService
 
-<AIStoryBuilders.Pages.Controls.StoryEdit objStory="objStory" StoryUpdated="Save" />
+<StoryEdit objStory="objStory" StoryUpdated="Save" />
 
 @code {
     Story objStory = new Story();

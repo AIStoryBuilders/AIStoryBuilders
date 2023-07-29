@@ -18,10 +18,10 @@
 <RadzenTabs Change=@OnTabChange TabPosition=TabPosition.Top RenderMode="TabRenderMode.Client">
     <Tabs>
         <RadzenTabsItem Text="Details">
-            <AIStoryBuilders.Pages.Controls.StoryEdit objStory="objStory" StoryUpdated="SaveStory" StoryDeleted="DeleteStory" />
+            <StoryEdit objStory="objStory" StoryUpdated="SaveStory" StoryDeleted="DeleteStory" />
         </RadzenTabsItem>
         <RadzenTabsItem Text="Characters">
-
+            <CharactersEdit objStory="objStory" />
         </RadzenTabsItem>
         <RadzenTabsItem Text="Locations">
 
@@ -40,19 +40,15 @@
     string Organization = "";
     string ApiKey = "";
 
+    List<Character> colCharacters = new List<Character>();
+
     // Initialize the component by setting the organization and API key
     protected override void OnInitialized()
-    {
-        Organization = _configuration["OpenAIServiceOptions:Organization"] ?? "";
-        ApiKey = _configuration["OpenAIServiceOptions:ApiKey"] ?? "";
-
-    }
-
-    protected override async Task OnInitializedAsync()
-    {
+    {    
         try
         {
-            // Get data from the database
+            Organization = _configuration["OpenAIServiceOptions:Organization"] ?? "";
+            ApiKey = _configuration["OpenAIServiceOptions:ApiKey"] ?? "";
         }
         catch (Exception ex)
         {
@@ -114,23 +110,26 @@
         }
     }
 
-    void OnTabChange(int index)
+    async Task OnTabChange(int index)
     {
-        //console.Log($"Tab with index {index} was selected.");
+        switch (index)
+        {
+            case 0:
+                // Story
+                objStory = await Service.GetStoryAsync(objStory.Id);
+                break;
+            case 1:
+                // Characters
+                break;
+            case 2:
+                // Locations
+                break;
+            case 3:
+                // Chapters
+                break;
+            case 4:
+                // AI
+                break;
+        }
     }
-
-    //    async Task DeleteUserDialog() => await dialogService
-    //.OpenAsync("Delete User", ds =>
-    //@<RadzenCard Style="padding: 20px;">
-    //    <p Style="margin-bottom: 10px;">Confirm?</p>
-    //    <div class="row">
-    //        <div class="col-md-12">
-    //            <RadzenButton Text="Yes" Click="DeleteUser"
-    //                      Style="margin-bottom: 10px; width: 150px" />
-    //            <RadzenButton Text="No" Click="()=> ds.Close(false)"
-    //                      ButtonStyle="ButtonStyle.Secondary"
-    //                      Style="margin-bottom: 10px; width: 150px" />
-    //        </div>
-    //    </div>
-    //</RadzenCard>);
 }

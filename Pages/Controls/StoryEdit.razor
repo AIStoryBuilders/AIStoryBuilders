@@ -37,7 +37,6 @@
     [Parameter] public EventCallback<Story> StoryDeleted { get; set; }
 
     IEnumerable<string> colStyles;
-    string Message = "";
     Variant variant = Variant.Outlined;
 
     protected override void OnInitialized()
@@ -71,8 +70,6 @@
     {
         try
         {
-            Message = "";
-
             if (objStory.Title != null)
             {
                 if (objStory.Title.Length < 1)
@@ -106,7 +103,13 @@
         }
         catch (Exception ex)
         {
-            Message = ex.Message;
+            NotificationService.Notify(new NotificationMessage
+                {
+                    Severity = NotificationSeverity.Error,
+                    Summary = "Error",
+                    Detail = ex.Message,
+                    Duration = 4000
+                });
         }
     }
 
