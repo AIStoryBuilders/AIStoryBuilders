@@ -38,15 +38,23 @@ namespace AIStoryBuilders.Services
 
             _context.Story.Add(newStory);
             await _context.SaveChangesAsync();
-            return story;
+            return newStory;
         }
 
         public async Task<Story> UpdateStoryAsync(Story story)
         {
+            // Get Story
+            var storyToUpdate = await _context.Story.FindAsync(story.Id);
+
+            // Update each value
+            storyToUpdate.Title = story.Title ?? "";
+            storyToUpdate.Style = story.Style ?? "";
+            storyToUpdate.Theme = story.Theme ?? "";
+            storyToUpdate.Synopsis = story.Synopsis ?? "";
+
             // Update Story
-            _context.Entry(story).State = EntityState.Modified;
             await _context.SaveChangesAsync();
-            return story;
+            return storyToUpdate;
         }
 
         public async Task<Story> DeleteStoryAsync(int id)

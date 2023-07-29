@@ -13,12 +13,12 @@
     We access AIStoryBuildersService using @Service
 *@
 @inherits OwningComponentBase<AIStoryBuildersService>
-<PageTitle>@Story.Title</PageTitle>
+<PageTitle>@objStory.Title</PageTitle>
 
 <RadzenTabs Change=@OnChange TabPosition=TabPosition.Top RenderMode="TabRenderMode.Client">
     <Tabs>
         <RadzenTabsItem Text="Details">
-
+            <AIStoryBuilders.Pages.Controls.StoryEdit objStory="objStory" StoryChanged="SaveStory" />
         </RadzenTabsItem>
         <RadzenTabsItem Text="Characters">
 
@@ -29,14 +29,14 @@
         <RadzenTabsItem Text="Chapters">
 
         </RadzenTabsItem>
-        <RadzenTabsItem Text="AI Log">
+        <RadzenTabsItem Text="AI">
 
         </RadzenTabsItem>
     </Tabs>
 </RadzenTabs>
 @code {
-    [Parameter] public Story Story { get; set; }
-    string Status = "";
+    [Parameter] public Story objStory { get; set; }
+
     string Organization = "";
     string ApiKey = "";
 
@@ -45,6 +45,7 @@
     {
         Organization = _configuration["OpenAIServiceOptions:Organization"] ?? "";
         ApiKey = _configuration["OpenAIServiceOptions:ApiKey"] ?? "";
+
     }
 
     protected override async Task OnInitializedAsync()
@@ -52,6 +53,33 @@
         try
         {
             // Get data from the database
+        }
+        catch (Exception ex)
+        {
+            NotificationService.Notify(new NotificationMessage
+                {
+                    Severity = NotificationSeverity.Error,
+                    Summary = "Error",
+                    Detail = ex.Message,
+                    Duration = 4000
+                });
+        }
+    }
+
+    private async Task SaveStory()
+    {
+        try
+        {
+            // Update the Story in the database
+            await Service.UpdateStoryAsync(objStory);
+
+            NotificationService.Notify(new NotificationMessage
+                {
+                    Severity = NotificationSeverity.Success,
+                    Summary = "Story",
+                    Detail = "Updated!",
+                    Duration = 2000
+                });
         }
         catch (Exception ex)
         {
