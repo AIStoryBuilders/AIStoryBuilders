@@ -27,12 +27,12 @@ Background Type:
               Style="margin-bottom: 10px; width: 150px" />&nbsp;&nbsp;
 <br />
 <br />
-
-<div style="height:200px; overflow-y: scroll;">
-    @foreach (var objCharacterBackground in colCharacterBackground)
-    {
-        <StoryObjectEdit ControlValue=@objCharacterBackground ControlType=ControlType.Character />
-    }
+<div style="height:200px; overflow-y: scroll;border-width:0px">
+    <RadzenDataList Data="@colCharacterBackground" TItem="CharacterBackground">
+        <Template Context="character">
+            <StoryObjectEdit ControlValue=@character ControlType=ControlType.Character />
+        </Template>
+    </RadzenDataList>
 </div>
 
 <br />
@@ -51,6 +51,7 @@ Background Type:
 </div>
 @code {
     [Parameter] public Character objCharacter { get; set; }
+    [Parameter] public DialogService DialogReference { get; set; }
 
     IEnumerable<CharacterBackground> colCharacterBackground = new List<CharacterBackground>();
     List<string> colTypes = new List<string>();
@@ -66,7 +67,7 @@ Background Type:
             "History"
         };
 
-        colCharacterBackground = objCharacter.CharacterBackground.Where(x => x.Type == @strType);
+       colCharacterBackground = objCharacter.CharacterBackground.Where(x => x.Type == @strType);
     }
 
     private async Task CharacterSave()
@@ -156,10 +157,10 @@ Background Type:
         }
     }
 
-    private async Task OnTypeChanged()
+    private void OnTypeChanged()
     {
         colCharacterBackground = objCharacter.CharacterBackground.Where(x => x.Type == @strType);
-        await InvokeAsync(() => { DialogService.Refresh(); });
+        DialogReference.Refresh();
     }
 
     private async Task AddBackground()
