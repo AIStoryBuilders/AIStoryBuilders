@@ -1,24 +1,28 @@
 ﻿@using AIStoryBuilders.Models;
 @inject NotificationService NotificationService
 @inject DialogService DialogService
-<p>@objCharacter.CharacterName</p>
-<p>@ControlType.ToString()</p>
+@if (ControlType == ControlType.Character)
+{
+    <p>@objCharacterBackground.Type</p>
+    <p>@objCharacterBackground.Description</p>
+    <p>@objCharacterBackground.ParagraphContent</p>
+}
 @code {
     [Parameter] public object ControlValue { get; set; }
     [Parameter] public ControlType ControlType { get; set; }
 
-    Character objCharacter = new Character();
+    CharacterBackground objCharacterBackground = new CharacterBackground();
     Location objLocation = new Location();
     Chapter objChapter = new Chapter();
 
     protected override void OnInitialized()
     {
         try
-        {  
-            switch(ControlType)
+        {
+            switch (ControlType)
             {
                 case ControlType.Character:
-                    objCharacter = (Character)ControlValue;
+                    objCharacterBackground = (CharacterBackground)ControlValue;
                     break;
                 case ControlType.Location:
                     objLocation = (Location)ControlValue;

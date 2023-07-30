@@ -40,27 +40,11 @@ SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
 GO
-IF NOT EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[dbo].[Character_CharacterBackgroundParagraph]') AND type in (N'U'))
+IF NOT EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[dbo].[CharacterBackground]') AND type in (N'U'))
 BEGIN
-CREATE TABLE [dbo].[Character_CharacterBackgroundParagraph](
+CREATE TABLE [dbo].[CharacterBackground](
 	[Id] [int] IDENTITY(1,1) NOT NULL,
 	[CharacterId] [int] NOT NULL,
-	[CharacterBackgroundParagraphId] [int] NOT NULL,
- CONSTRAINT [PK_Character_CharacterBackgroundParagraph] PRIMARY KEY CLUSTERED 
-(
-	[Id] ASC
-)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON) ON [PRIMARY]
-) ON [PRIMARY]
-END
-GO
-SET ANSI_NULLS ON
-GO
-SET QUOTED_IDENTIFIER ON
-GO
-IF NOT EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[dbo].[CharacterBackgroundParagraph]') AND type in (N'U'))
-BEGIN
-CREATE TABLE [dbo].[CharacterBackgroundParagraph](
-	[Id] [int] IDENTITY(1,1) NOT NULL,
 	[Sequence] [int] NOT NULL,
 	[Type] [nvarchar](100) NOT NULL,
 	[Description] [nvarchar](4000) NOT NULL,
@@ -76,11 +60,11 @@ SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
 GO
-IF NOT EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[dbo].[CharacterBackgroundParagraphVectorData]') AND type in (N'U'))
+IF NOT EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[dbo].[CharacterBackgroundVectorData]') AND type in (N'U'))
 BEGIN
-CREATE TABLE [dbo].[CharacterBackgroundParagraphVectorData](
+CREATE TABLE [dbo].[CharacterBackgroundVectorData](
 	[Id] [int] IDENTITY(1,1) NOT NULL,
-	[ChracterBackgroundParagraphId] [int] NOT NULL,
+	[CharacterBackgroundId] [int] NOT NULL,
 	[vector_value_id] [int] NOT NULL,
 	[vector_value] [float] NOT NULL,
  CONSTRAINT [PK_ChracterBackgroundParagraphVectorData] PRIMARY KEY CLUSTERED 
@@ -201,10 +185,10 @@ CREATE TABLE [dbo].[Story](
 ) ON [PRIMARY]
 END
 GO
-IF NOT EXISTS (SELECT * FROM sys.indexes WHERE object_id = OBJECT_ID(N'[dbo].[CharacterBackgroundParagraphVectorData]') AND name = N'NonClusteredColumnStoreIndex')
-CREATE NONCLUSTERED COLUMNSTORE INDEX [NonClusteredColumnStoreIndex] ON [dbo].[CharacterBackgroundParagraphVectorData]
+IF NOT EXISTS (SELECT * FROM sys.indexes WHERE object_id = OBJECT_ID(N'[dbo].[CharacterBackgroundVectorData]') AND name = N'NonClusteredColumnStoreIndex')
+CREATE NONCLUSTERED COLUMNSTORE INDEX [NonClusteredColumnStoreIndex] ON [dbo].[CharacterBackgroundVectorData]
 (
-	[ChracterBackgroundParagraphId]
+	[CharacterBackgroundId]
 )WITH (DROP_EXISTING = OFF, COMPRESSION_DELAY = 0, DATA_COMPRESSION = COLUMNSTORE) ON [PRIMARY]
 GO
 IF NOT EXISTS (SELECT * FROM sys.indexes WHERE object_id = OBJECT_ID(N'[dbo].[ParagraphVectorData]') AND name = N'NonClusteredColumnStoreIndex')
@@ -228,29 +212,21 @@ GO
 IF  EXISTS (SELECT * FROM sys.foreign_keys WHERE object_id = OBJECT_ID(N'[dbo].[FK_Character_Story]') AND parent_object_id = OBJECT_ID(N'[dbo].[Character]'))
 ALTER TABLE [dbo].[Character] CHECK CONSTRAINT [FK_Character_Story]
 GO
-IF NOT EXISTS (SELECT * FROM sys.foreign_keys WHERE object_id = OBJECT_ID(N'[dbo].[FK_Character_CharacterBackgroundParagraph_Character]') AND parent_object_id = OBJECT_ID(N'[dbo].[Character_CharacterBackgroundParagraph]'))
-ALTER TABLE [dbo].[Character_CharacterBackgroundParagraph]  WITH CHECK ADD  CONSTRAINT [FK_Character_CharacterBackgroundParagraph_Character] FOREIGN KEY([CharacterId])
+IF NOT EXISTS (SELECT * FROM sys.foreign_keys WHERE object_id = OBJECT_ID(N'[dbo].[FK_CharacterBackground_Character]') AND parent_object_id = OBJECT_ID(N'[dbo].[CharacterBackground]'))
+ALTER TABLE [dbo].[CharacterBackground]  WITH CHECK ADD  CONSTRAINT [FK_CharacterBackground_Character] FOREIGN KEY([CharacterId])
 REFERENCES [dbo].[Character] ([Id])
 ON DELETE CASCADE
 GO
-IF  EXISTS (SELECT * FROM sys.foreign_keys WHERE object_id = OBJECT_ID(N'[dbo].[FK_Character_CharacterBackgroundParagraph_Character]') AND parent_object_id = OBJECT_ID(N'[dbo].[Character_CharacterBackgroundParagraph]'))
-ALTER TABLE [dbo].[Character_CharacterBackgroundParagraph] CHECK CONSTRAINT [FK_Character_CharacterBackgroundParagraph_Character]
+IF  EXISTS (SELECT * FROM sys.foreign_keys WHERE object_id = OBJECT_ID(N'[dbo].[FK_CharacterBackground_Character]') AND parent_object_id = OBJECT_ID(N'[dbo].[CharacterBackground]'))
+ALTER TABLE [dbo].[CharacterBackground] CHECK CONSTRAINT [FK_CharacterBackground_Character]
 GO
-IF NOT EXISTS (SELECT * FROM sys.foreign_keys WHERE object_id = OBJECT_ID(N'[dbo].[FK_Character_CharacterBackgroundParagraph_CharacterBackgroundParagraph]') AND parent_object_id = OBJECT_ID(N'[dbo].[Character_CharacterBackgroundParagraph]'))
-ALTER TABLE [dbo].[Character_CharacterBackgroundParagraph]  WITH CHECK ADD  CONSTRAINT [FK_Character_CharacterBackgroundParagraph_CharacterBackgroundParagraph] FOREIGN KEY([CharacterBackgroundParagraphId])
-REFERENCES [dbo].[CharacterBackgroundParagraph] ([Id])
+IF NOT EXISTS (SELECT * FROM sys.foreign_keys WHERE object_id = OBJECT_ID(N'[dbo].[FK_CharacterBackgroundParagraphVectorData_CharacterBackgroundParagraph]') AND parent_object_id = OBJECT_ID(N'[dbo].[CharacterBackgroundVectorData]'))
+ALTER TABLE [dbo].[CharacterBackgroundVectorData]  WITH CHECK ADD  CONSTRAINT [FK_CharacterBackgroundParagraphVectorData_CharacterBackgroundParagraph] FOREIGN KEY([CharacterBackgroundId])
+REFERENCES [dbo].[CharacterBackground] ([Id])
 ON DELETE CASCADE
 GO
-IF  EXISTS (SELECT * FROM sys.foreign_keys WHERE object_id = OBJECT_ID(N'[dbo].[FK_Character_CharacterBackgroundParagraph_CharacterBackgroundParagraph]') AND parent_object_id = OBJECT_ID(N'[dbo].[Character_CharacterBackgroundParagraph]'))
-ALTER TABLE [dbo].[Character_CharacterBackgroundParagraph] CHECK CONSTRAINT [FK_Character_CharacterBackgroundParagraph_CharacterBackgroundParagraph]
-GO
-IF NOT EXISTS (SELECT * FROM sys.foreign_keys WHERE object_id = OBJECT_ID(N'[dbo].[FK_CharacterBackgroundParagraphVectorData_CharacterBackgroundParagraph]') AND parent_object_id = OBJECT_ID(N'[dbo].[CharacterBackgroundParagraphVectorData]'))
-ALTER TABLE [dbo].[CharacterBackgroundParagraphVectorData]  WITH CHECK ADD  CONSTRAINT [FK_CharacterBackgroundParagraphVectorData_CharacterBackgroundParagraph] FOREIGN KEY([ChracterBackgroundParagraphId])
-REFERENCES [dbo].[CharacterBackgroundParagraph] ([Id])
-ON DELETE CASCADE
-GO
-IF  EXISTS (SELECT * FROM sys.foreign_keys WHERE object_id = OBJECT_ID(N'[dbo].[FK_CharacterBackgroundParagraphVectorData_CharacterBackgroundParagraph]') AND parent_object_id = OBJECT_ID(N'[dbo].[CharacterBackgroundParagraphVectorData]'))
-ALTER TABLE [dbo].[CharacterBackgroundParagraphVectorData] CHECK CONSTRAINT [FK_CharacterBackgroundParagraphVectorData_CharacterBackgroundParagraph]
+IF  EXISTS (SELECT * FROM sys.foreign_keys WHERE object_id = OBJECT_ID(N'[dbo].[FK_CharacterBackgroundParagraphVectorData_CharacterBackgroundParagraph]') AND parent_object_id = OBJECT_ID(N'[dbo].[CharacterBackgroundVectorData]'))
+ALTER TABLE [dbo].[CharacterBackgroundVectorData] CHECK CONSTRAINT [FK_CharacterBackgroundParagraphVectorData_CharacterBackgroundParagraph]
 GO
 IF NOT EXISTS (SELECT * FROM sys.foreign_keys WHERE object_id = OBJECT_ID(N'[dbo].[FK_Location_Story]') AND parent_object_id = OBJECT_ID(N'[dbo].[Location]'))
 ALTER TABLE [dbo].[Location]  WITH CHECK ADD  CONSTRAINT [FK_Location_Story] FOREIGN KEY([StoryId])

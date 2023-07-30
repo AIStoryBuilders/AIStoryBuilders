@@ -70,9 +70,9 @@ namespace AIStoryBuilders.Services
         #region *** Character ***
         public async Task<List<Character>> GetCharactersAsync(Story story)
         {
-            // Get Characters including CharacterCharacterBackgroundParagraph
+            // Get Characters including CharacterCharacterBackground
             return await _context.Character
-                .Include(character => character.CharacterCharacterBackgroundParagraph)
+                .Include(character => character.CharacterBackground)
                 .OrderBy(character => character.CharacterName)
                 .Where(character => character.StoryId == story.Id)
                 .AsNoTracking().ToListAsync();

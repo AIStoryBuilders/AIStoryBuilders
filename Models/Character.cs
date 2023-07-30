@@ -17,7 +17,7 @@ public partial class Character
 
     public string Goals { get; set; }
 
-    public virtual ICollection<CharacterCharacterBackgroundParagraph> CharacterCharacterBackgroundParagraph { get; set; } = new List<CharacterCharacterBackgroundParagraph>();
+    public virtual ICollection<CharacterBackground> CharacterBackground { get; set; } = new List<CharacterBackground>();
 
     public virtual ICollection<ParagraphCharacter> ParagraphCharacter { get; set; } = new List<ParagraphCharacter>();
 

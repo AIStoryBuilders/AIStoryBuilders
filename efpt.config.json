@@ -24,15 +24,11 @@
          "ObjectType": 0
       },
       {
-         "Name": "[dbo].[Character_CharacterBackgroundParagraph]",
+         "Name": "[dbo].[CharacterBackground]",
          "ObjectType": 0
       },
       {
-         "Name": "[dbo].[CharacterBackgroundParagraph]",
-         "ObjectType": 0
-      },
-      {
-         "Name": "[dbo].[CharacterBackgroundParagraphVectorData]",
+         "Name": "[dbo].[CharacterBackgroundVectorData]",
          "ObjectType": 0
       },
       {

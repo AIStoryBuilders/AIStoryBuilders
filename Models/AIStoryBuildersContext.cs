@@ -17,11 +17,9 @@ public partial class AIStoryBuildersContext : DbContext
 
     public virtual DbSet<Character> Character { get; set; }
 
-    public virtual DbSet<CharacterBackgroundParagraph> CharacterBackgroundParagraph { get; set; }
+    public virtual DbSet<CharacterBackground> CharacterBackground { get; set; }
 
-    public virtual DbSet<CharacterBackgroundParagraphVectorData> CharacterBackgroundParagraphVectorData { get; set; }
-
-    public virtual DbSet<CharacterCharacterBackgroundParagraph> CharacterCharacterBackgroundParagraph { get; set; }
+    public virtual DbSet<CharacterBackgroundVectorData> CharacterBackgroundVectorData { get; set; }
 
     public virtual DbSet<Location> Location { get; set; }
 
@@ -69,8 +67,10 @@ public partial class AIStoryBuildersContext : DbContext
                 .HasConstraintName("FK_Character_Story");
         });
 
-        modelBuilder.Entity<CharacterBackgroundParagraph>(entity =>
+        modelBuilder.Entity<CharacterBackground>(entity =>
         {
+            entity.HasKey(e => e.Id).HasName("PK_CharacterBackgroundParagraph");
+
             entity.Property(e => e.Description)
                 .IsRequired()
                 .HasMaxLength(4000);
@@ -80,31 +80,22 @@ public partial class AIStoryBuildersContext : DbContext
             entity.Property(e => e.Type)
                 .IsRequired()
                 .HasMaxLength(100);
+
+            entity.HasOne(d => d.Character).WithMany(p => p.CharacterBackground)
+                .HasForeignKey(d => d.CharacterId)
+                .HasConstraintName("FK_CharacterBackground_Character");
         });
 
-        modelBuilder.Entity<CharacterBackgroundParagraphVectorData>(entity =>
+        modelBuilder.Entity<CharacterBackgroundVectorData>(entity =>
         {
             entity.HasKey(e => e.Id).HasName("PK_ChracterBackgroundParagraphVectorData");
 
             entity.Property(e => e.VectorValue).HasColumnName("vector_value");
             entity.Property(e => e.VectorValueId).HasColumnName("vector_value_id");
 
-            entity.HasOne(d => d.ChracterBackgroundParagraph).WithMany(p => p.CharacterBackgroundParagraphVectorData)
-                .HasForeignKey(d => d.ChracterBackgroundParagraphId)
+            entity.HasOne(d => d.CharacterBackground).WithMany(p => p.CharacterBackgroundVectorData)
+                .HasForeignKey(d => d.CharacterBackgroundId)
                 .HasConstraintName("FK_CharacterBackgroundParagraphVectorData_CharacterBackgroundParagraph");
-        });
-
-        modelBuilder.Entity<CharacterCharacterBackgroundParagraph>(entity =>
-        {
-            entity.ToTable("Character_CharacterBackgroundParagraph");
-
-            entity.HasOne(d => d.CharacterBackgroundParagraph).WithMany(p => p.CharacterCharacterBackgroundParagraph)
-                .HasForeignKey(d => d.CharacterBackgroundParagraphId)
-                .HasConstraintName("FK_Character_CharacterBackgroundParagraph_CharacterBackgroundParagraph");
-
-            entity.HasOne(d => d.Character).WithMany(p => p.CharacterCharacterBackgroundParagraph)
-                .HasForeignKey(d => d.CharacterId)
-                .HasConstraintName("FK_Character_CharacterBackgroundParagraph_Character");
         });
 
         modelBuilder.Entity<Location>(entity =>

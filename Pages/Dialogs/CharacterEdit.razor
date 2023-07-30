@@ -20,6 +20,10 @@
     </RadzenColumn>
 </RadzenRow>
 <br />
+@*@foreach (var objCharacterBackgroundParagraph in objCharacter.CharacterBackgroundParagraphs)
+{
+    <StoryObjectEdit ControlValue=@objCharacterBackgroundParagraph ControlType=ControlType.Character />
+}*@
 <StoryObjectEdit ControlValue=@objCharacter ControlType=ControlType.Character />
 <div class="row">
     <div class="col">

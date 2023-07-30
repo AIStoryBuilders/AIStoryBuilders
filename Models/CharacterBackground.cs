@@ -5,9 +5,11 @@ using System.Collections.Generic;
 
 namespace AIStoryBuilders.Models;
 
-public partial class CharacterBackgroundParagraph
+public partial class CharacterBackground
 {
     public int Id { get; set; }
+
+    public int CharacterId { get; set; }
 
     public int Sequence { get; set; }
 
@@ -17,7 +19,7 @@ public partial class CharacterBackgroundParagraph
 
     public string ParagraphContent { get; set; }
 
-    public virtual ICollection<CharacterBackgroundParagraphVectorData> CharacterBackgroundParagraphVectorData { get; set; } = new List<CharacterBackgroundParagraphVectorData>();
+    public virtual Character Character { get; set; }
 
-    public virtual ICollection<CharacterCharacterBackgroundParagraph> CharacterCharacterBackgroundParagraph { get; set; } = new List<CharacterCharacterBackgroundParagraph>();
+    public virtual ICollection<CharacterBackgroundVectorData> CharacterBackgroundVectorData { get; set; } = new List<CharacterBackgroundVectorData>();
 }

@@ -5,15 +5,15 @@ using System.Collections.Generic;
 
 namespace AIStoryBuilders.Models;
 
-public partial class CharacterBackgroundParagraphVectorData
+public partial class CharacterBackgroundVectorData
 {
     public int Id { get; set; }
 
-    public int ChracterBackgroundParagraphId { get; set; }
+    public int CharacterBackgroundId { get; set; }
 
     public int VectorValueId { get; set; }
 
     public double VectorValue { get; set; }
 
-    public virtual CharacterBackgroundParagraph ChracterBackgroundParagraph { get; set; }
+    public virtual CharacterBackground CharacterBackground { get; set; }
 }
