@@ -27,30 +27,7 @@
     @code {
     [Parameter] public Story objStory { get; set; }
 
-    string Organization = "";
-    string ApiKey = "";
-
     List<Character> colCharacters = new List<Character>();
-
-    // Initialize the component by setting the organization and API key
-    protected override void OnInitialized()
-    {
-        try
-        {
-            Organization = _configuration["OpenAIServiceOptions:Organization"] ?? "";
-            ApiKey = _configuration["OpenAIServiceOptions:ApiKey"] ?? "";
-        }
-        catch (Exception ex)
-        {
-            NotificationService.Notify(new NotificationMessage
-                {
-                    Severity = NotificationSeverity.Error,
-                    Summary = "Error",
-                    Detail = ex.Message,
-                    Duration = 4000
-                });
-        }
-    }
 
     protected override async Task OnInitializedAsync()
     {

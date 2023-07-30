@@ -3,9 +3,10 @@
 @inject DialogService DialogService
 @if (ControlType == ControlType.Character)
 {
-    <p>@objCharacterBackground.Type</p>
-    <p>@objCharacterBackground.Description</p>
-    <p>@objCharacterBackground.ParagraphContent</p>
+    <hr />
+    <p>Type: @objCharacterBackground.Type</p>
+    <p>Description: @objCharacterBackground.Description</p>
+    <p>ParagraphContent: @objCharacterBackground.ParagraphContent</p>
 }
 @code {
     [Parameter] public object ControlValue { get; set; }
@@ -32,7 +33,7 @@
                     break;
                 default:
                     break;
-            }
+            }            
         }
         catch (Exception ex)
         {

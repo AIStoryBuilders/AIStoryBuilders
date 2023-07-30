@@ -7,24 +7,36 @@
 <RadzenRow Gap="1rem">
     <RadzenColumn Size="12" SizeSM="12">
         <RadzenStack>
-            <RadzenFormField Text="Character Name:" Variant="@variant">
+            <RadzenFormField Text="Character Name:" Variant=Variant.Outlined>
                 <RadzenTextBox @bind-Value="@objCharacter.CharacterName" />
             </RadzenFormField>
-            <RadzenFormField Text="Description:" Variant="@variant">
+            <RadzenFormField Text="Description:" Variant=Variant.Outlined>
                 <RadzenTextArea @bind-Value="@objCharacter.Description" />
             </RadzenFormField>
-            <RadzenFormField Text="Goals:" Variant="@variant">
+            <RadzenFormField Text="Goals:" Variant=Variant.Outlined>
                 <RadzenTextArea @bind-Value="@objCharacter.Goals" />
             </RadzenFormField>
         </RadzenStack>
     </RadzenColumn>
 </RadzenRow>
 <br />
-@*@foreach (var objCharacterBackgroundParagraph in objCharacter.CharacterBackgroundParagraphs)
-{
-    <StoryObjectEdit ControlValue=@objCharacterBackgroundParagraph ControlType=ControlType.Character />
-}*@
-<StoryObjectEdit ControlValue=@objCharacter ControlType=ControlType.Character />
+Background Type:
+<RadzenDropDown Data=@colTypes @bind-Value="@strType" Change="OnTypeChanged" />
+<RadzenButton Text="Add Background" ButtonStyle="ButtonStyle.Secondary"
+              Click="AddBackground"
+              Style="margin-bottom: 10px; width: 150px" />&nbsp;&nbsp;
+<br />
+<br />
+
+<div style="height:200px; overflow-y: scroll;">
+    @foreach (var objCharacterBackground in colCharacterBackground)
+    {
+        <StoryObjectEdit ControlValue=@objCharacterBackground ControlType=ControlType.Character />
+    }
+</div>
+
+<br />
+<br />
 <div class="row">
     <div class="col">
         <RadzenButton Text="Save" ButtonStyle="ButtonStyle.Success"
@@ -40,7 +52,22 @@
 @code {
     [Parameter] public Character objCharacter { get; set; }
 
-    Variant variant = Variant.Outlined;
+    IEnumerable<CharacterBackground> colCharacterBackground = new List<CharacterBackground>();
+    List<string> colTypes = new List<string>();
+    string strType = "Appearance";
+
+    protected override void OnInitialized()
+    {
+        // Add sample data to the colTypes dropdown
+        colTypes = new List<string>()
+        {
+            "Appearance",
+            "Goals",
+            "History"
+        };
+
+        colCharacterBackground = objCharacter.CharacterBackground.Where(x => x.Type == @strType);
+    }
 
     private async Task CharacterSave()
     {
@@ -127,5 +154,16 @@
                     Duration = 4000
                 });
         }
+    }
+
+    private async Task OnTypeChanged()
+    {
+        colCharacterBackground = objCharacter.CharacterBackground.Where(x => x.Type == @strType);
+        await InvokeAsync(() => { DialogService.Refresh(); });
+    }
+
+    private async Task AddBackground()
+    {
+
     }
 }

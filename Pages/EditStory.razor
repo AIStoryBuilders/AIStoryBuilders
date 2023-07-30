@@ -1,17 +1,8 @@
 ﻿@using AIStoryBuilders.Models;
 @using AIStoryBuilders.Pages.Controls;
 @using AIStoryBuilders.Services;
-@inject IConfiguration _configuration
 @inject DialogService dialogService
 @inject NotificationService NotificationService
-@*
-    Using OwningComponentBase ensures that the service and related services
-    that share its scope are disposed with the component.
-    Otherwise DbContext in AIStoryBuildersService will live for the life of the
-    connection, which may be problematic if clients stay
-    connected for a long time.
-    We access AIStoryBuildersService using @Service
-*@
 @inherits OwningComponentBase<AIStoryBuildersService>
 <PageTitle>@objStory.Title</PageTitle>
 
@@ -37,29 +28,7 @@
 @code {
     [Parameter] public Story objStory { get; set; }
 
-    string Organization = "";
-    string ApiKey = "";
-
     List<Character> colCharacters = new List<Character>();
-
-    protected override void OnInitialized()
-    {    
-        try
-        {
-            Organization = _configuration["OpenAIServiceOptions:Organization"] ?? "";
-            ApiKey = _configuration["OpenAIServiceOptions:ApiKey"] ?? "";
-        }
-        catch (Exception ex)
-        {
-            NotificationService.Notify(new NotificationMessage
-                {
-                    Severity = NotificationSeverity.Error,
-                    Summary = "Error",
-                    Detail = ex.Message,
-                    Duration = 4000
-                });
-        }
-    }
 
     private async Task SaveStory()
     {
