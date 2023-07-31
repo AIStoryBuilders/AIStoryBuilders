@@ -6,4 +6,11 @@
         Location,
         Chapter
     }
+
+    public enum CharacterBackgroundType
+    {
+        Appearance,
+        Goals,
+        History
+    }
 }

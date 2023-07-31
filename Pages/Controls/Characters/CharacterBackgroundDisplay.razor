@@ -1,0 +1,8 @@
+﻿@using AIStoryBuilders.Models;
+@inject NotificationService NotificationService
+@inject DialogService DialogService
+<p><b>Description:</b> @objCharacterBackground.Description</p>
+<p>@objCharacterBackground.ParagraphContent</p>
+@code {
+    [Parameter] public CharacterBackground objCharacterBackground { get; set; }
+}

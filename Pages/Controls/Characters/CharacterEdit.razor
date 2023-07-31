@@ -30,7 +30,7 @@ Background Type:
 <div style="height:200px; overflow-y: scroll;border-width:0px">
     <RadzenDataList Data="@colCharacterBackground" TItem="CharacterBackground">
         <Template Context="characterbackground">
-            <CharacterBackgroundEdit objCharacterBackground=@characterbackground />
+            <CharacterBackgroundDisplay objCharacterBackground=@characterbackground />
         </Template>
     </RadzenDataList>
 </div>
@@ -59,13 +59,13 @@ Background Type:
 
     protected override void OnInitialized()
     {
-        // Add sample data to the colTypes dropdown
+        // Add colTypes
         colTypes = new List<string>()
-        {
+            {
             "Appearance",
             "Goals",
             "History"
-        };
+            };
 
         colCharacterBackground = objCharacter.CharacterBackground.Where(x => x.Type == @strType);
     }
@@ -79,7 +79,7 @@ Background Type:
                 if (objCharacter.CharacterName.Length < 1)
                 {
                     NotificationService.Notify(
-                        new NotificationMessage
+                    new NotificationMessage
                             {
                                 Severity = NotificationSeverity.Error,
                                 Summary = "Error",
@@ -107,7 +107,7 @@ Background Type:
             else
             {
                 NotificationService.Notify(
-                    new NotificationMessage
+                new NotificationMessage
                         {
                             Severity = NotificationSeverity.Error,
                             Summary = "Error",
@@ -120,12 +120,12 @@ Background Type:
         catch (Exception ex)
         {
             NotificationService.Notify(new NotificationMessage
-                {
-                    Severity = NotificationSeverity.Error,
-                    Summary = "Error",
-                    Detail = ex.Message,
-                    Duration = 4000
-                });
+                    {
+                        Severity = NotificationSeverity.Error,
+                        Summary = "Error",
+                        Detail = ex.Message,
+                        Duration = 4000
+                    });
         }
     }
 
@@ -135,7 +135,7 @@ Background Type:
         {
             // Ask for confirmation:
             var confirmResult = await DialogService.Confirm("Are you sure?", "Delete Character",
-                      new ConfirmOptions() { OkButtonText = "Yes", CancelButtonText = "No" });
+                  new ConfirmOptions() { OkButtonText = "Yes", CancelButtonText = "No" });
 
             if (confirmResult.HasValue && confirmResult.Value)
             {
@@ -148,12 +148,12 @@ Background Type:
         catch (Exception ex)
         {
             NotificationService.Notify(new NotificationMessage
-                {
-                    Severity = NotificationSeverity.Error,
-                    Summary = "Error",
-                    Detail = ex.Message,
-                    Duration = 4000
-                });
+                    {
+                        Severity = NotificationSeverity.Error,
+                        Summary = "Error",
+                        Detail = ex.Message,
+                        Duration = 4000
+                    });
         }
     }
 
@@ -165,6 +165,29 @@ Background Type:
 
     private async Task AddBackground()
     {
+        try
+        {
+            CharacterBackground NewCharacterBackground = new CharacterBackground();
+            NewCharacterBackground.CharacterId = objCharacter.Id;
+            NewCharacterBackground.Type = strType;
 
+
+            var EditStoryResult = await DialogService.OpenAsync(
+        "Edit Character", ds =>
+    @<CharacterBackgroundEdit objCharacterBackground=NewCharacterBackground></CharacterBackgroundEdit>
+    , new DialogOptions() { Height = "500px", Width = "500px" });
+
+            StateHasChanged();
+        }
+        catch (Exception ex)
+        {
+            NotificationService.Notify(new NotificationMessage
+                {
+                    Severity = NotificationSeverity.Error,
+                    Summary = "Error",
+                    Detail = ex.Message,
+                    Duration = 4000
+                });
+        }
     }
 }
