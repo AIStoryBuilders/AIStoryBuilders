@@ -29,8 +29,8 @@ Background Type:
 <br />
 <div style="height:200px; overflow-y: scroll;border-width:0px">
     <RadzenDataList Data="@colCharacterBackground" TItem="CharacterBackground">
-        <Template Context="character">
-            <StoryObjectEdit ControlValue=@character ControlType=ControlType.Character />
+        <Template Context="characterbackground">
+            <CharacterBackgroundEdit objCharacterBackground=@characterbackground />
         </Template>
     </RadzenDataList>
 </div>
@@ -67,7 +67,7 @@ Background Type:
             "History"
         };
 
-       colCharacterBackground = objCharacter.CharacterBackground.Where(x => x.Type == @strType);
+        colCharacterBackground = objCharacter.CharacterBackground.Where(x => x.Type == @strType);
     }
 
     private async Task CharacterSave()

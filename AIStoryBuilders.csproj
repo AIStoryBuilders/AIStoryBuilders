@@ -15,4 +15,9 @@
 		<PackageReference Include="Markdig" Version="0.31.0" />
 	</ItemGroup>
 
+	<ItemGroup>
+	  <Folder Include="Pages\Controls\Locations\" />
+	  <Folder Include="Pages\Controls\Paragraphs\" />
+	</ItemGroup>
+
 </Project>

@@ -1,0 +1,27 @@
+﻿@using AIStoryBuilders.Models;
+@inject NotificationService NotificationService
+@inject DialogService DialogService
+<p>Type: @objCharacterBackground.Type</p>
+<p>Description: @objCharacterBackground.Description</p>
+<p>ParagraphContent: @objCharacterBackground.ParagraphContent</p>
+@code {
+    [Parameter] public CharacterBackground objCharacterBackground { get; set; }
+
+    protected override void OnInitialized()
+    {
+        try
+        {
+
+        }
+        catch (Exception ex)
+        {
+            NotificationService.Notify(new NotificationMessage
+                {
+                    Severity = NotificationSeverity.Error,
+                    Summary = "Error",
+                    Detail = ex.Message,
+                    Duration = 4000
+                });
+        }
+    }
+}

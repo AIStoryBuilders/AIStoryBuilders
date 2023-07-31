@@ -1,6 +1,5 @@
 ﻿@using AIStoryBuilders.Models;
 @using AIStoryBuilders.Pages.Controls;
-@using AIStoryBuilders.Pages.Dialogs;
 @using AIStoryBuilders.Services;
 @inject IConfiguration _configuration
 @inject DialogService dialogService
@@ -39,12 +38,12 @@
         catch (Exception ex)
         {
             NotificationService.Notify(new NotificationMessage
-                {
-                    Severity = NotificationSeverity.Error,
-                    Summary = "Error",
-                    Detail = ex.Message,
-                    Duration = 4000
-                });
+                    {
+                        Severity = NotificationSeverity.Error,
+                        Summary = "Error",
+                        Detail = ex.Message,
+                        Duration = 4000
+                    });
         }
     }
 
@@ -60,8 +59,8 @@
             parms.Add("objCharacter", newCharacter);
 
             var NewCharacterResult = await dialogService.OpenAsync<CharacterEdit>($"New Character",
-                parms,
-                new DialogOptions() { Width = "650px" });
+            parms,
+            new DialogOptions() { Width = "650px" });
 
             // Get the Characters from the database
             colCharacters = await Service.GetCharactersAsync(objStory);
@@ -71,12 +70,12 @@
         catch (Exception ex)
         {
             NotificationService.Notify(new NotificationMessage
-                {
-                    Severity = NotificationSeverity.Error,
-                    Summary = "Error",
-                    Detail = ex.Message,
-                    Duration = 4000
-                });
+                    {
+                        Severity = NotificationSeverity.Error,
+                        Summary = "Error",
+                        Detail = ex.Message,
+                        Duration = 4000
+                    });
         }
     }
 
@@ -85,8 +84,8 @@
         try
         {
             var EditStoryResult = await dialogService.OpenAsync("Edit Character", ds =>
-            @<CharacterEdit objCharacter=paramCharacter DialogReference="ds"></CharacterEdit>
-            ,new DialogOptions() { Height = "700px", Width = "650px" });
+    @<CharacterEdit objCharacter=paramCharacter DialogReference="ds"></CharacterEdit>
+    , new DialogOptions() { Height = "700px", Width = "650px" });
 
             // Get the Characters from the database
             colCharacters = await Service.GetCharactersAsync(objStory);
