@@ -171,11 +171,10 @@ Background Type:
             NewCharacterBackground.CharacterId = objCharacter.Id;
             NewCharacterBackground.Type = strType;
 
-
             var EditStoryResult = await DialogService.OpenAsync(
-        "Edit Character", ds =>
-    @<CharacterBackgroundEdit objCharacterBackground=NewCharacterBackground></CharacterBackgroundEdit>
-    , new DialogOptions() { Height = "500px", Width = "500px" });
+                "Edit Character", ds =>
+                @<CharacterBackgroundEdit objCharacterBackground=NewCharacterBackground></CharacterBackgroundEdit>
+                , new DialogOptions() { Height = "500px", Width = "500px" });
 
             StateHasChanged();
         }

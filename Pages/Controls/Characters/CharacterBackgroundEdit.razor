@@ -5,7 +5,6 @@
 <p> <RadzenTextBox @bind-Value="@objCharacterBackground.ParagraphContent" /></p>
 @code {
     [Parameter] public CharacterBackground objCharacterBackground { get; set; }
-    [Parameter] public CharacterBackgroundType objCharacterBackgroundType { get; set; }
 
     List<string> colDescriptions = new List<string>();
 
@@ -14,12 +13,43 @@
         try
         {
             // Add colDescriptions
-            colDescriptions = new List<string>()
+            switch (objCharacterBackground.Type)
             {
-                "Appearance",
-                "Goals",
-                "History"
+                case "Appearance":
+                    colDescriptions = new List<string>()
+                    {
+                        "Height",
+                        "Weight",
+                        "Hair Color",
+                        "Eye Color",
+                        "Ethnicity",
+                        "Race",
+                        "Disability"
+                    };
+                    break;
+                case "Goals":
+                    colDescriptions = new List<string>()
+                    {
+                        "Strong",
+                        "Weak",
+                    };
+                    break;
+                case "History":
+                    colDescriptions = new List<string>()
+                    {
+                        "Childhood",
+                        "Recent",
+                        "Plesent",
+                        "Painful",
+                    };
+                    break;
+                default:
+                    colDescriptions = new List<string>();
+                    break;
             };
+
+            // Set the default description
+            objCharacterBackground.Description = colDescriptions[0];
         }
         catch (Exception ex)
         {
