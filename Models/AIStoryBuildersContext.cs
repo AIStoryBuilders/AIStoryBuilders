@@ -33,6 +33,8 @@ public partial class AIStoryBuildersContext : DbContext
 
     public virtual DbSet<Story> Story { get; set; }
 
+    public virtual DbSet<Timeline> Timeline { get; set; }
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder.Entity<Chapter>(entity =>
@@ -84,6 +86,10 @@ public partial class AIStoryBuildersContext : DbContext
             entity.HasOne(d => d.Character).WithMany(p => p.CharacterBackground)
                 .HasForeignKey(d => d.CharacterId)
                 .HasConstraintName("FK_CharacterBackground_Character");
+
+            entity.HasOne(d => d.Timeline).WithMany(p => p.CharacterBackground)
+                .HasForeignKey(d => d.TimelineId)
+                .HasConstraintName("FK_CharacterBackground_Timeline");
         });
 
         modelBuilder.Entity<CharacterBackgroundVectorData>(entity =>
@@ -103,11 +109,9 @@ public partial class AIStoryBuildersContext : DbContext
             entity.Property(e => e.Description)
                 .IsRequired()
                 .HasMaxLength(4000);
-            entity.Property(e => e.EndDate).HasColumnType("datetime");
             entity.Property(e => e.LocationName)
                 .IsRequired()
                 .HasMaxLength(4000);
-            entity.Property(e => e.StartDate).HasColumnType("datetime");
 
             entity.HasOne(d => d.Story).WithMany(p => p.Location)
                 .HasForeignKey(d => d.StoryId)
@@ -130,6 +134,10 @@ public partial class AIStoryBuildersContext : DbContext
             entity.HasOne(d => d.Chapter).WithMany(p => p.Paragraph)
                 .HasForeignKey(d => d.ChapterId)
                 .HasConstraintName("FK_Paragraph_Chapter");
+
+            entity.HasOne(d => d.Timeline).WithMany(p => p.Paragraph)
+                .HasForeignKey(d => d.TimelineId)
+                .HasConstraintName("FK_Paragraph_Timeline");
         });
 
         modelBuilder.Entity<ParagraphCharacter>(entity =>
@@ -184,6 +192,22 @@ public partial class AIStoryBuildersContext : DbContext
             entity.Property(e => e.Title)
                 .IsRequired()
                 .HasMaxLength(500);
+        });
+
+        modelBuilder.Entity<Timeline>(entity =>
+        {
+            entity.Property(e => e.StartDate).HasColumnType("datetime");
+            entity.Property(e => e.StopDate).HasColumnType("datetime");
+            entity.Property(e => e.TimelineDescription)
+                .IsRequired()
+                .HasMaxLength(2000);
+            entity.Property(e => e.TimelineName)
+                .IsRequired()
+                .HasMaxLength(250);
+
+            entity.HasOne(d => d.Story).WithMany(p => p.Timeline)
+                .HasForeignKey(d => d.StoryId)
+                .HasConstraintName("FK_Timeline_Story");
         });
 
         OnModelCreatingPartial(modelBuilder);

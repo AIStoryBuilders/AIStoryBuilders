@@ -49,6 +49,7 @@ CREATE TABLE [dbo].[CharacterBackground](
 	[Type] [nvarchar](100) NOT NULL,
 	[Description] [nvarchar](4000) NOT NULL,
 	[ParagraphContent] [nvarchar](3000) NOT NULL,
+	[TimelineId] [int] NULL,
  CONSTRAINT [PK_CharacterBackgroundParagraph] PRIMARY KEY CLUSTERED 
 (
 	[Id] ASC
@@ -85,8 +86,6 @@ CREATE TABLE [dbo].[Location](
 	[StoryId] [int] NOT NULL,
 	[LocationName] [nvarchar](4000) NOT NULL,
 	[Description] [nvarchar](4000) NOT NULL,
-	[StartDate] [datetime] NULL,
-	[EndDate] [datetime] NULL,
  CONSTRAINT [PK_Location] PRIMARY KEY CLUSTERED 
 (
 	[Id] ASC
@@ -107,6 +106,7 @@ CREATE TABLE [dbo].[Paragraph](
 	[Type] [nvarchar](100) NOT NULL,
 	[Description] [nvarchar](4000) NOT NULL,
 	[ParagraphContent] [nvarchar](3000) NOT NULL,
+	[TimelineId] [int] NULL,
  CONSTRAINT [PK_Paragraph] PRIMARY KEY CLUSTERED 
 (
 	[Id] ASC
@@ -185,6 +185,26 @@ CREATE TABLE [dbo].[Story](
 ) ON [PRIMARY]
 END
 GO
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+IF NOT EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[dbo].[Timeline]') AND type in (N'U'))
+BEGIN
+CREATE TABLE [dbo].[Timeline](
+	[Id] [int] IDENTITY(1,1) NOT NULL,
+	[StoryId] [int] NOT NULL,
+	[TimelineName] [nvarchar](250) NOT NULL,
+	[TimelineDescription] [nvarchar](2000) NOT NULL,
+	[StartDate] [datetime] NULL,
+	[StopDate] [datetime] NULL,
+ CONSTRAINT [PK_Timeline] PRIMARY KEY CLUSTERED 
+(
+	[Id] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON) ON [PRIMARY]
+) ON [PRIMARY]
+END
+GO
 IF NOT EXISTS (SELECT * FROM sys.indexes WHERE object_id = OBJECT_ID(N'[dbo].[CharacterBackgroundVectorData]') AND name = N'NonClusteredColumnStoreIndex')
 CREATE NONCLUSTERED COLUMNSTORE INDEX [NonClusteredColumnStoreIndex] ON [dbo].[CharacterBackgroundVectorData]
 (
@@ -220,6 +240,13 @@ GO
 IF  EXISTS (SELECT * FROM sys.foreign_keys WHERE object_id = OBJECT_ID(N'[dbo].[FK_CharacterBackground_Character]') AND parent_object_id = OBJECT_ID(N'[dbo].[CharacterBackground]'))
 ALTER TABLE [dbo].[CharacterBackground] CHECK CONSTRAINT [FK_CharacterBackground_Character]
 GO
+IF NOT EXISTS (SELECT * FROM sys.foreign_keys WHERE object_id = OBJECT_ID(N'[dbo].[FK_CharacterBackground_Timeline]') AND parent_object_id = OBJECT_ID(N'[dbo].[CharacterBackground]'))
+ALTER TABLE [dbo].[CharacterBackground]  WITH CHECK ADD  CONSTRAINT [FK_CharacterBackground_Timeline] FOREIGN KEY([TimelineId])
+REFERENCES [dbo].[Timeline] ([Id])
+GO
+IF  EXISTS (SELECT * FROM sys.foreign_keys WHERE object_id = OBJECT_ID(N'[dbo].[FK_CharacterBackground_Timeline]') AND parent_object_id = OBJECT_ID(N'[dbo].[CharacterBackground]'))
+ALTER TABLE [dbo].[CharacterBackground] CHECK CONSTRAINT [FK_CharacterBackground_Timeline]
+GO
 IF NOT EXISTS (SELECT * FROM sys.foreign_keys WHERE object_id = OBJECT_ID(N'[dbo].[FK_CharacterBackgroundParagraphVectorData_CharacterBackgroundParagraph]') AND parent_object_id = OBJECT_ID(N'[dbo].[CharacterBackgroundVectorData]'))
 ALTER TABLE [dbo].[CharacterBackgroundVectorData]  WITH CHECK ADD  CONSTRAINT [FK_CharacterBackgroundParagraphVectorData_CharacterBackgroundParagraph] FOREIGN KEY([CharacterBackgroundId])
 REFERENCES [dbo].[CharacterBackground] ([Id])
@@ -242,6 +269,13 @@ ON DELETE CASCADE
 GO
 IF  EXISTS (SELECT * FROM sys.foreign_keys WHERE object_id = OBJECT_ID(N'[dbo].[FK_Paragraph_Chapter]') AND parent_object_id = OBJECT_ID(N'[dbo].[Paragraph]'))
 ALTER TABLE [dbo].[Paragraph] CHECK CONSTRAINT [FK_Paragraph_Chapter]
+GO
+IF NOT EXISTS (SELECT * FROM sys.foreign_keys WHERE object_id = OBJECT_ID(N'[dbo].[FK_Paragraph_Timeline]') AND parent_object_id = OBJECT_ID(N'[dbo].[Paragraph]'))
+ALTER TABLE [dbo].[Paragraph]  WITH CHECK ADD  CONSTRAINT [FK_Paragraph_Timeline] FOREIGN KEY([TimelineId])
+REFERENCES [dbo].[Timeline] ([Id])
+GO
+IF  EXISTS (SELECT * FROM sys.foreign_keys WHERE object_id = OBJECT_ID(N'[dbo].[FK_Paragraph_Timeline]') AND parent_object_id = OBJECT_ID(N'[dbo].[Paragraph]'))
+ALTER TABLE [dbo].[Paragraph] CHECK CONSTRAINT [FK_Paragraph_Timeline]
 GO
 IF NOT EXISTS (SELECT * FROM sys.foreign_keys WHERE object_id = OBJECT_ID(N'[dbo].[FK_Paragraph_Character_Character]') AND parent_object_id = OBJECT_ID(N'[dbo].[Paragraph_Character]'))
 ALTER TABLE [dbo].[Paragraph_Character]  WITH CHECK ADD  CONSTRAINT [FK_Paragraph_Character_Character] FOREIGN KEY([CharacterId])
@@ -282,4 +316,12 @@ ON DELETE CASCADE
 GO
 IF  EXISTS (SELECT * FROM sys.foreign_keys WHERE object_id = OBJECT_ID(N'[dbo].[FK_ParagragraphVectorData_Paragraph]') AND parent_object_id = OBJECT_ID(N'[dbo].[ParagraphVectorData]'))
 ALTER TABLE [dbo].[ParagraphVectorData] CHECK CONSTRAINT [FK_ParagragraphVectorData_Paragraph]
+GO
+IF NOT EXISTS (SELECT * FROM sys.foreign_keys WHERE object_id = OBJECT_ID(N'[dbo].[FK_Timeline_Story]') AND parent_object_id = OBJECT_ID(N'[dbo].[Timeline]'))
+ALTER TABLE [dbo].[Timeline]  WITH CHECK ADD  CONSTRAINT [FK_Timeline_Story] FOREIGN KEY([StoryId])
+REFERENCES [dbo].[Story] ([Id])
+ON DELETE CASCADE
+GO
+IF  EXISTS (SELECT * FROM sys.foreign_keys WHERE object_id = OBJECT_ID(N'[dbo].[FK_Timeline_Story]') AND parent_object_id = OBJECT_ID(N'[dbo].[Timeline]'))
+ALTER TABLE [dbo].[Timeline] CHECK CONSTRAINT [FK_Timeline_Story]
 GO

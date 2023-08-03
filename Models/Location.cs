@@ -15,10 +15,6 @@ public partial class Location
 
     public string Description { get; set; }
 
-    public DateTime? StartDate { get; set; }
-
-    public DateTime? EndDate { get; set; }
-
     public virtual ICollection<ParagraphLocation> ParagraphLocation { get; set; } = new List<ParagraphLocation>();
 
     public virtual Story Story { get; set; }

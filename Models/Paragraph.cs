@@ -19,6 +19,8 @@ public partial class Paragraph
 
     public string ParagraphContent { get; set; }
 
+    public int? TimelineId { get; set; }
+
     public virtual Chapter Chapter { get; set; }
 
     public virtual ICollection<ParagraphCharacter> ParagraphCharacter { get; set; } = new List<ParagraphCharacter>();
@@ -26,4 +28,6 @@ public partial class Paragraph
     public virtual ICollection<ParagraphLocation> ParagraphLocation { get; set; } = new List<ParagraphLocation>();
 
     public virtual ICollection<ParagraphVectorData> ParagraphVectorData { get; set; } = new List<ParagraphVectorData>();
+
+    public virtual Timeline Timeline { get; set; }
 }

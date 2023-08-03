@@ -54,6 +54,10 @@
       {
          "Name": "[dbo].[Story]",
          "ObjectType": 0
+      },
+      {
+         "Name": "[dbo].[Timeline]",
+         "ObjectType": 0
       }
    ],
    "UiHint": "michael-home.AIStoryBuilders.dbo",

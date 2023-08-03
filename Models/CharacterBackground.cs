@@ -19,7 +19,11 @@ public partial class CharacterBackground
 
     public string ParagraphContent { get; set; }
 
+    public int? TimelineId { get; set; }
+
     public virtual Character Character { get; set; }
 
     public virtual ICollection<CharacterBackgroundVectorData> CharacterBackgroundVectorData { get; set; } = new List<CharacterBackgroundVectorData>();
+
+    public virtual Timeline Timeline { get; set; }
 }

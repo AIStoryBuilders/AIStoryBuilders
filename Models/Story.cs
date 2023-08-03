@@ -22,4 +22,6 @@ public partial class Story
     public virtual ICollection<Character> Character { get; set; } = new List<Character>();
 
     public virtual ICollection<Location> Location { get; set; } = new List<Location>();
+
+    public virtual ICollection<Timeline> Timeline { get; set; } = new List<Timeline>();
 }
