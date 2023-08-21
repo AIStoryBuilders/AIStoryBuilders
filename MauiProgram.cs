@@ -4,6 +4,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using Radzen;
+using System.Reflection;
 
 namespace AIStoryBuilders
 {
@@ -24,13 +25,12 @@ namespace AIStoryBuilders
 #if DEBUG
 		builder.Services.AddBlazorWebViewDeveloperTools();
 		builder.Logging.AddDebug();
-#endif
-
-            string DefaultConnection = "Data Source=(local);initial catalog=AIStoryBuilders;TrustServerCertificate=True;persist security info=True;user id=databaseuser;password=password;";
-
+#endif            
             // Database connection
+            builder.Configuration.AddJsonFile("appsettings.json", optional: true, reloadOnChange: true);
+
             builder.Services.AddDbContext<AIStoryBuildersContext>(options =>
-            options.UseSqlServer(DefaultConnection));
+            options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
 
             // Add services to the container.
             AppMetadata appMetadata = new AppMetadata() { Version = "00.01.00"};
