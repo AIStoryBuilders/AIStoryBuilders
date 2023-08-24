@@ -6,27 +6,31 @@
 
 ### Data Structure
 
-	• Story
-		○ Title
-		○ Style
-		○ Theme
-		○ Tone
-	• Locations 
-		○ Location Name
-		○ Description
-		○ StartDate (nullable)
-		○ EndDate (nullable)
-	• Characters
-		○ Character Name
-		○ Description
-		○ Goals
-		○ Background (composed of Paragraphs)
-	• Story 
-		○ Paragraph (Collection in order)
-			§ Content (500 word maximum)
-			§ Characters
-			§ Location
-                        § Timeline
+- **Story**
+  - *Title*
+  - *Style*
+  - *Theme*
+  - *Tone*
+  
+- **Locations**
+  - *Location Name*
+  - *Description*
+  - *StartDate (nullable)*
+  - *EndDate (nullable)*
+  
+- **Characters**
+  - *Character Name*
+  - *Description*
+  - *Goals*
+  - *Background*
+    - *Paragraphs*
+      
+- **Paragraphs**   
+  - *Content (500 word maximum)*
+  - *Characters*
+  - *Location*
+  - *Timeline*
+
 
 ![image](https://github.com/ADefWebserver/AIStoryBuilders/assets/1857799/284cbbe7-4cfb-47ca-90b5-f0ee06b1cf4e)
 
