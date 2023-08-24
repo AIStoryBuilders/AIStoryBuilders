@@ -26,7 +26,7 @@
 			§ Content (500 word maximum)
 			§ Characters
 			§ Location
-      § Timeline
+                        § Timeline
 
 ![image](https://github.com/ADefWebserver/AIStoryBuilders/assets/1857799/284cbbe7-4cfb-47ca-90b5-f0ee06b1cf4e)
 
