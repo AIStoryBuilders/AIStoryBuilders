@@ -15,32 +15,59 @@
 *@
 @inherits OwningComponentBase<AIStoryBuildersService>
 <PageTitle>AI Story Builders</PageTitle>
-<RadzenButton Click=@(() => NewStory()) Text="New Story" ButtonStyle="ButtonStyle.Success" />
+<RadzenMenu>
+    <RadzenMenuItem Click="OnHomeClicked" Text="Home" Icon="home"></RadzenMenuItem>
+    <RadzenMenuItem Click="OnMemoryClicked" Text="Memory" Icon="aspect_ratio"></RadzenMenuItem>
+    <RadzenMenuItem Click="OnLogsClicked" Text="Logs" Icon="assignment"></RadzenMenuItem>
+    <RadzenMenuItem Click="OnSettingsClicked" Text="Settings" Icon="line_style"></RadzenMenuItem>
+</RadzenMenu>
 <br />
-<br />
-<div style="height:500px">
-    <RadzenDataList AllowVirtualization=false Style="height:100%;overflow:auto;"
-                    WrapItems=true AllowPaging=false
-                    Data="@colStorys" TItem="Story">
-        <Template Context="story">
-            <RadzenCard Style="width: 100%; padding: 1;">
-                <RadzenRow Gap="0">
-                    <RadzenButton Text="Select" Click=@(() => EditStory(story))
-                                  ButtonStyle="ButtonStyle.Light" Style="width: 150px;height: 20px" />
-                    &nbsp;&nbsp;&nbsp;&nbsp;
-                    <RadzenText TextStyle="TextStyle.DisplayH5"
-                                class="rz-color-secondary">@(story.Title)</RadzenText>&nbsp;&nbsp;
-                    </RadzenRow>
-                </RadzenCard>
-            </Template>
-        </RadzenDataList>
- </div>
+@if (HomeVisible)
+{
+    <RadzenButton Click=@(() => NewStory()) Text="New Story" ButtonStyle="ButtonStyle.Success" />
+    <br />
+    <br />
+    <div style="height:500px">
+        <RadzenDataList AllowVirtualization=false Style="height:100%;overflow:auto;"
+                        WrapItems=true AllowPaging=false
+                        Data="@colStorys" TItem="Story">
+            <Template Context="story">
+                <RadzenCard Style="width: 100%; padding: 1;">
+                    <RadzenRow Gap="0">
+                        <RadzenButton Text="Select" Click=@(() => EditStory(story))
+                                      ButtonStyle="ButtonStyle.Light" Style="width: 150px;height: 20px" />
+                        &nbsp;&nbsp;&nbsp;&nbsp;
+                        <RadzenText TextStyle="TextStyle.DisplayH5"
+                                    class="rz-color-secondary">@(story.Title)</RadzenText>&nbsp;&nbsp;
+                        </RadzenRow>
+                    </RadzenCard>
+                </Template>
+            </RadzenDataList>
+        </div>
+}
+@if (SettingsVisible)
+{
+    <Settings></Settings>
+}
+@if (MemoryVisible)
+{
+    <Memory></Memory>
+}
+@if (LogsVisible)
+{
+    <Logs></Logs>
+}
  @code {
     List<Story> colStorys = new List<Story>();
     Story objStory = new Story();
 
     string Organization = "";
     string ApiKey = "";
+
+    bool HomeVisible = true;
+    bool SettingsVisible = false;
+    bool MemoryVisible = false;
+    bool LogsVisible = false;
 
     // Initialize the component by setting the organization and API key
     protected override void OnInitialized()
@@ -133,5 +160,37 @@
                     Duration = 4000
                 });
         }
+    }
+
+    void OnHomeClicked(MenuItemEventArgs args)
+    {
+        HomeVisible = true;
+        SettingsVisible = false;
+        MemoryVisible = false;
+        LogsVisible = false;
+    }
+
+    void OnSettingsClicked(MenuItemEventArgs args)
+    {
+        HomeVisible = false;
+        SettingsVisible = true;
+        MemoryVisible = false;
+        LogsVisible = false;
+    }
+
+    void OnMemoryClicked(MenuItemEventArgs args)
+    {
+        HomeVisible = false;
+        SettingsVisible = false;
+        MemoryVisible = true;
+        LogsVisible = false;
+    }
+
+    void OnLogsClicked(MenuItemEventArgs args)
+    {
+        HomeVisible = false;
+        SettingsVisible = false;
+        MemoryVisible = false;
+        LogsVisible = true;
     }
 }

@@ -1,0 +1,84 @@
+﻿@inject NotificationService NotificationService
+@inject DialogService DialogService
+<h3>Logs</h3>
+<div class="row">
+    <div class="col">
+        <RadzenButton Text="Clear Log" ButtonStyle="ButtonStyle.Danger"
+                      Click="ClearLog"
+                      Style="margin-bottom: 10px; width: 150px" />&nbsp;&nbsp;
+    </div>
+</div>
+<RadzenDataGrid AllowFiltering="false" AllowColumnResize="true" AllowAlternatingRows="true"
+                PageSize="3" AllowPaging="true" PagerHorizontalAlign="HorizontalAlign.Left"
+                Data="@AIStoryBuildersLog" TItem="string" ColumnWidth="300px" ShowPagingSummary="true">
+    <Columns>
+        <RadzenDataGridColumn TItem="string" Title="Entry">
+            <Template>
+                <div style="height: 100px; overflow-y: auto; white-space: normal;">
+                    @context
+                </div>
+            </Template>
+        </RadzenDataGridColumn>
+    </Columns>
+</RadzenDataGrid>
+
+
+@code {
+    string AIStoryBuildersLogPath = "";
+    string[] AIStoryBuildersLog;
+
+    protected override void OnInitialized()
+    {
+        AIStoryBuildersLogPath =
+        $"{Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments)}/AIStoryBuilders/AIStoryBuildersLog.csv";
+
+        // Read the lines from the .csv file
+        using (var file = new System.IO.StreamReader(AIStoryBuildersLogPath))
+        {
+            AIStoryBuildersLog = file.ReadToEnd().Split('\n');
+            if (AIStoryBuildersLog[AIStoryBuildersLog.Length - 1].Trim() == "")
+            {
+                AIStoryBuildersLog = AIStoryBuildersLog.Take(AIStoryBuildersLog.Length - 1).ToArray();
+            }
+        }
+    }
+
+    private void ClearLog()
+    {
+        try
+        {
+            using (var streamWriter = new StreamWriter(AIStoryBuildersLogPath))
+            {
+                streamWriter.WriteLine(string.Join("\n", "Log cleared on " + DateTime.Now));
+            }
+
+            // Read the lines from the .csv file
+            using (var file = new System.IO.StreamReader(AIStoryBuildersLogPath))
+            {
+                AIStoryBuildersLog = file.ReadToEnd().Split('\n');
+                if (AIStoryBuildersLog[AIStoryBuildersLog.Length - 1].Trim() == "")
+                {
+                    AIStoryBuildersLog = AIStoryBuildersLog.Take(AIStoryBuildersLog.Length - 1).ToArray();
+                }
+            }
+
+            NotificationService.Notify(new NotificationMessage
+                {
+                    Severity = NotificationSeverity.Success,
+                    Summary = "Success",
+                    Detail = "Log Cleared",
+                    Duration = 4000
+                });
+        }
+        catch (Exception ex)
+        {
+            NotificationService.Notify(new NotificationMessage
+                {
+                    Severity = NotificationSeverity.Error,
+                    Summary = "Error",
+                    Detail = ex.Message,
+                    Duration = 4000
+                });
+        }
+    }
+}

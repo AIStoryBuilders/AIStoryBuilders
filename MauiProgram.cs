@@ -1,4 +1,5 @@
-﻿using AIStoryBuilders.Models;
+﻿using AIStoryBuilders.Model;
+using AIStoryBuilders.Models;
 using AIStoryBuilders.Services;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
@@ -37,12 +38,111 @@ namespace AIStoryBuilders
             builder.Services.AddSingleton(appMetadata);
 
             builder.Services.AddScoped<AIStoryBuildersService>();
+            builder.Services.AddSingleton<LogService>();
+            builder.Services.AddSingleton<SettingsService>();
+            builder.Services.AddSingleton<OrchestratorMethods>();
 
             // Radzen
             builder.Services.AddScoped<DialogService>();
             builder.Services.AddScoped<NotificationService>();
             builder.Services.AddScoped<TooltipService>();
             builder.Services.AddScoped<ContextMenuService>();
+
+            // Load Default files
+            var folderPath = "";
+            var filePath = "";
+
+            // AIStoryBuilders Directory
+            folderPath = $"{Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments)}/AIStoryBuilders";
+            if (!Directory.Exists(folderPath))
+            {
+                Directory.CreateDirectory(folderPath);
+            }
+
+            // AIStoryBuilders Documents Directory
+            var folderDocumentsPath = $"{Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments)}/AIStoryBuilders/Documents";
+            if (!Directory.Exists(folderDocumentsPath))
+            {
+                Directory.CreateDirectory(folderDocumentsPath);              
+            }
+
+            // AIStoryBuildersLog.csv
+            filePath = Path.Combine(folderPath, "AIStoryBuildersLog.csv");
+
+            if (!File.Exists(filePath))
+            {
+                using (var streamWriter = new StreamWriter(filePath))
+                {
+                    streamWriter.WriteLine("Application started at " + DateTime.Now);
+                }
+            }
+            else
+            {
+                // File already exists
+                string[] AIStoryBuildersLog;
+
+                // Open the file to get existing content
+                using (var file = new System.IO.StreamReader(filePath))
+                {
+                    AIStoryBuildersLog = file.ReadToEnd().Split('\n');
+
+                    if (AIStoryBuildersLog[AIStoryBuildersLog.Length - 1].Trim() == "")
+                    {
+                        AIStoryBuildersLog = AIStoryBuildersLog.Take(AIStoryBuildersLog.Length - 1).ToArray();
+                    }
+                }
+
+                // Append the text to csv file
+                using (var streamWriter = new StreamWriter(filePath))
+                {
+                    streamWriter.WriteLine(string.Join("\n", "Application started at " + DateTime.Now));
+                    streamWriter.WriteLine(string.Join("\n", AIStoryBuildersLog));
+                }
+            }
+
+            // AIStoryBuildersMemory.csv
+            filePath = Path.Combine(folderPath, "AIStoryBuildersMemory.csv");
+
+            if (!File.Exists(filePath))
+            {
+                using (var streamWriter = new StreamWriter(filePath))
+                {
+                    streamWriter.WriteLine("** AIStoryBuildersMemory started at " + DateTime.Now + "|");
+                }
+            }
+
+            // AIStoryBuildersDatabase.json
+            filePath = Path.Combine(folderPath, "AIStoryBuildersDatabase.json");
+
+            if (!File.Exists(filePath))
+            {
+                using (var streamWriter = new StreamWriter(filePath))
+                {
+                    streamWriter.WriteLine(
+                        """
+                        {                         
+                        }
+                        """);
+                }
+            }
+
+            // AIStoryBuildersSettings.config
+            filePath = Path.Combine(folderPath, "AIStoryBuildersSettings.config");
+
+            if (!File.Exists(filePath))
+            {
+                using (var streamWriter = new StreamWriter(filePath))
+                {
+                    streamWriter.WriteLine(
+                        """
+                        {
+                         "OpenAIServiceOptions": {
+                         "Organization": "** Your OpenAI Organization **",
+                         "ApiKey": "** Your OpenAI ApiKey **" } 
+                        }
+                        """);
+                }
+            }
 
             return builder.Build();
         }

@@ -1,0 +1,93 @@
+﻿@using AIStoryBuilders.Model;
+@using Newtonsoft.Json;
+@inject NotificationService NotificationService
+@inject DialogService DialogService
+@inject SettingsService SettingsService
+<h3>Settings</h3>
+<div class="container-fluid">
+    <div>
+        <RadzenFormField Text="OpenAI Organization:" Variant="@variant">
+            <RadzenTextBox @bind-Value="@Organization" style="width:300px;" />
+        </RadzenFormField>
+    </div>
+    <div class="col-12">
+        <RadzenFormField Text="OpenAI ApiKey:" Variant="@variant">
+            <RadzenTextBox @bind-Value="@ApiKey" style="width:450px;" />
+        </RadzenFormField>
+    </div>
+</div>
+<br />
+<div class="row">
+    <div class="col">
+        <RadzenButton Text="Save" ButtonStyle="ButtonStyle.Success"
+                      Click="SettingsSave"
+                      Style="margin-bottom: 10px; width: 150px" />&nbsp;&nbsp;
+    </div>
+</div>
+@code {
+
+    Variant variant = Variant.Outlined;
+
+    dynamic AIStoryBuildersSettingsObject;
+    string AIStoryBuildersSettingsPath = "";
+    string AIStoryBuildersSettings = "";
+    string Organization = "";
+    string ApiKey = "";
+
+    protected override void OnInitialized()
+    {
+        // AIStoryBuilders Directory
+        AIStoryBuildersSettingsPath =
+        $"{Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments)}/AIStoryBuilders/AIStoryBuildersSettings.config";
+
+        // Open the file to get existing content
+        using (var streamReader = new StreamReader(AIStoryBuildersSettingsPath))
+        {
+            AIStoryBuildersSettings = streamReader.ReadToEnd();
+        }
+
+        // Convert the JSON to a dynamic object
+        AIStoryBuildersSettingsObject = JsonConvert.DeserializeObject(AIStoryBuildersSettings);
+        Organization = AIStoryBuildersSettingsObject.OpenAIServiceOptions.Organization;
+        ApiKey = AIStoryBuildersSettingsObject.OpenAIServiceOptions.ApiKey;
+    }
+
+    private async Task SettingsSave()
+    {
+        try
+        {
+            // Update the dynamic object
+            AIStoryBuildersSettingsObject.OpenAIServiceOptions.Organization = Organization;
+            AIStoryBuildersSettingsObject.OpenAIServiceOptions.ApiKey = ApiKey;
+
+            // Convert the dynamic object back to JSON
+            AIStoryBuildersSettings = JsonConvert.SerializeObject(AIStoryBuildersSettingsObject, Formatting.Indented);
+
+            // Write the JSON back to the file
+            using (var streamWriter = new StreamWriter(AIStoryBuildersSettingsPath))
+            {
+                await streamWriter.WriteAsync(AIStoryBuildersSettings);
+            }
+
+            SettingsService.ReloadSettings();
+
+            NotificationService.Notify(new NotificationMessage
+                {
+                    Severity = NotificationSeverity.Success,
+                    Summary = "Success",
+                    Detail = "Saved",
+                    Duration = 4000
+                });
+        }
+        catch (Exception ex)
+        {
+            NotificationService.Notify(new NotificationMessage
+                {
+                    Severity = NotificationSeverity.Error,
+                    Summary = "Error",
+                    Detail = ex.Message,
+                    Duration = 4000
+                });
+        }
+    }
+}
