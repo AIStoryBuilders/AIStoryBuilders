@@ -32,7 +32,7 @@
         try
         {
             // Get the Characters from the database
-            colCharacters = await Service.GetCharactersAsync(objStory);
+            //colCharacters = await Service.GetCharactersAsync(objStory);
         }
         catch (Exception ex)
         {
@@ -62,7 +62,7 @@
             new DialogOptions() { Width = "650px" });
 
             // Get the Characters from the database
-            colCharacters = await Service.GetCharactersAsync(objStory);
+            //colCharacters = await Service.GetCharactersAsync(objStory);
 
             StateHasChanged();
         }
@@ -88,7 +88,7 @@
                 , new DialogOptions() { Height = "700px", Width = "650px" });
 
             // Get the Characters from the database
-            colCharacters = await Service.GetCharactersAsync(objStory);
+            //colCharacters = await Service.GetCharactersAsync(objStory);
 
             StateHasChanged();
         }

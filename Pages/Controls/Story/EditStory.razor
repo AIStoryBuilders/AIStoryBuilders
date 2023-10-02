@@ -37,7 +37,7 @@
         try
         {
             // Update the Story in the database
-            await Service.UpdateStoryAsync(objStory);
+            //await Service.UpdateStoryAsync(objStory);
 
             NotificationService.Notify(new NotificationMessage
                 {
@@ -64,7 +64,7 @@
         try
         {
             // Delete the Story from the database
-            await Service.DeleteStoryAsync(objStory.Id);
+            //await Service.DeleteStoryAsync(objStory.Id);
 
             dialogService.Close(null);
         }
@@ -86,7 +86,7 @@
         {
             case 0:
                 // Story
-                objStory = await Service.GetStoryAsync(objStory.Id);
+                //objStory = await Service.GetStoryAsync(objStory.Id);
                 break;
             case 1:
                 // Characters

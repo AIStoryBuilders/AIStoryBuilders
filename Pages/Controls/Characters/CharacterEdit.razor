@@ -93,12 +93,12 @@ Background Type:
                     if (objCharacter.Id == -1)
                     {
                         // Add to the database
-                        await Service.AddCharacterAsync(objCharacter);
+                        //await Service.AddCharacterAsync(objCharacter);
                     }
                     else
                     {
                         // Save to the database
-                        await Service.UpdateCharacterAsync(objCharacter);
+                        //await Service.UpdateCharacterAsync(objCharacter);
                     }
 
                     DialogService.Close(null);
@@ -140,7 +140,7 @@ Background Type:
             if (confirmResult.HasValue && confirmResult.Value)
             {
                 // Delete from the database
-                await Service.DeleteCharacterAsync(objCharacter.Id);
+                //await Service.DeleteCharacterAsync(objCharacter.Id);
 
                 DialogService.Close(null);
             }

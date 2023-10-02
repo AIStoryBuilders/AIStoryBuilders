@@ -4,8 +4,12 @@ using AIStoryBuilders.Services;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
+using OpenAI;
 using Radzen;
 using System.Reflection;
+using static System.Runtime.InteropServices.JavaScript.JSType;
+using System.Runtime.Intrinsics.X86;
+using System.Windows.Forms;
 
 namespace AIStoryBuilders
 {
@@ -27,12 +31,6 @@ namespace AIStoryBuilders
 		builder.Services.AddBlazorWebViewDeveloperTools();
 		builder.Logging.AddDebug();
 #endif            
-            // Database connection
-            builder.Configuration.AddJsonFile("appsettings.json", optional: true, reloadOnChange: true);
-
-            builder.Services.AddDbContext<AIStoryBuildersContext>(options =>
-            options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
-
             // Add services to the container.
             AppMetadata appMetadata = new AppMetadata() { Version = "00.01.00"};
             builder.Services.AddSingleton(appMetadata);
@@ -119,21 +117,31 @@ namespace AIStoryBuilders
                 }
             }
 
+            // AIStoryBuildersStories.json
+            filePath = Path.Combine(folderPath, "AIStoryBuildersStories.csv");
+            if (!File.Exists(filePath))
+            {
+                using (var streamWriter = new StreamWriter(filePath))
+                {
+                    streamWriter.WriteLine("A Beautiful Day|Comedy|People discover that any day can be a beautiful day.|Mary wakes up thinking today will not be a good day.After a series of events, she realizes that any day can be a beautiful day.");
+                }
+            }
+
             // AIStoryBuildersSettings.config
             filePath = Path.Combine(folderPath, "AIStoryBuildersSettings.config");
-
             if (!File.Exists(filePath))
             {
                 using (var streamWriter = new StreamWriter(filePath))
                 {
                     streamWriter.WriteLine(
-                        """
+                    """
                         {
                          "OpenAIServiceOptions": {
                          "Organization": "",
                          "ApiKey": "" } 
                         }
-                        """);
+                        """
+                    );
                 }
             }
 
