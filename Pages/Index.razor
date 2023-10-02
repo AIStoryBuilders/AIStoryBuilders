@@ -1,10 +1,12 @@
 ﻿@page "/"
+@using AIStoryBuilders.Model;
 @using AIStoryBuilders.Models;
 @using AIStoryBuilders.Pages.Controls;
 @using AIStoryBuilders.Pages.Controls.Story;
 @using AIStoryBuilders.Services;
 @inject DialogService dialogService
 @inject NotificationService NotificationService
+@inject SettingsService SettingsService
 @*
     Using OwningComponentBase ensures that the service and related services
     that share its scope are disposed with the component.
@@ -72,16 +74,28 @@
     // Initialize the component by setting the organization and API key
     protected override void OnInitialized()
     {
-        //Organization = _configuration["OpenAIServiceOptions:Organization"] ?? "";
-        //ApiKey = _configuration["OpenAIServiceOptions:ApiKey"] ?? "";
+        SettingsService.LoadSettings();
+        Organization = SettingsService.Organization;
+        ApiKey = SettingsService.ApiKey;
     }
 
     protected override async Task OnInitializedAsync()
     {
         try
         {
-            // Get the Storys from the database
-            colStorys = await Service.GetStorysAsync();
+            if (ApiKey == "")
+            {
+                // Switch to the Settings page
+                HomeVisible = false;
+                SettingsVisible = true;
+                MemoryVisible = false;
+                LogsVisible = false;
+            }
+            else
+            {
+                // Get the Storys from the database
+                colStorys = await Service.GetStorysAsync();
+            }
         }
         catch (Exception ex)
         {

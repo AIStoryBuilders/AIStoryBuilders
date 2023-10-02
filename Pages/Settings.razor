@@ -3,6 +3,7 @@
 @inject NotificationService NotificationService
 @inject DialogService DialogService
 @inject SettingsService SettingsService
+@inject IJSRuntime JSRuntime
 <h3>Settings</h3>
 <div class="container-fluid">
     <div>
@@ -12,11 +13,23 @@
     </div>
     <div class="col-12">
         <RadzenFormField Text="OpenAI ApiKey:" Variant="@variant">
-            <RadzenTextBox @bind-Value="@ApiKey" style="width:450px;" />
+            <RadzenTextBox @bind-Value="@ApiKey" @oninput="APIKeyDetection" style="width:450px;" />
         </RadzenFormField>
     </div>
 </div>
 <br />
+@if (!IsSettingsEntered)
+{
+    <div class="row">
+        <div class="col">
+            <RadzenButton Text="An OpenAI API Key is required (Click here to get one)" ButtonStyle="ButtonStyle.Secondary"
+                          Click="GetAPIKey"
+                          Style="margin-bottom: 10px; width: 500px" />
+        </div>
+    </div>
+}
+else
+{
 <div class="row">
     <div class="col">
         <RadzenButton Text="Save" ButtonStyle="ButtonStyle.Success"
@@ -24,6 +37,7 @@
                       Style="margin-bottom: 10px; width: 150px" />&nbsp;&nbsp;
     </div>
 </div>
+}
 @code {
 
     Variant variant = Variant.Outlined;
@@ -34,42 +48,48 @@
     string Organization = "";
     string ApiKey = "";
 
+    bool IsSettingsEntered = false;
+
     protected override void OnInitialized()
     {
-        // AIStoryBuilders Directory
-        AIStoryBuildersSettingsPath =
-        $"{Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments)}/AIStoryBuilders/AIStoryBuildersSettings.config";
+        SettingsService.LoadSettings();
+        Organization = SettingsService.Organization;
+        ApiKey = SettingsService.ApiKey;
 
-        // Open the file to get existing content
-        using (var streamReader = new StreamReader(AIStoryBuildersSettingsPath))
+        if(ApiKey.Length > 1)
         {
-            AIStoryBuildersSettings = streamReader.ReadToEnd();
+            IsSettingsEntered = true;
         }
+        else
+        {
+            IsSettingsEntered = false;
+        }
+    }
 
-        // Convert the JSON to a dynamic object
-        AIStoryBuildersSettingsObject = JsonConvert.DeserializeObject(AIStoryBuildersSettings);
-        Organization = AIStoryBuildersSettingsObject.OpenAIServiceOptions.Organization;
-        ApiKey = AIStoryBuildersSettingsObject.OpenAIServiceOptions.ApiKey;
+    private async Task GetAPIKey()
+    {
+        // Open a new window to the OpenAI API Key page
+        await JSRuntime.InvokeVoidAsync("open", "https://platform.openai.com/account/api-keys");
+    }
+
+    private void APIKeyDetection(ChangeEventArgs args)
+    {
+        if (args.Value.ToString().Length > 1)
+        {
+            IsSettingsEntered = true;
+        }
+        else
+        {
+            IsSettingsEntered = false;
+        }
     }
 
     private async Task SettingsSave()
     {
         try
         {
-            // Update the dynamic object
-            AIStoryBuildersSettingsObject.OpenAIServiceOptions.Organization = Organization;
-            AIStoryBuildersSettingsObject.OpenAIServiceOptions.ApiKey = ApiKey;
-
-            // Convert the dynamic object back to JSON
-            AIStoryBuildersSettings = JsonConvert.SerializeObject(AIStoryBuildersSettingsObject, Formatting.Indented);
-
-            // Write the JSON back to the file
-            using (var streamWriter = new StreamWriter(AIStoryBuildersSettingsPath))
-            {
-                await streamWriter.WriteAsync(AIStoryBuildersSettings);
-            }
-
-            SettingsService.ReloadSettings();
+            // Update Settings
+            await SettingsService.SaveSettings(Organization, ApiKey);
 
             NotificationService.Notify(new NotificationMessage
                 {

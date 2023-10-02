@@ -59,13 +59,6 @@ namespace AIStoryBuilders
                 Directory.CreateDirectory(folderPath);
             }
 
-            // AIStoryBuilders Documents Directory
-            var folderDocumentsPath = $"{Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments)}/AIStoryBuilders/Documents";
-            if (!Directory.Exists(folderDocumentsPath))
-            {
-                Directory.CreateDirectory(folderDocumentsPath);              
-            }
-
             // AIStoryBuildersLog.csv
             filePath = Path.Combine(folderPath, "AIStoryBuildersLog.csv");
 
@@ -137,8 +130,8 @@ namespace AIStoryBuilders
                         """
                         {
                          "OpenAIServiceOptions": {
-                         "Organization": "** Your OpenAI Organization **",
-                         "ApiKey": "** Your OpenAI ApiKey **" } 
+                         "Organization": "",
+                         "ApiKey": "" } 
                         }
                         """);
                 }
