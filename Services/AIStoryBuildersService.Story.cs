@@ -24,17 +24,25 @@ namespace AIStoryBuilders.Services
                 }
             }
 
-            // Return collection of Story
-            return AIStoryBuildersStoriesContent
-                .Select(story => story.Split('|'))
-                .Select(story => new Story
-                {
-                    Title = story[0],
-                    Style = story[1],
-                    Theme = story[2],
-                    Synopsis = story[3],
-                })
-                .ToList();
+            try
+            {
+                // Return collection of Story
+                return AIStoryBuildersStoriesContent
+                    .Select(story => story.Split('|'))
+                    .Select(story => new Story
+                    {
+                        Title = story[0],
+                        Style = story[1],
+                        Theme = story[2],
+                        Synopsis = story[3],
+                    })
+                    .ToList();
+            }
+            catch (Exception)
+            {
+                // File is empty
+                return new List<Story>();
+            }
         }
 
         //public async Task<Story> GetStoryAsync(int id)

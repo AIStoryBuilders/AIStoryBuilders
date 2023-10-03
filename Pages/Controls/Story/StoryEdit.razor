@@ -1,36 +1,66 @@
 ﻿@using AIStoryBuilders.Models;
+@using AIStoryBuilders.Services;
+@inherits OwningComponentBase<AIStoryBuildersService>
 @inject NotificationService NotificationService
 @inject DialogService DialogService
-<div Class="rz-p-0 rz-p-md-12">
-    <RadzenRow Gap="1rem">
-        <RadzenColumn Size="12" SizeSM="12">
-            <RadzenStack>
-                <RadzenFormField Text="Story Title:" Variant="@variant">
-                    <RadzenTextBox @bind-Value="@objStory.Title" />
-                </RadzenFormField>
-                <RadzenFormField Text="Style:" Variant="@variant">
-                    <RadzenDropDown Data=@colStyles @bind-Value="@objStory.Style" />
-                </RadzenFormField>
-                <RadzenFormField Text="Theme:" Variant="@variant">
-                    <RadzenTextArea @bind-Value="@objStory.Theme" />
-                </RadzenFormField>
-                <RadzenFormField Text="Synopsis:" Variant="@variant">
-                    <RadzenTextArea @bind-Value="@objStory.Synopsis" />
-                </RadzenFormField>
-            </RadzenStack>
-        </RadzenColumn>
-    </RadzenRow>
-</div>
-<br />
-<div class="row">
-    <div class="col">
-        <RadzenButton Text="Save" ButtonStyle="ButtonStyle.Success"
-                      Click="StorySave"
-                      Style="margin-bottom: 10px; width: 150px" />&nbsp;&nbsp;
-        <RadzenButton Text="Delete" ButtonStyle="ButtonStyle.Danger"
-                      Click="StoryDelete" />
+@if (objStory.Id == 0) // New Story
+{
+     <div Class="rz-p-0 rz-p-md-12">
+        <RadzenRow Gap="1rem">
+            <RadzenColumn Size="12" SizeSM="12">
+                <RadzenStack>
+                    <RadzenFormField Text="Story Title:" Variant="@variant">
+                        <RadzenTextBox MaxLength="20" @bind-Value="@objStory.Title" />
+                    </RadzenFormField>
+                    <RadzenFormField Text="Synopsis:" Variant="@variant">
+                        <RadzenTextArea MaxLength="1000" Rows="10" @bind-Value="@objStory.Synopsis" />
+                    </RadzenFormField>
+                </RadzenStack>
+            </RadzenColumn>
+        </RadzenRow>
     </div>
-</div>
+    <br />
+    <div class="row">
+        <div class="col">
+            <RadzenButton Text="Save" ButtonStyle="ButtonStyle.Success"
+                          Click="StorySave"
+                          Style="margin-bottom: 10px; width: 150px" />&nbsp;&nbsp;
+        </div>
+    </div>    
+}
+else // Existing Story
+{
+    <div Class="rz-p-0 rz-p-md-12">
+        <RadzenRow Gap="1rem">
+            <RadzenColumn Size="12" SizeSM="12">
+                <RadzenStack>
+                    <RadzenFormField Text="Story Title:" Variant="@variant">
+                        <RadzenTextBox @bind-Value="@objStory.Title" />
+                    </RadzenFormField>
+                    <RadzenFormField Text="Style:" Variant="@variant">
+                        <RadzenDropDown Data=@colStyles @bind-Value="@objStory.Style" />
+                    </RadzenFormField>
+                    <RadzenFormField Text="Theme:" Variant="@variant">
+                        <RadzenTextArea @bind-Value="@objStory.Theme" />
+                    </RadzenFormField>
+                    <RadzenFormField Text="Synopsis:" Variant="@variant">
+                        <RadzenTextArea @bind-Value="@objStory.Synopsis" />
+                    </RadzenFormField>
+                </RadzenStack>
+            </RadzenColumn>
+        </RadzenRow>
+    </div>
+    <br />
+    <div class="row">
+        <div class="col">
+            <RadzenButton Text="Save" ButtonStyle="ButtonStyle.Success"
+                          Click="StorySave"
+                          Style="margin-bottom: 10px; width: 150px" />&nbsp;&nbsp;
+            <RadzenButton Text="Delete" ButtonStyle="ButtonStyle.Danger"
+                          Click="StoryDelete" />
+        </div>
+    </div>
+}
 @code {
     [Parameter] public Story objStory { get; set; }
     [Parameter] public EventCallback<Story> StoryUpdated { get; set; }
@@ -97,6 +127,44 @@
                         });
                 return;
             }
+
+            if(objStory.Id == 0) // New Story - Do Special Validation
+            {
+                // Check for duplicate Story Title
+                if (Service.GetStorys().Where(x => x.Title.ToLower() == objStory.Title.ToLower()).Count() > 0)
+                {
+                    NotificationService.Notify(
+                        new NotificationMessage
+                            {
+                                Severity = NotificationSeverity.Error,
+                                Summary = "Error",
+                                Detail = "Story Title already exists",
+                                Duration = 4000
+                            });
+                    return;
+                }
+
+                // Ensure name does not contain | or ;
+                if (objStory.Title.Contains("|") || objStory.Title.Contains(";") || objStory.Title.Contains(@"/") || objStory.Title.Contains(@"\") || objStory.Title.Contains(":"))
+                {
+                    NotificationService.Notify(
+                        new NotificationMessage
+                            {
+                                Severity = NotificationSeverity.Error,
+                                Summary = "Error",
+                                Detail = "Story Title cannot contain | or ; or \\ or / or :",
+                                Duration = 4000
+                            });
+                    return;
+                }
+
+                // Trim spaces out of story name
+                objStory.Title = objStory.Title.Trim();
+
+
+
+            }
+           
 
             // Notify parent component
             await StoryUpdated.InvokeAsync(objStory);

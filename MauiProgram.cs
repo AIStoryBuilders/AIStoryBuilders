@@ -121,9 +121,10 @@ namespace AIStoryBuilders
             filePath = Path.Combine(folderPath, "AIStoryBuildersStories.csv");
             if (!File.Exists(filePath))
             {
+                // create file with a blank line
                 using (var streamWriter = new StreamWriter(filePath))
                 {
-                    streamWriter.WriteLine("A Beautiful Day|Comedy|People discover that any day can be a beautiful day.|Mary wakes up thinking today will not be a good day.After a series of events, she realizes that any day can be a beautiful day.");
+                    streamWriter.WriteLine("");
                 }
             }
 
