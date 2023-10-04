@@ -1,5 +1,6 @@
 using Newtonsoft.Json;
 using OpenAI;
+using System.Text.RegularExpressions;
 using static AIStoryBuilders.Pages.Memory;
 
 namespace AIStoryBuilders.Model
@@ -277,8 +278,25 @@ namespace AIStoryBuilders.Model
                 return input;
 
             return string.Join(" ", words.Take(maxWords));
+        }
+        #endregion
+
+        #region public bool IsValidFolderName(string folderName)
+        public bool IsValidFolderName(string folderName)
+        {
+            string invalidChars = new string(Path.GetInvalidPathChars()) + new string(Path.GetInvalidFileNameChars());
+            Regex containsABadCharacter = new Regex("[" + Regex.Escape(invalidChars) + "]");
+            if (containsABadCharacter.IsMatch(folderName))
+            {
+                return false;
+            }
+            else
+            {
+                return true;
+            }
         } 
         #endregion
+
 
         #region public class ReadTextEventArgs : EventArgs
         public class ReadTextEventArgs : EventArgs

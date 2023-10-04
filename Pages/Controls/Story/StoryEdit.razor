@@ -1,6 +1,7 @@
-﻿@using AIStoryBuilders.Models;
+﻿@using AIStoryBuilders.Model;
+@using AIStoryBuilders.Models;
 @using AIStoryBuilders.Services;
-@inherits OwningComponentBase<AIStoryBuildersService>
+@inherits OwningComponentBase
 @inject NotificationService NotificationService
 @inject DialogService DialogService
 @if (objStory.Id == 0) // New Story
@@ -66,11 +67,17 @@ else // Existing Story
     [Parameter] public EventCallback<Story> StoryUpdated { get; set; }
     [Parameter] public EventCallback<Story> StoryDeleted { get; set; }
 
+    AIStoryBuildersService AIStoryBuildersService;
+    OrchestratorMethods OrchestratorMethods;
+
     IEnumerable<string> colStyles;
     Variant variant = Variant.Outlined;
 
     protected override void OnInitialized()
     {
+        AIStoryBuildersService = (AIStoryBuildersService)ScopedServices.GetService(typeof(AIStoryBuildersService));
+        OrchestratorMethods = (OrchestratorMethods)ScopedServices.GetService(typeof(OrchestratorMethods));
+
         // Add sample data to the Styles dropdown
         colStyles = new List<string>()
         {
@@ -131,7 +138,7 @@ else // Existing Story
             if(objStory.Id == 0) // New Story - Do Special Validation
             {
                 // Check for duplicate Story Title
-                if (Service.GetStorys().Where(x => x.Title.ToLower() == objStory.Title.ToLower()).Count() > 0)
+                if (AIStoryBuildersService.GetStorys().Where(x => x.Title.ToLower() == objStory.Title.ToLower()).Count() > 0)
                 {
                     NotificationService.Notify(
                         new NotificationMessage
@@ -144,8 +151,8 @@ else // Existing Story
                     return;
                 }
 
-                // Ensure name does not contain | or ;
-                if (objStory.Title.Contains("|") || objStory.Title.Contains(";") || objStory.Title.Contains(@"/") || objStory.Title.Contains(@"\") || objStory.Title.Contains(":"))
+                // Ensure IsValidFolderName
+                if (!OrchestratorMethods.IsValidFolderName(objStory.Title))
                 {
                     NotificationService.Notify(
                         new NotificationMessage
@@ -163,8 +170,7 @@ else // Existing Story
 
 
 
-            }
-           
+            }          
 
             // Notify parent component
             await StoryUpdated.InvokeAsync(objStory);

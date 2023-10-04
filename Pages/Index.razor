@@ -15,7 +15,7 @@
     connected for a long time.
     We access AIStoryBuildersService using @Service
 *@
-@inherits OwningComponentBase<AIStoryBuildersService>
+@inherits OwningComponentBase
 <PageTitle>AI Story Builders</PageTitle>
 <RadzenMenu>
     <RadzenMenuItem Click="OnHomeClicked" Text="Home" Icon="home"></RadzenMenuItem>
@@ -60,6 +60,9 @@
     <Logs></Logs>
 }
  @code {
+    AIStoryBuildersService AIStoryBuildersService;
+    OrchestratorMethods OrchestratorMethods;
+
     List<Story> colStorys = new List<Story>();
     Story objStory = new Story();
 
@@ -75,6 +78,9 @@
     {
         try
         {
+            AIStoryBuildersService = (AIStoryBuildersService)ScopedServices.GetService(typeof(AIStoryBuildersService));
+            OrchestratorMethods = (OrchestratorMethods)ScopedServices.GetService(typeof(OrchestratorMethods));
+
             SettingsService.LoadSettings();
             Organization = SettingsService.Organization;
             ApiKey = SettingsService.ApiKey;
@@ -90,7 +96,7 @@
             else
             {
                 // Get the Storys from the database
-                colStorys = Service.GetStorys();
+                colStorys = AIStoryBuildersService.GetStorys();
             }
         }
         catch (Exception ex)
@@ -129,7 +135,7 @@
                     // new DialogOptions() { Height = "600px", Width = "800px" });
                 }
 
-                colStorys = Service.GetStorys();
+                colStorys = AIStoryBuildersService.GetStorys();
 
                 StateHasChanged();
             }
@@ -156,7 +162,7 @@
             var EditStoryResult = await dialogService.OpenAsync<EditStory>($"{paramStory.Title}", parms,
             new DialogOptions() { Height = "700px", Width = "800px" });
 
-            colStorys = Service.GetStorys();
+            colStorys = AIStoryBuildersService.GetStorys();
 
             StateHasChanged();
         }
