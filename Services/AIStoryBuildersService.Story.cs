@@ -1,28 +1,21 @@
 ﻿using AIStoryBuilders.Models;
 using Microsoft.EntityFrameworkCore;
 using Newtonsoft.Json;
+using OpenAI.Files;
 
 namespace AIStoryBuilders.Services
 {
     public partial class AIStoryBuildersService
     {
+        public string BasePath = $"{Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments)}/AIStoryBuilders";
+        public AIStoryBuildersService() { }
+
         #region *** Story ***
         public List<Story> GetStorys()
         {
             // Get Storys from file
-            string[] AIStoryBuildersStoriesContent;
-            var AIStoryBuildersStoriesPath = $"{Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments)}/AIStoryBuilders/AIStoryBuildersStories.csv";
-
-            // Read the lines from the .csv file
-            using (var file = new System.IO.StreamReader(AIStoryBuildersStoriesPath))
-            {
-                AIStoryBuildersStoriesContent = file.ReadToEnd().Split('\n');
-                if (AIStoryBuildersStoriesContent[AIStoryBuildersStoriesContent.Length - 1].Trim() == "")
-                {
-                    AIStoryBuildersStoriesContent = AIStoryBuildersStoriesContent
-                        .Take(AIStoryBuildersStoriesContent.Length - 1).ToArray();
-                }
-            }
+            var AIStoryBuildersStoriesPath = $"{BasePath}/AIStoryBuildersStories.csv";
+            string[] AIStoryBuildersStoriesContent = ReadCSVFile(AIStoryBuildersStoriesPath);
 
             try
             {
@@ -54,22 +47,45 @@ namespace AIStoryBuilders.Services
         //        .FirstOrDefaultAsync(story => story.Id == id);
         //}
 
-        //public async Task<Story> AddStoryAsync(Story story)
-        //{
-        //    // Add Story
+        public void AddStory(Story story)
+        {
+            // Add Story
+            // Create Characters, Chapters, Timelines, and Locations sub folders
 
-        //    Story newStory = new Story
-        //    {
-        //        Title = story.Title ?? "",
-        //        Style = story.Style ?? "",
-        //        Theme = story.Theme ?? "",
-        //        Synopsis = story.Synopsis ?? "",
-        //    };
+            string StoryPath = $"{BasePath}/{story.Title}";
+            string CharactersPath = $"{StoryPath}/Characters";
+            string ChaptersPath = $"{StoryPath}/Chapters";
+            string TimelinesPath = $"{StoryPath}/Timelines";
+            string LocationsPath = $"{StoryPath}/Locations";
 
-        //    _context.Story.Add(newStory);
-        //    await _context.SaveChangesAsync();
-        //    return newStory;
-        //}
+            CreateDirectory(StoryPath);
+            CreateDirectory(CharactersPath);
+            CreateDirectory(ChaptersPath);
+            CreateDirectory(TimelinesPath);
+            CreateDirectory(LocationsPath);
+
+            var AIStoryBuildersCharactersPath = $"{CharactersPath}/Characters.csv";
+            var AIStoryBuildersChaptersPath = $"{ChaptersPath}/Chapters.csv";
+            var AIStoryBuildersTimelinesPath = $"{TimelinesPath}/Timelines.csv";
+            var AIStoryBuildersLocationsPath = $"{LocationsPath}/Locations.csv";
+
+            CreateFile(AIStoryBuildersCharactersPath, "");
+            CreateFile(AIStoryBuildersChaptersPath, "");
+            CreateFile(AIStoryBuildersTimelinesPath, "");
+            CreateFile(AIStoryBuildersLocationsPath, "");
+
+            // Add Story to file
+            var AIStoryBuildersStoriesPath = $"{BasePath}/AIStoryBuildersStories.csv";
+            string[] AIStoryBuildersStoriesContent = ReadCSVFile(AIStoryBuildersStoriesPath);
+
+            // Remove all empty lines
+            AIStoryBuildersStoriesContent = AIStoryBuildersStoriesContent.Where(line => line.Trim() != "").ToArray();
+
+            // Add Story to file
+            string newStory = $"{story.Title}|{story.Style}|{story.Theme}|{story.Synopsis}";
+            AIStoryBuildersStoriesContent = AIStoryBuildersStoriesContent.Append(newStory).ToArray();
+            File.WriteAllLines(AIStoryBuildersStoriesPath, AIStoryBuildersStoriesContent);
+        }
 
         //public async Task<Story> UpdateStoryAsync(Story story)
         //{
@@ -200,5 +216,50 @@ namespace AIStoryBuilders.Services
         //    return chapter;
         //}
         #endregion
+
+        // Utility
+
+        #region public string[] ReadCSVFile(string path)
+        public string[] ReadCSVFile(string path)
+        {
+            string[] content;
+
+            // Read the lines from the .csv file
+            using (var file = new System.IO.StreamReader(path))
+            {
+                content = file.ReadToEnd().Split('\n');
+
+                if (content[content.Length - 1].Trim() == "")
+                {
+                    content = content.Take(content.Length - 1).ToArray();
+                }
+            }
+
+            return content;
+        } 
+        #endregion
+
+        #region public void CreateDirectory(string path)
+        public void CreateDirectory(string path)
+        {
+            // Create directory if it doesn't exist
+            if (!Directory.Exists(path))
+            {
+                Directory.CreateDirectory(path);
+            }
+        }
+        #endregion
+
+        #region public void CreateFile(string path, string content)
+        public void CreateFile(string path, string content)
+        {
+            // Create file if it doesn't exist
+            if (!File.Exists(path))
+            {
+                File.WriteAllText(path, content);
+            }
+        } 
+        #endregion
+
     }
 }

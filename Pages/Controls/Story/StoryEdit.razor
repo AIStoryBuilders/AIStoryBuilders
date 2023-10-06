@@ -145,7 +145,7 @@ else // Existing Story
                             {
                                 Severity = NotificationSeverity.Error,
                                 Summary = "Error",
-                                Detail = "Story Title already exists",
+                                Detail = "Story name already exists",
                                 Duration = 4000
                             });
                     return;
@@ -167,9 +167,6 @@ else // Existing Story
 
                 // Trim spaces out of story name
                 objStory.Title = objStory.Title.Trim();
-
-
-
             }          
 
             // Notify parent component
