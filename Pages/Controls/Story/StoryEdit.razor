@@ -167,6 +167,8 @@ else // Existing Story
 
                 // Trim spaces out of story name
                 objStory.Title = objStory.Title.Trim();
+                // Trim inner spaces
+                objStory.Title = objStory.Title.Replace("  ", " ");
             }          
 
             // Notify parent component
