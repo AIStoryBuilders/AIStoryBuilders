@@ -1,4 +1,5 @@
-﻿using AIStoryBuilders.Models;
+﻿using AIStoryBuilders.Model;
+using AIStoryBuilders.Models;
 using Microsoft.EntityFrameworkCore;
 using Newtonsoft.Json;
 using OpenAI.Files;
@@ -6,9 +7,7 @@ using OpenAI.Files;
 namespace AIStoryBuilders.Services
 {
     public partial class AIStoryBuildersService
-    {
-        public string BasePath = $"{Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments)}/AIStoryBuilders";
-        public AIStoryBuildersService() { }
+    {       
 
         #region *** Story ***
         public List<Story> GetStorys()
@@ -17,6 +16,8 @@ namespace AIStoryBuilders.Services
             var AIStoryBuildersStoriesPath = $"{BasePath}/AIStoryBuildersStories.csv";
             string[] AIStoryBuildersStoriesContent = ReadCSVFile(AIStoryBuildersStoriesPath);
 
+            AIStoryBuildersStoriesContent = AIStoryBuildersStoriesContent.Where(line => line.Trim() != "").ToArray();
+            
             try
             {
                 // Return collection of Story
@@ -32,8 +33,11 @@ namespace AIStoryBuilders.Services
                     })
                     .ToList();
             }
-            catch (Exception)
+            catch (Exception ex)
             {
+                // Log error
+                LogService.WriteToLog(ex.Message);
+
                 // File is empty
                 return new List<Story>();
             }
@@ -50,7 +54,6 @@ namespace AIStoryBuilders.Services
 
         public void AddStory(Story story)
         {
-            // Add Story
             // Create Characters, Chapters, Timelines, and Locations sub folders
 
             string StoryPath = $"{BasePath}/{story.Title}";
@@ -93,134 +96,143 @@ namespace AIStoryBuilders.Services
         //    // Get Story
         //    var storyToUpdate = await _context.Story.FindAsync(story.Id);
 
-            //    // Update each value
-            //    storyToUpdate.Title = story.Title ?? "";
-            //    storyToUpdate.Style = story.Style ?? "";
-            //    storyToUpdate.Theme = story.Theme ?? "";
-            //    storyToUpdate.Synopsis = story.Synopsis ?? "";
+        //    // Update each value
+        //    storyToUpdate.Title = story.Title ?? "";
+        //    storyToUpdate.Style = story.Style ?? "";
+        //    storyToUpdate.Theme = story.Theme ?? "";
+        //    storyToUpdate.Synopsis = story.Synopsis ?? "";
 
-            //    // Update Story
-            //    await _context.SaveChangesAsync();
-            //    return storyToUpdate;
-            //}
+        //    // Update Story
+        //    await _context.SaveChangesAsync();
+        //    return storyToUpdate;
+        //}
 
-            //public async Task<Story> DeleteStoryAsync(int id)
-            //{
-            //    // Delete Story
-            //    var story = await _context.Story.FindAsync(id);
-            //    _context.Story.Remove(story);
-            //    await _context.SaveChangesAsync();
-            //    return story;
-            //}
-            //#endregion
+        public void DeleteStory(string StoryTitle)
+        {
+            // Get Story from file
+            var AIStoryBuildersStoriesPath = $"{BasePath}/AIStoryBuildersStories.csv";
+            string[] AIStoryBuildersStoriesContent = ReadCSVFile(AIStoryBuildersStoriesPath);
 
-            //#region *** Character ***
-            //public async Task<List<Character>> GetCharactersAsync(Story story)
-            //{
-            //    // Get Characters including CharacterCharacterBackground
-            //    return await _context.Character
-            //        .Include(character => character.CharacterBackground)
-            //        .OrderBy(character => character.CharacterName)
-            //        .Where(character => character.StoryId == story.Id)
-            //        .AsNoTracking().ToListAsync();
-            //}
+            // Remove all empty lines
+            AIStoryBuildersStoriesContent = AIStoryBuildersStoriesContent.Where(line => line.Trim() != "").ToArray();
 
-            //public async Task<Character> GetCharacterAsync(int id)
-            //{
-            //    // Get Character
-            //    return await _context.Character.FindAsync(id);
-            //}
+            // Remove Story from file
+            AIStoryBuildersStoriesContent = AIStoryBuildersStoriesContent.Where(line => line.Split('|')[1] != StoryTitle).ToArray();
+            File.WriteAllLines(AIStoryBuildersStoriesPath, AIStoryBuildersStoriesContent);
 
-            //public async Task<Character> AddCharacterAsync(Character character)
-            //{
-            //    // Ensure no duplicate CharacterName
-            //    var duplicateCharacter = await _context.Character
-            //        .AsNoTracking()
-            //        .Where(c => c.StoryId == character.StoryId)
-            //        .Where(c => c.CharacterName == character.CharacterName)
-            //        .FirstOrDefaultAsync();
+            // Delete folder and all its sub folders and files
+            string StoryPath = $"{BasePath}/{StoryTitle}";            
+            Directory.Delete(StoryPath, true);
+        }
+        #endregion
 
-            //    if (duplicateCharacter != null)
-            //    {
-            //        // Throw exception
-            //        throw new Exception("Duplicate CharacterName");
-            //    }
+        #region *** Character ***
+        //public async Task<List<Character>> GetCharactersAsync(Story story)
+        //{
+        //    // Get Characters including CharacterCharacterBackground
+        //    return await _context.Character
+        //        .Include(character => character.CharacterBackground)
+        //        .OrderBy(character => character.CharacterName)
+        //        .Where(character => character.StoryId == story.Id)
+        //        .AsNoTracking().ToListAsync();
+        //}
 
-            //    // Add Character
+        //public async Task<Character> GetCharacterAsync(int id)
+        //{
+        //    // Get Character
+        //    return await _context.Character.FindAsync(id);
+        //}
 
-            //    Character newCharacter = new Character();
-            //    newCharacter.StoryId = character.StoryId;
-            //    newCharacter.CharacterName = character.CharacterName ?? "";
-            //    newCharacter.Description = character.Description ?? "";
-            //    newCharacter.Goals = character.Goals ?? "";
+        //public async Task<Character> AddCharacterAsync(Character character)
+        //{
+        //    // Ensure no duplicate CharacterName
+        //    var duplicateCharacter = await _context.Character
+        //        .AsNoTracking()
+        //        .Where(c => c.StoryId == character.StoryId)
+        //        .Where(c => c.CharacterName == character.CharacterName)
+        //        .FirstOrDefaultAsync();
 
-            //    _context.Character.Add(newCharacter);
-            //    await _context.SaveChangesAsync();
-            //    return newCharacter;
-            //}
+        //    if (duplicateCharacter != null)
+        //    {
+        //        // Throw exception
+        //        throw new Exception("Duplicate CharacterName");
+        //    }
 
-            //public async Task<Character> UpdateCharacterAsync(Character character)
-            //{
-            //    // Get Character
-            //    var characterToUpdate = await _context.Character.FindAsync(character.Id);
+        //    // Add Character
 
-            //    // Update each value
-            //    characterToUpdate.CharacterName = character.CharacterName ?? "";
-            //    characterToUpdate.Description = character.Description ?? "";
-            //    characterToUpdate.Goals = character.Goals ?? "";
+        //    Character newCharacter = new Character();
+        //    newCharacter.StoryId = character.StoryId;
+        //    newCharacter.CharacterName = character.CharacterName ?? "";
+        //    newCharacter.Description = character.Description ?? "";
+        //    newCharacter.Goals = character.Goals ?? "";
 
-            //    _context.Character.Update(characterToUpdate);
-            //    await _context.SaveChangesAsync();
+        //    _context.Character.Add(newCharacter);
+        //    await _context.SaveChangesAsync();
+        //    return newCharacter;
+        //}
 
-            //    return characterToUpdate;
-            //}
+        //public async Task<Character> UpdateCharacterAsync(Character character)
+        //{
+        //    // Get Character
+        //    var characterToUpdate = await _context.Character.FindAsync(character.Id);
 
-            //public async Task<Character> DeleteCharacterAsync(int id)
-            //{
-            //    // Delete Character
-            //    var character = await _context.Character.FindAsync(id);
-            //    _context.Character.Remove(character);
-            //    await _context.SaveChangesAsync();
-            //    return character;
-            //}
-            //#endregion
+        //    // Update each value
+        //    characterToUpdate.CharacterName = character.CharacterName ?? "";
+        //    characterToUpdate.Description = character.Description ?? "";
+        //    characterToUpdate.Goals = character.Goals ?? "";
 
-            //#region *** Chapter ***
-            //public async Task<Chapter> GetChapterAsync(int id)
-            //{
-            //    // Get Chapter
-            //    return await _context.Chapter.FindAsync(id);
-            //}
+        //    _context.Character.Update(characterToUpdate);
+        //    await _context.SaveChangesAsync();
 
-            //public async Task<Chapter> AddChapterAsync(Chapter chapter)
-            //{
-            //    // Add Chapter
-            //    _context.Chapter.Add(chapter);
-            //    await _context.SaveChangesAsync();
-            //    return chapter;
-            //}
+        //    return characterToUpdate;
+        //}
 
-            //public async Task<Chapter> UpdateChapterAsync(Chapter chapter)
-            //{
-            //    // Update Chapter
-            //    _context.Entry(chapter).State = EntityState.Modified;
-            //    await _context.SaveChangesAsync();
-            //    return chapter;
-            //}
+        //public async Task<Character> DeleteCharacterAsync(int id)
+        //{
+        //    // Delete Character
+        //    var character = await _context.Character.FindAsync(id);
+        //    _context.Character.Remove(character);
+        //    await _context.SaveChangesAsync();
+        //    return character;
+        //}
+        #endregion
 
-            //public async Task<Chapter> DeleteChapterAsync(int id)
-            //{
-            //    // Delete Chapter
-            //    var chapter = await _context.Chapter.FindAsync(id);
-            //    _context.Chapter.Remove(chapter);
-            //    await _context.SaveChangesAsync();
-            //    return chapter;
-            //}
-            #endregion
+        #region *** Chapter ***
+        //public async Task<Chapter> GetChapterAsync(int id)
+        //{
+        //    // Get Chapter
+        //    return await _context.Chapter.FindAsync(id);
+        //}
 
-            // Utility
+        //public async Task<Chapter> AddChapterAsync(Chapter chapter)
+        //{
+        //    // Add Chapter
+        //    _context.Chapter.Add(chapter);
+        //    await _context.SaveChangesAsync();
+        //    return chapter;
+        //}
 
-            #region public string[] ReadCSVFile(string path)
+        //public async Task<Chapter> UpdateChapterAsync(Chapter chapter)
+        //{
+        //    // Update Chapter
+        //    _context.Entry(chapter).State = EntityState.Modified;
+        //    await _context.SaveChangesAsync();
+        //    return chapter;
+        //}
+
+        //public async Task<Chapter> DeleteChapterAsync(int id)
+        //{
+        //    // Delete Chapter
+        //    var chapter = await _context.Chapter.FindAsync(id);
+        //    _context.Chapter.Remove(chapter);
+        //    await _context.SaveChangesAsync();
+        //    return chapter;
+        //}
+        #endregion
+
+        // Utility
+
+        #region public string[] ReadCSVFile(string path)
         public string[] ReadCSVFile(string path)
         {
             string[] content;

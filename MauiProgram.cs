@@ -35,10 +35,10 @@ namespace AIStoryBuilders
             AppMetadata appMetadata = new AppMetadata() { Version = "00.01.00"};
             builder.Services.AddSingleton(appMetadata);
 
-            builder.Services.AddScoped<AIStoryBuildersService>();
             builder.Services.AddSingleton<LogService>();
             builder.Services.AddSingleton<SettingsService>();
             builder.Services.AddSingleton<OrchestratorMethods>();
+            builder.Services.AddSingleton<AIStoryBuildersService>();
 
             // Radzen
             builder.Services.AddScoped<DialogService>();

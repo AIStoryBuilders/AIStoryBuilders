@@ -59,12 +59,12 @@
         }
     }
 
-    private async Task DeleteStory()
+    private void DeleteStory()
     {
         try
         {
             // Delete the Story from the database
-            //await Service.DeleteStoryAsync(objStory.Id);
+            Service.DeleteStory(objStory.Title);
 
             dialogService.Close(null);
         }
@@ -80,7 +80,7 @@
         }
     }
 
-    async Task OnTabChange(int index)
+    private void OnTabChange(int index)
     {
         switch (index)
         {
