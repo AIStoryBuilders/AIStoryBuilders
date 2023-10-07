@@ -89,6 +89,9 @@ namespace AIStoryBuilders.Services
             string newStory = $"{AIStoryBuildersStoriesContent.Count() + 1}|{story.Title}|{story.Style}|{story.Theme}|{story.Synopsis}";
             AIStoryBuildersStoriesContent = AIStoryBuildersStoriesContent.Append(newStory).ToArray();
             File.WriteAllLines(AIStoryBuildersStoriesPath, AIStoryBuildersStoriesContent);
+
+            // Log
+            LogService.WriteToLog($"Story created {story.Title}");
         }
 
         //public async Task<Story> UpdateStoryAsync(Story story)
@@ -123,6 +126,9 @@ namespace AIStoryBuilders.Services
             // Delete folder and all its sub folders and files
             string StoryPath = $"{BasePath}/{StoryTitle}";            
             Directory.Delete(StoryPath, true);
+
+            // Log
+            LogService.WriteToLog($"Story deleted {StoryTitle}");
         }
         #endregion
 

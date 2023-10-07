@@ -46,6 +46,12 @@ namespace AIStoryBuilders.Model
                 }
             }
 
+            // If log has more than 1000 lines, keep only the recent 1000 lines
+            if (AIStoryBuildersLog.Length > 1000)
+            {
+                AIStoryBuildersLog = AIStoryBuildersLog.Take(1000).ToArray();
+            }
+
             // Append the text to csv file
             using (var streamWriter = new StreamWriter(AIStoryBuildersLogPath))
             {
