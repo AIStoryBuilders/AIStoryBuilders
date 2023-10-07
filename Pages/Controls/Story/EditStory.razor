@@ -32,12 +32,12 @@
 
     List<Character> colCharacters = new List<Character>();
 
-    private async Task SaveStory()
+    private void SaveStory()
     {
         try
         {
-            // Update the Story in the database
-            //await Service.UpdateStoryAsync(objStory);
+            // Update the Story 
+            Service.UpdateStory(objStory);
 
             NotificationService.Notify(new NotificationMessage
                 {

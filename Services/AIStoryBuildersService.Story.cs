@@ -12,7 +12,6 @@ namespace AIStoryBuilders.Services
         #region *** Story ***
         public List<Story> GetStorys()
         {
-            // Get Storys from file
             var AIStoryBuildersStoriesPath = $"{BasePath}/AIStoryBuildersStories.csv";
             string[] AIStoryBuildersStoriesContent = ReadCSVFile(AIStoryBuildersStoriesPath);
 
@@ -42,15 +41,6 @@ namespace AIStoryBuilders.Services
                 return new List<Story>();
             }
         }
-
-        //public async Task<Story> GetStoryAsync(int id)
-        //{
-        //    // Get Story including Chapters
-        //    return await _context.Story
-        //        .Include(story => story.Chapter)
-        //        .AsNoTracking()
-        //        .FirstOrDefaultAsync(story => story.Id == id);
-        //}
 
         public void AddStory(Story story)
         {
@@ -85,6 +75,9 @@ namespace AIStoryBuilders.Services
             // Remove all empty lines
             AIStoryBuildersStoriesContent = AIStoryBuildersStoriesContent.Where(line => line.Trim() != "").ToArray();
 
+            // Trim all lines
+            AIStoryBuildersStoriesContent = AIStoryBuildersStoriesContent.Select(line => line.Trim()).ToArray();
+
             // Add Story to file
             string newStory = $"{AIStoryBuildersStoriesContent.Count() + 1}|{story.Title}|{story.Style}|{story.Theme}|{story.Synopsis}";
             AIStoryBuildersStoriesContent = AIStoryBuildersStoriesContent.Append(newStory).ToArray();
@@ -94,21 +87,26 @@ namespace AIStoryBuilders.Services
             LogService.WriteToLog($"Story created {story.Title}");
         }
 
-        //public async Task<Story> UpdateStoryAsync(Story story)
-        //{
-        //    // Get Story
-        //    var storyToUpdate = await _context.Story.FindAsync(story.Id);
+        public void UpdateStory(Story story)
+        {
+            // Get Story
+            var AIStoryBuildersStoriesPath = $"{BasePath}/AIStoryBuildersStories.csv";
+            string[] AIStoryBuildersStoriesContent = ReadCSVFile(AIStoryBuildersStoriesPath);
 
-        //    // Update each value
-        //    storyToUpdate.Title = story.Title ?? "";
-        //    storyToUpdate.Style = story.Style ?? "";
-        //    storyToUpdate.Theme = story.Theme ?? "";
-        //    storyToUpdate.Synopsis = story.Synopsis ?? "";
+            // Remove all empty lines
+            AIStoryBuildersStoriesContent = AIStoryBuildersStoriesContent.Where(line => line.Trim() != "").ToArray();
 
-        //    // Update Story
-        //    await _context.SaveChangesAsync();
-        //    return storyToUpdate;
-        //}
+            // Get all lines except the one to update
+            AIStoryBuildersStoriesContent = AIStoryBuildersStoriesContent.Where(line => line.Split('|')[1] != story.Title).ToArray();
+
+            // Trim all lines
+            AIStoryBuildersStoriesContent = AIStoryBuildersStoriesContent.Select(line => line.Trim()).ToArray();
+
+            // Add Story to file
+            string updatedStory = $"{AIStoryBuildersStoriesContent.Count() + 1}|{story.Title}|{story.Style}|{story.Theme}|{story.Synopsis}";
+            AIStoryBuildersStoriesContent = AIStoryBuildersStoriesContent.Append(updatedStory).ToArray();
+            File.WriteAllLines(AIStoryBuildersStoriesPath, AIStoryBuildersStoriesContent);
+        }
 
         public void DeleteStory(string StoryTitle)
         {

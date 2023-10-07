@@ -294,9 +294,20 @@ namespace AIStoryBuilders.Model
             {
                 return true;
             }
-        } 
+        }
         #endregion
 
+        #region public static string TrimInnerSpaces(string input)
+        public static string TrimInnerSpaces(string input)
+        {
+            if (string.IsNullOrEmpty(input))
+            {
+                return input;
+            }
+
+            return Regex.Replace(input, @"\s{2,}", " ");
+        } 
+        #endregion
 
         #region public class ReadTextEventArgs : EventArgs
         public class ReadTextEventArgs : EventArgs
