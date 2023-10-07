@@ -128,11 +128,14 @@
                     // Save Story to the database
                     AIStoryBuildersService.AddStory(objStory);
 
-                    // var parms = new Dictionary<string, object>();
-                    // parms.Add("objStory", objSavedStory);
+                    // Edit so that it is not marked as new
+                    objStory.Id = 1000;
 
-                    // var EditStoryResult = await dialogService.OpenAsync<EditStory>($"{objSavedStory.Title}", parms,
-                    // new DialogOptions() { Height = "600px", Width = "800px" });
+                    var parms = new Dictionary<string, object>();
+                    parms.Add("objStory", objStory);
+
+                    var EditStoryResult = await dialogService.OpenAsync<EditStory>($"{objStory.Title}", parms,
+                    new DialogOptions() { Height = "650px", Width = "800px" });
                 }
 
                 colStorys = AIStoryBuildersService.GetStorys();
