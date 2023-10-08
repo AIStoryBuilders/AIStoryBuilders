@@ -1,6 +1,6 @@
 ﻿using AIStoryBuilders.Model;
 using AIStoryBuilders.Models;
-using Microsoft.EntityFrameworkCore;
+using AIStoryBuilders.Models.JSON;
 
 namespace AIStoryBuilders.Services
 {

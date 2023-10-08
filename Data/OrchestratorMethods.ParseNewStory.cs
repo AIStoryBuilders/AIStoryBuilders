@@ -86,11 +86,11 @@ namespace AIStoryBuilders.Model
                     "] \n" +
                     "Please identify and list the: \n" +
                     "#1 Characters present in the story. \n" +
-                    "#3 Description and background of each Character \n" +
-                    "#4 Locations mentioned in the story. \n" +
-                    "#5 Description and background of each Location \n" +
-                    "#6 Labels to identify specific Timelines or chronological events of the story. \n" +
-                    "#7 The first paragraph from the first chapter of the story. \n" +
+                    "#2 Description and background of each Character \n" +
+                    "#3 Locations mentioned in the story. \n" +
+                    "#4 Description and background of each Location \n" +
+                    "#5 Labels to identify specific Timelines or chronological events of the story. \n" +
+                    "#6 The first paragraph from the first chapter of the story. \n" +
                     "Provide the results in the following JSON format: \n" +
                     "{ \n" +
                     "\"characters\": \n" + 
@@ -103,7 +103,7 @@ namespace AIStoryBuilders.Model
                     "\"descriptions\": [descriptions] \n" +
                     "}, \n" +
                     "\"timelines\": [timelines], \n" +
-                    "\"first paragraph of chapter 1\": firstParagraph \n";
+                    "\"firstparagraph\": firstParagraph \n";
         }
         #endregion
     }

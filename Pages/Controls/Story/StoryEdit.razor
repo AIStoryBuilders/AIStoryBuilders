@@ -4,7 +4,7 @@
 @inherits OwningComponentBase
 @inject NotificationService NotificationService
 @inject DialogService DialogService
-@if (objStory.Id == 0) // New Story
+@if (objStory.Id == -1) // New Story
 {
      <div Class="rz-p-0 rz-p-md-12">
         <RadzenRow Gap="1rem">
@@ -45,7 +45,7 @@ else // Existing Story
                         <RadzenTextArea @bind-Value="@objStory.Theme" />
                     </RadzenFormField>
                     <RadzenFormField Text="Synopsis:" Variant="@variant">
-                        <RadzenTextArea @bind-Value="@objStory.Synopsis" />
+                        <RadzenTextArea @bind-Value="@objStory.Synopsis" MaxLength="1000" Rows="5" />
                     </RadzenFormField>
                 </RadzenStack>
             </RadzenColumn>

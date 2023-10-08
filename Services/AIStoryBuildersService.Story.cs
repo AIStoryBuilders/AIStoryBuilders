@@ -1,5 +1,6 @@
 ﻿using AIStoryBuilders.Model;
 using AIStoryBuilders.Models;
+using AIStoryBuilders.Models.JSON;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata;
 using Newtonsoft.Json;
@@ -91,13 +92,13 @@ namespace AIStoryBuilders.Services
             var ParsedStory = await OrchestratorMethods.ParseNewStory(story.Title, story.Synopsis);
 
             // Convert the JSON to a dynamic object
-            var ParsedStoryObjectDynamic = JsonConvert.DeserializeObject<dynamic>(ParsedStory);
+            JSONNewStory ParsedNewStory = JsonConvert.DeserializeObject<JSONNewStory>(ParsedStory);
 
         }
 
         public void UpdateStory(Story story)
         {
-            // Get Story
+            // Get all Stories from file
             var AIStoryBuildersStoriesPath = $"{BasePath}/AIStoryBuildersStories.csv";
             string[] AIStoryBuildersStoriesContent = ReadCSVFile(AIStoryBuildersStoriesPath);
 
@@ -110,7 +111,7 @@ namespace AIStoryBuilders.Services
             // Trim all lines
             AIStoryBuildersStoriesContent = AIStoryBuildersStoriesContent.Select(line => line.Trim()).ToArray();
 
-            // Add Story to file
+            // Re-add Story to file
             string updatedStory = $"{AIStoryBuildersStoriesContent.Count() + 1}|{story.Title}|{story.Style}|{story.Theme}|{story.Synopsis}";
             AIStoryBuildersStoriesContent = AIStoryBuildersStoriesContent.Append(updatedStory).ToArray();
             File.WriteAllLines(AIStoryBuildersStoriesPath, AIStoryBuildersStoriesContent);

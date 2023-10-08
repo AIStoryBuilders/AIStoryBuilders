@@ -6,7 +6,7 @@
 <StoryEdit objStory="objStory" StoryUpdated="Save" />
 
 @code {
-    Story objStory = new Story();
+    Story objStory = new Story() { Id = -1 };
 
     private void Save(Story paramStory)
     {

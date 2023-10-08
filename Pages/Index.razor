@@ -139,9 +139,6 @@
                     InProgress = false;
                     StateHasChanged();
 
-                    // Edit so that it is not marked as new
-                    objStory.Id = 1000;
-
                     var parms = new Dictionary<string, object>();
                     parms.Add("objStory", objStory);
 
@@ -176,7 +173,12 @@
     {
         try
         {
-            InProgress = true;
+            if (paramStory.Id == -1)
+            {
+                // It is a New Story and needs processing
+                // Show the Progress bar
+                InProgress = true; 
+            }
 
             var parms = new Dictionary<string, object>();
             parms.Add("objStory", paramStory);
