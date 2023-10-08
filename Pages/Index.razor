@@ -4,18 +4,12 @@
 @using AIStoryBuilders.Pages.Controls;
 @using AIStoryBuilders.Pages.Controls.Story;
 @using AIStoryBuilders.Services;
+@using static AIStoryBuilders.Model.OrchestratorMethods;
+@inherits OwningComponentBase
 @inject DialogService dialogService
 @inject NotificationService NotificationService
 @inject SettingsService SettingsService
-@*
-    Using OwningComponentBase ensures that the service and related services
-    that share its scope are disposed with the component.
-    Otherwise DbContext in AIStoryBuildersService will live for the life of the
-    connection, which may be problematic if clients stay
-    connected for a long time.
-    We access AIStoryBuildersService using @Service
-*@
-@inherits OwningComponentBase
+@implements IDisposable
 <PageTitle>AI Story Builders</PageTitle>
 <RadzenMenu>
     <RadzenMenuItem Click="OnHomeClicked" Text="Home" Icon="home"></RadzenMenuItem>
@@ -24,6 +18,12 @@
     <RadzenMenuItem Click="OnSettingsClicked" Text="Settings" Icon="line_style"></RadzenMenuItem>
 </RadzenMenu>
 <br />
+@if (@InProgress)
+{
+    <div class="rz-m-10">
+        <RadzenProgressBar Value="100" ShowValue="false" Mode="ProgressBarMode.Indeterminate" />
+    </div>
+}
 @if (HomeVisible)
 {
     <RadzenButton Click=@(() => NewStory()) Text="New Story" ButtonStyle="ButtonStyle.Success" />
@@ -69,6 +69,7 @@
     string Organization = "";
     string ApiKey = "";
 
+    bool InProgress = false;
     bool HomeVisible = true;
     bool SettingsVisible = false;
     bool MemoryVisible = false;
@@ -80,6 +81,8 @@
         {
             AIStoryBuildersService = (AIStoryBuildersService)ScopedServices.GetService(typeof(AIStoryBuildersService));
             OrchestratorMethods = (OrchestratorMethods)ScopedServices.GetService(typeof(OrchestratorMethods));
+
+            OrchestratorMethods.ReadTextEvent += OrchestratorMethods_ReadTextEvent;
 
             SettingsService.LoadSettings();
             Organization = SettingsService.Organization;
@@ -114,7 +117,7 @@
     private async Task NewStory()
     {
         try
-        {
+        {        
             var NewStoryResult = await dialogService.OpenAsync<NewStory>($"New Story",
                 null,
                 new DialogOptions() { Width = "650px" });
@@ -124,9 +127,17 @@
                 objStory = (Story)NewStoryResult;
 
                 if (objStory != null)
-                {
+                {         
+                    HomeVisible = false;
+                    InProgress = true;
+                    StateHasChanged();
+
                     // Save Story to the database
-                    AIStoryBuildersService.AddStory(objStory);
+                    await AIStoryBuildersService.AddStory(objStory);
+
+                    HomeVisible = true;
+                    InProgress = false;
+                    StateHasChanged();
 
                     // Edit so that it is not marked as new
                     objStory.Id = 1000;
@@ -141,10 +152,16 @@
                 colStorys = AIStoryBuildersService.GetStorys();
 
                 StateHasChanged();
+
+                HomeVisible = true;
+                InProgress = false;
             }
         }
         catch (Exception ex)
         {
+            HomeVisible = true;
+            InProgress = false;
+
             NotificationService.Notify(new NotificationMessage
                 {
                     Severity = NotificationSeverity.Error,
@@ -159,6 +176,8 @@
     {
         try
         {
+            InProgress = true;
+
             var parms = new Dictionary<string, object>();
             parms.Add("objStory", paramStory);
 
@@ -168,9 +187,13 @@
             colStorys = AIStoryBuildersService.GetStorys();
 
             StateHasChanged();
+
+            InProgress = false;
         }
         catch (Exception ex)
         {
+            InProgress = false;
+
             NotificationService.Notify(new NotificationMessage
                 {
                     Severity = NotificationSeverity.Error,
@@ -211,5 +234,25 @@
         SettingsVisible = false;
         MemoryVisible = false;
         LogsVisible = true;
+    }
+
+    // Events
+
+    private void OrchestratorMethods_ReadTextEvent(object sender, EventArgs e)
+    {
+        ReadTextEventArgs ReadTextEventArguments = (ReadTextEventArgs)e;
+
+        NotificationService.Notify(new NotificationMessage
+            {
+                Severity = NotificationSeverity.Info,
+                Summary = "Info",
+                Detail = ReadTextEventArguments.Message,
+                Duration = 4000
+            });
+    }
+
+    public void Dispose()
+    {
+        OrchestratorMethods.ReadTextEvent -= OrchestratorMethods_ReadTextEvent;
     }
 }

@@ -1,11 +1,14 @@
-﻿@using AIStoryBuilders.Models;
+﻿@using AIStoryBuilders.Model;
+@using AIStoryBuilders.Models;
 @using AIStoryBuilders.Pages.Controls;
 @using AIStoryBuilders.Pages.Controls.Characters
 @using AIStoryBuilders.Pages.Controls.Story
 @using AIStoryBuilders.Services;
+@using static AIStoryBuilders.Model.OrchestratorMethods;
+@inherits OwningComponentBase
 @inject DialogService dialogService
 @inject NotificationService NotificationService
-@inherits OwningComponentBase<AIStoryBuildersService>
+@implements IDisposable
 <PageTitle>@objStory.Title</PageTitle>
 
 <RadzenTabs Change=@OnTabChange TabPosition=TabPosition.Top RenderMode="TabRenderMode.Client">
@@ -30,14 +33,24 @@
 @code {
     [Parameter] public Story objStory { get; set; }
 
+    AIStoryBuildersService AIStoryBuildersService;
+    OrchestratorMethods OrchestratorMethods;
     List<Character> colCharacters = new List<Character>();
+
+    protected override void OnInitialized()
+    {
+        AIStoryBuildersService = (AIStoryBuildersService)ScopedServices.GetService(typeof(AIStoryBuildersService));
+        OrchestratorMethods = (OrchestratorMethods)ScopedServices.GetService(typeof(OrchestratorMethods));
+
+        OrchestratorMethods.ReadTextEvent += OrchestratorMethods_ReadTextEvent;
+    }
 
     private void SaveStory()
     {
         try
         {
             // Update the Story 
-            Service.UpdateStory(objStory);
+            AIStoryBuildersService.UpdateStory(objStory);
 
             NotificationService.Notify(new NotificationMessage
                 {
@@ -64,7 +77,7 @@
         try
         {
             // Delete the Story from the database
-            Service.DeleteStory(objStory.Title);
+            AIStoryBuildersService.DeleteStory(objStory.Title);
 
             dialogService.Close(null);
         }
@@ -101,5 +114,25 @@
                 // AI
                 break;
         }
+    }
+
+    // Events
+
+    private void OrchestratorMethods_ReadTextEvent(object sender, EventArgs e)
+    {
+        ReadTextEventArgs ReadTextEventArguments = (ReadTextEventArgs)e;
+
+        NotificationService.Notify(new NotificationMessage
+            {
+                Severity = NotificationSeverity.Info,
+                Summary = "Info",
+                Detail = ReadTextEventArguments.Message,
+                Duration = 4000
+            });
+    }
+
+    public void Dispose()
+    {
+        OrchestratorMethods.ReadTextEvent -= OrchestratorMethods_ReadTextEvent;
     }
 }

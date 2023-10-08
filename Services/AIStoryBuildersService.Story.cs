@@ -1,6 +1,7 @@
 ﻿using AIStoryBuilders.Model;
 using AIStoryBuilders.Models;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Metadata;
 using Newtonsoft.Json;
 using OpenAI.Files;
 
@@ -42,7 +43,7 @@ namespace AIStoryBuilders.Services
             }
         }
 
-        public void AddStory(Story story)
+        public async Task AddStory(Story story)
         {
             // Create Characters, Chapters, Timelines, and Locations sub folders
 
@@ -85,6 +86,13 @@ namespace AIStoryBuilders.Services
 
             // Log
             LogService.WriteToLog($"Story created {story.Title}");
+
+            // Parse the Story to create the files
+            var ParsedStory = await OrchestratorMethods.ParseNewStory(story.Title, story.Synopsis);
+
+            // Convert the JSON to a dynamic object
+            var ParsedStoryObjectDynamic = JsonConvert.DeserializeObject<dynamic>(ParsedStory);
+
         }
 
         public void UpdateStory(Story story)

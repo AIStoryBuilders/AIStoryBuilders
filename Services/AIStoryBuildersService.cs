@@ -7,15 +7,19 @@ namespace AIStoryBuilders.Services
     public partial class AIStoryBuildersService
     {
         private readonly AppMetadata _appMetadata;
-        public LogService LogService { get; set; }
+        private LogService LogService { get; set; }
+
+        private OrchestratorMethods OrchestratorMethods { get; set; }
 
         public string BasePath = $"{Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments)}/AIStoryBuilders";
         public AIStoryBuildersService(
             AppMetadata appMetadata,
-            LogService _LogService)
+            LogService _LogService,
+            OrchestratorMethods _OrchestratorMethods)
         {
             _appMetadata = appMetadata;
             LogService = _LogService;
+            OrchestratorMethods = _OrchestratorMethods;
         }
     }
 }
