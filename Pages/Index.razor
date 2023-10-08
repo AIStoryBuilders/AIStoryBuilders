@@ -1,9 +1,12 @@
 ﻿@page "/"
 @using AIStoryBuilders.Model;
 @using AIStoryBuilders.Models;
+@using AIStoryBuilders.Models.JSON;
 @using AIStoryBuilders.Pages.Controls;
 @using AIStoryBuilders.Pages.Controls.Story;
 @using AIStoryBuilders.Services;
+@using Newtonsoft.Json;
+@using static AIStoryBuilders.Services.AIStoryBuildersService;
 @using static AIStoryBuilders.Model.OrchestratorMethods;
 @inherits OwningComponentBase
 @inject DialogService dialogService
@@ -59,9 +62,10 @@
 {
     <Logs></Logs>
 }
- @code {
+@code {
     AIStoryBuildersService AIStoryBuildersService;
     OrchestratorMethods OrchestratorMethods;
+    LogService LogService;
 
     List<Story> colStorys = new List<Story>();
     Story objStory = new Story();
@@ -81,7 +85,9 @@
         {
             AIStoryBuildersService = (AIStoryBuildersService)ScopedServices.GetService(typeof(AIStoryBuildersService));
             OrchestratorMethods = (OrchestratorMethods)ScopedServices.GetService(typeof(OrchestratorMethods));
+            LogService = (LogService)ScopedServices.GetService(typeof(LogService));
 
+            AIStoryBuildersService.TextEvent += AIStoryBuildersService_TextEvent;
             OrchestratorMethods.ReadTextEvent += OrchestratorMethods_ReadTextEvent;
 
             SettingsService.LoadSettings();
@@ -111,6 +117,8 @@
                     Detail = ex.Message,
                     Duration = 4000
                 });
+
+            LogService.WriteToLog(ex.Message);
         }
     }
 
@@ -166,6 +174,8 @@
                     Detail = ex.Message,
                     Duration = 4000
                 });
+
+            LogService.WriteToLog(ex.Message);
         }
     }
 
@@ -203,6 +213,8 @@
                     Detail = ex.Message,
                     Duration = 4000
                 });
+
+            LogService.WriteToLog(ex.Message);
         }
     }
 
@@ -253,8 +265,22 @@
             });
     }
 
+    private void AIStoryBuildersService_TextEvent(object sender, EventArgs e)
+    {
+        TextEventArgs ReadTextEventArguments = (TextEventArgs)e;
+
+        NotificationService.Notify(new NotificationMessage
+            {
+                Severity = NotificationSeverity.Info,
+                Summary = "Info",
+                Detail = ReadTextEventArguments.Message,
+                Duration = 4000
+            });
+    }
+
     public void Dispose()
     {
         OrchestratorMethods.ReadTextEvent -= OrchestratorMethods_ReadTextEvent;
+        AIStoryBuildersService.TextEvent -= AIStoryBuildersService_TextEvent;
     }
 }

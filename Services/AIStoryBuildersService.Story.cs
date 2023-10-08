@@ -5,6 +5,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata;
 using Newtonsoft.Json;
 using OpenAI.Files;
+using static AIStoryBuilders.Model.OrchestratorMethods;
 
 namespace AIStoryBuilders.Services
 {
@@ -51,24 +52,12 @@ namespace AIStoryBuilders.Services
             string StoryPath = $"{BasePath}/{story.Title}";
             string CharactersPath = $"{StoryPath}/Characters";
             string ChaptersPath = $"{StoryPath}/Chapters";
-            string TimelinesPath = $"{StoryPath}/Timelines";
             string LocationsPath = $"{StoryPath}/Locations";
 
             CreateDirectory(StoryPath);
             CreateDirectory(CharactersPath);
             CreateDirectory(ChaptersPath);
-            CreateDirectory(TimelinesPath);
             CreateDirectory(LocationsPath);
-
-            var AIStoryBuildersCharactersPath = $"{CharactersPath}/Characters.csv";
-            var AIStoryBuildersChaptersPath = $"{ChaptersPath}/Chapters.csv";
-            var AIStoryBuildersTimelinesPath = $"{TimelinesPath}/Timelines.csv";
-            var AIStoryBuildersLocationsPath = $"{LocationsPath}/Locations.csv";
-
-            CreateFile(AIStoryBuildersCharactersPath, "");
-            CreateFile(AIStoryBuildersChaptersPath, "");
-            CreateFile(AIStoryBuildersTimelinesPath, "");
-            CreateFile(AIStoryBuildersLocationsPath, "");
 
             // Add Story to file
             var AIStoryBuildersStoriesPath = $"{BasePath}/AIStoryBuildersStories.csv";
@@ -94,6 +83,83 @@ namespace AIStoryBuilders.Services
             // Convert the JSON to a dynamic object
             JSONNewStory ParsedNewStory = JsonConvert.DeserializeObject<JSONNewStory>(ParsedStory);
 
+            // Create the Character files
+            TextEvent?.Invoke(this, new TextEventArgs($"Create the Character files"));
+            foreach (var character in ParsedNewStory.characters)
+            {
+                // Add Character to file
+                string CharacterName = OrchestratorMethods.SanitizeFileName(character.name);
+
+                // Create Character file
+                string CharacterPath = $"{CharactersPath}/{CharacterName}.csv";
+                List<string> CharacterContents = new List<string>();
+
+                foreach (var description in character.descriptions)
+                {
+                    string VectorDescriptionAndEmbedding = await OrchestratorMethods.GetVectorEmbedding(description);
+                    CharacterContents.Add($"{VectorDescriptionAndEmbedding}" + Environment.NewLine);
+                }
+
+                File.WriteAllLines(CharacterPath, CharacterContents);
+            }
+
+            // Create the Location files
+            TextEvent?.Invoke(this, new TextEventArgs($"Create the Location files"));
+            foreach (var location in ParsedNewStory.locations)
+            {
+                // Add Location to file
+                string LocationName = OrchestratorMethods.SanitizeFileName(location.name);
+
+                // Create Location file
+                string LocationPath = $"{LocationsPath}/{LocationName}.csv";
+                List<string> LocationContents = new List<string>();
+
+                foreach (var description in location.descriptions)
+                {
+                    string VectorDescriptionAndEmbedding = await OrchestratorMethods.GetVectorEmbedding(description);
+                    LocationContents.Add($"{VectorDescriptionAndEmbedding}" + Environment.NewLine);
+                }
+
+                File.WriteAllLines(LocationPath, LocationContents);
+            }
+
+            // Create the Timeline file
+            TextEvent?.Invoke(this, new TextEventArgs($"Create the Timeline file"));
+            List<string> TimelineContents = new List<string>();
+
+            int i = 0;
+            foreach (var timeline in ParsedNewStory.timelines)
+            {
+                // Add Timeline to file
+                string TimelineName = OrchestratorMethods.SanitizeFileName(timeline);
+
+                string StartTime = DateTime.Now.AddDays(i).ToShortDateString() + " " + DateTime.Now.AddDays(i).ToShortTimeString();
+                string StopTime = DateTime.Now.AddDays(i + 1).ToShortDateString() + " " + DateTime.Now.AddDays(i + 1).ToShortTimeString();
+                string TimelineContentsLine = $"{timeline}|{StartTime}|{StopTime}";
+
+                TimelineContents.Add(TimelineContentsLine);
+                i = i + 2;
+            }
+
+            // Create Timeline file
+            string TimelinePath = $"{StoryPath}/Timelines.csv";
+            File.WriteAllLines(TimelinePath, TimelineContents);
+
+            // **** Create the First Paragraph in the first Chapter
+
+            // Create a folder at: Chapters/Chapter1            
+            string ChapterPath = $"{ChaptersPath}/Chapter1";
+            CreateDirectory(ChapterPath);
+
+            // Create a file at: Chapters/Chapter1/Chapter.txt
+            string ChapterFilePath = $"{ChapterPath}/Chapter.txt";
+            File.WriteAllText(ChapterFilePath, $"Chapter One|");
+
+            // Create a file at: Chapters/Chapter1/Paragraph1.txt
+            TextEvent?.Invoke(this, new TextEventArgs($"Create Chapters/Chapter1/Paragraph1.txt"));
+            string FirstParagraphPath = $"{ChapterPath}/Paragraph1.txt";
+            string VectorDescriptionAndEmbeddingFirstParagraph = await OrchestratorMethods.GetVectorEmbedding(ParsedNewStory.firstparagraph);
+            File.WriteAllText(FirstParagraphPath, $"||{VectorDescriptionAndEmbeddingFirstParagraph}");
         }
 
         public void UpdateStory(Story story)
@@ -241,50 +307,6 @@ namespace AIStoryBuilders.Services
         //    await _context.SaveChangesAsync();
         //    return chapter;
         //}
-        #endregion
-
-        // Utility
-
-        #region public string[] ReadCSVFile(string path)
-        public string[] ReadCSVFile(string path)
-        {
-            string[] content;
-
-            // Read the lines from the .csv file
-            using (var file = new System.IO.StreamReader(path))
-            {
-                content = file.ReadToEnd().Split('\n');
-
-                if (content[content.Length - 1].Trim() == "")
-                {
-                    content = content.Take(content.Length - 1).ToArray();
-                }
-            }
-
-            return content;
-        } 
-        #endregion
-
-        #region public void CreateDirectory(string path)
-        public void CreateDirectory(string path)
-        {
-            // Create directory if it doesn't exist
-            if (!Directory.Exists(path))
-            {
-                Directory.CreateDirectory(path);
-            }
-        }
-        #endregion
-
-        #region public void CreateFile(string path, string content)
-        public void CreateFile(string path, string content)
-        {
-            // Create file if it doesn't exist
-            if (!File.Exists(path))
-            {
-                File.WriteAllText(path, content);
-            }
-        } 
         #endregion
 
     }

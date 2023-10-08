@@ -113,6 +113,35 @@ namespace AIStoryBuilders.Model
 
         // Memory and Vectors
 
+        #region public async Task<string> GetVectorEmbedding(string EmbeddingContent)
+        public async Task<string> GetVectorEmbedding(string EmbeddingContent)
+        {
+            // **** Call OpenAI and get embeddings for the memory text
+            // Create an instance of the OpenAI client
+            var api = new OpenAIClient(new OpenAIAuthentication(SettingsService.ApiKey, SettingsService.Organization));
+            // Get the model details
+            var model = await api.ModelsEndpoint.GetModelDetailsAsync("text-embedding-ada-002");
+            // Get embeddings for the text
+            var embeddings = await api.EmbeddingsEndpoint.CreateEmbeddingAsync(EmbeddingContent, model);
+            // Get embeddings as an array of floats
+            var EmbeddingVectors = embeddings.Data[0].Embedding.Select(d => (float)d).ToArray();
+            // Loop through the embeddings
+            List<VectorData> AllVectors = new List<VectorData>();
+            for (int i = 0; i < EmbeddingVectors.Length; i++)
+            {
+                var embeddingVector = new VectorData
+                {
+                    VectorValue = EmbeddingVectors[i]
+                };
+                AllVectors.Add(embeddingVector);
+            }
+            // Convert the floats to a single string
+            var VectorsToSave = "[" + string.Join(",", AllVectors.Select(x => x.VectorValue)) + "]";
+
+            return EmbeddingContent + "|" + VectorsToSave;
+        }
+        #endregion
+
         #region private async Task CreateVectorEntry(string vectorcontent)
         private async Task CreateVectorEntry(string VectorContent)
         {
@@ -306,6 +335,25 @@ namespace AIStoryBuilders.Model
             }
 
             return Regex.Replace(input, @"\s{2,}", " ");
+        }
+        #endregion
+
+        #region public static string SanitizeFileName(string input)
+        private static readonly char[] InvalidFileNameChars = System.IO.Path.GetInvalidFileNameChars();
+        private static readonly string[] ReservedNames = { "CON", "PRN", "AUX", "NUL", "COM1", "COM2", "COM3", "COM4", "COM5", "COM6", "COM7", "COM8", "COM9", "LPT1", "LPT2", "LPT3", "LPT4", "LPT5", "LPT6", "LPT7", "LPT8", "LPT9" };
+
+        public static string SanitizeFileName(string input)
+        {
+            // Strip out invalid characters
+            string sanitized = new string(input.Where(ch => !InvalidFileNameChars.Contains(ch)).ToArray());
+
+            // Check for reserved names, and append a "_" if found
+            if (ReservedNames.Contains(sanitized, StringComparer.OrdinalIgnoreCase))
+            {
+                sanitized += "_";
+            }
+
+            return sanitized;
         } 
         #endregion
 

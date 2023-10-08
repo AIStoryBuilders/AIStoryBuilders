@@ -69,6 +69,7 @@ else // Existing Story
 
     AIStoryBuildersService AIStoryBuildersService;
     OrchestratorMethods OrchestratorMethods;
+    LogService LogService;
 
     IEnumerable<string> colStyles;
     Variant variant = Variant.Outlined;
@@ -77,6 +78,7 @@ else // Existing Story
     {
         AIStoryBuildersService = (AIStoryBuildersService)ScopedServices.GetService(typeof(AIStoryBuildersService));
         OrchestratorMethods = (OrchestratorMethods)ScopedServices.GetService(typeof(OrchestratorMethods));
+        LogService = (LogService)ScopedServices.GetService(typeof(LogService));
 
         // Add sample data to the Styles dropdown
         colStyles = new List<string>()
@@ -181,6 +183,8 @@ else // Existing Story
                     Detail = ex.Message,
                     Duration = 4000
                 });
+
+            LogService.WriteToLog(ex.Message);
         }
     }
 
