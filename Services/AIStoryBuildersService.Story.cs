@@ -232,7 +232,7 @@ namespace AIStoryBuilders.Services
 
                     var CharacterBackgrounds = CharacterBackgroundContent.Select(x => x.Split('|')).Select(x => x[0]).ToList();
 
-                    //CharacterBackground
+                    // CharacterBackgrounds
 
                     // Create a Character
                     AIStoryBuilders.Models.Character Character = new AIStoryBuilders.Models.Character();
