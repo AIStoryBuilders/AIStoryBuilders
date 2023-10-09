@@ -19,8 +19,6 @@ public partial class Timeline
 
     public DateTime? StopDate { get; set; }
 
-    public virtual ICollection<CharacterBackground> CharacterBackground { get; set; } = new List<CharacterBackground>();
-
     public virtual ICollection<Paragraph> Paragraph { get; set; } = new List<Paragraph>();
 
     public virtual Story Story { get; set; }

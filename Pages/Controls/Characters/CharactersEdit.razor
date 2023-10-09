@@ -1,9 +1,10 @@
-﻿@using AIStoryBuilders.Models;
+﻿@using AIStoryBuilders.Model;
+@using AIStoryBuilders.Models;
 @using AIStoryBuilders.Pages.Controls;
 @using AIStoryBuilders.Services;
+@inherits OwningComponentBase
 @inject DialogService dialogService
 @inject NotificationService NotificationService
-@inherits OwningComponentBase<AIStoryBuildersService>
 <RadzenButton Click=@(() => NewCharacter()) Text="New Character" ButtonStyle="ButtonStyle.Success" />
 <br />
 <br />
@@ -24,6 +25,8 @@
     </RadzenDataList>
     @code {
     [Parameter] public Story objStory { get; set; }
+    AIStoryBuildersService AIStoryBuildersService;
+    OrchestratorMethods OrchestratorMethods;
 
     List<Character> colCharacters = new List<Character>();
 
@@ -31,8 +34,10 @@
     {
         try
         {
-            // Get the Characters from the database
-            //colCharacters = await Service.GetCharactersAsync(objStory);
+            AIStoryBuildersService = (AIStoryBuildersService)ScopedServices.GetService(typeof(AIStoryBuildersService));
+            OrchestratorMethods = (OrchestratorMethods)ScopedServices.GetService(typeof(OrchestratorMethods));
+
+            LoadCharacters(objStory);
         }
         catch (Exception ex)
         {
@@ -44,6 +49,11 @@
                         Duration = 4000
                     });
         }
+    }
+
+    public void LoadCharacters(Story paramStory)
+    {
+        colCharacters = AIStoryBuildersService.GetCharacters(paramStory);
     }
 
     private async Task NewCharacter()

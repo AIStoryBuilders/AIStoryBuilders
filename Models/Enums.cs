@@ -11,6 +11,8 @@
     {
         Appearance,
         Goals,
-        History
+        History,
+        Aliases,
+        Facts,
     }
 }

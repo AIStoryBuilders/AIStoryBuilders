@@ -14,10 +14,10 @@
 <RadzenTabs Change=@OnTabChange TabPosition=TabPosition.Top RenderMode="TabRenderMode.Client">
     <Tabs>
         <RadzenTabsItem Text="Details">
-            <StoryEdit objStory="objStory" StoryUpdated="SaveStory" StoryDeleted="DeleteStory" />
+            <StoryEdit @ref="ctrlStoryEdit" objStory="objStory" StoryUpdated="SaveStory" StoryDeleted="DeleteStory" />
         </RadzenTabsItem>
         <RadzenTabsItem Text="Characters">
-            <CharactersEdit objStory="objStory" />
+            <CharactersEdit @ref="CtrlCharactersEdit" objStory="objStory" />
         </RadzenTabsItem>
         <RadzenTabsItem Text="Locations">
         </RadzenTabsItem>
@@ -30,8 +30,12 @@
 @code {
     [Parameter] public Story objStory { get; set; }
 
+    StoryEdit ctrlStoryEdit;
+    CharactersEdit CtrlCharactersEdit;
+
     AIStoryBuildersService AIStoryBuildersService;
     OrchestratorMethods OrchestratorMethods;
+
     List<Character> colCharacters = new List<Character>();
 
     protected override void OnInitialized()
@@ -96,10 +100,10 @@
         {
             case 0:
                 // Story
-                //objStory = await Service.GetStoryAsync(objStory.Id);
                 break;
             case 1:
                 // Characters
+                CtrlCharactersEdit.LoadCharacters(objStory);
                 break;
             case 2:
                 // Locations

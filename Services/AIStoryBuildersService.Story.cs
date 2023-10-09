@@ -206,15 +206,61 @@ namespace AIStoryBuilders.Services
         #endregion
 
         #region *** Character ***
-        //public async Task<List<Character>> GetCharactersAsync(Story story)
-        //{
-        //    // Get Characters including CharacterCharacterBackground
-        //    return await _context.Character
-        //        .Include(character => character.CharacterBackground)
-        //        .OrderBy(character => character.CharacterName)
-        //        .Where(character => character.StoryId == story.Id)
-        //        .AsNoTracking().ToListAsync();
-        //}
+        public List<AIStoryBuilders.Models.Character> GetCharacters(Story story)
+        {
+            // Create a collection of Character
+            List<AIStoryBuilders.Models.Character> Characters = new List<AIStoryBuilders.Models.Character>();
+
+            var AIStoryBuildersCharactersPath = $"{BasePath}/{story.Title}/Characters";
+
+            try
+            {
+                // Get a list of all the Character files
+                string[] AIStoryBuildersCharactersFiles = Directory.GetFiles(AIStoryBuildersCharactersPath, "*.csv", SearchOption.AllDirectories);
+                           
+                // Loop through each Character file
+                foreach (var AIStoryBuildersCharacterFile in AIStoryBuildersCharactersFiles)
+                {
+                    // Get the CharacterName from the file name
+                    string CharacterName = Path.GetFileNameWithoutExtension(AIStoryBuildersCharacterFile);
+
+                    // Get the CharacterBackgroundContent from the file
+                    string[] CharacterBackgroundContent = File.ReadAllLines(AIStoryBuildersCharacterFile);
+
+                    // Remove all empty lines
+                    CharacterBackgroundContent = CharacterBackgroundContent.Where(line => line.Trim() != "").ToArray();
+
+                    var CharacterBackgrounds = CharacterBackgroundContent.Select(x => x.Split('|')).Select(x => x[0]).ToList();
+
+                    //CharacterBackground
+
+                    // Create a Character
+                    AIStoryBuilders.Models.Character Character = new AIStoryBuilders.Models.Character();
+                    Character.StoryId = story.Id;
+                    Character.CharacterName = CharacterName;
+                    Character.CharacterBackground = new List<CharacterBackground>();
+
+                    foreach (var CharacterBackground in CharacterBackgrounds)
+                    {
+                        Character.CharacterBackground.Add(new CharacterBackground { Description = CharacterBackground });
+                    }
+
+                    // Add Character to collection
+                    Characters.Add(Character);
+                }
+
+                // Return collection of Characters
+                return Characters;
+            }
+            catch (Exception ex)
+            {
+                // Log error
+                LogService.WriteToLog(ex.Message);
+
+                // File is empty
+                return new List<AIStoryBuilders.Models.Character>();
+            }
+        }
 
         //public async Task<Character> GetCharacterAsync(int id)
         //{
