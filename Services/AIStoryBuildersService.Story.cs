@@ -10,7 +10,7 @@ using static AIStoryBuilders.Model.OrchestratorMethods;
 namespace AIStoryBuilders.Services
 {
     public partial class AIStoryBuildersService
-    {       
+    {
 
         #region *** Story ***
         public List<Story> GetStorys()
@@ -19,7 +19,7 @@ namespace AIStoryBuilders.Services
             string[] AIStoryBuildersStoriesContent = ReadCSVFile(AIStoryBuildersStoriesPath);
 
             AIStoryBuildersStoriesContent = AIStoryBuildersStoriesContent.Where(line => line.Trim() != "").ToArray();
-            
+
             try
             {
                 // Return collection of Story
@@ -131,11 +131,11 @@ namespace AIStoryBuilders.Services
             foreach (var timeline in ParsedNewStory.timelines)
             {
                 // Add Timeline to file
-                string TimelineName = OrchestratorMethods.SanitizeFileName(timeline);
+                string TimelineName = OrchestratorMethods.SanitizeFileName(timeline.name);
 
                 string StartTime = DateTime.Now.AddDays(i).ToShortDateString() + " " + DateTime.Now.AddDays(i).ToShortTimeString();
                 string StopTime = DateTime.Now.AddDays(i + 1).ToShortDateString() + " " + DateTime.Now.AddDays(i + 1).ToShortTimeString();
-                string TimelineContentsLine = $"{timeline}|{StartTime}|{StopTime}";
+                string TimelineContentsLine = $"{TimelineName}|{timeline.description}|{StartTime}|{StopTime}";
 
                 TimelineContents.Add(TimelineContentsLine);
                 i = i + 2;
@@ -197,7 +197,7 @@ namespace AIStoryBuilders.Services
             File.WriteAllLines(AIStoryBuildersStoriesPath, AIStoryBuildersStoriesContent);
 
             // Delete folder and all its sub folders and files
-            string StoryPath = $"{BasePath}/{StoryTitle}";            
+            string StoryPath = $"{BasePath}/{StoryTitle}";
             Directory.Delete(StoryPath, true);
 
             // Log

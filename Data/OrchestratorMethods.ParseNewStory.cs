@@ -89,7 +89,7 @@ namespace AIStoryBuilders.Model
                     "#2 Description and background of each Character \n" +
                     "#3 Locations mentioned in the story. \n" +
                     "#4 Description and background of each Location \n" +
-                    "#5 Labels to identify specific Timelines or chronological events of the story. \n" +
+                    "#5 A short name and a description to identify specific Timelines or chronological events of the story. \n" +
                     "#6 The first paragraph from the first chapter of the story. \n" +
                     "Provide the results in the following JSON format: \n" +
                     "{ \n" +
@@ -102,7 +102,10 @@ namespace AIStoryBuilders.Model
                     "\"name\": name, \n" +
                     "\"descriptions\": [descriptions] \n" +
                     "}, \n" +
-                    "\"timelines\": [timelines], \n" +
+                    "\"timelines\": { \n" +
+                    "\"name\": name, \n" +
+                    "\"description\": description \n" +
+                    "}, \n" +
                     "\"firstparagraph\": firstParagraph \n";
         }
         #endregion

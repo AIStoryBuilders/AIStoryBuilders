@@ -4,7 +4,7 @@
     {
         public Character[] characters { get; set; }
         public Location[] locations { get; set; }
-        public string[] timelines { get; set; }
+        public Timeline[] timelines { get; set; }
         public string firstparagraph { get; set; }
     }
 
@@ -18,5 +18,11 @@
     {
         public string name { get; set; }
         public string[] descriptions { get; set; }
+    }
+
+    public class Timeline
+    {
+        public string name { get; set; }
+        public string description { get; set; }
     }
 }
