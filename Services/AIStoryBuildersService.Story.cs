@@ -77,11 +77,13 @@ namespace AIStoryBuilders.Services
             // Log
             LogService.WriteToLog($"Story created {story.Title}");
 
-            // Parse the Story to create the files
+            //  ********** Parse the Story to create the files **********
             var ParsedStory = await OrchestratorMethods.ParseNewStory(story.Title, story.Synopsis);
 
             // Convert the JSON to a dynamic object
             JSONNewStory ParsedNewStory = JsonConvert.DeserializeObject<JSONNewStory>(ParsedStory);
+
+            // *****************************************************
 
             // Create the Character files
             TextEvent?.Invoke(this, new TextEventArgs($"Create the Character files"));
@@ -94,11 +96,11 @@ namespace AIStoryBuilders.Services
                 string CharacterPath = $"{CharactersPath}/{CharacterName}.csv";
                 List<string> CharacterContents = new List<string>();
 
-                foreach (var description in character.descriptions)
-                {
-                    string VectorDescriptionAndEmbedding = await OrchestratorMethods.GetVectorEmbedding(description);
-                    CharacterContents.Add($"{VectorDescriptionAndEmbedding}" + Environment.NewLine);
-                }
+                //foreach (var description in character.descriptions)
+                //{
+                //    string VectorDescriptionAndEmbedding = await OrchestratorMethods.GetVectorEmbedding(description);
+                //    CharacterContents.Add($"{VectorDescriptionAndEmbedding}" + Environment.NewLine);
+                //}
 
                 File.WriteAllLines(CharacterPath, CharacterContents);
             }

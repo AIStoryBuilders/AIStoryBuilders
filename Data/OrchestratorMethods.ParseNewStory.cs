@@ -40,8 +40,6 @@ namespace AIStoryBuilders.Model
             // Trim paramStoryText to 10000 words (so we don't run out of tokens)
             paramStoryText = OrchestratorMethods.TrimToMaxWords(paramStoryText, 10000);
 
-            ReadTextEvent?.Invoke(this, new ReadTextEventArgs($"StoryText trimmed to: {paramStoryText.Split(' ').Length} words."));
-
             // Update System Message
             SystemMessage = CreateSystemMessageParseNewStory(paramStoryTitle, paramStoryText);
 
@@ -96,7 +94,12 @@ namespace AIStoryBuilders.Model
                     "\"characters\": \n" + 
                     "{ \n" +
                     "\"name\": name, \n" +
-                    "\"descriptions\": [descriptions] \n" +
+                    "\"descriptions\": \n" +
+                    "{ \n" +
+                    "\"descriptiontype\": description type, \n" +
+                    "\"enum\": [\"Appearance\",\"Goals\",\"History\",\"Aliases\",\"Facts\"] \n" +
+                    "\"description\": description \n" +
+                    "} \n" +
                     "}, \n" +
                     "\"locations\": { \n" +
                     "\"name\": name, \n" +

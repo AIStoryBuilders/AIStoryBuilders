@@ -7,11 +7,17 @@
         public Timeline[] timelines { get; set; }
         public string firstparagraph { get; set; }
     }
-
     public class Character
     {
         public string name { get; set; }
-        public string[] descriptions { get; set; }
+        public Descriptions descriptions { get; set; }
+    }
+
+    public class Descriptions
+    {
+        public string descriptiontype { get; set; }
+        public string[] _enum { get; set; }
+        public string description { get; set; }
     }
 
     public class Location
