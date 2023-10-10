@@ -96,11 +96,10 @@ namespace AIStoryBuilders.Services
                 string CharacterPath = $"{CharactersPath}/{CharacterName}.csv";
                 List<string> CharacterContents = new List<string>();
 
-                //foreach (var description in character.descriptions)
-                //{
-                //    string VectorDescriptionAndEmbedding = await OrchestratorMethods.GetVectorEmbedding(description);
-                //    CharacterContents.Add($"{VectorDescriptionAndEmbedding}" + Environment.NewLine);
-                //}
+                string description_type = character.descriptions.description_type ?? "";
+                string timeline_name = character.descriptions.timeline_name ?? "";
+                string VectorDescriptionAndEmbedding = await OrchestratorMethods.GetVectorEmbedding(character.descriptions.description ?? "");
+                CharacterContents.Add($"{description_type}|{timeline_name}|{VectorDescriptionAndEmbedding}" + Environment.NewLine);
 
                 File.WriteAllLines(CharacterPath, CharacterContents);
             }
@@ -147,21 +146,21 @@ namespace AIStoryBuilders.Services
             string TimelinePath = $"{StoryPath}/Timelines.csv";
             File.WriteAllLines(TimelinePath, TimelineContents);
 
-            // **** Create the First Paragraph in the first Chapter
+            //// **** Create the First Paragraph in the first Chapter
 
-            // Create a folder at: Chapters/Chapter1            
-            string ChapterPath = $"{ChaptersPath}/Chapter1";
-            CreateDirectory(ChapterPath);
+            //// Create a folder at: Chapters/Chapter1            
+            //string ChapterPath = $"{ChaptersPath}/Chapter1";
+            //CreateDirectory(ChapterPath);
 
-            // Create a file at: Chapters/Chapter1/Chapter.txt
-            string ChapterFilePath = $"{ChapterPath}/Chapter.txt";
-            File.WriteAllText(ChapterFilePath, $"Chapter One|");
+            //// Create a file at: Chapters/Chapter1/Chapter.txt
+            //string ChapterFilePath = $"{ChapterPath}/Chapter.txt";
+            //File.WriteAllText(ChapterFilePath, $"Chapter One|");
 
-            // Create a file at: Chapters/Chapter1/Paragraph1.txt
-            TextEvent?.Invoke(this, new TextEventArgs($"Create Chapters/Chapter1/Paragraph1.txt"));
-            string FirstParagraphPath = $"{ChapterPath}/Paragraph1.txt";
-            string VectorDescriptionAndEmbeddingFirstParagraph = await OrchestratorMethods.GetVectorEmbedding(ParsedNewStory.firstparagraph);
-            File.WriteAllText(FirstParagraphPath, $"||{VectorDescriptionAndEmbeddingFirstParagraph}");
+            //// Create a file at: Chapters/Chapter1/Paragraph1.txt
+            //TextEvent?.Invoke(this, new TextEventArgs($"Create Chapters/Chapter1/Paragraph1.txt"));
+            //string FirstParagraphPath = $"{ChapterPath}/Paragraph1.txt";
+            //string VectorDescriptionAndEmbeddingFirstParagraph = await OrchestratorMethods.GetVectorEmbedding(ParsedNewStory.firstparagraph);
+            //File.WriteAllText(FirstParagraphPath, $"||{VectorDescriptionAndEmbeddingFirstParagraph}");
         }
 
         public void UpdateStory(Story story)
@@ -219,7 +218,7 @@ namespace AIStoryBuilders.Services
             {
                 // Get a list of all the Character files
                 string[] AIStoryBuildersCharactersFiles = Directory.GetFiles(AIStoryBuildersCharactersPath, "*.csv", SearchOption.AllDirectories);
-                           
+
                 // Loop through each Character file
                 foreach (var AIStoryBuildersCharacterFile in AIStoryBuildersCharactersFiles)
                 {

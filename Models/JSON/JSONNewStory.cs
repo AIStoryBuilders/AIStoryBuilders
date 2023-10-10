@@ -1,12 +1,25 @@
 ﻿namespace AIStoryBuilders.Models.JSON
 {
+
     public class JSONNewStory
     {
+        public Locations[] locations { get; set; }
+        public Timelines[] timelines { get; set; }
         public Character[] characters { get; set; }
-        public Location[] locations { get; set; }
-        public Timeline[] timelines { get; set; }
-        public string firstparagraph { get; set; }
     }
+
+    public class Locations
+    {
+        public string name { get; set; }
+        public string[] descriptions { get; set; }
+    }
+
+    public class Timelines
+    {
+        public string name { get; set; }
+        public string description { get; set; }
+    }
+
     public class Character
     {
         public string name { get; set; }
@@ -15,20 +28,9 @@
 
     public class Descriptions
     {
-        public string descriptiontype { get; set; }
+        public string description_type { get; set; }
         public string[] _enum { get; set; }
         public string description { get; set; }
-    }
-
-    public class Location
-    {
-        public string name { get; set; }
-        public string[] descriptions { get; set; }
-    }
-
-    public class Timeline
-    {
-        public string name { get; set; }
-        public string description { get; set; }
+        public string timeline_name { get; set; }
     }
 }
