@@ -23,7 +23,7 @@
     public class Character
     {
         public string name { get; set; }
-        public Descriptions descriptions { get; set; }
+        public Descriptions[] descriptions { get; set; }
     }
 
     public class Descriptions
@@ -34,3 +34,6 @@
         public string timeline_name { get; set; }
     }
 }
+
+
+

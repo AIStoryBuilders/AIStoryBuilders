@@ -77,11 +77,11 @@ namespace AIStoryBuilders.Services
             // Log
             LogService.WriteToLog($"Story created {story.Title}");
 
-            //  ********** Parse the Story to create the files **********
+            //  ********** Call the LLM to Parse the Story to create the files **********
             var ParsedStory = await OrchestratorMethods.ParseNewStory(story.Title, story.Synopsis);
 
             // Convert the JSON to a dynamic object
-            JSONNewStory ParsedNewStory = JsonConvert.DeserializeObject<JSONNewStory>(ParsedStory);
+            JSONNewStory ParsedNewStory = ParseJSONNewStory(ParsedStory);
 
             // *****************************************************
 
@@ -96,10 +96,13 @@ namespace AIStoryBuilders.Services
                 string CharacterPath = $"{CharactersPath}/{CharacterName}.csv";
                 List<string> CharacterContents = new List<string>();
 
-                string description_type = character.descriptions.description_type ?? "";
-                string timeline_name = character.descriptions.timeline_name ?? "";
-                string VectorDescriptionAndEmbedding = await OrchestratorMethods.GetVectorEmbedding(character.descriptions.description ?? "");
-                CharacterContents.Add($"{description_type}|{timeline_name}|{VectorDescriptionAndEmbedding}" + Environment.NewLine);
+                foreach (var description in character.descriptions)
+                {
+                    string description_type = description.description_type ?? "";
+                    string timeline_name = description.timeline_name ?? "";
+                    string VectorDescriptionAndEmbedding = await OrchestratorMethods.GetVectorEmbedding(description.description ?? "");
+                    CharacterContents.Add($"{description_type}|{timeline_name}|{VectorDescriptionAndEmbedding}" + Environment.NewLine);
+                }
 
                 File.WriteAllLines(CharacterPath, CharacterContents);
             }
