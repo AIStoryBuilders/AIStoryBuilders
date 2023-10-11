@@ -14,18 +14,41 @@ namespace AIStoryBuilders.Services
                 // Convert the JSON to a dynamic object
                 //JSONNewStory ParsedNewStory = JsonConvert.DeserializeObject<JSONNewStory>(RawJSON);
 
-                int i = 0;
-                int ii = 0;
-                JSONNewStory ParsedNewStory = new JSONNewStory();
-
                 // Parse the JSON as a dynamic object
                 dynamic ParsedJSON = JsonConvert.DeserializeObject(RawJSON);
+
+                int i = 0;
+                int ii = 0;
+
+                JSONNewStory ParsedNewStory = new JSONNewStory();
+
+                int charactersCount = 1;
+                int locationsCount = 1;
+                int timelinesCount = 1;
+
+                if(ParsedJSON.characters != null)
+                {
+                    charactersCount = ParsedJSON.characters.Count;
+                }
+                if (ParsedJSON.locations != null)
+                {
+                    locationsCount = ParsedJSON.locations.Count;
+                }
+                if (ParsedJSON.timelines != null)
+                {
+                    timelinesCount = ParsedJSON.timelines.Count;
+                }
+
+                ParsedNewStory.characters = new Character[charactersCount];
+                ParsedNewStory.locations = new Locations[locationsCount];
+                ParsedNewStory.timelines = new Timelines[timelinesCount];
 
                 foreach (dynamic location in ParsedJSON.locations)
                 {
                     // Add the location to the new story
                     ParsedNewStory.locations[i] = new Locations();
                     ParsedNewStory.locations[i].name = location.name;
+                    ParsedNewStory.locations[i].descriptions = new string[location.descriptions.Count];
 
                     // See if there is more than one description
                     if (location.descriptions.Count > 1)
@@ -35,14 +58,15 @@ namespace AIStoryBuilders.Services
                         foreach (dynamic description in location.descriptions)
                         {
                             // Add the description to the location
-                            ParsedNewStory.locations[ii].descriptions[description] = description;
+                            ParsedNewStory.locations[i].descriptions[ii] = description;
                             ii++;
                         }
                     }
                     else
                     {
                         // Add the description to the location
-                        ParsedNewStory.locations[i].descriptions[location.descriptions] = location.descriptions;
+                        ParsedNewStory.locations[i].descriptions = new string[1];
+                        ParsedNewStory.locations[i].descriptions[0] = location.descriptions[0];
                     }
                     i++;
                 }
@@ -85,11 +109,11 @@ namespace AIStoryBuilders.Services
                         else
                         {
                             // Add the description to the character
-                            ParsedNewStory.characters[i].descriptions[i] = new Descriptions();
-                            ParsedNewStory.characters[i].descriptions[i].description_type = character.descriptions.description_type;
-                            ParsedNewStory.characters[i].descriptions[i]._enum = character.descriptions._enum;
-                            ParsedNewStory.characters[i].descriptions[i].description = character.descriptions.description;
-                            ParsedNewStory.characters[i].descriptions[i].timeline_name = character.descriptions.timeline_name;
+                            ParsedNewStory.characters[i].descriptions[0] = new Descriptions();
+                            ParsedNewStory.characters[i].descriptions[0].description_type = character.descriptions.description_type;
+                            ParsedNewStory.characters[i].descriptions[0]._enum = character.descriptions._enum;
+                            ParsedNewStory.characters[i].descriptions[0].description = character.descriptions.description;
+                            ParsedNewStory.characters[i].descriptions[0].timeline_name = character.descriptions.timeline_name;
                         }
                     }
                     i++;
