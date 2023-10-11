@@ -21,7 +21,6 @@
     <RadzenMenuItem Click="OnSettingsClicked" Text="Settings" Icon="line_style"></RadzenMenuItem>
 </RadzenMenu>
 <br />
-<RadzenButton Click=@(() => Test()) Text="Test" ButtonStyle="ButtonStyle.Danger" />
 @if (@InProgress)
 {
     <div class="rz-m-10">
@@ -79,35 +78,6 @@
     bool SettingsVisible = false;
     bool MemoryVisible = false;
     bool LogsVisible = false;
-
-    private void Test()
-    {
-        try
-        {
-            // Single
-            //string RawJSON = @"{ ""locations"": [ { ""name"": ""Mother’s home"", ""descriptions"": [""A home in the forest where the three pigs lived before setting out to build their own houses.""] }, { ""name"": ""Straw house"", ""descriptions"": [""The first house built by Tom, the first pig, made entirely out of straw.""] }, { ""name"": ""Stick house"", ""descriptions"": [""The second house built by Joe, the second pig, made entirely out of sticks.""] }, { ""name"": ""Brick house"", ""descriptions"": [""The third house built by Charlie, the third pig, made entirely out of bricks.""] } ], ""timelines"": [ { ""name"": ""Pigs' Journey"", ""description"": ""The three pigs, Tom, Joe, and Charlie, leave their mother's home in the forest in early summer to build their own houses."" }, { ""name"": ""Wolf's Attack"", ""description"": ""A wolf tries to eat the pigs but fails to blow down the brick house and falls into a cauldron, dying."" } ], ""characters"": [ { ""name"": ""Tom"", ""descriptions"": { ""description_type"": ""History"", ""enum"": [""Appearance"",""Goals"",""History"",""Aliases"",""Facts""], ""description"": ""Tom is the first pig who builds his house out of straw."", ""timeline_name"": ""Pigs' Journey"" } }, { ""name"": ""Joe"", ""descriptions"": { ""description_type"": ""History"", ""enum"": [""Appearance"",""Goals"",""History"",""Aliases"",""Facts""], ""description"": ""Joe is the second pig who builds his house out of sticks."", ""timeline_name"": ""Pigs' Journey"" } }, { ""name"": ""Charlie"", ""descriptions"": { ""description_type"": ""History"", ""enum"": [""Appearance"",""Goals"",""History"",""Aliases"",""Facts""], ""description"": ""Charlie is the third pig who builds his house out of bricks."", ""timeline_name"": ""Pigs' Journey"" } }, { ""name"": ""Wolf"", ""descriptions"": { ""description_type"": ""History"", ""enum"": [""Appearance"",""Goals"",""History"",""Aliases"",""Facts""], ""description"": ""The wolf tries to eat the pigs but fails and dies."", ""timeline_name"": ""Wolf's Attack"" } } ] }";
-
-            // Multiple
-            string RawJSON = @"{ ""locations"": [ { ""name"": ""Main Street"", ""descriptions"": [""John lives in a box on Main Street before becoming rich.""] } ], ""timelines"": [ { ""name"": ""John's Transformation"", ""description"": ""John goes from living in a box on Main Street to becoming a rich man with the help of Mary."" }, { ""name"": ""Mary's Kindness"", ""description"": ""Mary helps John by giving him a dollar, which leads to his success. Later, John returns the favor."" } ], ""characters"": [ { ""name"": ""John"", ""descriptions"": [ { ""description_type"": ""Appearance"", ""enum"": [""Appearance"",""Goals"",""History"",""Aliases"",""Facts""], ""description"": ""John has red hair."", ""timeline_name"": ""John's Transformation"" }, { ""description_type"": ""Goals"", ""enum"": [""Appearance"",""Goals"",""History"",""Aliases"",""Facts""], ""description"": ""John wants to find a home to live in."", ""timeline_name"": ""John's Transformation"" }, { ""description_type"": ""History"", ""enum"": [""Appearance"",""Goals"",""History"",""Aliases"",""Facts""], ""description"": ""John was once poor and lived in a box, but later became rich."", ""timeline_name"": ""John's Transformation"" } ] }, { ""name"": ""Mary"", ""descriptions"": [ { ""description_type"": ""Appearance"", ""enum"": [""Appearance"",""Goals"",""History"",""Aliases"",""Facts""], ""description"": ""Mary has green hair."", ""timeline_name"": ""Mary's Kindness"" }, { ""description_type"": ""History"", ""enum"": [""Appearance"",""Goals"",""History"",""Aliases"",""Facts""], ""description"": ""Mary helped John by giving him a dollar, which led to his success. Later, John returned the favor."", ""timeline_name"": ""Mary's Kindness"" } ] } ] }";
-
-            JSONNewStory ParsedNewStory = AIStoryBuildersService.ParseJSONNewStory(RawJSON);
-        }
-        catch (Exception ex)
-        {
-            HomeVisible = true;
-            InProgress = false;
-
-            NotificationService.Notify(new NotificationMessage
-                {
-                    Severity = NotificationSeverity.Error,
-                    Summary = "Error",
-                    Detail = ex.Message,
-                    Duration = 4000
-                });
-
-            LogService.WriteToLog(ex.Message);
-        }
-    }
 
     protected override void OnInitialized()
     {
