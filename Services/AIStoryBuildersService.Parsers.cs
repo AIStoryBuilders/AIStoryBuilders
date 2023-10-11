@@ -95,6 +95,7 @@ namespace AIStoryBuilders.Services
                         {
                             // Loop through the descriptions
                             ii = 0;
+                            ParsedNewStory.characters[i].descriptions = new Descriptions[character.descriptions.Count];
                             foreach (dynamic description in character.descriptions)
                             {
                                 // Add the description to the character
@@ -109,6 +110,7 @@ namespace AIStoryBuilders.Services
                         else
                         {
                             // Add the description to the character
+                            ParsedNewStory.characters[i].descriptions = new Descriptions[1];
                             ParsedNewStory.characters[i].descriptions[0] = new Descriptions();
                             ParsedNewStory.characters[i].descriptions[0].description_type = character.descriptions.description_type;
                             ParsedNewStory.characters[i].descriptions[0]._enum = character.descriptions._enum;
