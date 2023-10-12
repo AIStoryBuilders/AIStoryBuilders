@@ -16,7 +16,6 @@
 <PageTitle>AI Story Builders</PageTitle>
 <RadzenMenu>
     <RadzenMenuItem Click="OnHomeClicked" Text="Home" Icon="home"></RadzenMenuItem>
-    <RadzenMenuItem Click="OnMemoryClicked" Text="Memory" Icon="aspect_ratio"></RadzenMenuItem>
     <RadzenMenuItem Click="OnLogsClicked" Text="Logs" Icon="assignment"></RadzenMenuItem>
     <RadzenMenuItem Click="OnSettingsClicked" Text="Settings" Icon="line_style"></RadzenMenuItem>
 </RadzenMenu>
@@ -54,10 +53,6 @@
 {
     <Settings></Settings>
 }
-@if (MemoryVisible)
-{
-    <Memory></Memory>
-}
 @if (LogsVisible)
 {
     <Logs></Logs>
@@ -76,7 +71,6 @@
     bool InProgress = false;
     bool HomeVisible = true;
     bool SettingsVisible = false;
-    bool MemoryVisible = false;
     bool LogsVisible = false;
 
     protected override void OnInitialized()
@@ -99,7 +93,6 @@
                 // Switch to the Settings page
                 HomeVisible = false;
                 SettingsVisible = true;
-                MemoryVisible = false;
                 LogsVisible = false;
             }
             else
@@ -222,7 +215,6 @@
     {
         HomeVisible = true;
         SettingsVisible = false;
-        MemoryVisible = false;
         LogsVisible = false;
     }
 
@@ -230,15 +222,6 @@
     {
         HomeVisible = false;
         SettingsVisible = true;
-        MemoryVisible = false;
-        LogsVisible = false;
-    }
-
-    void OnMemoryClicked(MenuItemEventArgs args)
-    {
-        HomeVisible = false;
-        SettingsVisible = false;
-        MemoryVisible = true;
         LogsVisible = false;
     }
 
@@ -246,7 +229,6 @@
     {
         HomeVisible = false;
         SettingsVisible = false;
-        MemoryVisible = false;
         LogsVisible = true;
     }
 

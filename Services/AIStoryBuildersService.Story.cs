@@ -149,7 +149,13 @@ namespace AIStoryBuilders.Services
             string TimelinePath = $"{StoryPath}/Timelines.csv";
             File.WriteAllLines(TimelinePath, TimelineContents);
 
-            //// **** Create the First Paragraph in the first Chapter
+            //// **** Create the First Paragraph and first three Chapters
+            
+            // Call ChatGPT
+            var ParsedChapters = await OrchestratorMethods.CreateNewChapters(ParsedStory);
+
+            // Convert the JSON to a dynamic object
+            JSONChapters ParsedNewChapters = ParseJSONNewChapters(ParsedChapters);
 
             //// Create a folder at: Chapters/Chapter1            
             //string ChapterPath = $"{ChaptersPath}/Chapter1";

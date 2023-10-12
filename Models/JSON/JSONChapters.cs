@@ -1,5 +1,9 @@
 ﻿namespace AIStoryBuilders.Models.JSON
 {
+    public class JSONChapters
+    {
+        public JSONChapter[] chapter { get; set; }
+    }
     public class JSONChapter
     {
         public string chapter_name { get; set; }
