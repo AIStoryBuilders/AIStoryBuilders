@@ -86,7 +86,7 @@ namespace AIStoryBuilders.Services
             // *****************************************************
 
             // Create the Character files
-            TextEvent?.Invoke(this, new TextEventArgs($"Create the Character files"));
+            TextEvent?.Invoke(this, new TextEventArgs($"Create the Character files", 5));
             foreach (var character in ParsedNewStory.characters)
             {
                 // Add Character to file
@@ -108,7 +108,7 @@ namespace AIStoryBuilders.Services
             }
 
             // Create the Location files
-            TextEvent?.Invoke(this, new TextEventArgs($"Create the Location files"));
+            TextEvent?.Invoke(this, new TextEventArgs($"Create the Location files", 5));
             foreach (var location in ParsedNewStory.locations)
             {
                 // Add Location to file
@@ -128,7 +128,7 @@ namespace AIStoryBuilders.Services
             }
 
             // Create the Timeline file
-            TextEvent?.Invoke(this, new TextEventArgs($"Create the Timeline file"));
+            TextEvent?.Invoke(this, new TextEventArgs($"Create the Timeline file", 5));
             List<string> TimelineContents = new List<string>();
 
             int i = 0;

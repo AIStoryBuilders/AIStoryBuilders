@@ -74,10 +74,12 @@ namespace AIStoryBuilders.Services
         public class TextEventArgs : EventArgs
         {
             public string Message { get; set; }
+            public int DisplayLength { get; set; }
 
-            public TextEventArgs(string message)
+            public TextEventArgs(string message, int displayLength)
             {
                 Message = message;
+                DisplayLength = displayLength;
             }
         }
         #endregion

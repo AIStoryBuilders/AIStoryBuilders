@@ -114,11 +114,11 @@ namespace AIStoryBuilders.Model
                         // Break out of the loop
                         ChatGPTCallingComplete = true;
                         LogService.WriteToLog($"* Breaking out of loop * Iteration: {CallCount}");
-                        ReadTextEvent?.Invoke(this, new ReadTextEventArgs($"Break out of the loop - Iteration: {CallCount}"));
+                        ReadTextEvent?.Invoke(this, new ReadTextEventArgs($"Break out of the loop - Iteration: {CallCount}", 5));
                     }
                     else
                     {
-                        ReadTextEvent?.Invoke(this, new ReadTextEventArgs($"Continue to Loop - Iteration: {CallCount}"));
+                        ReadTextEvent?.Invoke(this, new ReadTextEventArgs($"Continue to Loop - Iteration: {CallCount}", 5));
                     }
                 }
                 else
@@ -126,13 +126,13 @@ namespace AIStoryBuilders.Model
                     // Break out of the loop
                     ChatGPTCallingComplete = true;
                     LogService.WriteToLog($"Iteration: {CallCount}");
-                    ReadTextEvent?.Invoke(this, new ReadTextEventArgs($"Break out of the loop - Iteration: {CallCount}"));
+                    ReadTextEvent?.Invoke(this, new ReadTextEventArgs($"Break out of the loop - Iteration: {CallCount}", 5));
                 }
             }
 
             // *****************************************************
             // Clean up the final summary
-            ReadTextEvent?.Invoke(this, new ReadTextEventArgs($"Clean up the final summary"));
+            ReadTextEvent?.Invoke(this, new ReadTextEventArgs($"Clean up the final summary", 5));
             string RawSummary = ChatResponseResult.FirstChoice.Message.Content;
 
             chatPrompts = new List<Message>();

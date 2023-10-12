@@ -361,10 +361,12 @@ namespace AIStoryBuilders.Model
         public class ReadTextEventArgs : EventArgs
         {
             public string Message { get; set; }
+            public int DisplayLength { get; set; }
 
-            public ReadTextEventArgs(string message)
+            public ReadTextEventArgs(string message, int display_length)
             {
                 Message = message;
+                DisplayLength = display_length;
             }
         }
         #endregion

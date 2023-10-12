@@ -125,7 +125,7 @@
     private async Task NewStory()
     {
         try
-        {        
+        {
             var NewStoryResult = await dialogService.OpenAsync<NewStory>($"New Story",
                 null,
                 new DialogOptions() { Width = "650px" });
@@ -135,7 +135,7 @@
                 objStory = (Story)NewStoryResult;
 
                 if (objStory != null)
-                {         
+                {
                     HomeVisible = false;
                     InProgress = true;
                     StateHasChanged();
@@ -187,7 +187,7 @@
             {
                 // It is a New Story and needs processing
                 // Show the Progress bar
-                InProgress = true; 
+                InProgress = true;
             }
 
             var parms = new Dictionary<string, object>();
@@ -261,20 +261,20 @@
                 Severity = NotificationSeverity.Info,
                 Summary = "Info",
                 Detail = ReadTextEventArguments.Message,
-                Duration = 4000
+                Duration = (ReadTextEventArguments.DisplayLength * 1000)
             });
     }
 
     private void AIStoryBuildersService_TextEvent(object sender, EventArgs e)
     {
-        TextEventArgs ReadTextEventArguments = (TextEventArgs)e;
+        TextEventArgs TextEventArguments = (TextEventArgs)e;
 
         NotificationService.Notify(new NotificationMessage
             {
                 Severity = NotificationSeverity.Info,
                 Summary = "Info",
-                Detail = ReadTextEventArguments.Message,
-                Duration = 4000
+                Detail = TextEventArguments.Message,
+                Duration = (TextEventArguments.DisplayLength * 1000)
             });
     }
 

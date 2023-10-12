@@ -123,9 +123,14 @@ namespace AIStoryBuilders.Services
             catch (Exception ex)
             {
                 // Log error
-                LogService.WriteToLog(ex.Message);
+                LogService.WriteToLog("ParseJSONNewStory: " + ex.Message);
 
-                throw;
+                JSONStory ParsedNewStory = new JSONStory();
+                ParsedNewStory.characters = new Character[0];
+                ParsedNewStory.locations = new Locations[0];
+                ParsedNewStory.timelines = new Timelines[0];
+
+                return ParsedNewStory;
             }
         }
         #endregion

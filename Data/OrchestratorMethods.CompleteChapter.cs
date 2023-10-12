@@ -58,12 +58,12 @@ namespace AIStoryBuilders.Model
             // Create a single string from the first colum of SearchResults
             string BackgroundText = string.Join(",", SearchResults.Select(x => x.Item1));
 
-            ReadTextEvent?.Invoke(this, new ReadTextEventArgs($"Background retrieved: {BackgroundText.Split(' ').Length} words."));
+            ReadTextEvent?.Invoke(this, new ReadTextEventArgs($"Background retrieved: {BackgroundText.Split(' ').Length} words.", 5));
 
             // Trim BackgroundText to 5000 words (so we don't run out of tokens)
             BackgroundText = OrchestratorMethods.TrimToMaxWords(BackgroundText, 10000);
 
-            ReadTextEvent?.Invoke(this, new ReadTextEventArgs($"Background trimmed to: {BackgroundText.Split(' ').Length} words."));
+            ReadTextEvent?.Invoke(this, new ReadTextEventArgs($"Background trimmed to: {BackgroundText.Split(' ').Length} words.", 5));
 
             // Update System Message
             SystemMessage = CreateSystemMessageChapter(NewChapter, BackgroundText);
@@ -77,7 +77,7 @@ namespace AIStoryBuilders.Model
                 )
             );
 
-            ReadTextEvent?.Invoke(this, new ReadTextEventArgs($"Call ChatGPT..."));
+            ReadTextEvent?.Invoke(this, new ReadTextEventArgs($"Call ChatGPT...",30));
 
             // Get a response from ChatGPT 
             var FinalChatRequest = new ChatRequest(
