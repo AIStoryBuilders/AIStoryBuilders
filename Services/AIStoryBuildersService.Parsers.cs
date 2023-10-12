@@ -7,20 +7,17 @@ namespace AIStoryBuilders.Services
     {
 
         #region *** JSONNewStory ***
-        public JSONNewStory ParseJSONNewStory(string RawJSON)
+        public JSONStory ParseJSONNewStory(string RawJSON)
         {
             try
             {
-                // Convert the JSON to a dynamic object
-                //JSONNewStory ParsedNewStory = JsonConvert.DeserializeObject<JSONNewStory>(RawJSON);
-
                 // Parse the JSON as a dynamic object
                 dynamic ParsedJSON = JsonConvert.DeserializeObject(RawJSON);
 
                 int i = 0;
                 int ii = 0;
 
-                JSONNewStory ParsedNewStory = new JSONNewStory();
+                JSONStory ParsedNewStory = new JSONStory();
 
                 int charactersCount = 1;
                 int locationsCount = 1;

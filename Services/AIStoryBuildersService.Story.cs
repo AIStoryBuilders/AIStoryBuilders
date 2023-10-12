@@ -81,7 +81,7 @@ namespace AIStoryBuilders.Services
             var ParsedStory = await OrchestratorMethods.ParseNewStory(story.Title, story.Synopsis);
 
             // Convert the JSON to a dynamic object
-            JSONNewStory ParsedNewStory = ParseJSONNewStory(ParsedStory);
+            JSONStory ParsedNewStory = ParseJSONNewStory(ParsedStory);
 
             // *****************************************************
 

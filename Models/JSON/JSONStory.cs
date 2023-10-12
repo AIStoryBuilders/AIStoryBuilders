@@ -1,7 +1,7 @@
 ﻿namespace AIStoryBuilders.Models.JSON
 {
 
-    public class JSONNewStory
+    public class JSONStory
     {
         public Locations[] locations { get; set; }
         public Timelines[] timelines { get; set; }
@@ -34,6 +34,3 @@
         public string timeline_name { get; set; }
     }
 }
-
-
-
