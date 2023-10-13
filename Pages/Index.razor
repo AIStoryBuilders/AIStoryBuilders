@@ -19,6 +19,7 @@
     <RadzenMenuItem Click="OnLogsClicked" Text="Logs" Icon="assignment"></RadzenMenuItem>
     <RadzenMenuItem Click="OnSettingsClicked" Text="Settings" Icon="line_style"></RadzenMenuItem>
 </RadzenMenu>
+<RadzenButton Click=@(() => Test()) Text="Test" ButtonStyle="ButtonStyle.Danger" />
 <br />
 @if (@InProgress)
 {
@@ -72,6 +73,16 @@
     bool HomeVisible = true;
     bool SettingsVisible = false;
     bool LogsVisible = false;
+
+    private void Test()
+    {
+        string json = "[{\"chapter\":{\"chapter_name\":\"Chapter1\",\"chapter_synopsis\":\"John's life on Main Street and his encounter with Mary.\",\"paragraphs\":{\"contents\":\"John, a man with red hair, lived in a box on Main Street. Every day, he saw Mary, a woman with green hair, walk past him.\",\"location_name\":\"Main Street\",\"timeline_name\":\"John's Transformation\",\"character_names\":[\"John\",\"Mary\"]}}},{\"chapter\":{\"chapter_name\":\"Chapter2\",\"chapter_synopsis\":\"Mary's decision to help John and their journey together.\",\"paragraphs\":{\"contents\":\"One day, Mary decided to help John. She had always noticed him and felt a strong urge to change his life.\",\"location_name\":\"Main Street\",\"timeline_name\":\"John's Transformation\",\"character_names\":[\"Mary\",\"John\"]}}},{\"chapter\":{\"chapter_name\":\"Chapter3\",\"chapter_synopsis\":\"John's transformation from a homeless man to a rich man.\",\"paragraphs\":{\"contents\":\"With Mary's help, John was able to find a home and eventually became a rich man. He was no longer the man who lived in a box on Main Street.\",\"location_name\":\"Main Street\",\"timeline_name\":\"John's Transformation\",\"character_names\":[\"John\",\"Mary\"]}}}]";
+        
+        // Convert the JSON to a dynamic object
+        JSONChapters ParsedNewChapters = AIStoryBuildersService.ParseJSONNewChapters(json);
+    
+    }
+
 
     protected override void OnInitialized()
     {

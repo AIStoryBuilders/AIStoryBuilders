@@ -153,71 +153,73 @@ namespace AIStoryBuilders.Services
 
                 int chapterCount = 1;
 
-                if (ParsedJSON.chapter != null)
+                if (ParsedJSON != null)
                 {
-                    chapterCount = ParsedJSON.chapter.Count;
-                }
 
-                ParsedNewChapters.chapter = new JSONChapter[chapterCount];
+                    chapterCount = ParsedJSON.Count;
 
-                foreach (dynamic chapter in ParsedJSON.chapter)
-                {
-                    // Add the chapter to the new story
-                    ParsedNewChapters.chapter[i] = new JSONChapter();
-                    ParsedNewChapters.chapter[i].chapter_name = chapter.chapter_name;
-                    ParsedNewChapters.chapter[i].chapter_synopsis = chapter.chapter_synopsis;
+                    ParsedNewChapters.chapter = new JSONChapter[chapterCount];
 
-                    if (chapter.paragraphs != null)
+                    foreach (dynamic chapter in ParsedJSON)
                     {
-                        ParsedNewChapters.chapter[i].paragraphs = new Paragraphs[chapter.paragraphs.Count];
+                        // Add the chapter to the new story
+                        ParsedNewChapters.chapter[i] = new JSONChapter();
+                        ParsedNewChapters.chapter[i].chapter_name = chapter[i].chapter_name;
+                        ParsedNewChapters.chapter[i].chapter_synopsis = chapter[i].chapter_synopsis;
 
-                        // See if there is more than one paragraph
-                        if (chapter.paragraphs.Count > 1)
+                        if (chapter[i].paragraphs != null)
                         {
-                            // Loop through the paragraphs
-                            ii = 0;
-                            foreach (dynamic paragraph in chapter.paragraphs)
+                            ParsedNewChapters.chapter[i].paragraphs = new Paragraphs[chapter[i].paragraphs.Count];
+
+                            // See if there is more than one paragraph
+                            if (chapter[i].paragraphs.Count > 1)
                             {
-                                // Add the paragraph to the chapter
-                                ParsedNewChapters.chapter[i].paragraphs[ii] = new Paragraphs();
-                                ParsedNewChapters.chapter[i].paragraphs[ii].contents = paragraph.contents;
-                                ParsedNewChapters.chapter[i].paragraphs[ii].location_name = paragraph.location_name;
-                                ParsedNewChapters.chapter[i].paragraphs[ii].timeline_name = paragraph.timeline_name;
-
-                                if (paragraph.character_names != null)
+                                // Loop through the paragraphs
+                                ii = 0;
+                                foreach (dynamic paragraph in chapter[i].paragraphs)
                                 {
-                                    ParsedNewChapters.chapter[i].paragraphs[ii].character_names = new string[paragraph.character_names.Count];
+                                    // Add the paragraph to the chapter
+                                    ParsedNewChapters.chapter[i].paragraphs[ii] = new Paragraphs();
+                                    ParsedNewChapters.chapter[i].paragraphs[ii].contents = paragraph[ii].contents;
+                                    ParsedNewChapters.chapter[i].paragraphs[ii].location_name = paragraph[ii].location_name;
+                                    ParsedNewChapters.chapter[i].paragraphs[ii].timeline_name = paragraph[ii].timeline_name;
 
-                                    // See if there is more than one character
-                                    if (paragraph.character_names.Count > 1)
+                                    if (paragraph[ii].character_names != null)
                                     {
-                                        // Loop through the characters
-                                        int iii = 0;
-                                        foreach (dynamic character in paragraph.character_names)
+                                        ParsedNewChapters.chapter[i].paragraphs[ii].character_names = new string[paragraph[ii].character_names.Count];
+
+                                        // See if there is more than one character
+                                        if (paragraph[ii].character_names.Count > 1)
+                                        {
+                                            // Loop through the characters
+                                            int iii = 0;
+                                            foreach (dynamic character in paragraph[iii].character_names)
+                                            {
+                                                // Add the character to the paragraph
+                                                ParsedNewChapters.chapter[i].paragraphs[ii].character_names[iii] = character;
+                                                iii++;
+                                            }
+                                        }
+                                        else
                                         {
                                             // Add the character to the paragraph
-                                            ParsedNewChapters.chapter[i].paragraphs[ii].character_names[iii] = character;
-                                            iii++;
+                                            ParsedNewChapters.chapter[i].paragraphs[ii].character_names[0] = paragraph[ii].character_names[0];
                                         }
                                     }
-                                    else
-                                    {
-                                        // Add the character to the paragraph
-                                        ParsedNewChapters.chapter[i].paragraphs[ii].character_names[0] = paragraph.character_names[0];
-                                    }
+                                    ii++;
                                 }
-                                ii++;
+                            }
+                            else
+                            {
+                                // Add the paragraph to the chapter
+                                ParsedNewChapters.chapter[i].paragraphs = new Paragraphs[1];
+                                ParsedNewChapters.chapter[i].paragraphs[0] = new Paragraphs();
+                                ParsedNewChapters.chapter[i].paragraphs[0].contents = chapter.paragraphs;
                             }
                         }
-                        else
-                        {
-                            // Add the paragraph to the chapter
-                            ParsedNewChapters.chapter[i].paragraphs = new Paragraphs[1];
-                            ParsedNewChapters.chapter[i].paragraphs[0] = new Paragraphs();
-                            ParsedNewChapters.chapter[i].paragraphs[0].contents = chapter.paragraphs;
-                        }
+                        i++;
                     }
-                }               
+                }
 
                 return ParsedNewChapters;
             }

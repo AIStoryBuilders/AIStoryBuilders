@@ -157,19 +157,36 @@ namespace AIStoryBuilders.Services
             // Convert the JSON to a dynamic object
             JSONChapters ParsedNewChapters = ParseJSONNewChapters(ParsedChapters);
 
-            //// Create a folder at: Chapters/Chapter1            
-            //string ChapterPath = $"{ChaptersPath}/Chapter1";
-            //CreateDirectory(ChapterPath);
+            // Create the first three Chapters
+            TextEvent?.Invoke(this, new TextEventArgs($"Create the first three Chapters", 5));
 
-            //// Create a file at: Chapters/Chapter1/Chapter.txt
-            //string ChapterFilePath = $"{ChapterPath}/Chapter.txt";
-            //File.WriteAllText(ChapterFilePath, $"Chapter One|");
+            int ChapterNumber = 1;
+            foreach (var chapter in ParsedNewChapters.chapter)
+            {       
+                // Create a folder in Chapters/            
+                string ChapterPath = $"{ChaptersPath}/{chapter.chapter_name}";
+                CreateDirectory(ChapterPath);
 
-            //// Create a file at: Chapters/Chapter1/Paragraph1.txt
-            //TextEvent?.Invoke(this, new TextEventArgs($"Create Chapters/Chapter1/Paragraph1.txt"));
-            //string FirstParagraphPath = $"{ChapterPath}/Paragraph1.txt";
-            //string VectorDescriptionAndEmbeddingFirstParagraph = await OrchestratorMethods.GetVectorEmbedding(ParsedNewStory.firstparagraph);
-            //File.WriteAllText(FirstParagraphPath, $"||{VectorDescriptionAndEmbeddingFirstParagraph}");
+                TextEvent?.Invoke(this, new TextEventArgs($"ChapterPath", 5));
+
+                if (chapter.chapter_synopsis != null)
+                {
+                    // Create a file at: Chapters/Chapter{ChapterNumber}/Chapter{ChapterNumber}.txt
+                    string ChapterFilePath = $"{ChapterPath}/Chapter{ChapterNumber}.txt";
+                    string ChapterSynopsisAndEmbedding = await OrchestratorMethods.GetVectorEmbedding(chapter.chapter_synopsis);
+                    File.WriteAllText(ChapterFilePath, $"{chapter.chapter_name}|{ChapterSynopsisAndEmbedding}");
+
+                    if (chapter.paragraphs[0] != null)
+                    {
+                        // Create a file at: Chapters/Chapter1/Paragraph1.txt
+                        string FirstParagraphPath = $"{ChapterPath}/Chapter{ChapterNumber}/Paragraph1.txt";
+                        string VectorDescriptionAndEmbeddingFirstParagraph = await OrchestratorMethods.GetVectorEmbedding(chapter.paragraphs[0].contents);
+                        File.WriteAllText(FirstParagraphPath, $"||{VectorDescriptionAndEmbeddingFirstParagraph}");
+                    }
+                }
+
+                ChapterNumber++;
+            }
         }
 
         public void UpdateStory(Story story)
