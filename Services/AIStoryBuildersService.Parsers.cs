@@ -5,7 +5,6 @@ namespace AIStoryBuilders.Services
 {
     public partial class AIStoryBuildersService
     {
-
         #region *** JSONNewStory ***
         public JSONStory ParseJSONNewStory(string RawJSON)
         {
@@ -45,25 +44,29 @@ namespace AIStoryBuilders.Services
                     // Add the location to the new story
                     ParsedNewStory.locations[i] = new Locations();
                     ParsedNewStory.locations[i].name = location.name;
-                    ParsedNewStory.locations[i].descriptions = new string[location.descriptions.Count];
 
-                    // See if there is more than one description
-                    if (location.descriptions.Count > 1)
+                    if (location.descriptions != null)
                     {
-                        // Loop through the descriptions
-                        ii = 0;
-                        foreach (dynamic description in location.descriptions)
+                        ParsedNewStory.locations[i].descriptions = new string[location.descriptions.Count];
+
+                        // See if there is more than one description
+                        if (location.descriptions.Count > 1)
+                        {
+                            // Loop through the descriptions
+                            ii = 0;
+                            foreach (dynamic description in location.descriptions)
+                            {
+                                // Add the description to the location
+                                ParsedNewStory.locations[i].descriptions[ii] = description;
+                                ii++;
+                            }
+                        }
+                        else
                         {
                             // Add the description to the location
-                            ParsedNewStory.locations[i].descriptions[ii] = description;
-                            ii++;
+                            ParsedNewStory.locations[i].descriptions = new string[1];
+                            ParsedNewStory.locations[i].descriptions[0] = location.descriptions[0];
                         }
-                    }
-                    else
-                    {
-                        // Add the description to the location
-                        ParsedNewStory.locations[i].descriptions = new string[1];
-                        ParsedNewStory.locations[i].descriptions[0] = location.descriptions[0];
                     }
                     i++;
                 }
@@ -157,83 +160,64 @@ namespace AIStoryBuilders.Services
 
                 ParsedNewChapters.chapter = new JSONChapter[chapterCount];
 
-                //foreach (dynamic location in ParsedJSON.locations)
-                //{
-                //    // Add the location to the new story
-                //    ParsedNewStory.locations[i] = new Locations();
-                //    ParsedNewStory.locations[i].name = location.name;
-                //    ParsedNewStory.locations[i].descriptions = new string[location.descriptions.Count];
+                foreach (dynamic chapter in ParsedJSON.chapter)
+                {
+                    // Add the chapter to the new story
+                    ParsedNewChapters.chapter[i] = new JSONChapter();
+                    ParsedNewChapters.chapter[i].chapter_name = chapter.chapter_name;
+                    ParsedNewChapters.chapter[i].chapter_synopsis = chapter.chapter_synopsis;
 
-                //    // See if there is more than one description
-                //    if (location.descriptions.Count > 1)
-                //    {
-                //        // Loop through the descriptions
-                //        ii = 0;
-                //        foreach (dynamic description in location.descriptions)
-                //        {
-                //            // Add the description to the location
-                //            ParsedNewStory.locations[i].descriptions[ii] = description;
-                //            ii++;
-                //        }
-                //    }
-                //    else
-                //    {
-                //        // Add the description to the location
-                //        ParsedNewStory.locations[i].descriptions = new string[1];
-                //        ParsedNewStory.locations[i].descriptions[0] = location.descriptions[0];
-                //    }
-                //    i++;
-                //}
+                    if (chapter.paragraphs != null)
+                    {
+                        ParsedNewChapters.chapter[i].paragraphs = new Paragraphs[chapter.paragraphs.Count];
 
-                //i = 0;
-                //foreach (dynamic timeline in ParsedJSON.timelines)
-                //{
-                //    // Add the timeline to the new story
-                //    ParsedNewStory.timelines[i] = new Timelines();
-                //    ParsedNewStory.timelines[i].name = timeline.name;
-                //    ParsedNewStory.timelines[i].description = timeline.description;
-                //    i++;
-                //}
+                        // See if there is more than one paragraph
+                        if (chapter.paragraphs.Count > 1)
+                        {
+                            // Loop through the paragraphs
+                            ii = 0;
+                            foreach (dynamic paragraph in chapter.paragraphs)
+                            {
+                                // Add the paragraph to the chapter
+                                ParsedNewChapters.chapter[i].paragraphs[ii] = new Paragraphs();
+                                ParsedNewChapters.chapter[i].paragraphs[ii].contents = paragraph.contents;
+                                ParsedNewChapters.chapter[i].paragraphs[ii].location_name = paragraph.location_name;
+                                ParsedNewChapters.chapter[i].paragraphs[ii].timeline_name = paragraph.timeline_name;
 
-                //i = 0;
-                //foreach (dynamic character in ParsedJSON.characters)
-                //{
-                //    // Add the character to the new story
-                //    ParsedNewStory.characters[i] = new Character();
-                //    ParsedNewStory.characters[i].name = character.name;
+                                if (paragraph.character_names != null)
+                                {
+                                    ParsedNewChapters.chapter[i].paragraphs[ii].character_names = new string[paragraph.character_names.Count];
 
-                //    if (character.descriptions != null)
-                //    {
-                //        // See if there is more than one description
-                //        if (character.descriptions.Count > 1)
-                //        {
-                //            // Loop through the descriptions
-                //            ii = 0;
-                //            ParsedNewStory.characters[i].descriptions = new Descriptions[character.descriptions.Count];
-                //            foreach (dynamic description in character.descriptions)
-                //            {
-                //                // Add the description to the character
-                //                ParsedNewStory.characters[i].descriptions[ii] = new Descriptions();
-                //                ParsedNewStory.characters[i].descriptions[ii].description_type = description.description_type;
-                //                ParsedNewStory.characters[i].descriptions[ii]._enum = description._enum;
-                //                ParsedNewStory.characters[i].descriptions[ii].description = description.description;
-                //                ParsedNewStory.characters[i].descriptions[ii].timeline_name = description.timeline_name;
-                //                ii++;
-                //            }
-                //        }
-                //        else
-                //        {
-                //            // Add the description to the character
-                //            ParsedNewStory.characters[i].descriptions = new Descriptions[1];
-                //            ParsedNewStory.characters[i].descriptions[0] = new Descriptions();
-                //            ParsedNewStory.characters[i].descriptions[0].description_type = character.descriptions.description_type;
-                //            ParsedNewStory.characters[i].descriptions[0]._enum = character.descriptions._enum;
-                //            ParsedNewStory.characters[i].descriptions[0].description = character.descriptions.description;
-                //            ParsedNewStory.characters[i].descriptions[0].timeline_name = character.descriptions.timeline_name;
-                //        }
-                //    }
-                //    i++;
-                //}
+                                    // See if there is more than one character
+                                    if (paragraph.character_names.Count > 1)
+                                    {
+                                        // Loop through the characters
+                                        int iii = 0;
+                                        foreach (dynamic character in paragraph.character_names)
+                                        {
+                                            // Add the character to the paragraph
+                                            ParsedNewChapters.chapter[i].paragraphs[ii].character_names[iii] = character;
+                                            iii++;
+                                        }
+                                    }
+                                    else
+                                    {
+                                        // Add the character to the paragraph
+                                        ParsedNewChapters.chapter[i].paragraphs[ii].character_names[0] = paragraph.character_names[0];
+                                    }
+                                }
+                                ii++;
+                            }
+                        }
+                        else
+                        {
+                            // Add the paragraph to the chapter
+                            ParsedNewChapters.chapter[i].paragraphs = new Paragraphs[1];
+                            ParsedNewChapters.chapter[i].paragraphs[0] = new Paragraphs();
+                            ParsedNewChapters.chapter[i].paragraphs[0].contents = chapter.paragraphs;
+                        }
+                    }
+                }               
 
                 return ParsedNewChapters;
             }
