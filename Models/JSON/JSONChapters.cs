@@ -13,7 +13,7 @@
 
     public class Paragraphs
     {
-        int sequence { get; set; }
+        public int sequence { get; set; }
         public string contents { get; set; }
         public string location_name { get; set; }
         public string timeline_name { get; set; }

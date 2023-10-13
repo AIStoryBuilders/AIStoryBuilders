@@ -157,13 +157,12 @@ namespace AIStoryBuilders.Services
             // Convert the JSON to a dynamic object
             JSONChapters ParsedNewChapters = ParseJSONNewChapters(ParsedChapters);
 
-            // Create the first three Chapters
-            TextEvent?.Invoke(this, new TextEventArgs($"Create the first three Chapters", 5));
+            //// **** Create the Files
 
             int ChapterNumber = 1;
             foreach (var chapter in ParsedNewChapters.chapter)
-            {       
-                // Create a folder in Chapters/            
+            {
+                // Create a folder in Chapters/
                 string ChapterPath = $"{ChaptersPath}/{chapter.chapter_name}";
                 CreateDirectory(ChapterPath);
 
@@ -174,14 +173,32 @@ namespace AIStoryBuilders.Services
                     // Create a file at: Chapters/Chapter{ChapterNumber}/Chapter{ChapterNumber}.txt
                     string ChapterFilePath = $"{ChapterPath}/Chapter{ChapterNumber}.txt";
                     string ChapterSynopsisAndEmbedding = await OrchestratorMethods.GetVectorEmbedding(chapter.chapter_synopsis);
-                    File.WriteAllText(ChapterFilePath, $"{chapter.chapter_name}|{ChapterSynopsisAndEmbedding}");
+                    File.WriteAllText(ChapterFilePath, $"{ChapterSynopsisAndEmbedding}");
 
                     if (chapter.paragraphs[0] != null)
                     {
                         // Create a file at: Chapters/Chapter1/Paragraph1.txt
-                        string FirstParagraphPath = $"{ChapterPath}/Chapter{ChapterNumber}/Paragraph1.txt";
+                        string FirstParagraphPath = $"{ChapterPath}/Paragraph1.txt";
                         string VectorDescriptionAndEmbeddingFirstParagraph = await OrchestratorMethods.GetVectorEmbedding(chapter.paragraphs[0].contents);
-                        File.WriteAllText(FirstParagraphPath, $"||{VectorDescriptionAndEmbeddingFirstParagraph}");
+
+                        string Location = chapter.paragraphs[0].location_name;
+                        string Timeline = chapter.paragraphs[0].timeline_name;
+                        string Characters = "[";
+
+                        if (chapter.paragraphs[0].character_names != null)
+                        {
+                            foreach (var character in chapter.paragraphs[0].character_names)
+                            {
+                                Characters += $"{character},";
+                            }
+
+                            // Remove the last comma
+                            Characters = Characters.Remove(Characters.Length - 1);
+
+                        }
+                        Characters = Characters + "]";
+
+                        File.WriteAllText(FirstParagraphPath, $"{Location}|{Timeline}|{Characters}|{VectorDescriptionAndEmbeddingFirstParagraph}");
                     }
                 }
 
