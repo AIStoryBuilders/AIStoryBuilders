@@ -84,19 +84,21 @@ namespace AIStoryBuilders.Model
                     "#3 A short first paragraph for each chapter. \n" +
                     "#4 A single timeline_name for each paragraph. \n" +
                     "#5 The list of character names that appear in each paragraph. \n" +
+                    "Output JSON nothing else. \n" +
                     "Provide the results in the following JSON format: \n" +
                     "{ \n" +
-                    "\"chapter\": \n" +
+                    "\"chapter\": [\n" +
                     "{ \n" +
                     "\"chapter_name\": chapter_name, \n" +
                     "\"chapter_synopsis\": chapter_synopsis, \n" +
-                    "\"paragraphs\": \n" +
+                    "\"paragraphs\": [\n" +
                     "{ \n" +
                     "\"contents\": contents, \n" +
                     "\"location_name\": location_name, \n" +
                     "\"timeline_name\": timeline_name, \n" +
                     "\"character_names\": [character_names] \n" +
                     "} \n" +
+                    "] \n" +
                     "} \n";
         }
         #endregion

@@ -150,6 +150,11 @@ namespace AIStoryBuilders.Services
             File.WriteAllLines(TimelinePath, TimelineContents);
 
             //// **** Create the First Paragraph and first three Chapters
+
+            // Search for the first occurrence of the { character
+            int FirstCurlyBrace = ParsedStory.IndexOf('{');
+            // Set ParsedStory to the string after the first occurrence of the { character
+            ParsedStory = ParsedStory.Substring(FirstCurlyBrace);
             
             // Call ChatGPT
             var ParsedChapters = await OrchestratorMethods.CreateNewChapters(ParsedStory);
