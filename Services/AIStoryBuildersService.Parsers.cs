@@ -158,7 +158,16 @@ namespace AIStoryBuilders.Services
                     if (ParsedJSON.Count == null)
                     {
                         // All three chapters have been returned as one element
-                        ParsedJSON = ParsedJSON.chapter;
+                        if(ParsedJSON.chapter != null)
+                        {
+                            // Sometimes it comes back as chapter
+                            ParsedJSON = ParsedJSON.chapter;
+                        }
+                        else
+                        {
+                            // Sometimes it comes back as chapters
+                            ParsedJSON = ParsedJSON.chapters;
+                        }
 
                         chapterCount = ParsedJSON.Count;
 
