@@ -14,10 +14,10 @@
 @inject SettingsService SettingsService
 @implements IDisposable
 <PageTitle>AI Story Builders</PageTitle>
-<RadzenButton Click=@(() => Test()) Text="Test" ButtonStyle="ButtonStyle.Danger" />
 <RadzenMenu>
     <RadzenMenuItem Click="OnHomeClicked" Text="Home" Icon="home"></RadzenMenuItem>
     <RadzenMenuItem Click="OnLogsClicked" Text="Logs" Icon="assignment"></RadzenMenuItem>
+    <RadzenMenuItem Click="OnUtilityClicked" Text="Utility" Icon="aspect_ratio"></RadzenMenuItem>
     <RadzenMenuItem Click="OnSettingsClicked" Text="Settings" Icon="line_style"></RadzenMenuItem>
 </RadzenMenu>
 <br />
@@ -58,6 +58,10 @@
 {
     <Logs></Logs>
 }
+@if (UtilityVisible)
+{
+    <Utility></Utility>
+}
 @code {
     AIStoryBuildersService AIStoryBuildersService;
     OrchestratorMethods OrchestratorMethods;
@@ -73,54 +77,7 @@
     bool HomeVisible = true;
     bool SettingsVisible = false;
     bool LogsVisible = false;
-
-    public void Test()
-    {
-        string jsonString = @"{
-                                ""chapter"": [
-                                    {
-                                        ""chapter_name"": ""Chapter1"",
-                                        ""chapter_synopsis"": ""John's life on Main Street"",
-                                        ""paragraphs"": [
-                                            {
-                                                ""contents"": ""John, a man with red hair, lived in a box on Main Street. His only goal was to find a home to live in."",
-                                                ""location_name"": ""Main Street"",
-                                                ""timeline_name"": ""John's Transformation"",
-                                                ""character_names"": [""John""]
-                                            }
-                                        ]
-                                    },
-                                    {
-                                        ""chapter_name"": ""Chapter2"",
-                                        ""chapter_synopsis"": ""Mary's intervention"",
-                                        ""paragraphs"": [
-                                            {
-                                                ""contents"": ""Mary, a woman with green hair, noticed John's plight and decided to help him."",
-                                                ""location_name"": ""Main Street"",
-                                                ""timeline_name"": ""John's Transformation"",
-                                                ""character_names"": [""Mary"", ""John""]
-                                            }
-                                        ]
-                                    },
-                                    {
-                                        ""chapter_name"": ""Chapter3"",
-                                        ""chapter_synopsis"": ""John's transformation"",
-                                        ""paragraphs"": [
-                                            {
-                                                ""contents"": ""With Mary's help, John was able to leave his box on Main Street and become a rich man."",
-                                                ""location_name"": ""Main Street"",
-                                                ""timeline_name"": ""John's Transformation"",
-                                                ""character_names"": [""John"", ""Mary""]
-                                            }
-                                        ]
-                                    }
-                                ]
-                            }";
-
-
-        var result = AIStoryBuildersService.ParseJSONNewChapters(jsonString);
-
-    }
+    bool UtilityVisible = false;
 
     protected override void OnInitialized()
     {
@@ -264,6 +221,7 @@
     {
         HomeVisible = true;
         SettingsVisible = false;
+        UtilityVisible = false;
         LogsVisible = false;
     }
 
@@ -271,6 +229,7 @@
     {
         HomeVisible = false;
         SettingsVisible = true;
+        UtilityVisible = false;
         LogsVisible = false;
     }
 
@@ -278,7 +237,16 @@
     {
         HomeVisible = false;
         SettingsVisible = false;
+        UtilityVisible = false;
         LogsVisible = true;
+    }
+
+    void OnUtilityClicked(MenuItemEventArgs args)
+    {
+        HomeVisible = false;
+        SettingsVisible = false;
+        UtilityVisible = true;
+        LogsVisible = false;
     }
 
     // Events

@@ -9,7 +9,6 @@ using System.Text.Json;
 using Newtonsoft.Json;
 using static AIStoryBuilders.Model.OrchestratorMethods;
 using Microsoft.Maui.Storage;
-using static AIStoryBuilders.Pages.Memory;
 
 namespace AIStoryBuilders.Model
 {

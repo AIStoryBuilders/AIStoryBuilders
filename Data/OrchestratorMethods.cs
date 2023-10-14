@@ -1,7 +1,6 @@
 using Newtonsoft.Json;
 using OpenAI;
 using System.Text.RegularExpressions;
-using static AIStoryBuilders.Pages.Memory;
 
 namespace AIStoryBuilders.Model
 {

@@ -1,0 +1,103 @@
+﻿@using AIStoryBuilders.Model;
+@using AIStoryBuilders.Services;
+@using Newtonsoft.Json;
+@using OpenAI;
+@inherits OwningComponentBase
+@inject NotificationService NotificationService
+@inject DialogService DialogService
+@inject SettingsService SettingsService
+@inject OrchestratorMethods OrchestratorMethods
+<h3>Parse JSON</h3>
+<div class="row">
+    <div class="col">
+        <RadzenButton Text="Add JSON" ButtonStyle="ButtonStyle.Success"
+                      Click="AddJSON"
+                      Style="margin-bottom: 10px; width: 150px" />&nbsp;&nbsp;
+        <p><RadzenDropDown Data=@colMethods @bind-Value="@SelectedMethod" /></p>
+        <RadzenButton Text="Parse JSON" ButtonStyle="ButtonStyle.Info"
+                      Click="ParseJSON"
+                      Style="margin-bottom: 10px; width: 150px" />&nbsp;&nbsp;
+    </div>
+</div>
+<RadzenTextArea MaxLength="1000" Cols="100" Rows="10" @bind-Value="@jsonParsed" />
+
+@code {
+    AIStoryBuildersService AIStoryBuildersService;
+    string jsonString = @"{]";
+    string jsonParsed = "";
+    string SelectedMethod = "ParseJSONNewChapters";
+
+    List<string> colMethods = new List<string>()
+                {
+                    "ParseJSONNewChapters",
+                    "ParseJSONNewStory",
+                };
+
+
+    protected override void OnInitialized()
+    {
+        AIStoryBuildersService = (AIStoryBuildersService)ScopedServices.GetService(typeof(AIStoryBuildersService));
+    }
+
+    private async Task AddJSON()
+    {
+        try
+        {
+            // Display inline Radzen dialog to capture text
+            var result = await DialogService.OpenAsync("Add JSON", ds =>
+    @<RadzenStack Gap="1.5rem">
+        <RadzenTextArea @bind-Value="@jsonString" class="w-100" Style="height:200px" />
+        <RadzenStack Orientation="Orientation.Horizontal" Gap="0.5rem" AlignItems="AlignItems.Center" JustifyContent="JustifyContent.SpaceBetween">
+            <RadzenStack Orientation="Orientation.Horizontal">
+                <RadzenButton Text="Ok" Click="() => ds.Close(true)" Style="width: 80px;" />
+                <RadzenButton Text="Cancel" Click="() => ds.Close(false)" ButtonStyle="ButtonStyle.Light" />
+            </RadzenStack>
+        </RadzenStack>
+    </RadzenStack>
+        );
+
+        }
+        catch (Exception ex)
+        {
+            NotificationService.Notify(new NotificationMessage
+                    {
+                        Severity = NotificationSeverity.Error,
+                        Summary = "Error",
+                        Detail = ex.Message,
+                        Duration = 4000
+                    });
+        }
+    } 
+
+    private void ParseJSON()
+    {
+        try
+        {
+            if (SelectedMethod == "ParseJSONNewStory")
+            {
+                // Parse the JSON (New Story)
+                var ParseJSONNewStoryResult = AIStoryBuildersService.ParseJSONNewStory(jsonString);
+
+                jsonParsed = JsonConvert.SerializeObject(ParseJSONNewStoryResult, Formatting.Indented);
+            }
+
+            if(SelectedMethod == "ParseJSONNewChapters")
+            {
+                // Parse the JSON (New Chapters)
+                var ParseJSONNewChaptersResult = AIStoryBuildersService.ParseJSONNewChapters(jsonString);
+
+                jsonParsed = JsonConvert.SerializeObject(ParseJSONNewChaptersResult, Formatting.Indented);
+            }
+        }
+        catch (Exception ex)
+        {
+            NotificationService.Notify(new NotificationMessage
+                {
+                    Severity = NotificationSeverity.Error,
+                    Summary = "Error",
+                    Detail = ex.Message,
+                    Duration = 10000
+                });
+        }
+    }
+}
