@@ -81,7 +81,7 @@ namespace AIStoryBuilders.Services
             var ParsedStory = await OrchestratorMethods.ParseNewStory(story.Title, story.Synopsis);
 
             // Convert the JSON to a dynamic object
-            JSONStory ParsedNewStory = ParseJSONNewStory(ParsedStory);
+            JSONStory ParsedNewStory = ParseJSONNewStory(GetOnlyJSON(ParsedStory));
 
             // *****************************************************
 
@@ -150,17 +150,12 @@ namespace AIStoryBuilders.Services
             File.WriteAllLines(TimelinePath, TimelineContents);
 
             //// **** Create the First Paragraph and first three Chapters
-
-            // Search for the first occurrence of the { character
-            int FirstCurlyBrace = ParsedStory.IndexOf('{');
-            // Set ParsedStory to the string after the first occurrence of the { character
-            ParsedStory = ParsedStory.Substring(FirstCurlyBrace);
             
             // Call ChatGPT
             var ParsedChapters = await OrchestratorMethods.CreateNewChapters(ParsedStory);
 
             // Convert the JSON to a dynamic object
-            JSONChapters ParsedNewChapters = ParseJSONNewChapters(ParsedChapters);
+            JSONChapters ParsedNewChapters = ParseJSONNewChapters(GetOnlyJSON(ParsedChapters));
 
             //// **** Create the Files
 

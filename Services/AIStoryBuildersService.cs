@@ -59,6 +59,19 @@ namespace AIStoryBuilders.Services
         }
         #endregion
 
+        #region public string GetOnlyJSON(string json)
+        public string GetOnlyJSON(string json)
+        {
+            string OnlyJSON = "";
+            // Search for the first occurrence of the { character
+            int FirstCurlyBrace = json.IndexOf('{');
+            // Set ParsedStory to the string after the first occurrence of the { character
+            OnlyJSON = json.Substring(FirstCurlyBrace);
+
+            return OnlyJSON;
+        }
+        #endregion
+
         #region public void CreateFile(string path, string content)
         public void CreateFile(string path, string content)
         {
