@@ -17,6 +17,8 @@ public partial class Story
 
     public string Synopsis { get; set; }
 
+    public string ChapterCount { get; set; }
+
     public virtual ICollection<Chapter> Chapter { get; set; } = new List<Chapter>();
 
     public virtual ICollection<Character> Character { get; set; } = new List<Character>();

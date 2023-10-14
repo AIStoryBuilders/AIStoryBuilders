@@ -16,14 +16,14 @@
                     <RadzenFormField Text="Synopsis:" Variant="@variant">
                         <RadzenTextArea MaxLength="1000" Rows="10" @bind-Value="@objStory.Synopsis" />
                     </RadzenFormField>
+                    <p>Chapters: <RadzenDropDown Data=@colChapters @bind-Value="@objStory.ChapterCount" Style="width:75px" /></p>
                 </RadzenStack>
             </RadzenColumn>
         </RadzenRow>
     </div>
-    <br />
     <div class="row">
         <div class="col">
-            <RadzenButton Text="Save" ButtonStyle="ButtonStyle.Success"
+            <RadzenButton Text="Create Story" ButtonStyle="ButtonStyle.Success"
                           Click="StorySave"
                           Style="margin-bottom: 10px; width: 150px" />&nbsp;&nbsp;
         </div>
@@ -74,6 +74,22 @@ else // Existing Story
     IEnumerable<string> colStyles;
     Variant variant = Variant.Outlined;
 
+    List<string> colChapters = new List<string>()
+                {
+                    "1",
+                    "2",
+                    "3",
+                    "4",
+                    "5",
+                    "6",
+                    "7",
+                    "8",
+                    "9",
+                    "10",
+                    "11",
+                    "12"
+                };
+
     protected override void OnInitialized()
     {
         AIStoryBuildersService = (AIStoryBuildersService)ScopedServices.GetService(typeof(AIStoryBuildersService));
@@ -102,6 +118,7 @@ else // Existing Story
         if (objStory.Style == null)
         {
             objStory.Style = "Drama";
+            objStory.ChapterCount = "3";
         }
     }
 

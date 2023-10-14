@@ -149,10 +149,10 @@ namespace AIStoryBuilders.Services
             string TimelinePath = $"{StoryPath}/Timelines.csv";
             File.WriteAllLines(TimelinePath, TimelineContents);
 
-            //// **** Create the First Paragraph and first three Chapters
+            //// **** Create the First Paragraph and the Chapters
             
             // Call ChatGPT
-            var ParsedChapters = await OrchestratorMethods.CreateNewChapters(ParsedStory);
+            var ParsedChapters = await OrchestratorMethods.CreateNewChapters(ParsedStory, story.ChapterCount);
 
             // Convert the JSON to a dynamic object
             JSONChapters ParsedNewChapters = ParseJSONNewChapters(GetOnlyJSON(ParsedChapters));
@@ -166,7 +166,7 @@ namespace AIStoryBuilders.Services
                 string ChapterPath = $"{ChaptersPath}/{chapter.chapter_name}";
                 CreateDirectory(ChapterPath);
 
-                TextEvent?.Invoke(this, new TextEventArgs($"ChapterPath", 5));
+                TextEvent?.Invoke(this, new TextEventArgs($"Create Chapter {ChapterNumber}", 5));
 
                 if (chapter.chapter_synopsis != null)
                 {

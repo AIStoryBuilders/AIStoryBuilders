@@ -13,8 +13,8 @@ namespace AIStoryBuilders.Model
 {
     public partial class OrchestratorMethods
     {
-        #region public async Task<string> CreateNewChapters(string JSONNewStory)
-        public async Task<string> CreateNewChapters(string JSONNewStory)
+        #region public async Task<string> CreateNewChapters(string JSONNewStory, string ChapterCount)
+        public async Task<string> CreateNewChapters(string JSONNewStory, string ChapterCount)
         {
             LogService.WriteToLog("CreateNewChapters - Start");
             string Organization = SettingsService.Organization;
@@ -35,7 +35,7 @@ namespace AIStoryBuilders.Model
             dynamic Databasefile = AIStoryBuildersDatabaseObject;
 
             // Update System Message
-            SystemMessage = CreateSystemMessageCreateNewChapters(JSONNewStory);
+            SystemMessage = CreateSystemMessageCreateNewChapters(JSONNewStory, ChapterCount);
 
             LogService.WriteToLog($"Prompt: {SystemMessage}");
 
@@ -71,15 +71,15 @@ namespace AIStoryBuilders.Model
 
         // Methods
 
-        #region private string CreateSystemMessageCreateNewChapters(string paramJSONNewStory)
-        private string CreateSystemMessageCreateNewChapters(string paramJSONNewStory)
+        #region private string CreateSystemMessageCreateNewChapters(string paramJSONNewStory, string paramChapterCount)
+        private string CreateSystemMessageCreateNewChapters(string paramJSONNewStory, string paramChapterCount)
         {
             return "Given a story with the following structure: \n" +
                     "[ \n" +
                     $"{paramJSONNewStory} \n" +
                     "] \n" +
                     "Using only this information please: \n" +
-                    "#1 Create 3 chapters (Chapter1, Chapter2, Chapter3). \n" +
+                    $"#1 Create {paramChapterCount} chapters in a format like this: Chapter1, Chapter2, Chapter3. \n" +
                     "#2 A short chapter_synopsis description. \n" +
                     "#3 A short first paragraph for each chapter. \n" +
                     "#4 A single timeline_name for each paragraph. \n" +
