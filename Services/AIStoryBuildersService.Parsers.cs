@@ -112,10 +112,10 @@ namespace AIStoryBuilders.Services
                             // Add the description to the character
                             ParsedNewStory.characters[i].descriptions = new Descriptions[1];
                             ParsedNewStory.characters[i].descriptions[0] = new Descriptions();
-                            ParsedNewStory.characters[i].descriptions[0].description_type = character.descriptions.description_type;
-                            ParsedNewStory.characters[i].descriptions[0]._enum = character.descriptions._enum;
-                            ParsedNewStory.characters[i].descriptions[0].description = character.descriptions.description;
-                            ParsedNewStory.characters[i].descriptions[0].timeline_name = character.descriptions.timeline_name;
+                            ParsedNewStory.characters[i].descriptions[0].description_type = character.descriptions[0].description_type;
+                            ParsedNewStory.characters[i].descriptions[0]._enum = character.descriptions[0]._enum;
+                            ParsedNewStory.characters[i].descriptions[0].description = character.descriptions[0].description;
+                            ParsedNewStory.characters[i].descriptions[0].timeline_name = character.descriptions[0].timeline_name;
                         }
                     }
                     i++;
