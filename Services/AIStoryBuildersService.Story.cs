@@ -486,18 +486,26 @@ namespace AIStoryBuilders.Services
             try
             {
                 // Get a list of all the Chapter folders
+                // order by the folder name
+
                 string[] AIStoryBuildersChaptersFolders = Directory.GetDirectories(AIStoryBuildersChaptersPath);
+                                
+                // order by the folder name
+                AIStoryBuildersChaptersFolders = AIStoryBuildersChaptersFolders.OrderBy(x => x).ToArray();
 
                 // Loop through each Chapter folder
-                int i = 1;
                 foreach (var AIStoryBuildersChapterFolder in AIStoryBuildersChaptersFolders)
                 {
-                    // Get the ChapterName from the file name
-                    string ChapterFileName = Path.Combine(AIStoryBuildersChapterFolder, $"Chapter{i}.txt");
+                    // Get the ChapterName from the file name                    
                     string ChapterName = Path.GetFileNameWithoutExtension(AIStoryBuildersChapterFolder);
+                    string ChapterFileName = Path.Combine(AIStoryBuildersChapterFolder, $"{ChapterName}.txt");
 
                     // Put in a space after the word Chapter
                     ChapterName = ChapterName.Insert(7, " ");
+
+                    // Get sequence number from folder name
+                    string ChapterSequence = ChapterName.Split(' ')[1];
+                    int ChapterSequenceNumber = int.Parse(ChapterSequence);
 
                     // Get the ChapterContent from the file
                     string[] ChapterContent = File.ReadAllLines(ChapterFileName);
@@ -511,17 +519,15 @@ namespace AIStoryBuilders.Services
                     AIStoryBuilders.Models.Chapter Chapter = new AIStoryBuilders.Models.Chapter();
                     Chapter.StoryId = story.Id;
                     Chapter.ChapterName = ChapterName;
-                    Chapter.Sequence = i;
+                    Chapter.Sequence = ChapterSequenceNumber;
                     Chapter.Synopsis = ChapterDescription;
 
                     // Add Chapter to collection
                     Chapters.Add(Chapter);
-
-                    i++;
                 }
 
                 // Return collection of Chapters
-                return Chapters;
+                return Chapters.OrderBy(x => x.Sequence).ToList();
             }
             catch (Exception ex)
             {
