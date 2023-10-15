@@ -11,7 +11,6 @@ namespace AIStoryBuilders.Services
 {
     public partial class AIStoryBuildersService
     {
-
         #region *** Story ***
         public List<Story> GetStorys()
         {
@@ -44,7 +43,6 @@ namespace AIStoryBuilders.Services
                 return new List<Story>();
             }
         }
-
         public async Task AddStory(Story story)
         {
             // Create Characters, Chapters, Timelines, and Locations sub folders
@@ -249,6 +247,64 @@ namespace AIStoryBuilders.Services
         }
         #endregion
 
+        #region *** Timelines ***
+        public List<AIStoryBuilders.Models.Timeline> GetTimelines(Story story)
+        {
+            // Create a collection of Timelines
+            List<AIStoryBuilders.Models.Timeline> Timelines = new List<AIStoryBuilders.Models.Timeline>();
+
+            var AIStoryBuildersTimelinesPath = $"{BasePath}/{story.Title}/Timelines.csv";
+
+            try
+            {
+                // load the Timelines file
+                string[] AIStoryBuildersTimelinesContent = File.ReadAllLines(AIStoryBuildersTimelinesPath);
+
+                // Remove all empty lines
+                AIStoryBuildersTimelinesContent = AIStoryBuildersTimelinesContent.Where(line => line.Trim() != "").ToArray();
+
+                // Loop through each Timeline line
+                foreach (var AIStoryBuildersTimelineLine in AIStoryBuildersTimelinesContent)
+                {
+                    // Get the TimelineName from the line
+                    string[] AIStoryBuildersTimelineLineSplit = AIStoryBuildersTimelineLine.Split('|');
+                    string TimelineName = AIStoryBuildersTimelineLineSplit[0];
+
+                    // Get the TimelineDescription from the line
+                    string TimelineDescription = AIStoryBuildersTimelineLineSplit[1];
+
+                    // Get the TimelineStartTime from the line
+                    string TimelineStartTime = AIStoryBuildersTimelineLineSplit[2];
+
+                    // Get the TimelineStopTime from the line
+                    string TimelineStopTime = AIStoryBuildersTimelineLineSplit[3];
+
+                    // Create a Timeline
+                    AIStoryBuilders.Models.Timeline Timeline = new AIStoryBuilders.Models.Timeline();
+                    Timeline.StoryId = story.Id;
+                    Timeline.TimelineName = TimelineName;
+                    Timeline.TimelineDescription = TimelineDescription;
+                    Timeline.StartDate = DateTime.Parse(TimelineStartTime);
+                    Timeline.StopDate = DateTime.Parse(TimelineStopTime);
+
+                    // Add Timeline to collection
+                    Timelines.Add(Timeline);
+                }
+
+                // Return collection of Timelines
+                return Timelines;
+            }
+            catch (Exception ex)
+            {
+                // Log error
+                LogService.WriteToLog(ex.Message);
+
+                // File is empty
+                return new List<AIStoryBuilders.Models.Timeline>();
+            }
+        }
+        #endregion
+
         #region *** Character ***
         public List<AIStoryBuilders.Models.Character> GetCharacters(Story story)
         {
@@ -398,6 +454,5 @@ namespace AIStoryBuilders.Services
         //    return chapter;
         //}
         #endregion
-
     }
 }

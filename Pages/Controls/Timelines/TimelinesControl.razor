@@ -5,20 +5,20 @@
 @inherits OwningComponentBase
 @inject DialogService dialogService
 @inject NotificationService NotificationService
-<RadzenButton Click=@(() => NewCharacter()) Text="New Character" ButtonStyle="ButtonStyle.Success" />
+<RadzenButton Click=@(() => NewTimeline()) Text="New Timeline" ButtonStyle="ButtonStyle.Success" />
 <br />
 <br />
 <RadzenDataList AllowVirtualization=false Style="height:100%;overflow:auto;"
                 WrapItems=true AllowPaging=false
-                Data="@colCharacters" TItem="Character">
-    <Template Context="character">
+                Data="@colTimelines" TItem="Timeline">
+    <Template Context="timeline">
         <RadzenCard Style="width: 100%; padding: 1;">
             <RadzenRow Gap="0">
-                <RadzenButton Text="Edit" Click=@(() => EditCharacter(character))
+                <RadzenButton Text="Edit" Click=@(() => EditTimeline(timeline))
                               ButtonStyle="ButtonStyle.Light" Style="width: 150px;height: 20px" />
                 &nbsp;&nbsp;&nbsp;&nbsp;
                 <RadzenText TextStyle="TextStyle.DisplayH5"
-                            class="rz-color-secondary">@(character.CharacterName)</RadzenText>&nbsp;&nbsp;
+                            class="rz-color-secondary">@(timeline.TimelineName)</RadzenText>&nbsp;&nbsp;
                 </RadzenRow>
             </RadzenCard>
         </Template>
@@ -28,7 +28,7 @@
     AIStoryBuildersService AIStoryBuildersService;
     OrchestratorMethods OrchestratorMethods;
 
-    List<Character> colCharacters = new List<Character>();
+    List<Timeline> colTimelines = new List<Timeline>();
 
     protected override void OnInitialized()
     {
@@ -37,26 +37,26 @@
             AIStoryBuildersService = (AIStoryBuildersService)ScopedServices.GetService(typeof(AIStoryBuildersService));
             OrchestratorMethods = (OrchestratorMethods)ScopedServices.GetService(typeof(OrchestratorMethods));
 
-            LoadCharacters(objStory);
+            LoadTimelines(objStory);
         }
         catch (Exception ex)
         {
             NotificationService.Notify(new NotificationMessage
-                    {
-                        Severity = NotificationSeverity.Error,
-                        Summary = "Error",
-                        Detail = ex.Message,
-                        Duration = 4000
-                    });
+                {
+                    Severity = NotificationSeverity.Error,
+                    Summary = "Error",
+                    Detail = ex.Message,
+                    Duration = 4000
+                });
         }
     }
 
-    public void LoadCharacters(Story paramStory)
+    public void LoadTimelines(Story paramStory)
     {
-        colCharacters = AIStoryBuildersService.GetCharacters(paramStory);
+        colTimelines = AIStoryBuildersService.GetTimelines(paramStory);
     }
 
-    private async Task NewCharacter()
+    private async Task NewTimeline()
     {
         try
         {
@@ -79,16 +79,16 @@
         catch (Exception ex)
         {
             NotificationService.Notify(new NotificationMessage
-                    {
-                        Severity = NotificationSeverity.Error,
-                        Summary = "Error",
-                        Detail = ex.Message,
-                        Duration = 4000
-                    });
+                {
+                    Severity = NotificationSeverity.Error,
+                    Summary = "Error",
+                    Detail = ex.Message,
+                    Duration = 4000
+                });
         }
     }
 
-    private async Task EditCharacter(Character paramCharacter)
+    private async Task EditTimeline(Timeline paramTimeline)
     {
         try
         {

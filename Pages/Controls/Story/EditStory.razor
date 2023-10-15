@@ -116,17 +116,23 @@
                 // Story
                 break;
             case 1:
-                // Characters
-                CtrlCharactersEdit.LoadCharacters(objStory);
+                // Timelines
+                timelinesControl.LoadTimelines(objStory);
                 break;
             case 2:
                 // Locations
                 break;
             case 3:
-                // Chapters
+                // Characters
+                CtrlCharactersEdit.LoadCharacters(objStory);
                 break;
             case 4:
+                // Chapters
+                break;
+            case 5:
                 // AI
+                break;
+            default:
                 break;
         }
     }
