@@ -9,8 +9,9 @@
 - **Story**
   - *Title*
   - *Style*
+  - *Synopsis*
  
-  - **Timelines**
+- **Timelines**
   - *Timeline Name*
   - *Description*
   - *StartDate*
@@ -26,7 +27,8 @@
     - *Desciption Type*
     - *Timeline Name*
 
-- **Chapters** 
+- **Chapters**
+  - *Synopsis*
   - **Paragraphs**   
     - *Content*
     - *Timeline Name*
