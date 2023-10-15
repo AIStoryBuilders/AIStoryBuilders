@@ -1,0 +1,116 @@
+﻿@using AIStoryBuilders.Model;
+@using AIStoryBuilders.Models;
+@using AIStoryBuilders.Pages.Controls;
+@using AIStoryBuilders.Services;
+@inherits OwningComponentBase
+@inject DialogService dialogService
+@inject NotificationService NotificationService
+<RadzenButton Click=@(() => NewCharacter()) Text="New Character" ButtonStyle="ButtonStyle.Success" />
+<br />
+<br />
+<RadzenDataList AllowVirtualization=false Style="height:100%;overflow:auto;"
+                WrapItems=true AllowPaging=false
+                Data="@colCharacters" TItem="Character">
+    <Template Context="character">
+        <RadzenCard Style="width: 100%; padding: 1;">
+            <RadzenRow Gap="0">
+                <RadzenButton Text="Edit" Click=@(() => EditCharacter(character))
+                              ButtonStyle="ButtonStyle.Light" Style="width: 150px;height: 20px" />
+                &nbsp;&nbsp;&nbsp;&nbsp;
+                <RadzenText TextStyle="TextStyle.DisplayH5"
+                            class="rz-color-secondary">@(character.CharacterName)</RadzenText>&nbsp;&nbsp;
+                </RadzenRow>
+            </RadzenCard>
+        </Template>
+    </RadzenDataList>
+    @code {
+    [Parameter] public Story objStory { get; set; }
+    AIStoryBuildersService AIStoryBuildersService;
+    OrchestratorMethods OrchestratorMethods;
+
+    List<Character> colCharacters = new List<Character>();
+
+    protected override void OnInitialized()
+    {
+        try
+        {
+            AIStoryBuildersService = (AIStoryBuildersService)ScopedServices.GetService(typeof(AIStoryBuildersService));
+            OrchestratorMethods = (OrchestratorMethods)ScopedServices.GetService(typeof(OrchestratorMethods));
+
+            LoadCharacters(objStory);
+        }
+        catch (Exception ex)
+        {
+            NotificationService.Notify(new NotificationMessage
+                    {
+                        Severity = NotificationSeverity.Error,
+                        Summary = "Error",
+                        Detail = ex.Message,
+                        Duration = 4000
+                    });
+        }
+    }
+
+    public void LoadCharacters(Story paramStory)
+    {
+        colCharacters = AIStoryBuildersService.GetCharacters(paramStory);
+    }
+
+    private async Task NewCharacter()
+    {
+        try
+        {
+            // var newCharacter = new Character();
+            // newCharacter.Id = -1; // So we know it is new
+            // newCharacter.StoryId = objStory.Id; // Set the StoryId to the current Story
+
+            // var parms = new Dictionary<string, object>();
+            // parms.Add("objCharacter", newCharacter);
+
+            // var NewCharacterResult = await dialogService.OpenAsync<CharacterEdit>($"New Character",
+            // parms,
+            // new DialogOptions() { Width = "650px" });
+
+            // Get the Characters from the database
+            //colCharacters = await Service.GetCharactersAsync(objStory);
+
+            StateHasChanged();
+        }
+        catch (Exception ex)
+        {
+            NotificationService.Notify(new NotificationMessage
+                    {
+                        Severity = NotificationSeverity.Error,
+                        Summary = "Error",
+                        Detail = ex.Message,
+                        Duration = 4000
+                    });
+        }
+    }
+
+    private async Task EditCharacter(Character paramCharacter)
+    {
+        try
+        {
+            // var EditStoryResult = await dialogService.OpenAsync(
+            //     "Edit Character", ds =>
+            //     @<CharacterEdit objCharacter=paramCharacter DialogReference="ds"></CharacterEdit>
+            //     , new DialogOptions() { Height = "700px", Width = "650px" });
+
+            // Get the Characters from the database
+            //colCharacters = await Service.GetCharactersAsync(objStory);
+
+            StateHasChanged();
+        }
+        catch (Exception ex)
+        {
+            NotificationService.Notify(new NotificationMessage
+                {
+                    Severity = NotificationSeverity.Error,
+                    Summary = "Error",
+                    Detail = ex.Message,
+                    Duration = 4000
+                });
+        }
+    }
+}

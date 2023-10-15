@@ -1,8 +1,12 @@
 ﻿@using AIStoryBuilders.Model;
 @using AIStoryBuilders.Models;
 @using AIStoryBuilders.Pages.Controls;
+@using AIStoryBuilders.Pages.Controls.AI;
+@using AIStoryBuilders.Pages.Controls.Chapters;
 @using AIStoryBuilders.Pages.Controls.Characters
+@using AIStoryBuilders.Pages.Controls.Locations;
 @using AIStoryBuilders.Pages.Controls.Story
+@using AIStoryBuilders.Pages.Controls.Timelines;
 @using AIStoryBuilders.Services;
 @using static AIStoryBuilders.Model.OrchestratorMethods;
 @inherits OwningComponentBase
@@ -17,15 +21,19 @@
             <StoryEdit @ref="ctrlStoryEdit" objStory="objStory" StoryUpdated="SaveStory" StoryDeleted="DeleteStory" />
         </RadzenTabsItem>
         <RadzenTabsItem Text="Timelines">
+            <TimelinesControl @ref="timelinesControl" objStory="objStory" />
         </RadzenTabsItem>
         <RadzenTabsItem Text="Locations">
+            <LocationsControl @ref="locationsControl" objStory="objStory" />
         </RadzenTabsItem>
         <RadzenTabsItem Text="Characters">
             <CharactersEdit @ref="CtrlCharactersEdit" objStory="objStory" />
         </RadzenTabsItem>
         <RadzenTabsItem Text="Chapters">
+            <ChaptersControl @ref="chaptersControl" objStory="objStory" />
         </RadzenTabsItem>
         <RadzenTabsItem Text="AI">
+            <AIControl @ref="aIControl" objStory="objStory" />
         </RadzenTabsItem>
     </Tabs>
 </RadzenTabs>
@@ -34,6 +42,10 @@
 
     StoryEdit ctrlStoryEdit;
     CharactersEdit CtrlCharactersEdit;
+    TimelinesControl timelinesControl;
+    LocationsControl locationsControl;
+    ChaptersControl chaptersControl;
+    AIControl aIControl;
 
     AIStoryBuildersService AIStoryBuildersService;
     OrchestratorMethods OrchestratorMethods;
@@ -52,7 +64,7 @@
     {
         try
         {
-            // Update the Story 
+            // Update the Story
             AIStoryBuildersService.UpdateStory(objStory);
 
             NotificationService.Notify(new NotificationMessage

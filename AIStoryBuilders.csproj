@@ -50,15 +50,10 @@
     </ItemGroup>
 
     <ItemGroup>
-      <Compile Remove="Pages\Controls\Locations\**" />
       <Compile Remove="Pages\Controls\Paragraphs\**" />
-      <Content Remove="Pages\Controls\Locations\**" />
       <Content Remove="Pages\Controls\Paragraphs\**" />
-      <EmbeddedResource Remove="Pages\Controls\Locations\**" />
       <EmbeddedResource Remove="Pages\Controls\Paragraphs\**" />
-      <MauiXaml Remove="Pages\Controls\Locations\**" />
       <MauiXaml Remove="Pages\Controls\Paragraphs\**" />
-      <None Remove="Pages\Controls\Locations\**" />
       <None Remove="Pages\Controls\Paragraphs\**" />
     </ItemGroup>
 
@@ -69,10 +64,6 @@
 		<PackageReference Include="Radzen.Blazor" Version="4.13.2" />
 		<PackageReference Include="OpenAI-DotNet" Version="7.0.1" />
 		<PackageReference Include="Markdig" Version="0.31.0" />
-    </ItemGroup>
-
-    <ItemGroup>
-      <PRIResource Remove="Pages\Controls\Locations\**" />
     </ItemGroup>
 
     <ItemGroup>
