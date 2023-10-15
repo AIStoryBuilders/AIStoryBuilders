@@ -305,6 +305,59 @@ namespace AIStoryBuilders.Services
         }
         #endregion
 
+        #region *** Locations ***
+        public List<AIStoryBuilders.Models.Location> GetLocations(Story story)
+        {
+            // Create a collection of Location
+            List<AIStoryBuilders.Models.Location> Locations = new List<AIStoryBuilders.Models.Location>();
+
+            var AIStoryBuildersLocationsPath = $"{BasePath}/{story.Title}/Locations";
+
+            try
+            {
+                // Get a list of all the Location files
+                string[] AIStoryBuildersLocationsFiles = Directory.GetFiles(AIStoryBuildersLocationsPath, "*.csv", SearchOption.AllDirectories);
+
+                // Loop through each Location file
+                foreach (var AIStoryBuildersLocationFile in AIStoryBuildersLocationsFiles)
+                {
+                    // Get the LocationName from the file name
+                    string LocationName = Path.GetFileNameWithoutExtension(AIStoryBuildersLocationFile);
+
+                    // Get the LocationContent from the file
+                    string[] LocationContent = File.ReadAllLines(AIStoryBuildersLocationFile);
+
+                    // Remove all empty lines
+                    LocationContent = LocationContent.Where(line => line.Trim() != "").ToArray();
+
+                    var LocationDescription = LocationContent.Select(x => x.Split('|')).Select(x => x[0]).FirstOrDefault();
+
+                    // LocationBackgrounds
+
+                    // Create a Location
+                    AIStoryBuilders.Models.Location Location = new AIStoryBuilders.Models.Location();
+                    Location.StoryId = story.Id;
+                    Location.LocationName = LocationName;
+                    Location.Description = LocationDescription;
+
+                    // Add Location to collection
+                    Locations.Add(Location);
+                }
+
+                // Return collection of Locations
+                return Locations;
+            }
+            catch (Exception ex)
+            {
+                // Log error
+                LogService.WriteToLog(ex.Message);
+
+                // File is empty
+                return new List<AIStoryBuilders.Models.Location>();
+            }
+        }
+        #endregion
+
         #region *** Character ***
         public List<AIStoryBuilders.Models.Character> GetCharacters(Story story)
         {
@@ -423,6 +476,63 @@ namespace AIStoryBuilders.Services
         #endregion
 
         #region *** Chapter ***
+        public List<AIStoryBuilders.Models.Chapter> GetChapters(Story story)
+        {
+            // Create a collection of Chapter
+            List<AIStoryBuilders.Models.Chapter> Chapters = new List<AIStoryBuilders.Models.Chapter>();
+
+            var AIStoryBuildersChaptersPath = $"{BasePath}/{story.Title}/Chapters";
+
+            try
+            {
+                // Get a list of all the Chapter folders
+                string[] AIStoryBuildersChaptersFolders = Directory.GetDirectories(AIStoryBuildersChaptersPath);
+
+                // Loop through each Chapter folder
+                int i = 1;
+                foreach (var AIStoryBuildersChapterFolder in AIStoryBuildersChaptersFolders)
+                {
+                    // Get the ChapterName from the file name
+                    string ChapterFileName = Path.Combine(AIStoryBuildersChapterFolder, $"Chapter{i}.txt");
+                    string ChapterName = Path.GetFileNameWithoutExtension(AIStoryBuildersChapterFolder);
+
+                    // Put in a space after the word Chapter
+                    ChapterName = ChapterName.Insert(7, " ");
+
+                    // Get the ChapterContent from the file
+                    string[] ChapterContent = File.ReadAllLines(ChapterFileName);
+
+                    // Remove all empty lines
+                    ChapterContent = ChapterContent.Where(line => line.Trim() != "").ToArray();
+
+                    var ChapterDescription = ChapterContent.Select(x => x.Split('|')).Select(x => x[0]).FirstOrDefault();
+
+                    // Create a Chapter
+                    AIStoryBuilders.Models.Chapter Chapter = new AIStoryBuilders.Models.Chapter();
+                    Chapter.StoryId = story.Id;
+                    Chapter.ChapterName = ChapterName;
+                    Chapter.Sequence = i;
+                    Chapter.Synopsis = ChapterDescription;
+
+                    // Add Chapter to collection
+                    Chapters.Add(Chapter);
+
+                    i++;
+                }
+
+                // Return collection of Chapters
+                return Chapters;
+            }
+            catch (Exception ex)
+            {
+                // Log error
+                LogService.WriteToLog(ex.Message);
+
+                // File is empty
+                return new List<AIStoryBuilders.Models.Chapter>();
+            }
+        }
+
         //public async Task<Chapter> GetChapterAsync(int id)
         //{
         //    // Get Chapter
