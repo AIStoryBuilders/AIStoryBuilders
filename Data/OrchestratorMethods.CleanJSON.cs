@@ -13,10 +13,10 @@ namespace AIStoryBuilders.Model
 {
     public partial class OrchestratorMethods
     {
-        #region public async Task<string> CreateNewChapters(string JSONNewStory, string ChapterCount)
-        public async Task<string> CreateNewChapters(string JSONNewStory, string ChapterCount)
+        #region public async Task<string> CleanJSON(string JSON)
+        public async Task<string> CleanJSON(string JSON)
         {
-            LogService.WriteToLog("CreateNewChapters - Start");
+            LogService.WriteToLog("Clean JSON - Start");
             string Organization = SettingsService.Organization;
             string ApiKey = SettingsService.ApiKey;
             string SystemMessage = "";
@@ -35,7 +35,7 @@ namespace AIStoryBuilders.Model
             dynamic Databasefile = AIStoryBuildersDatabaseObject;
 
             // Update System Message
-            SystemMessage = CreateSystemMessageCreateNewChapters(JSONNewStory, ChapterCount);
+            SystemMessage = CreateSystemMessageCleanJSON(JSON);
 
             LogService.WriteToLog($"Prompt: {SystemMessage}");
 
@@ -48,7 +48,7 @@ namespace AIStoryBuilders.Model
                 )
             );
 
-            ReadTextEvent?.Invoke(this, new ReadTextEventArgs($"Calling ChatGPT...", 50));
+            ReadTextEvent?.Invoke(this, new ReadTextEventArgs($"Calling ChatGPT to clean JSON...", 20));
 
             // Get a response from ChatGPT 
             var FinalChatRequest = new ChatRequest(
@@ -71,35 +71,11 @@ namespace AIStoryBuilders.Model
 
         // Methods
 
-        #region private string CreateSystemMessageCreateNewChapters(string paramJSONNewStory, string paramChapterCount)
-        private string CreateSystemMessageCreateNewChapters(string paramJSONNewStory, string paramChapterCount)
+        #region private string CreateSystemMessageCleanJSON(string paramJSON)
+        private string CreateSystemMessageCleanJSON(string paramJSON)
         {
-            return "Given a story with the following structure: \n" +
-                    "[ \n" +
-                    $"{paramJSONNewStory} \n" +
-                    "] \n" +
-                    "Using only this information please: \n" +
-                    $"#1 Create {paramChapterCount} chapters in a format like this: Chapter1, Chapter2, Chapter3. \n" +
-                    "#2 A short chapter_synopsis description. \n" +
-                    "#3 A short first paragraph for each chapter. \n" +
-                    "#4 A single timeline_name for each paragraph. \n" +
-                    "#5 The list of character names that appear in each paragraph. \n" +
-                    "Output JSON nothing else. \n" +
-                    "Provide the results in the following JSON format: \n" +
-                    "{ \n" +
-                    "\"chapter\": [\n" +
-                    "{ \n" +
-                    "\"chapter_name\": chapter_name, \n" +
-                    "\"chapter_synopsis\": chapter_synopsis, \n" +
-                    "\"paragraphs\": [\n" +
-                    "{ \n" +
-                    "\"contents\": contents, \n" +
-                    "\"location_name\": location_name, \n" +
-                    "\"timeline_name\": timeline_name, \n" +
-                    "\"character_names\": [character_names] \n" +
-                    "} \n" +
-                    "] \n" +
-                    "} \n";
+            return "Please correct this json to make it valid. Return only the valid json: \n" +
+                    $"{paramJSON} \n";                    
         }
         #endregion
     }

@@ -22,7 +22,7 @@ namespace AIStoryBuilders.Services
                 int locationsCount = 1;
                 int timelinesCount = 1;
 
-                if(ParsedJSON.characters != null)
+                if (ParsedJSON.characters != null)
                 {
                     charactersCount = ParsedJSON.characters.Count;
                 }
@@ -115,17 +115,20 @@ namespace AIStoryBuilders.Services
 
                             if (((Newtonsoft.Json.Linq.JContainer)character.descriptions).HasValues)
                             {
-                                ParsedNewStory.characters[i].descriptions[0].description_type = character.descriptions.description_type;
-                                ParsedNewStory.characters[i].descriptions[0]._enum = character.descriptions._enum;
-                                ParsedNewStory.characters[i].descriptions[0].description = character.descriptions.description;
-                                ParsedNewStory.characters[i].descriptions[0].timeline_name = character.descriptions.timeline_name;
-                            }
-                            else
-                            {
-                                ParsedNewStory.characters[i].descriptions[0].description_type = character.descriptions[0].description_type;
-                                ParsedNewStory.characters[i].descriptions[0]._enum = character.descriptions[0]._enum;
-                                ParsedNewStory.characters[i].descriptions[0].description = character.descriptions[0].description;
-                                ParsedNewStory.characters[i].descriptions[0].timeline_name = character.descriptions[0].timeline_name;
+                                try
+                                {
+                                    ParsedNewStory.characters[i].descriptions[0].description_type = character.descriptions.description_type;
+                                    ParsedNewStory.characters[i].descriptions[0]._enum = character.descriptions._enum;
+                                    ParsedNewStory.characters[i].descriptions[0].description = character.descriptions.description;
+                                    ParsedNewStory.characters[i].descriptions[0].timeline_name = character.descriptions.timeline_name;
+                                }
+                                catch
+                                {
+                                    ParsedNewStory.characters[i].descriptions[0].description_type = character.descriptions[0].description_type;
+                                    ParsedNewStory.characters[i].descriptions[0]._enum = character.descriptions[0]._enum;
+                                    ParsedNewStory.characters[i].descriptions[0].description = character.descriptions[0].description;
+                                    ParsedNewStory.characters[i].descriptions[0].timeline_name = character.descriptions[0].timeline_name;
+                                }
                             }
                         }
                     }
@@ -169,7 +172,7 @@ namespace AIStoryBuilders.Services
                     if (ParsedJSON.Count == null)
                     {
                         // All three chapters have been returned as one element
-                        if(ParsedJSON.chapter != null)
+                        if (ParsedJSON.chapter != null)
                         {
                             // Sometimes it comes back as chapter
                             ParsedJSON = ParsedJSON.chapter;

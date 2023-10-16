@@ -76,10 +76,22 @@ namespace AIStoryBuilders.Services
             LogService.WriteToLog($"Story created {story.Title}");
 
             //  ********** Call the LLM to Parse the Story to create the files **********
-            var ParsedStory = await OrchestratorMethods.ParseNewStory(story.Title, story.Synopsis);
+            var ParsedStoryJSON = await OrchestratorMethods.ParseNewStory(story.Title, story.Synopsis);
+
+            JSONStory ParsedNewStory = new JSONStory();
 
             // Convert the JSON to a dynamic object
-            JSONStory ParsedNewStory = ParseJSONNewStory(GetOnlyJSON(ParsedStory));
+            ParsedNewStory = ParseJSONNewStory(GetOnlyJSON(ParsedStoryJSON));
+
+            // Test to see that something was returned
+            if(ParsedNewStory.characters.Length == 0)
+            {
+                // Clean the JSON
+                ParsedStoryJSON = await OrchestratorMethods.CleanJSON(GetOnlyJSON(ParsedStoryJSON));
+
+                // Convert the JSON to a dynamic object
+                ParsedNewStory = ParseJSONNewStory(GetOnlyJSON(ParsedStoryJSON));
+            }
 
             // *****************************************************
 
@@ -150,10 +162,22 @@ namespace AIStoryBuilders.Services
             //// **** Create the First Paragraph and the Chapters
             
             // Call ChatGPT
-            var ParsedChapters = await OrchestratorMethods.CreateNewChapters(ParsedStory, story.ChapterCount);
+            var ParsedChaptersJSON = await OrchestratorMethods.CreateNewChapters(ParsedStoryJSON, story.ChapterCount);
+
+            JSONChapters ParsedNewChapters = new JSONChapters();
 
             // Convert the JSON to a dynamic object
-            JSONChapters ParsedNewChapters = ParseJSONNewChapters(GetOnlyJSON(ParsedChapters));
+            ParsedNewChapters = ParseJSONNewChapters(GetOnlyJSON(ParsedChaptersJSON));
+
+            // Test to see that something was returned
+            if (ParsedNewChapters.chapter.Length == 0)
+            {
+                // Clean the JSON
+                ParsedChaptersJSON = await OrchestratorMethods.CleanJSON(GetOnlyJSON(ParsedChaptersJSON));
+
+                // Convert the JSON to a dynamic object
+                ParsedNewChapters = ParseJSONNewChapters(GetOnlyJSON(ParsedChaptersJSON));
+            }
 
             //// **** Create the Files
 
