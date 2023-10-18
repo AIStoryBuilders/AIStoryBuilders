@@ -91,17 +91,6 @@ namespace AIStoryBuilders
                 }
             }
 
-            // AIStoryBuildersMemory.csv
-            filePath = Path.Combine(folderPath, "AIStoryBuildersMemory.csv");
-
-            if (!File.Exists(filePath))
-            {
-                using (var streamWriter = new StreamWriter(filePath))
-                {
-                    streamWriter.WriteLine("** AIStoryBuildersMemory started at " + DateTime.Now + "|");
-                }
-            }
-
             // AIStoryBuildersDatabase.json
             filePath = Path.Combine(folderPath, "AIStoryBuildersDatabase.json");
 
