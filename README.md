@@ -29,7 +29,7 @@
 
 - **Chapters**
   - *Synopsis*
-  - **Paragraphs**   
+  - *Paragraphs*   
     - *Content*
     - *Timeline Name*
     - *Location Name*
