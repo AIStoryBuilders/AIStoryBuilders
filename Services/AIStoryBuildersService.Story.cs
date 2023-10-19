@@ -84,7 +84,7 @@ namespace AIStoryBuilders.Services
             ParsedNewStory = ParseJSONNewStory(GetOnlyJSON(ParsedStoryJSON));
 
             // Test to see that something was returned
-            if(ParsedNewStory.characters.Length == 0)
+            if (ParsedNewStory.characters.Length == 0)
             {
                 // Clean the JSON
                 ParsedStoryJSON = await OrchestratorMethods.CleanJSON(GetOnlyJSON(ParsedStoryJSON));
@@ -160,7 +160,7 @@ namespace AIStoryBuilders.Services
             File.WriteAllLines(TimelinePath, TimelineContents);
 
             //// **** Create the First Paragraph and the Chapters
-            
+
             // Call ChatGPT
             var ParsedChaptersJSON = await OrchestratorMethods.CreateNewChapters(ParsedStoryJSON, story.ChapterCount);
 
@@ -513,7 +513,7 @@ namespace AIStoryBuilders.Services
                 // order by the folder name
 
                 string[] AIStoryBuildersChaptersFolders = Directory.GetDirectories(AIStoryBuildersChaptersPath);
-                                
+
                 // order by the folder name
                 AIStoryBuildersChaptersFolders = AIStoryBuildersChaptersFolders.OrderBy(x => x).ToArray();
 
@@ -593,6 +593,17 @@ namespace AIStoryBuilders.Services
         //    await _context.SaveChangesAsync();
         //    return chapter;
         //}
+        #endregion
+
+        #region *** Paragraph ***
+        public List<AIStoryBuilders.Models.Paragraph> GetParagraphs(Chapter chapter)
+        {
+            List<Paragraph> colParagraphs = new List<Paragraph>();
+
+
+            return colParagraphs;
+
+        }
         #endregion
     }
 }

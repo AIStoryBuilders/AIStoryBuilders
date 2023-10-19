@@ -11,6 +11,8 @@
 Chapters:
 <RadzenDropDown Data=@colChapters @bind-Value="@SelectedChapter" TextProperty="ChapterName" Change="OnChapterChanged" />
 <br />
+Chapters:
+<RadzenDropDown Data=@colParagraphs @bind-Value="@SelectedParagraph" TextProperty="Description" />
 <br />
 <p>@SelectedChapter.Synopsis</p>
 @code {
@@ -19,7 +21,9 @@ Chapters:
     OrchestratorMethods OrchestratorMethods;
 
     List<Chapter> colChapters = new List<Chapter>();
+    List<Paragraph> colParagraphs = new List<Paragraph>();
     Chapter SelectedChapter = new Chapter();
+    Paragraph SelectedParagraph = new Paragraph();
 
     protected override void OnInitialized()
     {
@@ -49,6 +53,18 @@ Chapters:
         if (colChapters.Count > 0)
         {
             SelectedChapter = colChapters.FirstOrDefault();
+
+            LoadParagraphs(SelectedChapter);
+        }
+    }
+
+    public void LoadParagraphs(Chapter paramChapter)
+    {
+        colParagraphs = AIStoryBuildersService.GetParagraphs(paramChapter);
+
+        if (colParagraphs.Count > 0)
+        {
+            SelectedParagraph = colParagraphs.FirstOrDefault();
         }
     }
 
