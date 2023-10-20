@@ -409,8 +409,6 @@ namespace AIStoryBuilders.Services
 
                     var CharacterBackgrounds = CharacterBackgroundContent.Select(x => x.Split('|')).Select(x => x[0]).ToList();
 
-                    // CharacterBackgrounds
-
                     // Create a Character
                     AIStoryBuilders.Models.Character Character = new AIStoryBuilders.Models.Character();
                     Character.StoryId = story.Id;
@@ -545,6 +543,7 @@ namespace AIStoryBuilders.Services
                     Chapter.ChapterName = ChapterName;
                     Chapter.Sequence = ChapterSequenceNumber;
                     Chapter.Synopsis = ChapterDescription;
+                    Chapter.Story = story;
 
                     // Add Chapter to collection
                     Chapters.Add(Chapter);
@@ -600,9 +599,56 @@ namespace AIStoryBuilders.Services
         {
             List<Paragraph> colParagraphs = new List<Paragraph>();
 
+            try
+            {
+                var ChapterNameParts = chapter.ChapterName.Split(' ');
+                string ChapterName = ChapterNameParts[0] + ChapterNameParts[1];
 
-            return colParagraphs;
+                var AIStoryBuildersParagraphsPath = $"{BasePath}/{chapter.Story.Title}/Chapters/{ChapterName}";
 
+                // Get a list of all the Paragraph files
+                string[] AIStoryBuildersParagraphsFiles = Directory.GetFiles(AIStoryBuildersParagraphsPath, "Paragraph*.txt", SearchOption.AllDirectories);
+
+                // Loop through each Paragraph file
+                foreach (var AIStoryBuildersParagraphFile in AIStoryBuildersParagraphsFiles)
+                {
+                    // Get the ParagraphName from the file name
+                    string ParagraphName = Path.GetFileNameWithoutExtension(AIStoryBuildersParagraphFile);
+
+                    // Put in a space after the word ParagraphName
+                    ParagraphName = ParagraphName.Insert(9, " ");
+
+                    // Get sequence number from folder name
+                    string ParagraphSequence = ParagraphName.Split(' ')[1];
+                    int ParagraphSequenceNumber = int.Parse(ParagraphSequence);
+
+                    // Get the ChapterContent from the file
+                    string[] ChapterContent = File.ReadAllLines(AIStoryBuildersParagraphFile);
+
+                    // Remove all empty lines
+                    ChapterContent = ChapterContent.Where(line => line.Trim() != "").ToArray();
+
+                    var ChapterDescription = ChapterContent.Select(x => x.Split('|')).Select(x => x[0]).FirstOrDefault();
+
+                    // Create a Paragraph
+                    AIStoryBuilders.Models.Paragraph Paragraph = new AIStoryBuilders.Models.Paragraph();
+                    Paragraph.Sequence = ParagraphSequenceNumber;
+                    Paragraph.Description = ChapterDescription;
+
+                    // Add Paragraph to collection
+                    colParagraphs.Add(Paragraph);
+                }
+
+                return colParagraphs;
+            }
+            catch (Exception ex)
+            {
+                // Log error
+                LogService.WriteToLog(ex.Message);
+
+                // File is empty
+                return new List<AIStoryBuilders.Models.Paragraph>();
+            }
         }
         #endregion
     }
