@@ -259,6 +259,17 @@ namespace AIStoryBuilders.Model
             }
 
             return sanitized;
+        }
+        #endregion
+
+        #region public static List<string> ParseStringToList(string input)
+        public static List<string> ParseStringToList(string input)
+        {
+            // Remove the brackets and split the string by comma
+            string[] items = Regex.Replace(input, @"[\[\]]", "").Split(',');
+
+            // Convert the array to a List<string> and return
+            return new List<string>(items);
         } 
         #endregion
 

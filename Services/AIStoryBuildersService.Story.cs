@@ -628,12 +628,28 @@ namespace AIStoryBuilders.Services
                     // Remove all empty lines
                     ChapterContent = ChapterContent.Where(line => line.Trim() != "").ToArray();
 
-                    var ChapterDescription = ChapterContent.Select(x => x.Split('|')).Select(x => x[0]).FirstOrDefault();
+                    var ParagraphLocation = ChapterContent.Select(x => x.Split('|')).Select(x => x[0]).FirstOrDefault();
+                    var ParagraphTimeline = ChapterContent.Select(x => x.Split('|')).Select(x => x[1]).FirstOrDefault();
+                    var ParagraphCharactersRaw = ChapterContent.Select(x => x.Split('|')).Select(x => x[2]).FirstOrDefault();
+                    var ParagraphContent = ChapterContent.Select(x => x.Split('|')).Select(x => x[3]).FirstOrDefault();
+
+                    // Convert ParagraphCharactersRaw to a List
+                    List<string> ParagraphCharacters = ParseStringToList(ParagraphCharactersRaw);
+
+                    // Convert to List<Models.Character>
+                    List<Models.Character> Characters = new List<Models.Character>();
+                    foreach (var ParagraphCharacter in ParagraphCharacters)
+                    {
+                        Characters.Add(new Models.Character() { CharacterName = ParagraphCharacter });
+                    }
 
                     // Create a Paragraph
                     AIStoryBuilders.Models.Paragraph Paragraph = new AIStoryBuilders.Models.Paragraph();
                     Paragraph.Sequence = ParagraphSequenceNumber;
-                    Paragraph.Description = ChapterDescription;
+                    Paragraph.Location = new Models.Location() { LocationName = ParagraphLocation };
+                    Paragraph.Timeline = new Models.Timeline() { TimelineName = ParagraphTimeline };
+                    Paragraph.Characters = Characters;
+                    Paragraph.ParagraphContent = ParagraphContent;
 
                     // Add Paragraph to collection
                     colParagraphs.Add(Paragraph);
