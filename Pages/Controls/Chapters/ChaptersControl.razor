@@ -5,48 +5,83 @@
 @inherits OwningComponentBase
 @inject DialogService dialogService
 @inject NotificationService NotificationService
-<RadzenButton Click=@(() => NewChapter()) Text="New Chapter" ButtonStyle="ButtonStyle.Success" />
+<div class="row">
+    <div class="col">
+        <RadzenButton Text="New Chapter" ButtonStyle="ButtonStyle.Success"
+                      Click=@(() => NewChapter()) />&nbsp;&nbsp;
+        <RadzenButton Text="Save" ButtonStyle="ButtonStyle.Success"
+                      Click="ChapterSave" />&nbsp;&nbsp;
+        <RadzenButton Text="Delete" ButtonStyle="ButtonStyle.Danger"
+                      Click="ChapterDelete" />
+    </div>
+</div>
 <br />
+<RadzenRow Gap="1rem">
+    <RadzenColumn Size="12" SizeSM="12">
+        <RadzenStack>
+            <RadzenFormField Text="Chapters:" Variant="@variant">
+                <RadzenDropDown Data=@colChapters @bind-Value="@SelectedChapter" TextProperty="ChapterName" Change="OnChapterChanged" />
+            </RadzenFormField>
+            <RadzenFormField Text="Synopsis:" Variant="@variant">
+                <RadzenTextArea @bind-Value="@SelectedChapter.Synopsis" MaxLength="1000" Rows="2" />
+            </RadzenFormField>
+        </RadzenStack>
+    </RadzenColumn>
+</RadzenRow>
 <br />
-Chapters:
-<RadzenDropDown Data=@colChapters @bind-Value="@SelectedChapter" TextProperty="ChapterName" Change="OnChapterChanged" />
-<br />
-Chapters:
-<RadzenDropDown Data=@colParagraphs @bind-Value="@SelectedParagraph" TextProperty="Description" />
-<br />
-<p>@SelectedChapter.Synopsis</p>
+<RadzenDataList @ref=objDatalist AllowVirtualization=false Style="height:300px;overflow:auto;"
+                WrapItems=false AllowPaging=false
+                Data="@colParagraphs" TItem="Paragraph">
+    <Template Context="paragraph">
+        @if (paragraph.Sequence == 2)
+        {
+            <RadzenTextArea @bind-Value="@(paragraph.ParagraphContent)" MaxLength="1000" Rows="3" Style="width: 100%;" />
+            <br />
+            <span>Characters: <RadzenDropDown Data=paragraph.Characters @bind-Value="@SelectedCharacter" /></span>
+        }
+        else
+        {
+            <RadzenText>@(paragraph.ParagraphContent)</RadzenText>
+        }
+    </Template>
+</RadzenDataList>
 @code {
     [Parameter] public Story objStory { get; set; }
     AIStoryBuildersService AIStoryBuildersService;
     OrchestratorMethods OrchestratorMethods;
+
+    RadzenDataList<Paragraph> objDatalist;
+    Variant variant = Variant.Outlined;
 
     List<Chapter> colChapters = new List<Chapter>();
     List<Paragraph> colParagraphs = new List<Paragraph>();
     Chapter SelectedChapter = new Chapter();
     Paragraph SelectedParagraph = new Paragraph();
 
-    protected override void OnInitialized()
+    string SelectedCharacter = "";
+
+    protected override async Task OnInitializedAsync()
     {
         try
         {
             AIStoryBuildersService = (AIStoryBuildersService)ScopedServices.GetService(typeof(AIStoryBuildersService));
             OrchestratorMethods = (OrchestratorMethods)ScopedServices.GetService(typeof(OrchestratorMethods));
 
-            LoadChapters(objStory);
+            await LoadChapters(objStory);
         }
         catch (Exception ex)
         {
             NotificationService.Notify(new NotificationMessage
-                    {
-                        Severity = NotificationSeverity.Error,
-                        Summary = "Error",
-                        Detail = ex.Message,
-                        Duration = 4000
-                    });
+                {
+                    Severity = NotificationSeverity.Error,
+                    Summary = "Error",
+                    Detail = ex.Message,
+                    Duration = 4000
+                });
         }
     }
 
-    public void LoadChapters(Story paramStory)
+    public async Task LoadChapters(Story paramStory)
     {
         colChapters = AIStoryBuildersService.GetChapters(paramStory);
 
@@ -54,13 +89,19 @@ Chapters:
         {
             SelectedChapter = colChapters.FirstOrDefault();
 
-            LoadParagraphs(SelectedChapter);
+            await LoadParagraphs(SelectedChapter);
         }
     }
 
-    public void LoadParagraphs(Chapter paramChapter)
+    public async Task LoadParagraphs(Chapter paramChapter)
     {
         colParagraphs = AIStoryBuildersService.GetParagraphs(paramChapter);
+
+        if (objDatalist != null)
+        {
+            await objDatalist.Reload();
+            dialogService.Refresh();
+        }
 
         if (colParagraphs.Count > 0)
         {
@@ -91,32 +132,6 @@ Chapters:
         catch (Exception ex)
         {
             NotificationService.Notify(new NotificationMessage
-                    {
-                        Severity = NotificationSeverity.Error,
-                        Summary = "Error",
-                        Detail = ex.Message,
-                        Duration = 4000
-                    });
-        }
-    }
-
-    private async Task EditChapter(Chapter paramChapter)
-    {
-        try
-        {
-            // var EditStoryResult = await dialogService.OpenAsync(
-            //     "Edit Chapter", ds =>
-            //     @<ChapterEdit objChapter=paramChapter DialogReference="ds"></ChapterEdit>
-            //     , new DialogOptions() { Height = "700px", Width = "650px" });
-
-            // Get the Chapters from the database
-            //colChapters = await Service.GetChaptersAsync(objStory);
-
-            StateHasChanged();
-        }
-        catch (Exception ex)
-        {
-            NotificationService.Notify(new NotificationMessage
                 {
                     Severity = NotificationSeverity.Error,
                     Summary = "Error",
@@ -126,9 +141,18 @@ Chapters:
         }
     }
 
-    private void OnChapterChanged()
+    private async Task ChapterSave()
     {
-        // ChapterDetails = objCharacter.CharacterBackground.Where(x => x.Type == @strType);
-        // DialogReference.Refresh();
+
+    }
+
+    private async Task ChapterDelete()
+    {
+
+    }
+
+    private async Task OnChapterChanged()
+    {
+        await LoadParagraphs(SelectedChapter);
     }
 }

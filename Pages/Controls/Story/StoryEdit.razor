@@ -6,48 +6,45 @@
 @inject DialogService DialogService
 @if (objStory.Id == -1) // New Story
 {
-     <div Class="rz-p-0 rz-p-md-12">
-        <RadzenRow Gap="1rem">
-            <RadzenColumn Size="12" SizeSM="12">
-                <RadzenStack>
-                    <RadzenFormField Text="Story Title:" Variant="@variant">
-                        <RadzenTextBox MaxLength="20" @bind-Value="@objStory.Title" />
-                    </RadzenFormField>
-                    <RadzenFormField Text="Synopsis:" Variant="@variant">
-                        <RadzenTextArea MaxLength="1000" Rows="10" @bind-Value="@objStory.Synopsis" />
-                    </RadzenFormField>
-                    <p>Chapters: <RadzenDropDown Data=@colChapters @bind-Value="@objStory.ChapterCount" Style="width:75px" /></p>
-                </RadzenStack>
-            </RadzenColumn>
-        </RadzenRow>
-    </div>
+    <RadzenRow Gap="1rem">
+        <RadzenColumn Size="12" SizeSM="12">
+            <RadzenStack>
+                <RadzenFormField Text="Story Title:" Variant="@variant">
+                    <RadzenTextBox MaxLength="20" @bind-Value="@objStory.Title" />
+                </RadzenFormField>
+                <RadzenFormField Text="Synopsis:" Variant="@variant">
+                    <RadzenTextArea MaxLength="1000" Rows="10" @bind-Value="@objStory.Synopsis" />
+                </RadzenFormField>
+                <p>Chapters: <RadzenDropDown Data=@colChapters @bind-Value="@objStory.ChapterCount" Style="width:75px" /></p>
+            </RadzenStack>
+        </RadzenColumn>
+    </RadzenRow>
     <div class="row">
         <div class="col">
             <RadzenButton Text="Create Story" ButtonStyle="ButtonStyle.Success"
                           Click="StorySave"
                           Style="margin-bottom: 10px; width: 150px" />&nbsp;&nbsp;
         </div>
-    </div>    
+    </div>
 }
 else // Existing Story
 {
-    <div Class="rz-p-0 rz-p-md-12">
-        <RadzenRow Gap="1rem">
-            <RadzenColumn Size="12" SizeSM="12">
-                <RadzenStack>
-                    <RadzenFormField Text="Story Title:" Variant="@variant">
-                        <RadzenLabel Text="@objStory.Title" Style="margin-top:10px; margin-left:10px; margin-bottom:10px" />
-                    </RadzenFormField>
-                    <RadzenFormField Text="Style:" Variant="@variant">
-                        <RadzenDropDown Data=@colStyles @bind-Value="@objStory.Style" />
-                    </RadzenFormField>
-                    <RadzenFormField Text="Synopsis:" Variant="@variant">
-                        <RadzenTextArea @bind-Value="@objStory.Synopsis" MaxLength="1000" Rows="5" />
-                    </RadzenFormField>
-                </RadzenStack>
-            </RadzenColumn>
-        </RadzenRow>
-    </div>
+    <RadzenRow Gap="1rem">
+        <RadzenColumn Size="12" SizeSM="12">
+            <RadzenStack>
+                <RadzenFormField Text="Story Title:" Variant="@variant">
+                    <RadzenLabel Text="@objStory.Title" Style="margin-top:10px; margin-left:10px; margin-bottom:10px" />
+                </RadzenFormField>
+                <RadzenFormField Text="Style:" Variant="@variant">
+                    <RadzenDropDown Data=@colStyles @bind-Value="@objStory.Style" />
+                </RadzenFormField>
+                <RadzenFormField Text="Synopsis:" Variant="@variant">
+                    <RadzenTextArea @bind-Value="@objStory.Synopsis" MaxLength="1000" Rows="5" />
+                </RadzenFormField>
+            </RadzenStack>
+        </RadzenColumn>
+    </RadzenRow>
+
     <br />
     <div class="row">
         <div class="col">
@@ -168,7 +165,7 @@ else // Existing Story
             // Trim spaces out of story name
             objStory.Title = OrchestratorMethods.TrimInnerSpaces(objStory.Title);
 
-            if(objStory.Id == 0) // New Story - Do Special Validation
+            if (objStory.Id == 0) // New Story - Do Special Validation
             {
                 // Check for duplicate Story Title
                 if (AIStoryBuildersService.GetStorys().Where(x => x.Title.ToLower() == objStory.Title.ToLower()).Count() > 0)
@@ -183,7 +180,7 @@ else // Existing Story
                             });
                     return;
                 }
-            }          
+            }
 
             // Notify parent component
             await StoryUpdated.InvokeAsync(objStory);

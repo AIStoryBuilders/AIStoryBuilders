@@ -10,15 +10,13 @@ public partial class Paragraph
 
     public int Sequence { get; set; }
 
-    public string Description { get; set; }
-
     public string ParagraphContent { get; set; }
 
     public Chapter Chapter { get; set; }
 
-    public List<Character> Characters { get; set; } = new List<Character>();
-
     public Location Location { get; set; } 
 
     public Timeline Timeline { get; set; }
+
+    public List<Character> Characters { get; set; } = new List<Character>();
 }
