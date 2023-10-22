@@ -655,7 +655,7 @@ namespace AIStoryBuilders.Services
                     colParagraphs.Add(Paragraph);
                 }
 
-                return colParagraphs;
+                return colParagraphs.OrderBy(x => x.Sequence).ToList();
             }
             catch (Exception ex)
             {
