@@ -6,6 +6,7 @@ using Microsoft.EntityFrameworkCore.Metadata;
 using Newtonsoft.Json;
 using OpenAI.Files;
 using static AIStoryBuilders.Model.OrchestratorMethods;
+using Character = AIStoryBuilders.Models.Character;
 
 namespace AIStoryBuilders.Services
 {
@@ -407,18 +408,31 @@ namespace AIStoryBuilders.Services
                     // Remove all empty lines
                     CharacterBackgroundContent = CharacterBackgroundContent.Where(line => line.Trim() != "").ToArray();
 
-                    var CharacterBackgrounds = CharacterBackgroundContent.Select(x => x.Split('|')).Select(x => x[0]).ToList();
+                    int i = 1;
+                    List<CharacterBackground> colCharacterBackground = new List<CharacterBackground>();
+                    foreach (var CharacterBackground in CharacterBackgroundContent)
+                    {
+                        // Split CharacterBackground into parts using the pipe character
+                        string[] CharacterBackgroundParts = CharacterBackground.Split('|');
+
+                        CharacterBackground objCharacterBackground = new CharacterBackground();
+
+                        objCharacterBackground.Sequence = i;
+                        objCharacterBackground.Type = CharacterBackgroundParts[0];
+                        objCharacterBackground.Timeline = new Timeline() { TimelineName = CharacterBackgroundParts[1] };
+                        objCharacterBackground.Description = CharacterBackgroundParts[2];
+                        objCharacterBackground.VectorContent = CharacterBackgroundParts[3];
+                        objCharacterBackground.Character = new Character() { CharacterName = CharacterName };
+
+                        colCharacterBackground.Add(objCharacterBackground);
+                        i++;
+                    }
 
                     // Create a Character
                     AIStoryBuilders.Models.Character Character = new AIStoryBuilders.Models.Character();
                     Character.StoryId = story.Id;
                     Character.CharacterName = CharacterName;
-                    Character.CharacterBackground = new List<CharacterBackground>();
-
-                    foreach (var CharacterBackground in CharacterBackgrounds)
-                    {
-                        Character.CharacterBackground.Add(new CharacterBackground { Description = CharacterBackground });
-                    }
+                    Character.CharacterBackground = colCharacterBackground;
 
                     // Add Character to collection
                     Characters.Add(Character);

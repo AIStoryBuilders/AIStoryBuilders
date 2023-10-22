@@ -164,7 +164,6 @@ Background Type:
         try
         {
             CharacterBackground NewCharacterBackground = new CharacterBackground();
-            NewCharacterBackground.CharacterId = objCharacter.Id;
             NewCharacterBackground.Type = strType;
 
             var EditStoryResult = await DialogService.OpenAsync(

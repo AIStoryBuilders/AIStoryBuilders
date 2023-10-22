@@ -2,7 +2,7 @@
 @inject NotificationService NotificationService
 @inject DialogService DialogService
 <p><b>Description:</b> <RadzenDropDown Data=@colDescriptions @bind-Value="@objCharacterBackground.Description" /></p>
-<p> <RadzenTextBox @bind-Value="@objCharacterBackground.ParagraphContent" /></p>
+<p> <RadzenTextBox @bind-Value="@objCharacterBackground.Description" /></p>
 @code {
     [Parameter] public CharacterBackground objCharacterBackground { get; set; }
 

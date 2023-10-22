@@ -9,17 +9,13 @@ public partial class CharacterBackground
 {
     public int Id { get; set; }
 
-    public int CharacterId { get; set; }
-
     public int Sequence { get; set; }
 
     public string Type { get; set; }
 
     public string Description { get; set; }
 
-    public string ParagraphContent { get; set; }
-
-    public int? TimelineId { get; set; }
+    public string VectorContent { get; set; }
 
     public virtual Character Character { get; set; }
 
