@@ -67,7 +67,7 @@
             var EditStoryResult = await dialogService.OpenAsync(
                 "Edit Location", ds =>
                 @<LocationEdit objLocation=newLocation DialogReference="ds"></LocationEdit>
-                , new DialogOptions() { Height = "500px", Width = "650px" });
+                , new DialogOptions() { Height = "400px", Width = "650px" });
 
             LoadLocations(objStory);
 
@@ -92,7 +92,7 @@
             var EditStoryResult = await dialogService.OpenAsync(
             "Edit Location", ds =>
             @<LocationEdit objLocation=paramLocation DialogReference="ds"></LocationEdit>
-            , new DialogOptions() { Height = "500px", Width = "650px" });
+            , new DialogOptions() { Height = "400px", Width = "650px" });
 
             LoadLocations(objStory);
 

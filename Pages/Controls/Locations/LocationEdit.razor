@@ -10,6 +10,9 @@
             <RadzenFormField Text="Location Name:" Variant=Variant.Outlined>
                 <RadzenTextBox @bind-Value="@objLocation.LocationName" />
             </RadzenFormField>
+            <RadzenFormField Text="Description:" Variant="@variant">
+                <RadzenTextArea @bind-Value="@objLocation.Description" MaxLength="1000" Rows="4" />
+            </RadzenFormField>
         </RadzenStack>
     </RadzenColumn>
 </RadzenRow>
@@ -30,6 +33,7 @@
 @code {
     [Parameter] public Location objLocation { get; set; }
     [Parameter] public DialogService DialogReference { get; set; }
+    Variant variant = Variant.Outlined;
 
     private void LocationSave()
     {

@@ -343,6 +343,7 @@ namespace AIStoryBuilders.Services
                 string[] AIStoryBuildersLocationsFiles = Directory.GetFiles(AIStoryBuildersLocationsPath, "*.csv", SearchOption.AllDirectories);
 
                 // Loop through each Location file
+                int i = 1;
                 foreach (var AIStoryBuildersLocationFile in AIStoryBuildersLocationsFiles)
                 {
                     // Get the LocationName from the file name
@@ -360,11 +361,13 @@ namespace AIStoryBuilders.Services
 
                     // Create a Location
                     AIStoryBuilders.Models.Location Location = new AIStoryBuilders.Models.Location();
+                    Location.Id = i;
                     Location.LocationName = LocationName;
                     Location.Description = LocationDescription;
 
                     // Add Location to collection
                     Locations.Add(Location);
+                    i++;
                 }
 
                 // Return collection of Locations
