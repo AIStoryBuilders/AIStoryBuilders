@@ -306,7 +306,6 @@ namespace AIStoryBuilders.Services
 
                     // Create a Timeline
                     AIStoryBuilders.Models.Timeline Timeline = new AIStoryBuilders.Models.Timeline();
-                    Timeline.StoryId = story.Id;
                     Timeline.TimelineName = TimelineName;
                     Timeline.TimelineDescription = TimelineDescription;
                     Timeline.StartDate = DateTime.Parse(TimelineStartTime);
@@ -361,7 +360,6 @@ namespace AIStoryBuilders.Services
 
                     // Create a Location
                     AIStoryBuilders.Models.Location Location = new AIStoryBuilders.Models.Location();
-                    Location.StoryId = story.Id;
                     Location.LocationName = LocationName;
                     Location.Description = LocationDescription;
 
@@ -430,7 +428,6 @@ namespace AIStoryBuilders.Services
 
                     // Create a Character
                     AIStoryBuilders.Models.Character Character = new AIStoryBuilders.Models.Character();
-                    Character.StoryId = story.Id;
                     Character.CharacterName = CharacterName;
                     Character.CharacterBackground = colCharacterBackground;
 
@@ -553,7 +550,6 @@ namespace AIStoryBuilders.Services
 
                     // Create a Chapter
                     AIStoryBuilders.Models.Chapter Chapter = new AIStoryBuilders.Models.Chapter();
-                    Chapter.StoryId = story.Id;
                     Chapter.ChapterName = ChapterName;
                     Chapter.Sequence = ChapterSequenceNumber;
                     Chapter.Synopsis = ChapterDescription;

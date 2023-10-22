@@ -62,14 +62,13 @@
         {
             var newCharacter = new Character();
             newCharacter.Id = -1; // So we know it is new
-            newCharacter.StoryId = objStory.Id; // Set the StoryId to the current Story
 
             var parms = new Dictionary<string, object>();
             parms.Add("objCharacter", newCharacter);
 
             var NewCharacterResult = await dialogService.OpenAsync<CharacterEdit>($"New Character",
-        parms,
-        new DialogOptions() { Width = "650px" });
+            parms,
+            new DialogOptions() { Width = "650px" });
 
             // Get the Characters from the database
             //colCharacters = await Service.GetCharactersAsync(objStory);

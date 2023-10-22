@@ -12,11 +12,8 @@ public partial class Character
 
     public string CharacterName { get; set; }
 
-    public string Description { get; set; }
+    public Story Story { get; set; }
 
-    public string Goals { get; set; }
+    public List<CharacterBackground> CharacterBackground { get; set; } = new List<CharacterBackground>();
 
-    public virtual ICollection<CharacterBackground> CharacterBackground { get; set; } = new List<CharacterBackground>();
-
-    public virtual Story Story { get; set; }
 }

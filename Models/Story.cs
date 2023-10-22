@@ -19,11 +19,11 @@ public partial class Story
 
     public string ChapterCount { get; set; }
 
-    public virtual ICollection<Chapter> Chapter { get; set; } = new List<Chapter>();
+    public List<Chapter> Chapter { get; set; } = new List<Chapter>();
 
-    public virtual ICollection<Character> Character { get; set; } = new List<Character>();
+    public List<Character> Character { get; set; } = new List<Character>();
 
-    public virtual ICollection<Location> Location { get; set; } = new List<Location>();
+    public List<Location> Location { get; set; } = new List<Location>();
 
-    public virtual ICollection<Timeline> Timeline { get; set; } = new List<Timeline>();
+    public List<Timeline> Timeline { get; set; } = new List<Timeline>();
 }

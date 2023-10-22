@@ -9,15 +9,13 @@ public partial class Chapter
 {
     public int Id { get; set; }
 
-    public int StoryId { get; set; }
-
     public string ChapterName { get; set; }
 
     public string Synopsis { get; set; }
 
     public int Sequence { get; set; }
 
-    public virtual ICollection<Paragraph> Paragraph { get; set; } = new List<Paragraph>();
+    public List<Paragraph> Paragraph { get; set; } = new List<Paragraph>();
 
     public virtual Story Story { get; set; }
 }
