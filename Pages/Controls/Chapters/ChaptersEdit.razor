@@ -1,0 +1,120 @@
+﻿@using AIStoryBuilders.Models;
+@using AIStoryBuilders.Pages.Controls
+@using AIStoryBuilders.Services;
+@inject NotificationService NotificationService
+@inject DialogService DialogService
+@inherits OwningComponentBase<AIStoryBuildersService>
+<RadzenRow Gap="1rem">
+    <RadzenColumn Size="12" SizeSM="12">
+        <RadzenStack>
+            <RadzenFormField Text="Chapter Name:" Variant=Variant.Outlined>
+                <RadzenTextBox @bind-Value="@objChapter.ChapterName" />
+            </RadzenFormField>
+        </RadzenStack>
+    </RadzenColumn>
+</RadzenRow>
+<br />
+<br />
+<div class="row">
+    <div class="col">
+        <RadzenButton Text="Save" ButtonStyle="ButtonStyle.Success"
+                      Click="ChapterSave"
+                      Style="margin-bottom: 10px; width: 150px" />&nbsp;&nbsp;
+        @if (objChapter.Id > 0)
+        {
+            <RadzenButton Text="Delete" ButtonStyle="ButtonStyle.Danger"
+                          Click="ChapterDelete" />
+        }
+    </div>
+</div>
+@code {
+    [Parameter] public Chapter objChapter { get; set; }
+    [Parameter] public DialogService DialogReference { get; set; }
+
+    private void ChapterSave()
+    {
+        try
+        {
+            if (objChapter.ChapterName != null)
+            {
+                if (objChapter.ChapterName.Length < 1)
+                {
+                    NotificationService.Notify(
+                    new NotificationMessage
+                        {
+                            Severity = NotificationSeverity.Error,
+                            Summary = "Error",
+                            Detail = "Chapter Name is required",
+                            Duration = 4000
+                        });
+                    return;
+                }
+                else
+                {
+                    if (objChapter.Id == -1)
+                    {
+                        // Add to the database
+                        //await Service.AddChapterAsync(objChapter);
+                    }
+                    else
+                    {
+                        // Save to the database
+                        //await Service.UpdateChapterAsync(objChapter);
+                    }
+
+                    DialogService.Close(null);
+                }
+            }
+            else
+            {
+                NotificationService.Notify(
+                new NotificationMessage
+                    {
+                        Severity = NotificationSeverity.Error,
+                        Summary = "Error",
+                        Detail = "Chapter Name is required",
+                        Duration = 4000
+                    });
+                return;
+            }
+        }
+        catch (Exception ex)
+        {
+            NotificationService.Notify(new NotificationMessage
+                {
+                    Severity = NotificationSeverity.Error,
+                    Summary = "Error",
+                    Detail = ex.Message,
+                    Duration = 4000
+                });
+        }
+    }
+
+    private async Task ChapterDelete()
+    {
+        try
+        {
+            // Ask for confirmation:
+            var confirmResult = await DialogService.Confirm("Are you sure?", "Delete Chapter",
+                  new ConfirmOptions() { OkButtonText = "Yes", CancelButtonText = "No" });
+
+            if (confirmResult.HasValue && confirmResult.Value)
+            {
+                // Delete from the database
+                //await Service.DeleteChapterAsync(objChapter.Id);
+
+                DialogService.Close(null);
+            }
+        }
+        catch (Exception ex)
+        {
+            NotificationService.Notify(new NotificationMessage
+                {
+                    Severity = NotificationSeverity.Error,
+                    Summary = "Error",
+                    Detail = ex.Message,
+                    Duration = 4000
+                });
+        }
+    }
+}

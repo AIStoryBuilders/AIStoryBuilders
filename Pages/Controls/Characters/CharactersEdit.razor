@@ -93,11 +93,10 @@
         {
             var EditStoryResult = await dialogService.OpenAsync(
             "Edit Character", ds =>
-    @<CharacterEdit objCharacter=paramCharacter DialogReference="ds"></CharacterEdit>
-        , new DialogOptions() { Height = "700px", Width = "650px" });
+            @<CharacterEdit objCharacter=paramCharacter DialogReference="ds"></CharacterEdit>
+            , new DialogOptions() { Height = "600px", Width = "650px" });
 
-            // Get the Characters from the database
-            //colCharacters = await Service.GetCharactersAsync(objStory);
+            LoadCharacters(objStory);
 
             StateHasChanged();
         }

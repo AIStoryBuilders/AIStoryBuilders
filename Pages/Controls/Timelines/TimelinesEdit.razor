@@ -1,0 +1,120 @@
+﻿@using AIStoryBuilders.Models;
+@using AIStoryBuilders.Pages.Controls
+@using AIStoryBuilders.Services;
+@inject NotificationService NotificationService
+@inject DialogService DialogService
+@inherits OwningComponentBase<AIStoryBuildersService>
+<RadzenRow Gap="1rem">
+    <RadzenColumn Size="12" SizeSM="12">
+        <RadzenStack>
+            <RadzenFormField Text="Timeline Name:" Variant=Variant.Outlined>
+                <RadzenTextBox @bind-Value="@objTimeline.TimelineName" />
+            </RadzenFormField>
+        </RadzenStack>
+    </RadzenColumn>
+</RadzenRow>
+<br />
+<br />
+<div class="row">
+    <div class="col">
+        <RadzenButton Text="Save" ButtonStyle="ButtonStyle.Success"
+                      Click="TimelineSave"
+                      Style="margin-bottom: 10px; width: 150px" />&nbsp;&nbsp;
+        @if (objTimeline.Id > 0)
+        {
+            <RadzenButton Text="Delete" ButtonStyle="ButtonStyle.Danger"
+                          Click="TimelineDelete" />
+        }
+    </div>
+</div>
+@code {
+    [Parameter] public Timeline objTimeline { get; set; }
+    [Parameter] public DialogService DialogReference { get; set; }
+
+    private void TimelineSave()
+    {
+        try
+        {
+            if (objTimeline.TimelineName != null)
+            {
+                if (objTimeline.TimelineName.Length < 1)
+                {
+                    NotificationService.Notify(
+                    new NotificationMessage
+                        {
+                            Severity = NotificationSeverity.Error,
+                            Summary = "Error",
+                            Detail = "Timeline Name is required",
+                            Duration = 4000
+                        });
+                    return;
+                }
+                else
+                {
+                    if (objTimeline.Id == -1)
+                    {
+                        // Add to the database
+                        //await Service.AddTimelineAsync(objTimeline);
+                    }
+                    else
+                    {
+                        // Save to the database
+                        //await Service.UpdateTimelineAsync(objTimeline);
+                    }
+
+                    DialogService.Close(null);
+                }
+            }
+            else
+            {
+                NotificationService.Notify(
+                new NotificationMessage
+                    {
+                        Severity = NotificationSeverity.Error,
+                        Summary = "Error",
+                        Detail = "Timeline Name is required",
+                        Duration = 4000
+                    });
+                return;
+            }
+        }
+        catch (Exception ex)
+        {
+            NotificationService.Notify(new NotificationMessage
+                {
+                    Severity = NotificationSeverity.Error,
+                    Summary = "Error",
+                    Detail = ex.Message,
+                    Duration = 4000
+                });
+        }
+    }
+
+    private async Task TimelineDelete()
+    {
+        try
+        {
+            // Ask for confirmation:
+            var confirmResult = await DialogService.Confirm("Are you sure?", "Delete Timeline",
+                  new ConfirmOptions() { OkButtonText = "Yes", CancelButtonText = "No" });
+
+            if (confirmResult.HasValue && confirmResult.Value)
+            {
+                // Delete from the database
+                //await Service.DeleteTimelineAsync(objTimeline.Id);
+
+                DialogService.Close(null);
+            }
+        }
+        catch (Exception ex)
+        {
+            NotificationService.Notify(new NotificationMessage
+                {
+                    Severity = NotificationSeverity.Error,
+                    Summary = "Error",
+                    Detail = ex.Message,
+                    Duration = 4000
+                });
+        }
+    }
+}

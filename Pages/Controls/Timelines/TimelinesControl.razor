@@ -42,12 +42,12 @@
         catch (Exception ex)
         {
             NotificationService.Notify(new NotificationMessage
-                {
-                    Severity = NotificationSeverity.Error,
-                    Summary = "Error",
-                    Detail = ex.Message,
-                    Duration = 4000
-                });
+                    {
+                        Severity = NotificationSeverity.Error,
+                        Summary = "Error",
+                        Detail = ex.Message,
+                        Duration = 4000
+                    });
         }
     }
 
@@ -60,31 +60,30 @@
     {
         try
         {
-            // var newCharacter = new Character();
-            // newCharacter.Id = -1; // So we know it is new
-            // newCharacter.StoryId = objStory.Id; // Set the StoryId to the current Story
+            var newTimeline = new Timeline();
+            newTimeline.Id = -1; // So we know it is new
+            newTimeline.Story = objStory; 
+            newTimeline.StartDate = null;
+            newTimeline.StopDate = null;
 
-            // var parms = new Dictionary<string, object>();
-            // parms.Add("objCharacter", newCharacter);
+            var EditStoryResult = await dialogService.OpenAsync(
+                "New Timeline", ds =>
+                @<TimelinesEdit objTimeline=newTimeline DialogReference="ds"></TimelinesEdit>
+                , new DialogOptions() { Height = "500px", Width = "650px" });
 
-            // var NewCharacterResult = await dialogService.OpenAsync<CharacterEdit>($"New Character",
-            // parms,
-            // new DialogOptions() { Width = "650px" });
-
-            // Get the Characters from the database
-            //colCharacters = await Service.GetCharactersAsync(objStory);
+            LoadTimelines(objStory);
 
             StateHasChanged();
         }
         catch (Exception ex)
         {
             NotificationService.Notify(new NotificationMessage
-                {
-                    Severity = NotificationSeverity.Error,
-                    Summary = "Error",
-                    Detail = ex.Message,
-                    Duration = 4000
-                });
+                    {
+                        Severity = NotificationSeverity.Error,
+                        Summary = "Error",
+                        Detail = ex.Message,
+                        Duration = 4000
+                    });
         }
     }
 
@@ -92,13 +91,12 @@
     {
         try
         {
-            // var EditStoryResult = await dialogService.OpenAsync(
-            //     "Edit Character", ds =>
-            //     @<CharacterEdit objCharacter=paramCharacter DialogReference="ds"></CharacterEdit>
-            //     , new DialogOptions() { Height = "700px", Width = "650px" });
+            var EditStoryResult = await dialogService.OpenAsync(
+            "Edit Timeline", ds =>
+            @<TimelinesEdit objTimeline=paramTimeline DialogReference="ds"></TimelinesEdit>
+            , new DialogOptions() { Height = "500px", Width = "650px" });
 
-            // Get the Characters from the database
-            //colCharacters = await Service.GetCharactersAsync(objStory);
+            LoadTimelines(objStory);
 
             StateHasChanged();
         }

@@ -113,19 +113,16 @@
     {
         try
         {
-            // var newChapter = new Chapter();
-            // newChapter.Id = -1; // So we know it is new
-            // newChapter.StoryId = objStory.Id; // Set the StoryId to the current Story
+            var newChapter = new Chapter();
+            newChapter.Id = -1; // So we know it is new
+            newChapter.Story = objStory;
 
-            // var parms = new Dictionary<string, object>();
-            // parms.Add("objChapter", newChapter);
+            var EditStoryResult = await dialogService.OpenAsync(
+                "New Chapter", ds =>
+                @<ChaptersEdit objChapter=newChapter DialogReference="ds"></ChaptersEdit>
+                , new DialogOptions() { Height = "500px", Width = "650px" });
 
-            // var NewChapterResult = await dialogService.OpenAsync<ChapterEdit>($"New Chapter",
-            // parms,
-            // new DialogOptions() { Width = "650px" });
-
-            // Get the Chapters from the database
-            //colChapters = await Service.GetChaptersAsync(objStory);
+            await LoadChapters(objStory);
 
             StateHasChanged();
         }
