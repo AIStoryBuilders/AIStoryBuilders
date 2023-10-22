@@ -147,9 +147,10 @@
                     StateHasChanged();
 
                     var parms = new Dictionary<string, object>();
+                    objStory.Id = 0; // So we know it is no longer new;
                     parms.Add("objStory", objStory);
 
-                    var EditStoryResult = await dialogService.OpenAsync<EditStory>($"{objStory.Title}", parms,
+                    var EditStoryResult = await dialogService.OpenAsync<StoryControl>($"{objStory.Title}", parms,
                     new DialogOptions() { Height = "650px", Width = "800px" });
                 }
 
@@ -192,7 +193,7 @@
             var parms = new Dictionary<string, object>();
             parms.Add("objStory", paramStory);
 
-            var EditStoryResult = await dialogService.OpenAsync<EditStory>($"{paramStory.Title}", parms,
+            var EditStoryResult = await dialogService.OpenAsync<StoryControl>($"{paramStory.Title}", parms,
             new DialogOptions() { Height = "700px", Width = "800px" });
 
             colStorys = AIStoryBuildersService.GetStorys();
