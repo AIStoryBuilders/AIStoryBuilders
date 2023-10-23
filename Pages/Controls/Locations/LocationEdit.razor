@@ -1,5 +1,6 @@
-﻿@using AIStoryBuilders.Models;
-@using AIStoryBuilders.Pages.Controls
+﻿@using AIStoryBuilders.Model;
+@using AIStoryBuilders.Models;
+@using AIStoryBuilders.Pages.Controls;
 @using AIStoryBuilders.Services;
 @inject NotificationService NotificationService
 @inject DialogService DialogService
@@ -8,10 +9,10 @@
     <RadzenColumn Size="12" SizeSM="12">
         <RadzenStack>
             <RadzenFormField Text="Location Name:" Variant=Variant.Outlined>
-                <RadzenTextBox @bind-Value="@objLocation.LocationName" />
+                <RadzenTextBox @bind-Value="@objLocation.LocationName" MaxLength="100" />
             </RadzenFormField>
             <RadzenFormField Text="Description:" Variant="@variant">
-                <RadzenTextArea @bind-Value="@objLocation.Description" MaxLength="1000" Rows="4" />
+                <RadzenTextArea @bind-Value="@objLocation.Description" MaxLength="500" Rows="4" />
             </RadzenFormField>
         </RadzenStack>
     </RadzenColumn>
@@ -31,11 +32,39 @@
     </div>
 </div>
 @code {
+    [Parameter] public Story objStory { get; set; }
     [Parameter] public Location objLocation { get; set; }
+    [Parameter] public Location objOrginalLocation { get; set; }
     [Parameter] public DialogService DialogReference { get; set; }
-    Variant variant = Variant.Outlined;
 
-    private void LocationSave()
+    AIStoryBuildersService AIStoryBuildersService;
+    OrchestratorMethods OrchestratorMethods;
+
+    Variant variant = Variant.Outlined;
+    string strOriginalLocationName = "";
+
+    protected override void OnInitialized()
+    {
+        try
+        {
+            AIStoryBuildersService = (AIStoryBuildersService)ScopedServices.GetService(typeof(AIStoryBuildersService));
+            OrchestratorMethods = (OrchestratorMethods)ScopedServices.GetService(typeof(OrchestratorMethods));
+
+            strOriginalLocationName = objOrginalLocation.LocationName;
+        }
+        catch (Exception ex)
+        {
+            NotificationService.Notify(new NotificationMessage
+                {
+                    Severity = NotificationSeverity.Error,
+                    Summary = "Error",
+                    Detail = ex.Message,
+                    Duration = 4000
+                });
+        }
+    }
+
+    private async Task LocationSave()
     {
         try
         {
@@ -55,13 +84,23 @@
                 }
                 else
                 {
-                    if (objLocation.Id == -1)
+                    if (objLocation.Id == -1) // New Location
                     {
                         // Add to the database
-                        //await Service.AddLocationAsync(objLocation);
+                        //await AIStoryBuildersService.AddLocationAsync(objLocation);
                     }
-                    else
+                    else // Existing Location
                     {
+                        if (objLocation.LocationName != strOriginalLocationName)
+                        {
+                            // The name is being updated, so we need to update the name in all the stories
+                        }
+                        else
+                        {
+                            // Only the Description is being updated
+                            objLocation = await Service.UpdateLocation(objStory, objLocation);
+                        }
+
                         // Save to the database
                         //await Service.UpdateLocationAsync(objLocation);
                     }

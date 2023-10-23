@@ -3,6 +3,7 @@ using AIStoryBuilders.Models;
 using AIStoryBuilders.Models.JSON;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.Maui.Devices.Sensors;
 using Newtonsoft.Json;
 using OpenAI.Files;
 using static AIStoryBuilders.Model.OrchestratorMethods;
@@ -122,20 +123,23 @@ namespace AIStoryBuilders.Services
             TextEvent?.Invoke(this, new TextEventArgs($"Create the Location files", 5));
             foreach (var location in ParsedNewStory.locations)
             {
-                // Add Location to file
-                string LocationName = OrchestratorMethods.SanitizeFileName(location.name);
-
-                // Create Location file
-                string LocationPath = $"{LocationsPath}/{LocationName}.csv";
-                List<string> LocationContents = new List<string>();
-
-                foreach (var description in location.descriptions)
+                if (location.descriptions.FirstOrDefault() != null)
                 {
+                    // Add Location to file
+                    string LocationName = OrchestratorMethods.SanitizeFileName(location.name);
+
+                    // Create Location file
+                    string LocationPath = $"{LocationsPath}/{LocationName}.csv";
+                    List<string> LocationContents = new List<string>();
+
+                    // We only want the first description
+                    var description = location.descriptions.FirstOrDefault();
+
                     string VectorDescriptionAndEmbedding = await OrchestratorMethods.GetVectorEmbedding(description);
                     LocationContents.Add($"{VectorDescriptionAndEmbedding}" + Environment.NewLine);
-                }
 
-                File.WriteAllLines(LocationPath, LocationContents);
+                    File.WriteAllLines(LocationPath, LocationContents);
+                }
             }
 
             // Create the Timeline file
@@ -156,7 +160,6 @@ namespace AIStoryBuilders.Services
                 i = i + 2;
             }
 
-            // Create Timeline file
             string TimelinePath = $"{StoryPath}/Timelines.csv";
             File.WriteAllLines(TimelinePath, TimelineContents);
 
@@ -382,6 +385,76 @@ namespace AIStoryBuilders.Services
                 return new List<AIStoryBuilders.Models.Location>();
             }
         }
+
+        public bool LocationExists(Story story, Models.Location objLocation)
+        {
+            bool LocationExists = true;
+            var AIStoryBuildersLocationsPath = $"{BasePath}/{story.Title}/Locations";
+
+            try
+            {
+                // Get a list of all the Location files
+                string[] AIStoryBuildersLocationsFiles = Directory.GetFiles(AIStoryBuildersLocationsPath, "*.csv", SearchOption.AllDirectories);
+
+                List<string> ExistingLocations = new List<string>();
+                // Loop through each Location file
+                foreach (var AIStoryBuildersLocationFile in AIStoryBuildersLocationsFiles)
+                {
+                    // Get the LocationName from the file name
+                    string LocationName = Path.GetFileNameWithoutExtension(AIStoryBuildersLocationFile);
+                                        
+                    ExistingLocations.Add(LocationName.ToLower());
+                }
+
+                if (ExistingLocations.Contains(objLocation.LocationName.ToLower()))
+                {
+                    LocationExists = true;
+                }
+                else
+                {
+                    LocationExists = false;
+                }
+
+                return LocationExists;
+            }
+            catch (Exception ex)
+            {
+                // Log error
+                LogService.WriteToLog(ex.Message);
+
+                // File is empty
+                return true;
+            }
+        }
+
+        public async Task<Models.Location> UpdateLocation(Story story, Models.Location paramLocation)
+        {
+            try
+            { 
+                string StoryPath = $"{BasePath}/{story.Title}";
+                string LocationsPath = $"{StoryPath}/Locations";
+
+                // Add Location to file
+                List<string> LocationContents = new List<string>();
+                string LocationName = OrchestratorMethods.SanitizeFileName(paramLocation.LocationName);                      
+
+                string VectorDescriptionAndEmbedding = await OrchestratorMethods.GetVectorEmbedding(paramLocation.Description);
+                LocationContents.Add($"{VectorDescriptionAndEmbedding}" + Environment.NewLine);
+            
+                string LocationPath = $"{LocationsPath}/{LocationName}.csv";
+                File.WriteAllLines(LocationPath, LocationContents);
+
+                return paramLocation;
+            }
+            catch (Exception ex)
+            {
+                // Log error
+                LogService.WriteToLog(ex.Message);
+
+                return new Models.Location() { Id = -1 , Description = "ERROR! - Check Logs" };
+            }
+        }
+
         #endregion
 
         #region *** Character ***
