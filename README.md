@@ -25,7 +25,7 @@ https://github.com/ADefWebserver/AIStoryBuilders/assets/1857799/65a1d17c-8b08-40
   
 - **Locations**
   - *Location Name*
-  - *Description*
+  - *Descriptions*
   
 - **Characters**
   - *Character Name*
