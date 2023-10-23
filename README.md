@@ -4,6 +4,12 @@
 #
 ![image](https://github.com/ADefWebserver/AIStoryBuilders/assets/1857799/1e9e7b28-ed00-42da-b038-063d0d0b45d7)
 
+
+
+https://github.com/ADefWebserver/AIStoryBuilders/assets/1857799/65a1d17c-8b08-4075-8e8d-b707ec700ea8
+
+
+
 ### Data Structure
 
 - **Story**
