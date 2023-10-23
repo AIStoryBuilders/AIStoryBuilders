@@ -123,23 +123,20 @@ namespace AIStoryBuilders.Services
             TextEvent?.Invoke(this, new TextEventArgs($"Create the Location files", 5));
             foreach (var location in ParsedNewStory.locations)
             {
-                if (location.descriptions.FirstOrDefault() != null)
+                // Add Location to file
+                string LocationName = OrchestratorMethods.SanitizeFileName(location.name);
+
+                // Create Location file
+                string LocationPath = $"{LocationsPath}/{LocationName}.csv";
+                List<string> LocationContents = new List<string>();
+
+                foreach (var description in location.descriptions)
                 {
-                    // Add Location to file
-                    string LocationName = OrchestratorMethods.SanitizeFileName(location.name);
-
-                    // Create Location file
-                    string LocationPath = $"{LocationsPath}/{LocationName}.csv";
-                    List<string> LocationContents = new List<string>();
-
-                    // We only want the first description
-                    var description = location.descriptions.FirstOrDefault();
-
                     string VectorDescriptionAndEmbedding = await OrchestratorMethods.GetVectorEmbedding(description);
                     LocationContents.Add($"{VectorDescriptionAndEmbedding}" + Environment.NewLine);
-
-                    File.WriteAllLines(LocationPath, LocationContents);
                 }
+
+                File.WriteAllLines(LocationPath, LocationContents);
             }
 
             // Create the Timeline file
