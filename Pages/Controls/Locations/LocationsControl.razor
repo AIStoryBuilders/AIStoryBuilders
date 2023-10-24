@@ -65,9 +65,9 @@
             newLocation.Story = objStory;
 
             var EditStoryResult = await dialogService.OpenAsync(
-                "Edit Location", ds =>
+                "New Location", ds =>
                 @<LocationEdit objStory=objStory objLocation=newLocation objOrginalLocation=newLocation DialogReference="ds"></LocationEdit>
-                , new DialogOptions() { Height = "400px", Width = "650px" });
+                , new DialogOptions() { Height = "250px", Width = "650px" });
 
             LoadLocations(objStory);
 

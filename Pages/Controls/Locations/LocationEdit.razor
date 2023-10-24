@@ -11,13 +11,15 @@
             <RadzenFormField Text="Location Name:" Variant=Variant.Outlined>
                 <RadzenTextBox @bind-Value="@objLocation.LocationName" MaxLength="100" />
             </RadzenFormField>
-            <RadzenFormField Text="Description:" Variant="@variant">
-                <RadzenTextArea @bind-Value="@objLocation.Description" MaxLength="500" Rows="4" />
-            </RadzenFormField>
+            @if (@objLocation.Id > 0)
+            {
+                <RadzenFormField Text="Description:" Variant="Variant.Outlined">
+                    <RadzenTextArea @bind-Value="@NewDescription" MaxLength="500" Rows="4" />
+                    </RadzenFormField> 
+            }
         </RadzenStack>
     </RadzenColumn>
 </RadzenRow>
-<br />
 <br />
 <div class="row">
     <div class="col">
@@ -40,8 +42,8 @@
     AIStoryBuildersService AIStoryBuildersService;
     OrchestratorMethods OrchestratorMethods;
 
-    Variant variant = Variant.Outlined;
     string strOriginalLocationName = "";
+    string NewDescription = "";
 
     protected override void OnInitialized()
     {
@@ -84,8 +86,14 @@
                 }
                 else
                 {
+
+                    // Get the Current Description being edited
+                    var LocationDescription = objLocation.Description.FirstOrDefault();
+
                     if (objLocation.Id == -1) // New Location
                     {
+                        // Check that there is not already a Location with the same name
+
                         // Add to the database
                         //await AIStoryBuildersService.AddLocationAsync(objLocation);
                     }
@@ -98,7 +106,7 @@
                         else
                         {
                             // Only the Description is being updated
-                            objLocation = await Service.UpdateLocation(objStory, objLocation);
+                            await Service.UpdateLocation(objStory, objLocation.LocationName, LocationDescription);
                         }
 
                         // Save to the database

@@ -355,15 +355,13 @@ namespace AIStoryBuilders.Services
                     // Remove all empty lines
                     LocationContent = LocationContent.Where(line => line.Trim() != "").ToArray();
 
-                    var LocationDescription = LocationContent.Select(x => x.Split('|')).Select(x => x[0]).FirstOrDefault();
-
-                    // LocationBackgrounds
+                    var LocationDescriptions = LocationContent.Select(x => x.Split('|')).Select(x => x[0]).ToList();
 
                     // Create a Location
                     AIStoryBuilders.Models.Location Location = new AIStoryBuilders.Models.Location();
                     Location.Id = i;
                     Location.LocationName = LocationName;
-                    Location.Description = LocationDescription;
+                    Location.Description = LocationDescriptions;
 
                     // Add Location to collection
                     Locations.Add(Location);
@@ -424,7 +422,7 @@ namespace AIStoryBuilders.Services
             }
         }
 
-        public async Task<Models.Location> UpdateLocation(Story story, Models.Location paramLocation)
+        public async Task UpdateLocation(Story story, string paramLocationName, string paramLocationDescription)
         {
             try
             { 
@@ -433,22 +431,18 @@ namespace AIStoryBuilders.Services
 
                 // Add Location to file
                 List<string> LocationContents = new List<string>();
-                string LocationName = OrchestratorMethods.SanitizeFileName(paramLocation.LocationName);                      
+                string LocationName = OrchestratorMethods.SanitizeFileName(paramLocationName);                      
 
-                string VectorDescriptionAndEmbedding = await OrchestratorMethods.GetVectorEmbedding(paramLocation.Description);
+                string VectorDescriptionAndEmbedding = await OrchestratorMethods.GetVectorEmbedding(paramLocationDescription);
                 LocationContents.Add($"{VectorDescriptionAndEmbedding}" + Environment.NewLine);
             
                 string LocationPath = $"{LocationsPath}/{LocationName}.csv";
                 File.WriteAllLines(LocationPath, LocationContents);
-
-                return paramLocation;
             }
             catch (Exception ex)
             {
                 // Log error
                 LogService.WriteToLog(ex.Message);
-
-                return new Models.Location() { Id = -1 , Description = "ERROR! - Check Logs" };
             }
         }
 

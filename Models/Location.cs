@@ -11,7 +11,7 @@ public partial class Location
 
     public string LocationName { get; set; }
 
-    public string Description { get; set; }
+    public List<string> Description { get; set; }
 
     public Story Story { get; set; }
 }
