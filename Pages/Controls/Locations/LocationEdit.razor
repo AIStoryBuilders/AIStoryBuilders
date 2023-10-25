@@ -2,9 +2,9 @@
 @using AIStoryBuilders.Models;
 @using AIStoryBuilders.Pages.Controls;
 @using AIStoryBuilders.Services;
+@inherits OwningComponentBase
 @inject NotificationService NotificationService
 @inject DialogService DialogService
-@inherits OwningComponentBase<AIStoryBuildersService>
 <RadzenRow Gap="1rem">
     <RadzenColumn Size="12" SizeSM="12">
         <RadzenStack>
@@ -119,7 +119,7 @@
                         else
                         {
                             // Only the Description is being updated
-                            await Service.UpdateLocationDescriptions(objStory, objLocation);
+                            await AIStoryBuildersService.UpdateLocationDescriptions(objStory, objLocation);
                         }
 
                         // Save to the database
