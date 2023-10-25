@@ -422,7 +422,7 @@ namespace AIStoryBuilders.Services
             }
         }
 
-        public async Task UpdateLocation(Story story, string paramLocationName, string paramLocationDescription)
+        public async Task UpdateLocationDescriptions(Story story, Models.Location objLocation)
         {
             try
             { 
@@ -431,11 +431,14 @@ namespace AIStoryBuilders.Services
 
                 // Add Location to file
                 List<string> LocationContents = new List<string>();
-                string LocationName = OrchestratorMethods.SanitizeFileName(paramLocationName);                      
-
-                string VectorDescriptionAndEmbedding = await OrchestratorMethods.GetVectorEmbedding(paramLocationDescription);
-                LocationContents.Add($"{VectorDescriptionAndEmbedding}" + Environment.NewLine);
-            
+                string LocationName = OrchestratorMethods.SanitizeFileName(objLocation.LocationName);  
+                
+                foreach(var description in objLocation.Description)
+                {
+                    string VectorDescriptionAndEmbedding = await OrchestratorMethods.GetVectorEmbedding(description);
+                    LocationContents.Add($"{VectorDescriptionAndEmbedding}" + Environment.NewLine);
+                }
+             
                 string LocationPath = $"{LocationsPath}/{LocationName}.csv";
                 File.WriteAllLines(LocationPath, LocationContents);
             }
