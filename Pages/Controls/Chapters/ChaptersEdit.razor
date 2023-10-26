@@ -1,9 +1,10 @@
-﻿@using AIStoryBuilders.Models;
+﻿@using AIStoryBuilders.Model;
+@using AIStoryBuilders.Models;
 @using AIStoryBuilders.Pages.Controls
 @using AIStoryBuilders.Services;
+@inherits OwningComponentBase
 @inject NotificationService NotificationService
 @inject DialogService DialogService
-@inherits OwningComponentBase<AIStoryBuildersService>
 <RadzenRow Gap="1rem">
     <RadzenColumn Size="12" SizeSM="12">
         <RadzenStack>
@@ -30,6 +31,28 @@
 @code {
     [Parameter] public Chapter objChapter { get; set; }
     [Parameter] public DialogService DialogReference { get; set; }
+
+    AIStoryBuildersService AIStoryBuildersService;
+    OrchestratorMethods OrchestratorMethods;
+
+    protected override void OnInitialized()
+    {
+        try
+        {
+            AIStoryBuildersService = (AIStoryBuildersService)ScopedServices.GetService(typeof(AIStoryBuildersService));
+            OrchestratorMethods = (OrchestratorMethods)ScopedServices.GetService(typeof(OrchestratorMethods));
+        }
+        catch (Exception ex)
+        {
+            NotificationService.Notify(new NotificationMessage
+                {
+                    Severity = NotificationSeverity.Error,
+                    Summary = "Error",
+                    Detail = ex.Message,
+                    Duration = 4000
+                });
+        }
+    }
 
     private void ChapterSave()
     {

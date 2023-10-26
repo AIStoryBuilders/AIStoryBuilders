@@ -25,7 +25,7 @@ namespace AIStoryBuilders.Model
 
             // Create a new OpenAIClient object
             // with the provided API key and organization
-            var api = new OpenAIClient(new OpenAIAuthentication(ApiKey, Organization));
+            var api = new OpenAIClient(new OpenAIAuthentication(ApiKey, Organization),null,new HttpClient() { Timeout= TimeSpan.FromSeconds(520) });
 
             // Create a colection of chatPrompts
             ChatResponse ChatResponseResult = new ChatResponse();
@@ -48,7 +48,7 @@ namespace AIStoryBuilders.Model
                 )
             );
 
-            ReadTextEvent?.Invoke(this, new ReadTextEventArgs($"Calling ChatGPT...", 50));
+            ReadTextEvent?.Invoke(this, new ReadTextEventArgs($"Calling ChatGPT...", 70));
 
             // Get a response from ChatGPT 
             var FinalChatRequest = new ChatRequest(

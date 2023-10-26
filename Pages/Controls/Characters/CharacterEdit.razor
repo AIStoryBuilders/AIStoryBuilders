@@ -1,9 +1,10 @@
-﻿@using AIStoryBuilders.Models;
+﻿@using AIStoryBuilders.Model;
+@using AIStoryBuilders.Models;
 @using AIStoryBuilders.Pages.Controls
 @using AIStoryBuilders.Services;
+@inherits OwningComponentBase
 @inject NotificationService NotificationService
 @inject DialogService DialogService
-@inherits OwningComponentBase<AIStoryBuildersService>
 <RadzenRow Gap="1rem">
     <RadzenColumn Size="12" SizeSM="12">
         <RadzenStack>
@@ -47,12 +48,18 @@ Background Type:
     [Parameter] public Character objCharacter { get; set; }
     [Parameter] public DialogService DialogReference { get; set; }
 
+    AIStoryBuildersService AIStoryBuildersService;
+    OrchestratorMethods OrchestratorMethods;
+
     IEnumerable<CharacterBackground> colCharacterBackground = new List<CharacterBackground>();
     List<string> colTypes = new List<string>();
     string strType = "Appearance";
 
     protected override void OnInitialized()
     {
+         AIStoryBuildersService = (AIStoryBuildersService)ScopedServices.GetService(typeof(AIStoryBuildersService));
+         OrchestratorMethods = (OrchestratorMethods)ScopedServices.GetService(typeof(OrchestratorMethods));
+
         // Add colTypes
         colTypes = new List<string>()
             {
@@ -86,6 +93,9 @@ Background Type:
                 }
                 else
                 {
+                    // Always remove any pipe (|) characters
+                    objCharacter.CharacterName = objCharacter.CharacterName.Replace("|", "");
+
                     if (objCharacter.Id == -1)
                     {
                         // Add to the database

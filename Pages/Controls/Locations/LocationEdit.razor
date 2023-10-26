@@ -73,6 +73,9 @@
             // Always trim
             objLocation.LocationName = objLocation.LocationName.Trim();
 
+            // Always remove any pipe (|) characters
+            objLocation.LocationName = objLocation.LocationName.Replace("|", "");
+
             if (objLocation.LocationName != null)
             {
                 if (objLocation.LocationName.Length < 1)
