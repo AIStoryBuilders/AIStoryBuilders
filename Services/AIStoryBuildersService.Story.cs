@@ -112,7 +112,7 @@ namespace AIStoryBuilders.Services
                 {
                     string description_type = description.description_type ?? "";
                     string timeline_name = description.timeline_name ?? "";
-                    string VectorDescriptionAndEmbedding = await OrchestratorMethods.GetVectorEmbedding(description.description ?? "");
+                    string VectorDescriptionAndEmbedding = await OrchestratorMethods.GetVectorEmbedding(description.description ?? "", true);
                     CharacterContents.Add($"{description_type}|{timeline_name}|{VectorDescriptionAndEmbedding}" + Environment.NewLine);
                 }
 
@@ -132,8 +132,12 @@ namespace AIStoryBuilders.Services
 
                 foreach (var description in location.descriptions)
                 {
-                    string VectorDescriptionAndEmbedding = await OrchestratorMethods.GetVectorEmbedding(description);
-                    LocationContents.Add($"{VectorDescriptionAndEmbedding}" + Environment.NewLine);
+                    string VectorEmbedding = await OrchestratorMethods.GetVectorEmbedding(description, false);
+   
+                    // We are deliberately not setting a LocationTimeline (therefore setting it to empty string)
+                    // We did not ask the AI to set this value because it would have ben asking too much
+                    var LocationDescriptionAndTimeline = $"{description}|";
+                    LocationContents.Add($"{LocationDescriptionAndTimeline}|{VectorEmbedding}" + Environment.NewLine);
                 }
 
                 File.WriteAllLines(LocationPath, LocationContents);
@@ -195,14 +199,14 @@ namespace AIStoryBuilders.Services
                 {
                     // Create a file at: Chapters/Chapter{ChapterNumber}/Chapter{ChapterNumber}.txt
                     string ChapterFilePath = $"{ChapterPath}/Chapter{ChapterNumber}.txt";
-                    string ChapterSynopsisAndEmbedding = await OrchestratorMethods.GetVectorEmbedding(chapter.chapter_synopsis);
+                    string ChapterSynopsisAndEmbedding = await OrchestratorMethods.GetVectorEmbedding(chapter.chapter_synopsis, true);
                     File.WriteAllText(ChapterFilePath, $"{ChapterSynopsisAndEmbedding}");
 
                     if (chapter.paragraphs[0] != null)
                     {
                         // Create a file at: Chapters/Chapter1/Paragraph1.txt
                         string FirstParagraphPath = $"{ChapterPath}/Paragraph1.txt";
-                        string VectorDescriptionAndEmbeddingFirstParagraph = await OrchestratorMethods.GetVectorEmbedding(chapter.paragraphs[0].contents);
+                        string VectorDescriptionAndEmbeddingFirstParagraph = await OrchestratorMethods.GetVectorEmbedding(chapter.paragraphs[0].contents, true);
 
                         string Location = chapter.paragraphs[0].location_name;
                         string Timeline = chapter.paragraphs[0].timeline_name;
@@ -355,13 +359,30 @@ namespace AIStoryBuilders.Services
                     // Remove all empty lines
                     LocationContent = LocationContent.Where(line => line.Trim() != "").ToArray();
 
-                    var LocationDescriptions = LocationContent.Select(x => x.Split('|')).Select(x => x[0]).ToList();
+                    var LocationDescriptionRaw = LocationContent.Select(x => x.Split('|')).Select(x => x[0]).ToList();
 
                     // Create a Location
                     AIStoryBuilders.Models.Location Location = new AIStoryBuilders.Models.Location();
                     Location.Id = i;
                     Location.LocationName = LocationName;
-                    Location.Description = LocationDescriptions;
+                    Location.LocationDescription = new List<LocationDescription>();
+
+                    if (LocationDescriptionRaw[0] != null)
+                    {
+                        LocationDescription objLocationDescription = new LocationDescription();
+                        objLocationDescription.Description = LocationDescriptionRaw[0];
+
+                        // Does the TimelineName element exist?
+                        if (LocationDescriptionRaw.Count() > 1)
+                        {
+                            Timeline objTimeline = new Timeline();
+                            objTimeline.TimelineName = LocationDescriptionRaw[1];
+
+                            objLocationDescription.Timeline = objTimeline;
+                        }
+
+                        Location.LocationDescription.Add(objLocationDescription);
+                    }
 
                     // Add Location to collection
                     Locations.Add(Location);
@@ -433,10 +454,23 @@ namespace AIStoryBuilders.Services
                 List<string> LocationContents = new List<string>();
                 string LocationName = OrchestratorMethods.SanitizeFileName(objLocation.LocationName);  
                 
-                foreach(var description in objLocation.Description)
-                {
-                    string VectorDescriptionAndEmbedding = await OrchestratorMethods.GetVectorEmbedding(description);
-                    LocationContents.Add($"{VectorDescriptionAndEmbedding}" + Environment.NewLine);
+                foreach(var description in objLocation.LocationDescription)
+                {                  
+                    string VectorEmbedding = await OrchestratorMethods.GetVectorEmbedding(description.Description, false);
+
+                    // Set TimelineName to empty string if null
+                    string TimelineName = "";
+                    if(description.Timeline == null)
+                    {
+                        TimelineName = "";
+                    }
+                    else
+                    {
+                        TimelineName = description.Timeline.TimelineName ?? "";
+                    }
+
+                    var LocationDescriptionAndTimeline = $"{description.Description}|{TimelineName}";
+                    LocationContents.Add($"{LocationDescriptionAndTimeline}|{VectorEmbedding}" + Environment.NewLine);
                 }
              
                 string LocationPath = $"{LocationsPath}/{LocationName}.csv";

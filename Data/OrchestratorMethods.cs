@@ -112,8 +112,8 @@ namespace AIStoryBuilders.Model
 
         // Memory and Vectors
 
-        #region public async Task<string> GetVectorEmbedding(string EmbeddingContent)
-        public async Task<string> GetVectorEmbedding(string EmbeddingContent)
+        #region public async Task<string> GetVectorEmbedding(string EmbeddingContent, bool Combine)
+        public async Task<string> GetVectorEmbedding(string EmbeddingContent, bool Combine)
         {
             // **** Call OpenAI and get embeddings for the memory text
             // Create an instance of the OpenAI client
@@ -137,7 +137,14 @@ namespace AIStoryBuilders.Model
             // Convert the floats to a single string
             var VectorsToSave = "[" + string.Join(",", AllVectors.Select(x => x.VectorValue)) + "]";
 
-            return EmbeddingContent + "|" + VectorsToSave;
+            if (Combine)
+            {
+                return EmbeddingContent + "|" + VectorsToSave;
+            }
+            else
+            {
+                return VectorsToSave;
+            }
         }
         #endregion
 
@@ -252,11 +259,8 @@ namespace AIStoryBuilders.Model
             // Strip out invalid characters
             string sanitized = new string(input.Where(ch => !InvalidFileNameChars.Contains(ch)).ToArray());
 
-            // Check for reserved names, and append a "_" if found
-            if (ReservedNames.Contains(sanitized, StringComparer.OrdinalIgnoreCase))
-            {
-                sanitized += "_";
-            }
+            // Remove the | character
+            sanitized = sanitized.Replace("|", "");
 
             return sanitized;
         }

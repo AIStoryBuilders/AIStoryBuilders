@@ -1,5 +1,4 @@
-﻿
-#nullable disable
+﻿#nullable disable
 using System;
 using System.Collections.Generic;
 
@@ -11,7 +10,7 @@ public partial class Location
 
     public string LocationName { get; set; }
 
-    public List<string> Description { get; set; }
+    public List<LocationDescription> LocationDescription { get; set; }
 
     public Story Story { get; set; }
 }
