@@ -11,31 +11,38 @@
             <RadzenFormField Text="Location Name:" Variant=Variant.Outlined>
                 <RadzenTextBox @bind-Value="@objLocation.LocationName" MaxLength="100" />
             </RadzenFormField>
+            <div class="row">
+                <div class="col">
+                    <RadzenButton Text="Save" ButtonStyle="ButtonStyle.Success"
+                                  Click="LocationSave"
+                                  Style="margin-bottom: 10px; width: 150px" />&nbsp;&nbsp;
+                    @if (objLocation.Id > 0)
+                    {
+                        <RadzenButton Text="Delete" ButtonStyle="ButtonStyle.Danger"
+                                      Click="LocationDelete" />
+                    }
+                </div>
+            </div>
             @if (@objLocation.Id > 0)
             {
-                foreach (LocationDescription objLocationDescription in objLocation.LocationDescription)
-                {
-                    <RadzenFormField Variant="Variant.Outlined">
-                        <RadzenTextArea @bind-Value="@objLocationDescription.Description" MaxLength="500" Rows="4" />
-                    </RadzenFormField>
-                }
+                <RadzenDataList AllowVirtualization=false Style="height:100%;overflow:auto;"
+                                WrapItems=true AllowPaging=false
+                                Data="@objLocation.LocationDescription" TItem="LocationDescription">
+                    <Template Context="Location">
+                        <RadzenCard Style="width: 100%; padding: 1;">
+                            <RadzenRow Gap="0">
+                                <RadzenButton Text="Edit" Click=@(() => EditLocationDescription(Location))
+                                              ButtonStyle="ButtonStyle.Light" Style="width: 75px;height: 20px" />
+                                &nbsp;&nbsp;&nbsp;&nbsp;
+                                <RadzenText>@(Location.Description)</RadzenText>&nbsp;&nbsp;
+                                </RadzenRow>
+                            </RadzenCard>
+                        </Template>
+                    </RadzenDataList>
             }
         </RadzenStack>
     </RadzenColumn>
 </RadzenRow>
-<br />
-<div class="row">
-    <div class="col">
-        <RadzenButton Text="Save" ButtonStyle="ButtonStyle.Success"
-                      Click="LocationSave"
-                      Style="margin-bottom: 10px; width: 150px" />&nbsp;&nbsp;
-        @if (objLocation.Id > 0)
-        {
-            <RadzenButton Text="Delete" ButtonStyle="ButtonStyle.Danger"
-                          Click="LocationDelete" />
-        }
-    </div>
-</div>
 @code {
     [Parameter] public Location objLocation { get; set; }
     [Parameter] public Location objOrginalLocation { get; set; }
@@ -54,6 +61,26 @@
             OrchestratorMethods = (OrchestratorMethods)ScopedServices.GetService(typeof(OrchestratorMethods));
 
             strOriginalLocationName = objOrginalLocation.LocationName;
+        }
+        catch (Exception ex)
+        {
+            NotificationService.Notify(new NotificationMessage
+                {
+                    Severity = NotificationSeverity.Error,
+                    Summary = "Error",
+                    Detail = ex.Message,
+                    Duration = 4000
+                });
+        }
+    }
+
+    private async Task EditLocationDescription(LocationDescription paramLocationDescription)
+    {
+        try
+        {
+
+
+            StateHasChanged();
         }
         catch (Exception ex)
         {

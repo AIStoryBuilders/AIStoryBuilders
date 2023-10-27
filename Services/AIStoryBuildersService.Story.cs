@@ -359,7 +359,7 @@ namespace AIStoryBuilders.Services
                     // Remove all empty lines
                     LocationContent = LocationContent.Where(line => line.Trim() != "").ToArray();
 
-                    var LocationDescriptionRaw = LocationContent.Select(x => x.Split('|')).Select(x => x[0]).ToList();
+                    var LocationDescriptionRaw = LocationContent.Select(x => x.Split('|')).ToArray();
 
                     // Create a Location
                     AIStoryBuilders.Models.Location Location = new AIStoryBuilders.Models.Location();
@@ -369,19 +369,24 @@ namespace AIStoryBuilders.Services
 
                     if (LocationDescriptionRaw.Count() > 0)
                     {
-                        LocationDescription objLocationDescription = new LocationDescription();
-                        objLocationDescription.Description = LocationDescriptionRaw[0];
-
-                        // Does the TimelineName element exist?
-                        if (LocationDescriptionRaw.Count() > 1)
+                        foreach (var description in LocationDescriptionRaw)
                         {
-                            Timeline objTimeline = new Timeline();
-                            objTimeline.TimelineName = LocationDescriptionRaw[1];
+                            var DescriptionRaw = description.Select(x => x.Split('|')).ToArray();
 
-                            objLocationDescription.Timeline = objTimeline;
-                        }
+                            LocationDescription objLocationDescription = new LocationDescription();
+                            objLocationDescription.Description = DescriptionRaw[0][0];
 
-                        Location.LocationDescription.Add(objLocationDescription);
+                            // Does the TimelineName element exist?
+                            if (DescriptionRaw[0].Count() > 1)
+                            {
+                                Timeline objTimeline = new Timeline();
+                                objTimeline.TimelineName = DescriptionRaw[0][1];
+
+                                objLocationDescription.Timeline = objTimeline;
+                            }
+
+                            Location.LocationDescription.Add(objLocationDescription);
+                        }                        
                     }
 
                     // Add Location to collection
