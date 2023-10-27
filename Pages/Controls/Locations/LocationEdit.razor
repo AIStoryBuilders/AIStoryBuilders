@@ -13,9 +13,12 @@
             </RadzenFormField>
             @if (@objLocation.Id > 0)
             {
-                <RadzenFormField Text="Description:" Variant="Variant.Outlined">
-                    <RadzenTextArea @bind-Value="@NewDescription" MaxLength="500" Rows="4" />
-                    </RadzenFormField> 
+                foreach (LocationDescription objLocationDescription in objLocation.LocationDescription)
+                {
+                    <RadzenFormField Variant="Variant.Outlined">
+                        <RadzenTextArea @bind-Value="@objLocationDescription.Description" MaxLength="500" Rows="4" />
+                    </RadzenFormField>
+                }
             }
         </RadzenStack>
     </RadzenColumn>
@@ -34,7 +37,6 @@
     </div>
 </div>
 @code {
-    [Parameter] public Story objStory { get; set; }
     [Parameter] public Location objLocation { get; set; }
     [Parameter] public Location objOrginalLocation { get; set; }
     [Parameter] public DialogService DialogReference { get; set; }
@@ -43,7 +45,6 @@
     OrchestratorMethods OrchestratorMethods;
 
     string strOriginalLocationName = "";
-    string NewDescription = "";
 
     protected override void OnInitialized()
     {
@@ -82,12 +83,12 @@
                 {
                     NotificationService.Notify(
                     new NotificationMessage
-                            {
-                                Severity = NotificationSeverity.Error,
-                                Summary = "Error",
-                                Detail = "Location Name is required",
-                                Duration = 4000
-                            });
+                        {
+                            Severity = NotificationSeverity.Error,
+                            Summary = "Error",
+                            Detail = "Location Name is required",
+                            Duration = 4000
+                        });
                     return;
                 }
                 else
@@ -95,7 +96,7 @@
                     if (objLocation.Id == -1) // New Location
                     {
                         // Check that there is not already a Location with the same name
-                        bool LocationExists = AIStoryBuildersService.LocationExists(objStory, objLocation);
+                        bool LocationExists = AIStoryBuildersService.LocationExists(objLocation);
 
                         if (LocationExists)
                         {
@@ -107,26 +108,28 @@
                                     Detail = "Location Name already exists. Choose a new name",
                                     Duration = 4000
                                 });
+
                             return;
                         }
 
                         // Add to the database
-                        //await AIStoryBuildersService.AddLocationAsync(objLocation);
+                        await AIStoryBuildersService.AddLocationAsync(objLocation);
                     }
                     else // Existing Location
                     {
                         if (objLocation.LocationName != strOriginalLocationName)
                         {
-                            // The name is being updated, so we need to update the name in all the stories
+                            // Show a popup that the name is being updated, so we need to update the name in all the stories
+
+                            // Show a prgress bar and show each renaming in a Toast
+
+                            // If rename works then update the name and write any Descriptions in the database
                         }
                         else
                         {
-                            // Only the Description is being updated
-                            await AIStoryBuildersService.UpdateLocationDescriptions(objStory, objLocation);
+                            // Only the Descriptions are being updated
+                            await AIStoryBuildersService.UpdateLocationDescriptions(objLocation);
                         }
-
-                        // Save to the database
-                        //await Service.UpdateLocationAsync(objLocation);
                     }
 
                     DialogService.Close(null);
@@ -136,24 +139,24 @@
             {
                 NotificationService.Notify(
                 new NotificationMessage
-                        {
-                            Severity = NotificationSeverity.Error,
-                            Summary = "Error",
-                            Detail = "Location Name is required",
-                            Duration = 4000
-                        });
+                    {
+                        Severity = NotificationSeverity.Error,
+                        Summary = "Error",
+                        Detail = "Location Name is required",
+                        Duration = 4000
+                    });
                 return;
             }
         }
         catch (Exception ex)
         {
             NotificationService.Notify(new NotificationMessage
-                    {
-                        Severity = NotificationSeverity.Error,
-                        Summary = "Error",
-                        Detail = ex.Message,
-                        Duration = 4000
-                    });
+                {
+                    Severity = NotificationSeverity.Error,
+                    Summary = "Error",
+                    Detail = ex.Message,
+                    Duration = 4000
+                });
         }
     }
 
@@ -176,12 +179,12 @@
         catch (Exception ex)
         {
             NotificationService.Notify(new NotificationMessage
-                    {
-                        Severity = NotificationSeverity.Error,
-                        Summary = "Error",
-                        Detail = ex.Message,
-                        Duration = 4000
-                    });
+                {
+                    Severity = NotificationSeverity.Error,
+                    Summary = "Error",
+                    Detail = ex.Message,
+                    Duration = 4000
+                });
         }
-    }    
+    }
 }

@@ -64,10 +64,11 @@
             var newLocation = new Location();
             newLocation.Id = -1; // So we know it is new
             newLocation.Story = objStory;
+            newLocation.LocationDescription = new List<LocationDescription>();
 
             var EditStoryResult = await dialogService.OpenAsync(
                 "New Location", ds =>
-                @<LocationEdit objStory=objStory objLocation=newLocation objOrginalLocation=newLocation DialogReference="ds"></LocationEdit>
+                @<LocationEdit objLocation=newLocation objOrginalLocation=newLocation DialogReference="ds"></LocationEdit>
                 , new DialogOptions() { Height = "250px", Width = "650px" });
 
             LoadLocations(objStory);
@@ -90,9 +91,13 @@
     {
         try
         {
+            // Add the story to the location so it 
+            // is available in the edit screen
+            paramLocation.Story = objStory;
+
             var EditStoryResult = await dialogService.OpenAsync(
             "Edit Location", ds =>
-            @<LocationEdit objStory=objStory objLocation=paramLocation objOrginalLocation=paramLocation DialogReference="ds"></LocationEdit>
+            @<LocationEdit objLocation=paramLocation objOrginalLocation=paramLocation DialogReference="ds"></LocationEdit>
             , new DialogOptions() { Height = "400px", Width = "650px" });
 
             LoadLocations(objStory);

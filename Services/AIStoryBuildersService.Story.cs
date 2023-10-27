@@ -367,7 +367,7 @@ namespace AIStoryBuilders.Services
                     Location.LocationName = LocationName;
                     Location.LocationDescription = new List<LocationDescription>();
 
-                    if (LocationDescriptionRaw[0] != null)
+                    if (LocationDescriptionRaw.Count() > 0)
                     {
                         LocationDescription objLocationDescription = new LocationDescription();
                         objLocationDescription.Description = LocationDescriptionRaw[0];
@@ -402,10 +402,10 @@ namespace AIStoryBuilders.Services
             }
         }
 
-        public bool LocationExists(Story story, Models.Location objLocation)
+        public bool LocationExists(Models.Location objLocation)
         {
             bool LocationExists = true;
-            var AIStoryBuildersLocationsPath = $"{BasePath}/{story.Title}/Locations";
+            var AIStoryBuildersLocationsPath = $"{BasePath}/{objLocation.Story.Title}/Locations";
 
             try
             {
@@ -443,11 +443,51 @@ namespace AIStoryBuilders.Services
             }
         }
 
-        public async Task UpdateLocationDescriptions(Story story, Models.Location objLocation)
+        public async Task AddLocationAsync(Models.Location objLocation)
+        {
+            try
+            {
+                string StoryPath = $"{BasePath}/{objLocation.Story.Title}";
+                string LocationsPath = $"{StoryPath}/Locations";
+
+                // Add Location to file
+                List<string> LocationContents = new List<string>();
+                string LocationName = OrchestratorMethods.SanitizeFileName(objLocation.LocationName);
+
+                foreach (var description in objLocation.LocationDescription)
+                {
+                    string VectorEmbedding = await OrchestratorMethods.GetVectorEmbedding(description.Description, false);
+
+                    // Set TimelineName to empty string if null
+                    string TimelineName = "";
+                    if (description.Timeline == null)
+                    {
+                        TimelineName = "";
+                    }
+                    else
+                    {
+                        TimelineName = description.Timeline.TimelineName ?? "";
+                    }
+
+                    var LocationDescriptionAndTimeline = $"{description.Description}|{TimelineName}";
+                    LocationContents.Add($"{LocationDescriptionAndTimeline}|{VectorEmbedding}" + Environment.NewLine);
+                }
+
+                string LocationPath = $"{LocationsPath}/{LocationName}.csv";
+                File.WriteAllLines(LocationPath, LocationContents);
+            }
+            catch (Exception ex)
+            {
+                // Log error
+                LogService.WriteToLog(ex.Message);
+            }
+        }
+
+        public async Task UpdateLocationDescriptions(Models.Location objLocation)
         {
             try
             { 
-                string StoryPath = $"{BasePath}/{story.Title}";
+                string StoryPath = $"{BasePath}/{objLocation.Story.Title}";
                 string LocationsPath = $"{StoryPath}/Locations";
 
                 // Add Location to file
