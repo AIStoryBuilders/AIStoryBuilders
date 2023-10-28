@@ -379,10 +379,10 @@ namespace AIStoryBuilders.Services
                             objLocationDescription.Description = DescriptionRaw[0][0];
 
                             // Does the TimelineName element exist?
-                            if (DescriptionRaw[0].Count() > 1)
+                            if (DescriptionRaw[1].Count() > 0)
                             {
                                 Timeline objTimeline = new Timeline();
-                                objTimeline.TimelineName = DescriptionRaw[0][1];
+                                objTimeline.TimelineName = DescriptionRaw[1][0];
 
                                 objLocationDescription.Timeline = objTimeline;
                             }
