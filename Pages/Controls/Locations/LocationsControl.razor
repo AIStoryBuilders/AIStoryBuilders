@@ -5,6 +5,14 @@
 @inherits OwningComponentBase
 @inject DialogService dialogService
 @inject NotificationService NotificationService
+@if (@InProgress)
+{
+    <div class="rz-m-10">
+        <RadzenProgressBar Value="100" ShowValue="false" Mode="ProgressBarMode.Indeterminate" />
+    </div>
+}
+else
+{
 <RadzenButton Click=@(() => NewLocation()) Text="New Location" ButtonStyle="ButtonStyle.Success" />
 <br />
 <br />
@@ -23,12 +31,14 @@
             </RadzenCard>
         </Template>
     </RadzenDataList>
+    }
     @code {
     [Parameter] public Story objStory { get; set; }
 
     AIStoryBuildersService AIStoryBuildersService;
     OrchestratorMethods OrchestratorMethods;
 
+    bool InProgress = false;
     List<Location> colLocations = new List<Location>();
 
     protected override void OnInitialized()
@@ -98,7 +108,7 @@
             var EditStoryResult = await dialogService.OpenAsync(
             "Edit Location", ds =>
             @<LocationEdit objLocation=paramLocation objOrginalLocation=paramLocation DialogReference="ds"></LocationEdit>
-            , new DialogOptions() { Height = "400px", Width = "650px" });
+            , new DialogOptions() { Height = "500px", Width = "650px" });
 
             LoadLocations(objStory);
 

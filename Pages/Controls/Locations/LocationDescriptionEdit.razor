@@ -52,6 +52,7 @@
             // Load Timelines
             colTimelines = AIStoryBuildersService.GetTimelines(objStory);
             colTimelineNames = colTimelines.Select(x => x.TimelineName).ToList();
+            colTimelineNames.Add("");
 
             if (objLocationDescription.Id > 0)
             {
