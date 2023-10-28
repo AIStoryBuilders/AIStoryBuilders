@@ -4,7 +4,10 @@
 @using AIStoryBuilders.Services;
 @inherits OwningComponentBase
 @inject NotificationService NotificationService
-@inject DialogService DialogService
+@inject DialogService dialogService
+<RadzenButton Click=@(() => NewLocationDescription()) Text="New Description" ButtonStyle="ButtonStyle.Success" />
+<br />
+<br />
 <RadzenRow Gap="1rem">
     <RadzenColumn Size="12" SizeSM="12">
         <RadzenStack>
@@ -75,11 +78,36 @@
         }
     }
 
+    private async Task NewLocationDescription()
+    {
+        try
+        {
+            var newLocationDescription = new LocationDescription();
+            newLocationDescription.Id = -1; // So we know it is new
+            newLocationDescription.Timeline = new Timeline();
+
+            await EditLocationDescription(newLocationDescription);
+        }
+        catch (Exception ex)
+        {
+            NotificationService.Notify(new NotificationMessage
+                {
+                    Severity = NotificationSeverity.Error,
+                    Summary = "Error",
+                    Detail = ex.Message,
+                    Duration = 4000
+                });
+        }
+    }
+
     private async Task EditLocationDescription(LocationDescription paramLocationDescription)
     {
         try
         {
-
+            var EditLocationDescriptionResult = await dialogService.OpenAsync(
+            "Edit Location Description", ds =>
+            @<LocationDescriptionEdit objLocationDescription=paramLocationDescription DialogReference="ds"></LocationDescriptionEdit>
+            , new DialogOptions() { Height = "250px", Width = "650px" });
 
             StateHasChanged();
         }
@@ -160,7 +188,7 @@
                         }
                     }
 
-                    DialogService.Close(null);
+                    dialogService.Close(null);
                 }
             }
             else
@@ -193,7 +221,7 @@
         try
         {
             // Ask for confirmation:
-            var confirmResult = await DialogService.Confirm("Are you sure?", "Delete Location",
+            var confirmResult = await dialogService.Confirm("Are you sure?", "Delete Location",
                   new ConfirmOptions() { OkButtonText = "Yes", CancelButtonText = "No" });
 
             if (confirmResult.HasValue && confirmResult.Value)
@@ -201,7 +229,7 @@
                 // Delete from the database
                 //await Service.DeleteLocationAsync(objLocation.Id);
 
-                DialogService.Close(null);
+                dialogService.Close(null);
             }
         }
         catch (Exception ex)

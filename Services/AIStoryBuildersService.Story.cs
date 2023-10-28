@@ -369,11 +369,13 @@ namespace AIStoryBuilders.Services
 
                     if (LocationDescriptionRaw.Count() > 0)
                     {
+                        int ii= 1;
                         foreach (var description in LocationDescriptionRaw)
                         {
                             var DescriptionRaw = description.Select(x => x.Split('|')).ToArray();
 
                             LocationDescription objLocationDescription = new LocationDescription();
+                            objLocationDescription.Id = ii;
                             objLocationDescription.Description = DescriptionRaw[0][0];
 
                             // Does the TimelineName element exist?
@@ -386,6 +388,7 @@ namespace AIStoryBuilders.Services
                             }
 
                             Location.LocationDescription.Add(objLocationDescription);
+                            ii++;
                         }                        
                     }
 
