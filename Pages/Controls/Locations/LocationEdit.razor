@@ -11,18 +11,6 @@
             <RadzenFormField Text="Location Name:" Variant=Variant.Outlined>
                 <RadzenTextBox @bind-Value="@objLocation.LocationName" MaxLength="100" />
             </RadzenFormField>
-            <div class="row">
-                <div class="col">
-                    <RadzenButton Text="Save" ButtonStyle="ButtonStyle.Success"
-                                  Click="LocationSave"
-                                  Style="margin-bottom: 10px; width: 150px" />&nbsp;&nbsp;
-                    @if (objLocation.Id > 0)
-                    {
-                        <RadzenButton Text="Delete" ButtonStyle="ButtonStyle.Danger"
-                                      Click="LocationDelete" />
-                    }
-                </div>
-            </div>
             @if (@objLocation.Id > 0)
             {
                 <RadzenDataList AllowVirtualization=false Style="height:100%;overflow:auto;"
@@ -43,6 +31,19 @@
         </RadzenStack>
     </RadzenColumn>
 </RadzenRow>
+<br/>
+<div class="row">
+    <div class="col">
+        <RadzenButton Text="Save" ButtonStyle="ButtonStyle.Success"
+                      Click="LocationSave"
+                      Style="margin-bottom: 10px; width: 150px" />&nbsp;&nbsp;
+        @if (objLocation.Id > 0)
+        {
+            <RadzenButton Text="Delete" ButtonStyle="ButtonStyle.Danger"
+                          Click="LocationDelete" />
+        }
+    </div>
+</div>
 @code {
     [Parameter] public Location objLocation { get; set; }
     [Parameter] public Location objOrginalLocation { get; set; }
