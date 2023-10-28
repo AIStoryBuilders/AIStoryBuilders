@@ -11,6 +11,9 @@
             <RadzenFormField Text="Location Description:" Variant=Variant.Outlined>
                 <RadzenTextBox @bind-Value="@objLocationDescription.Description" MaxLength="100" />
             </RadzenFormField>
+            <RadzenFormField Text="Timeline:" Variant=Variant.Outlined>
+                <RadzenDropDown Data=@colTimelineNames @bind-Value="@SelectedTimeline" />
+            </RadzenFormField>
         </RadzenStack>
     </RadzenColumn>
 </RadzenRow>
@@ -29,10 +32,15 @@
 </div>
 @code {
     [Parameter] public LocationDescription objLocationDescription { get; set; }
+    [Parameter] public Story objStory { get; set; }
     [Parameter] public DialogService DialogReference { get; set; }
 
     AIStoryBuildersService AIStoryBuildersService;
     OrchestratorMethods OrchestratorMethods;
+
+    List<Timeline> colTimelines = new List<Timeline>();
+    List<string> colTimelineNames = new List<string>();
+    string SelectedTimeline = "";
 
     protected override void OnInitialized()
     {
@@ -40,6 +48,18 @@
         {
             AIStoryBuildersService = (AIStoryBuildersService)ScopedServices.GetService(typeof(AIStoryBuildersService));
             OrchestratorMethods = (OrchestratorMethods)ScopedServices.GetService(typeof(OrchestratorMethods));
+
+            // Load Timelines
+            colTimelines = AIStoryBuildersService.GetTimelines(objStory);
+            colTimelineNames = colTimelines.Select(x => x.TimelineName).ToList();
+
+            if (objLocationDescription.Id > 0)
+            {
+                if (objLocationDescription.Timeline != null)
+                {
+                    SelectedTimeline = objLocationDescription.Timeline.TimelineName;
+                }
+            }
         }
         catch (Exception ex)
         {
@@ -53,13 +73,27 @@
         }
     }
 
-    private async Task LocationDescriptionSave()
+    private void LocationDescriptionSave()
     {
         try
         {
+            if (objLocationDescription.Description != null)
+            {
+                if (objLocationDescription.Description.Length < 1)
+                {
+                    NotificationService.Notify(
+                        new NotificationMessage
+                            {
+                                Severity = NotificationSeverity.Error,
+                                Summary = "Error",
+                                Detail = "Description is required",
+                                Duration = 4000
+                            });
+                    return;
+                }
+            }
 
-            DialogService.Close(null);
-
+            DialogService.Close(objLocationDescription);
         }
         catch (Exception ex)
         {
@@ -83,10 +117,9 @@
 
             if (confirmResult.HasValue && confirmResult.Value)
             {
-                // Delete from the collection
-                //await Service.DeleteLocationAsync(objLocation.Id);
-
-                DialogService.Close(null);
+                // Chnage the Id to 0 so we kno wthis is to be deleted
+                objLocationDescription.Id = 0;
+                DialogService.Close(objLocationDescription);
             }
         }
         catch (Exception ex)

@@ -106,8 +106,43 @@
         {
             var EditLocationDescriptionResult = await dialogService.OpenAsync(
             "Edit Location Description", ds =>
-            @<LocationDescriptionEdit objLocationDescription=paramLocationDescription DialogReference="ds"></LocationDescriptionEdit>
-            , new DialogOptions() { Height = "250px", Width = "650px" });
+            @<LocationDescriptionEdit objLocationDescription=paramLocationDescription objStory=objLocation.Story DialogReference="ds"></LocationDescriptionEdit>
+            , new DialogOptions() { Height = "280px", Width = "650px" });
+
+            if (EditLocationDescriptionResult != null)
+            {
+                if (EditLocationDescriptionResult.Id == -1)
+                {
+                    // This is a new locationDescription so it needs to be added
+                    // First Change its Id to someting other than -1
+                    // Get the current higest Id and add 1
+                    int intNewId = 1;
+                    if (objLocation.LocationDescription.Count > 0)
+                    {
+                        intNewId = objLocation.LocationDescription.Max(x => x.Id) + 1;
+                    }
+
+                    EditLocationDescriptionResult.Id = intNewId;
+
+                    // Add the new LocationDescription to the Location
+                    objLocation.LocationDescription.Add(paramLocationDescription);
+                }
+                else if (EditLocationDescriptionResult.Id == 0)
+                {
+                    // If the result is null then the user is deleteing
+                    objLocation.LocationDescription.Remove(paramLocationDescription);
+                }
+                else
+                {
+                    // This is an existing LocationDescription so it needs to be updated
+                    // Find the LocationDescription in the Location
+                    var objLocationDescription = objLocation.LocationDescription.Where(x => x.Id == EditLocationDescriptionResult.Id).FirstOrDefault();
+
+                    // Update the LocationDescription
+                    objLocationDescription.Description = EditLocationDescriptionResult.Description;
+                    objLocationDescription.Timeline = EditLocationDescriptionResult.Timeline;
+                }
+            }
 
             StateHasChanged();
         }
