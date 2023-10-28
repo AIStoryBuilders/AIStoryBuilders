@@ -93,6 +93,7 @@
                 }
             }
 
+            UpdateLocationTimeline();
             DialogService.Close(objLocationDescription);
         }
         catch (Exception ex)
@@ -117,7 +118,7 @@
 
             if (confirmResult.HasValue && confirmResult.Value)
             {
-                // Chnage the Id to 0 so we kno wthis is to be deleted
+                // Chnage the Id to 0 so we know this is to be deleted                
                 objLocationDescription.Id = 0;
                 DialogService.Close(objLocationDescription);
             }
@@ -131,6 +132,18 @@
                     Detail = ex.Message,
                     Duration = 4000
                 });
+        }
+    }
+
+    private void UpdateLocationTimeline()
+    {
+        if (SelectedTimeline.Length > 0)
+        {
+            objLocationDescription.Timeline = new Timeline() { TimelineName = SelectedTimeline };
+        }
+        else
+        {
+            objLocationDescription.Timeline = null;
         }
     }
 }
