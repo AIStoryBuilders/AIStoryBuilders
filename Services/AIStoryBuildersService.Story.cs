@@ -531,6 +531,62 @@ namespace AIStoryBuilders.Services
             }
         }
 
+        public void DeleteLocation(Models.Location objLocation)
+        {
+            try
+            {
+                string StoryPath = $"{BasePath}/{objLocation.Story.Title}";
+                string LocationsPath = $"{StoryPath}/Locations";
+                string LocationPath = $"{LocationsPath}/{objLocation.LocationName}.csv";
+
+                if (objLocation.LocationName.Trim() != "")
+                {
+                    // Loops through every Chapter and Paragraph and remove the Location
+                    var Chapters = GetChapters(objLocation.Story);
+
+                    foreach (var Chapter in Chapters)
+                    {
+                        var Paragraphs = GetParagraphs(Chapter);
+
+                        foreach (var Paragraph in Paragraphs)
+                        {
+                            // Create the path to the Paragraph file
+                            string ParagraphPath = $"{StoryPath}/Chapters/{Chapter.ChapterName}/Paragraph{Paragraph.Sequence}.txt";
+
+                            // Get the ParagraphContent from the file
+                            string[] ParagraphContent = File.ReadAllLines(ParagraphPath);
+
+                            // Remove all empty lines
+                            ParagraphContent = ParagraphContent.Where(line => line.Trim() != "").ToArray();
+
+                            // Get the Location from the file
+                            string[] ParagraphLocation = ParagraphContent[0].Split('|');
+
+                            // If the Location is the one to delete, then set it to empty string
+                            if (ParagraphLocation[0] == objLocation.LocationName)
+                            {
+                                ParagraphLocation[0] = "";
+
+                                // Put the ParagraphContent back together
+                                ParagraphContent[0] = string.Join("|", ParagraphLocation);
+
+                                // Write the ParagraphContent back to the file
+                                File.WriteAllLines(ParagraphPath, ParagraphContent);
+                            }                        
+                        }
+                    }
+                }
+
+                // Delete Location file
+                //File.Delete(LocationPath);
+            }
+            catch (Exception ex)
+            {
+                // Log error
+                LogService.WriteToLog(ex.Message);
+            }
+        }
+
         #endregion
 
         #region *** Character ***

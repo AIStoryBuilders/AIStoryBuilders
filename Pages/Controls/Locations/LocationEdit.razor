@@ -298,7 +298,7 @@ else
                 StateHasChanged();
 
                 // Delete from the database
-                //await Service.DeleteLocationAsync(objLocation.Id);
+                AIStoryBuildersService.DeleteLocation(objLocation);
 
                 InProgress = false;
                 StateHasChanged();
