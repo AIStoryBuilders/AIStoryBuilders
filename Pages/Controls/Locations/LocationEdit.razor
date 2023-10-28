@@ -5,6 +5,14 @@
 @inherits OwningComponentBase
 @inject NotificationService NotificationService
 @inject DialogService dialogService
+@if (@InProgress)
+{
+    <div class="rz-m-10">
+        <RadzenProgressBar Value="100" ShowValue="false" Mode="ProgressBarMode.Indeterminate" />
+    </div>
+}
+else
+{
 <RadzenButton Click=@(() => NewLocationDescription()) Text="New Description" ButtonStyle="ButtonStyle.Success" />
 <br />
 <br />
@@ -47,6 +55,7 @@
         }
     </div>
 </div>
+}
 @code {
     [Parameter] public Location objLocation { get; set; }
     [Parameter] public Location objOrginalLocation { get; set; }
@@ -55,6 +64,7 @@
     AIStoryBuildersService AIStoryBuildersService;
     OrchestratorMethods OrchestratorMethods;
 
+    bool InProgress = false;
     string strOriginalLocationName = "";
 
     protected override void OnInitialized()
@@ -184,6 +194,9 @@
                 }
                 else
                 {
+                    InProgress = true;
+                    StateHasChanged();
+
                     if (objLocation.Id == -1) // New Location
                     {
                         // Check that there is not already a Location with the same name
@@ -218,8 +231,13 @@
                         }
                         else
                         {
+                            InProgress = true;
+                            StateHasChanged();
                             // Only the Descriptions are being updated
                             await AIStoryBuildersService.UpdateLocationDescriptions(objLocation);
+
+                            InProgress = false;
+                            StateHasChanged();
                         }
                     }
 
