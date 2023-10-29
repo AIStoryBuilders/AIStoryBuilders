@@ -599,6 +599,66 @@ namespace AIStoryBuilders.Services
             }
         }
 
+        public void UpdateLocationName(Models.Location objLocation, string paramOriginalLocationName)
+        {
+            try
+            {
+                string StoryPath = $"{BasePath}/{objLocation.Story.Title}";
+                string LocationsPath = $"{StoryPath}/Locations";
+                string LocationPath = $"{LocationsPath}/{paramOriginalLocationName}.csv";
+
+                if (objLocation.LocationName.Trim() != "")
+                {
+                    // Loops through every Chapter and Paragraph and remove the Location
+                    var Chapters = GetChapters(objLocation.Story);
+
+                    foreach (var Chapter in Chapters)
+                    {
+                        var Paragraphs = GetParagraphs(Chapter);
+
+                        foreach (var Paragraph in Paragraphs)
+                        {
+                            // Create the path to the Paragraph file
+                            var ChapterNameParts = Chapter.ChapterName.Split(' ');
+                            string ChapterName = ChapterNameParts[0] + ChapterNameParts[1];
+                            string ParagraphPath = $"{StoryPath}/Chapters/{ChapterName}/Paragraph{Paragraph.Sequence}.txt";
+
+                            // Get the ParagraphContent from the file
+                            string[] ParagraphContent = File.ReadAllLines(ParagraphPath);
+
+                            // Remove all empty lines
+                            ParagraphContent = ParagraphContent.Where(line => line.Trim() != "").ToArray();
+
+                            // Get the Location from the file
+                            string[] ParagraphLocation = ParagraphContent[0].Split('|');
+
+                            // If the Location is the one to update, then set it to new name
+                            if (ParagraphLocation[0] == paramOriginalLocationName)
+                            {
+                                // Set to the new name
+                                ParagraphLocation[0] = objLocation.LocationName;
+
+                                // Put the ParagraphContent back together
+                                ParagraphContent[0] = string.Join("|", ParagraphLocation);
+
+                                // Write the ParagraphContent back to the file
+                                File.WriteAllLines(ParagraphPath, ParagraphContent);
+                            }
+                        }
+                    }
+
+                    // Rename Location file
+                    string NewLocationPath = $"{LocationsPath}/{objLocation.LocationName}.csv";
+                    File.Move(LocationPath, NewLocationPath);                    
+                }
+            }
+            catch (Exception ex)
+            {
+                // Log error
+                LogService.WriteToLog(ex.Message);
+            }
+        }
+
         #endregion
 
         #region *** Character ***
