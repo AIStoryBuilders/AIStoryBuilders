@@ -208,8 +208,18 @@ namespace AIStoryBuilders.Services
                         string FirstParagraphPath = $"{ChapterPath}/Paragraph1.txt";
                         string VectorDescriptionAndEmbeddingFirstParagraph = await OrchestratorMethods.GetVectorEmbedding(chapter.paragraphs[0].contents, true);
 
-                        string Location = chapter.paragraphs[0].location_name;
-                        string Timeline = chapter.paragraphs[0].timeline_name;
+                        // Only allow one Location and Timeline
+                        var TempLocation = chapter.paragraphs[0].location_name;
+                        var TempTimeline = chapter.paragraphs[0].timeline_name;
+
+                        // Split the Location and Timeline using the comma
+                        var TempLocationSplit = TempLocation.Split(',');
+                        var TempTimelineSplit = TempTimeline.Split(',');
+
+                        // Get the first Location and Timeline
+                        string Location = TempLocationSplit[0];
+                        string Timeline = TempTimelineSplit[0];
+
                         string Characters = "[";
 
                         if (chapter.paragraphs[0].character_names != null)
@@ -551,7 +561,9 @@ namespace AIStoryBuilders.Services
                         foreach (var Paragraph in Paragraphs)
                         {
                             // Create the path to the Paragraph file
-                            string ParagraphPath = $"{StoryPath}/Chapters/{Chapter.ChapterName}/Paragraph{Paragraph.Sequence}.txt";
+                            var ChapterNameParts = Chapter.ChapterName.Split(' ');
+                            string ChapterName = ChapterNameParts[0] + ChapterNameParts[1];
+                            string ParagraphPath = $"{StoryPath}/Chapters/{ChapterName}/Paragraph{Paragraph.Sequence}.txt";
 
                             // Get the ParagraphContent from the file
                             string[] ParagraphContent = File.ReadAllLines(ParagraphPath);
@@ -578,7 +590,7 @@ namespace AIStoryBuilders.Services
                 }
 
                 // Delete Location file
-                //File.Delete(LocationPath);
+                File.Delete(LocationPath);
             }
             catch (Exception ex)
             {
