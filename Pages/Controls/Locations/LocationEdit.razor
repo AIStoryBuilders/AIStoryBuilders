@@ -228,28 +228,32 @@ else
                     }
                     else // Existing Location
                     {
+                        InProgress = true;
+                        StateHasChanged();
+
+                        // Only the Descriptions are being updated
+                        await AIStoryBuildersService.UpdateLocationDescriptions(objLocation);
+
+                        InProgress = false;
+                        StateHasChanged();
+
                         if (objLocation.LocationName != strOriginalLocationName)
                         {
-                            InProgress = true;
-                            StateHasChanged();
-                            // Show a popup that the name is being updated, so we need to update the name in all the stories
+                            // Ask for confirmation:
+                            var confirmResult = await dialogService.Confirm("Are you sure? The entire story will be updated to update the Location.", "Location Name Change",
+                                  new ConfirmOptions() { OkButtonText = "Yes", CancelButtonText = "No" });
 
-                            // Show a prgress bar and show each renaming in a Toast
+                            if (confirmResult.HasValue && confirmResult.Value)
+                            {
+                                InProgress = true;
+                                StateHasChanged();
 
-                            // If rename works then update the name and write any Descriptions in the database
-                            InProgress = false;
-                            StateHasChanged();
-                        }
-                        else
-                        {
-                            InProgress = true;
-                            StateHasChanged();
+                                // Update the name 
+                                //await AIStoryBuildersService.UpdateLocationName(objLocation, strOriginalLocationName);
 
-                            // Only the Descriptions are being updated
-                            await AIStoryBuildersService.UpdateLocationDescriptions(objLocation);
-
-                            InProgress = false;
-                            StateHasChanged();
+                                InProgress = false;
+                                StateHasChanged();
+                            }
                         }
                     }
 
