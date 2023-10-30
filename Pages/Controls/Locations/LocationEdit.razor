@@ -124,7 +124,7 @@ else
             var EditLocationDescriptionResult = await dialogService.OpenAsync(
         "Edit Location Description", ds =>
     @<LocationDescriptionEdit objLocationDescription=paramLocationDescription objStory=objLocation.Story DialogReference="ds"></LocationDescriptionEdit>
-    , new DialogOptions() { Height = "280px", Width = "650px" });
+    , new DialogOptions() { Height = "300px", Width = "650px" });
 
             if (EditLocationDescriptionResult != null)
             {

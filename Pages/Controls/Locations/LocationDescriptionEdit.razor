@@ -9,7 +9,7 @@
     <RadzenColumn Size="12" SizeSM="12">
         <RadzenStack>
             <RadzenFormField Text="Location Description:" Variant=Variant.Outlined>
-                <RadzenTextBox @bind-Value="@objLocationDescription.Description" MaxLength="100" />
+                <RadzenTextArea Rows="2" MaxLength="100" @bind-Value="@objLocationDescription.Description" class="w-100" />
             </RadzenFormField>
             <RadzenFormField Text="Timeline:" Variant=Variant.Outlined>
                 <RadzenDropDown Data=@colTimelineNames @bind-Value="@SelectedTimeline" />
