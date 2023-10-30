@@ -14,13 +14,22 @@
         </RadzenStack>
     </RadzenColumn>
 </RadzenRow>
-<br />
-Background Type:
-<RadzenDropDown Data=@colTypes @bind-Value="@strType" Change="OnTypeChanged" />
-<RadzenButton Text="Add Background" ButtonStyle="ButtonStyle.Secondary"
-              Click="AddBackground"
-              Style="margin-bottom: 10px; width: 150px" />&nbsp;&nbsp;
-<br />
+<RadzenRow Gap="1rem">
+    <RadzenColumn Size="8" SizeSM="8">
+        <RadzenStack>
+            <RadzenFormField Text="Background Type:" Variant=Variant.Outlined>
+                <RadzenDropDown Data=@colTypes @bind-Value="@strType" Change="OnTypeChanged" />
+            </RadzenFormField>
+        </RadzenStack>
+    </RadzenColumn>
+    <RadzenColumn Size="4" SizeSM="4">
+        <RadzenStack>
+            <RadzenButton Text="Add Background" ButtonStyle="ButtonStyle.Secondary"
+                          Click="AddBackground"
+                          Style="margin-top: 10px; width: 150px" />
+        </RadzenStack>
+    </RadzenColumn>
+</RadzenRow>
 <br />
 <div style="height:200px; overflow-y: scroll;border-width:0px">
     <RadzenDataList Data="@colCharacterBackground" TItem="CharacterBackground">
@@ -57,18 +66,18 @@ Background Type:
 
     protected override void OnInitialized()
     {
-         AIStoryBuildersService = (AIStoryBuildersService)ScopedServices.GetService(typeof(AIStoryBuildersService));
-         OrchestratorMethods = (OrchestratorMethods)ScopedServices.GetService(typeof(OrchestratorMethods));
+        AIStoryBuildersService = (AIStoryBuildersService)ScopedServices.GetService(typeof(AIStoryBuildersService));
+        OrchestratorMethods = (OrchestratorMethods)ScopedServices.GetService(typeof(OrchestratorMethods));
 
         // Add colTypes
         colTypes = new List<string>()
-            {
+                    {
             "Appearance",
             "Goals",
             "History",
             "Aliases",
             "Facts"
-            };
+                    };
 
         colCharacterBackground = objCharacter.CharacterBackground.Where(x => x.Type == @strType);
     }
@@ -82,13 +91,13 @@ Background Type:
                 if (objCharacter.CharacterName.Length < 1)
                 {
                     NotificationService.Notify(
-                    new NotificationMessage
-                            {
-                                Severity = NotificationSeverity.Error,
-                                Summary = "Error",
-                                Detail = "Character Name is required",
-                                Duration = 4000
-                            });
+            new NotificationMessage
+                    {
+                        Severity = NotificationSeverity.Error,
+                        Summary = "Error",
+                        Detail = "Character Name is required",
+                        Duration = 4000
+                    });
                     return;
                 }
                 else
@@ -113,13 +122,13 @@ Background Type:
             else
             {
                 NotificationService.Notify(
-                new NotificationMessage
-                        {
-                            Severity = NotificationSeverity.Error,
-                            Summary = "Error",
-                            Detail = "Character Name is required",
-                            Duration = 4000
-                        });
+        new NotificationMessage
+                {
+                    Severity = NotificationSeverity.Error,
+                    Summary = "Error",
+                    Detail = "Character Name is required",
+                    Duration = 4000
+                });
                 return;
             }
         }
@@ -141,7 +150,7 @@ Background Type:
         {
             // Ask for confirmation:
             var confirmResult = await DialogService.Confirm("Are you sure?", "Delete Character",
-                  new ConfirmOptions() { OkButtonText = "Yes", CancelButtonText = "No" });
+          new ConfirmOptions() { OkButtonText = "Yes", CancelButtonText = "No" });
 
             if (confirmResult.HasValue && confirmResult.Value)
             {
@@ -177,9 +186,9 @@ Background Type:
             NewCharacterBackground.Type = strType;
 
             var EditStoryResult = await DialogService.OpenAsync(
-                "Edit Character", ds =>
-                @<CharacterBackgroundEdit objCharacterBackground=NewCharacterBackground></CharacterBackgroundEdit>
-                , new DialogOptions() { Height = "500px", Width = "500px" });
+        "Edit Character", ds =>
+    @<CharacterBackgroundEdit objCharacterBackground=NewCharacterBackground></CharacterBackgroundEdit>
+        , new DialogOptions() { Height = "500px", Width = "500px" });
 
             StateHasChanged();
         }

@@ -69,7 +69,7 @@
             var EditStoryResult = await dialogService.OpenAsync(
                 "New Timeline", ds =>
                 @<TimelinesEdit objTimeline=newTimeline DialogReference="ds"></TimelinesEdit>
-                , new DialogOptions() { Height = "300px", Width = "650px" });
+                , new DialogOptions() { Height = "350px", Width = "650px" });
 
             LoadTimelines(objStory);
 
@@ -94,7 +94,7 @@
             var EditStoryResult = await dialogService.OpenAsync(
             "Edit Timeline", ds =>
             @<TimelinesEdit objTimeline=paramTimeline DialogReference="ds"></TimelinesEdit>
-            , new DialogOptions() { Height = "300px", Width = "650px" });
+            , new DialogOptions() { Height = "350px", Width = "650px" });
 
             LoadTimelines(objStory);
 

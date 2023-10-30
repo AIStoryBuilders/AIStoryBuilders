@@ -8,12 +8,26 @@
     <RadzenColumn Size="12" SizeSM="12">
         <RadzenStack>
             <RadzenFormField Text="Timeline Name:" Variant=Variant.Outlined>
-                <RadzenTextBox @bind-Value="@objTimeline.TimelineName" />
+                <RadzenTextBox MaxLength="200" @bind-Value="@objTimeline.TimelineName" />
+            </RadzenFormField>
+            <RadzenFormField Text="Description:" Variant=Variant.Outlined>
+                <RadzenTextArea Rows="2" MaxLength="200" @bind-Value="@objTimeline.TimelineDescription" class="w-100" />
             </RadzenFormField>
         </RadzenStack>
+        <RadzenRow Style="margin-top:10px">
+            <RadzenColumn Size="5" Offset="1">
+                <RadzenFormField Text="Start:" Variant=Variant.Outlined>
+                    <RadzenDatePicker AllowClear=false @bind-Value=@dtStart />
+                </RadzenFormField>
+            </RadzenColumn>
+            <RadzenColumn Size="5">
+                <RadzenFormField Text="Stop:" Variant=Variant.Outlined>
+                    <RadzenDatePicker AllowClear=true @bind-Value=@dtStop />
+                </RadzenFormField>
+            </RadzenColumn>
+        </RadzenRow>
     </RadzenColumn>
 </RadzenRow>
-<br />
 <br />
 <div class="row">
     <div class="col">
@@ -30,6 +44,9 @@
 @code {
     [Parameter] public Timeline objTimeline { get; set; }
     [Parameter] public DialogService DialogReference { get; set; }
+
+    DateTime dtStart = DateTime.Now;
+    DateTime? dtStop = DateTime.Now;
 
     private void TimelineSave()
     {
