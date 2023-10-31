@@ -14,16 +14,29 @@
     <Template Context="timeline">
         <RadzenCard Style="width: 100%; padding: 1;">
             <RadzenRow Gap="0">
-                <RadzenButton Text="Edit" Click=@(() => EditTimeline(timeline))
-                              ButtonStyle="ButtonStyle.Light" Style="width: 150px;height: 20px" />
-                &nbsp;&nbsp;&nbsp;&nbsp;
-                <RadzenText TextStyle="TextStyle.DisplayH5"
-                            class="rz-color-secondary">@(timeline.TimelineName)</RadzenText>&nbsp;&nbsp;
-                </RadzenRow>
-            </RadzenCard>
-        </Template>
-    </RadzenDataList>
-    @code {
+                <RadzenColumn Size="2">
+                    <RadzenButton Text="Edit" Click=@(() => EditTimeline(timeline))
+                                  ButtonStyle="ButtonStyle.Light" Style="width: 75px;height: 20px" />
+                </RadzenColumn>
+                <RadzenColumn>
+                    <RadzenText TextStyle=TextStyle.DisplayH6>@(timeline.TimelineName)</RadzenText>
+                    @if (!timeline.StopDate.HasValue)
+                    {
+                        string strStartDate = timeline.StartDate.Value.ToShortDateString() + ' ' + timeline.StartDate.Value.ToShortTimeString();
+                        <RadzenText TextStyle=TextStyle.Subtitle2>@strStartDate</RadzenText>
+                    }
+                    else
+                    {
+                        string strStartDate = timeline.StartDate.Value.ToShortDateString() + ' ' + timeline.StartDate.Value.ToShortTimeString();
+                        string strStopDate = timeline.StopDate.Value.ToShortDateString() + ' ' + timeline.StopDate.Value.ToShortTimeString();
+                        <RadzenText TextStyle=TextStyle.Subtitle2>@($"{strStartDate} - {strStopDate}")</RadzenText>
+                    }
+                </RadzenColumn>
+            </RadzenRow>
+        </RadzenCard>
+    </Template>
+</RadzenDataList>
+@code {
     [Parameter] public Story objStory { get; set; }
     AIStoryBuildersService AIStoryBuildersService;
     OrchestratorMethods OrchestratorMethods;
@@ -62,14 +75,14 @@
         {
             var newTimeline = new Timeline();
             newTimeline.Id = -1; // So we know it is new
-            newTimeline.Story = objStory; 
+            newTimeline.Story = objStory;
             newTimeline.StartDate = null;
             newTimeline.StopDate = null;
 
             var EditStoryResult = await dialogService.OpenAsync(
-                "New Timeline", ds =>
-                @<TimelinesEdit objTimeline=newTimeline DialogReference="ds"></TimelinesEdit>
-                , new DialogOptions() { Height = "350px", Width = "650px" });
+            "New Timeline", ds =>
+    @<TimelinesEdit objTimeline=newTimeline DialogReference="ds"></TimelinesEdit>
+            , new DialogOptions() { Height = "350px", Width = "650px" });
 
             LoadTimelines(objStory);
 
@@ -94,9 +107,9 @@
             paramTimeline.Story = objStory;
 
             var EditStoryResult = await dialogService.OpenAsync(
-            "Edit Timeline", ds =>
-            @<TimelinesEdit objTimeline=paramTimeline DialogReference="ds"></TimelinesEdit>
-            , new DialogOptions() { Height = "350px", Width = "650px" });
+        "Edit Timeline", ds =>
+    @<TimelinesEdit objTimeline=paramTimeline DialogReference="ds"></TimelinesEdit>
+    , new DialogOptions() { Height = "350px", Width = "650px" });
 
             LoadTimelines(objStory);
 

@@ -5,6 +5,14 @@
 @inherits OwningComponentBase
 @inject DialogService dialogService
 @inject NotificationService NotificationService
+@if (@InProgress)
+{
+    <div class="rz-m-10">
+        <RadzenProgressBar Value="100" ShowValue="false" Mode="ProgressBarMode.Indeterminate" />
+    </div>
+}
+else
+{
 <RadzenRow Gap="1rem">
     <RadzenColumn Size="12" SizeSM="12">
         <RadzenStack>
@@ -42,6 +50,7 @@
         }
     </div>
 </div>
+}
 @code {
     [Parameter] public Timeline objTimeline { get; set; }
     [Parameter] public DialogService DialogReference { get; set; }
@@ -49,6 +58,7 @@
     AIStoryBuildersService AIStoryBuildersService;
     OrchestratorMethods OrchestratorMethods;
 
+    bool InProgress = false;
     string TimelineNameOriginal;
 
     protected override void OnInitialized()
@@ -72,7 +82,7 @@
         }
     }
 
-    private void TimelineSave()
+    private async Task TimelineSave()
     {
         try
         {
@@ -116,14 +126,29 @@
                 }
                 else
                 {
-                    // Save to the database - This will update everything bu the name
-                    AIStoryBuildersService.UpdateTimeline(objTimeline, TimelineNameOriginal);
-
                     // Detect that the name is being updated
                     if (objTimeline.TimelineName != TimelineNameOriginal)
                     {
-                        // Update the name
-                        //AIStoryBuildersService.UpdateTimelineName(objTimeline, TimelineNameOriginal);
+                        // Ask for confirmation:
+                        var confirmResult = await dialogService.Confirm("Are you sure? The entire story will be updated to update the Timeline name.", "Timeline Name Change",
+                              new ConfirmOptions() { OkButtonText = "Yes", CancelButtonText = "No" });
+
+                        if (confirmResult.HasValue && confirmResult.Value)
+                        {
+                            InProgress = true;
+                            StateHasChanged();
+
+                            // Update the name
+                            //AIStoryBuildersService.UpdateTimelineName(objTimeline, TimelineNameOriginal);
+
+                            InProgress = false;
+                            StateHasChanged();
+                        }
+                    }
+                    else
+                    {
+                        // Update the database
+                        AIStoryBuildersService.UpdateTimeline(objTimeline, TimelineNameOriginal);
                     }
                 }
 
@@ -160,13 +185,19 @@
         try
         {
             // Ask for confirmation:
-            var confirmResult = await dialogService.Confirm("Are you sure?", "Delete Timeline",
+            var confirmResult = await dialogService.Confirm("Are you sure? The entire story will be updated to remove the Timeline.", "Delete Timeline",
                   new ConfirmOptions() { OkButtonText = "Yes", CancelButtonText = "No" });
 
             if (confirmResult.HasValue && confirmResult.Value)
             {
+                InProgress = true;
+                StateHasChanged();
+
                 // Delete from the database
                 //AIStoryBuildersService.DeleteTimelineAsync(objTimeline.Id);
+
+                InProgress = false;
+                StateHasChanged();
 
                 dialogService.Close(null);
             }

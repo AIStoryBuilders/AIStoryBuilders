@@ -40,11 +40,11 @@ else
                                         {
                                             <RadzenText TextStyle=TextStyle.Subtitle2>@(Location.Timeline.TimelineName)</RadzenText>
                                         }
-                                        </RadzenColumn>
-                                    </RadzenRow>
-                                </RadzenCard>
-                            </Template>
-                        </RadzenDataList>
+                                    </RadzenColumn>
+                                </RadzenRow>
+                            </RadzenCard>
+                        </Template>
+                    </RadzenDataList>
                 }
             </RadzenStack>
         </RadzenColumn>
@@ -122,9 +122,9 @@ else
         try
         {
             var EditLocationDescriptionResult = await dialogService.OpenAsync(
-        "Edit Location Description", ds =>
-    @<LocationDescriptionEdit objLocationDescription=paramLocationDescription objStory=objLocation.Story DialogReference="ds"></LocationDescriptionEdit>
-    , new DialogOptions() { Height = "300px", Width = "650px" });
+                "Edit Location Description", ds =>
+                @<LocationDescriptionEdit objLocationDescription=paramLocationDescription objStory=objLocation.Story DialogReference="ds"></LocationDescriptionEdit>
+                , new DialogOptions() { Height = "300px", Width = "650px" });
 
             if (EditLocationDescriptionResult != null)
             {
