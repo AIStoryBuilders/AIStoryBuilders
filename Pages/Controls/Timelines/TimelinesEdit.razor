@@ -49,8 +49,7 @@
     AIStoryBuildersService AIStoryBuildersService;
     OrchestratorMethods OrchestratorMethods;
 
-    DateTime dtStart = DateTime.Now;
-    DateTime? dtStop = null;
+    string TimelineNameOriginal;
 
     protected override void OnInitialized()
     {
@@ -58,6 +57,8 @@
         {
             AIStoryBuildersService = (AIStoryBuildersService)ScopedServices.GetService(typeof(AIStoryBuildersService));
             OrchestratorMethods = (OrchestratorMethods)ScopedServices.GetService(typeof(OrchestratorMethods));
+
+            TimelineNameOriginal = objTimeline.TimelineName;
         }
         catch (Exception ex)
         {
@@ -77,6 +78,7 @@
         {
             if (objTimeline.TimelineName != null)
             {
+                // Validate Timeline Name
                 if (objTimeline.TimelineName.Length < 1)
                 {
                     NotificationService.Notify(
@@ -89,21 +91,44 @@
                         });
                     return;
                 }
+
+                // Validate Start Date is not after Stop Date
+                if (objTimeline.StopDate != null)
+                {
+                    if (objTimeline.StartDate >= objTimeline.StopDate)
+                    {
+                        NotificationService.Notify(
+                        new NotificationMessage
+                            {
+                                Severity = NotificationSeverity.Error,
+                                Summary = "Error",
+                                Detail = "Start Date must be before Stop Date",
+                                Duration = 4000
+                            });
+                        return;
+                    }
+                }
+
+                if (objTimeline.Id == -1)
+                {
+                    // Add to the database
+                    AIStoryBuildersService.AddTimeline(objTimeline);
+                }
                 else
                 {
-                    if (objTimeline.Id == -1)
-                    {
-                        // Add to the database
-                        AIStoryBuildersService.AddTimeline(objTimeline);
-                    }
-                    else
-                    {
-                        // Save to the database
-                        //AIStoryBuildersService.UpdateTimelineAsync(objTimeline);
-                    }
+                    // Save to the database - This will update everything bu the name
+                    AIStoryBuildersService.UpdateTimeline(objTimeline, TimelineNameOriginal);
 
-                    dialogService.Close(null);
+                    // Detect that the name is being updated
+                    if (objTimeline.TimelineName != TimelineNameOriginal)
+                    {
+                        // Update the name
+                        //AIStoryBuildersService.UpdateTimelineName(objTimeline, TimelineNameOriginal);
+                    }
                 }
+
+                dialogService.Close(null);
+
             }
             else
             {

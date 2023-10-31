@@ -4,6 +4,7 @@ using AIStoryBuilders.Models.JSON;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata;
 using Microsoft.Maui.Devices.Sensors;
+using Microsoft.UI.Xaml.Media.Animation;
 using Newtonsoft.Json;
 using OpenAI.Files;
 using static AIStoryBuilders.Model.OrchestratorMethods;
@@ -337,7 +338,7 @@ namespace AIStoryBuilders.Services
                 }
 
                 // Return collection of Timelines
-                return Timelines;
+                return Timelines.OrderBy(x => x.StartDate).ToList();
             }
             catch (Exception ex)
             {
@@ -366,6 +367,52 @@ namespace AIStoryBuilders.Services
                 LogService.WriteToLog(ex.Message);
             }
         }
+
+        // Edit TimeLine
+        public void UpdateTimeline(Models.Timeline objTimeline, string paramTimelineNameOriginal)
+        {
+            try
+            {
+                // Get all Timelines from file
+                var ExistingTimelines = GetTimelines(objTimeline.Story);
+
+                // Get all Timelines except the one to update
+                ExistingTimelines = ExistingTimelines.Where(line => line.TimelineName != paramTimelineNameOriginal).ToList();
+
+                // Add the updated Timeline - first update it to use the paramTimelineNameOriginal (in case it was changed)
+                objTimeline.TimelineName = paramTimelineNameOriginal;
+                ExistingTimelines.Add(objTimeline);
+
+                // Create the lines to write to the Timeline file
+                List<string> TimelineContents = new List<string>();
+
+                foreach (var timeline in ExistingTimelines)
+                {
+                    string StartTime = timeline.StartDate.Value.ToShortDateString() + " " + timeline.StartDate.Value.ToShortTimeString();
+
+                    string StopTime = "";
+
+                    if (timeline.StopDate.HasValue)
+                    {
+                        StopTime = timeline.StopDate.Value.ToShortDateString() + " " + timeline.StopDate.Value.ToShortTimeString();
+                    }
+
+                    string TimelineContentsLine = $"{timeline.TimelineName}|{timeline.TimelineDescription}|{StartTime}|{StopTime}";
+                    TimelineContents.Add(TimelineContentsLine);
+                }
+
+                // Write the file
+                string StoryPath = $"{BasePath}/{objTimeline.Story.Title}";
+                string TimelinesPath = $"{StoryPath}/Timelines.csv";
+                File.WriteAllLines(TimelinesPath, TimelineContents);
+            }
+            catch (Exception ex)
+            {
+                // Log error
+                LogService.WriteToLog(ex.Message);
+            }
+        }
+
         #endregion
 
         #region *** Locations ***
@@ -416,7 +463,7 @@ namespace AIStoryBuilders.Services
                             // Does the TimelineName element exist?
                             if (DescriptionRaw[1].Count() > 0)
                             {
-                                Timeline objTimeline = new Timeline();
+                                Models.Timeline objTimeline = new Models.Timeline();
                                 objTimeline.TimelineName = DescriptionRaw[1][0];
 
                                 objLocationDescription.Timeline = objTimeline;
@@ -722,7 +769,7 @@ namespace AIStoryBuilders.Services
 
                         objCharacterBackground.Sequence = i;
                         objCharacterBackground.Type = CharacterBackgroundParts[0];
-                        objCharacterBackground.Timeline = new Timeline() { TimelineName = CharacterBackgroundParts[1] };
+                        objCharacterBackground.Timeline = new Models.Timeline() { TimelineName = CharacterBackgroundParts[1] };
                         objCharacterBackground.Description = CharacterBackgroundParts[2];
                         objCharacterBackground.VectorContent = CharacterBackgroundParts[3];
                         objCharacterBackground.Character = new Character() { CharacterName = CharacterName };
