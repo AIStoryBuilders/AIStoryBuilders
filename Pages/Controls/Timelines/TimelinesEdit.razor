@@ -1,9 +1,10 @@
-﻿@using AIStoryBuilders.Models;
-@using AIStoryBuilders.Pages.Controls
+﻿@using AIStoryBuilders.Model;
+@using AIStoryBuilders.Models;
+@using AIStoryBuilders.Pages.Controls;
 @using AIStoryBuilders.Services;
+@inherits OwningComponentBase
+@inject DialogService dialogService
 @inject NotificationService NotificationService
-@inject DialogService DialogService
-@inherits OwningComponentBase<AIStoryBuildersService>
 <RadzenRow Gap="1rem">
     <RadzenColumn Size="12" SizeSM="12">
         <RadzenStack>
@@ -17,12 +18,12 @@
         <RadzenRow Style="margin-top:10px">
             <RadzenColumn Size="5" Offset="1">
                 <RadzenFormField Text="Start:" Variant=Variant.Outlined>
-                    <RadzenDatePicker AllowClear=false @bind-Value=@dtStart />
+                    <RadzenDatePicker AllowClear=false @bind-Value=objTimeline.StartDate />
                 </RadzenFormField>
             </RadzenColumn>
             <RadzenColumn Size="5">
                 <RadzenFormField Text="Stop:" Variant=Variant.Outlined>
-                    <RadzenDatePicker AllowClear=true @bind-Value=@dtStop />
+                    <RadzenDatePicker AllowClear=true @bind-Value=objTimeline.StopDate />
                 </RadzenFormField>
             </RadzenColumn>
         </RadzenRow>
@@ -45,8 +46,30 @@
     [Parameter] public Timeline objTimeline { get; set; }
     [Parameter] public DialogService DialogReference { get; set; }
 
+    AIStoryBuildersService AIStoryBuildersService;
+    OrchestratorMethods OrchestratorMethods;
+
     DateTime dtStart = DateTime.Now;
-    DateTime? dtStop = DateTime.Now;
+    DateTime? dtStop = null;
+
+    protected override void OnInitialized()
+    {
+        try
+        {
+            AIStoryBuildersService = (AIStoryBuildersService)ScopedServices.GetService(typeof(AIStoryBuildersService));
+            OrchestratorMethods = (OrchestratorMethods)ScopedServices.GetService(typeof(OrchestratorMethods));
+        }
+        catch (Exception ex)
+        {
+            NotificationService.Notify(new NotificationMessage
+                {
+                    Severity = NotificationSeverity.Error,
+                    Summary = "Error",
+                    Detail = ex.Message,
+                    Duration = 4000
+                });
+        }
+    }
 
     private void TimelineSave()
     {
@@ -71,15 +94,15 @@
                     if (objTimeline.Id == -1)
                     {
                         // Add to the database
-                        //await Service.AddTimelineAsync(objTimeline);
+                        AIStoryBuildersService.AddTimeline(objTimeline);
                     }
                     else
                     {
                         // Save to the database
-                        //await Service.UpdateTimelineAsync(objTimeline);
+                        //AIStoryBuildersService.UpdateTimelineAsync(objTimeline);
                     }
 
-                    DialogService.Close(null);
+                    dialogService.Close(null);
                 }
             }
             else
@@ -112,15 +135,15 @@
         try
         {
             // Ask for confirmation:
-            var confirmResult = await DialogService.Confirm("Are you sure?", "Delete Timeline",
+            var confirmResult = await dialogService.Confirm("Are you sure?", "Delete Timeline",
                   new ConfirmOptions() { OkButtonText = "Yes", CancelButtonText = "No" });
 
             if (confirmResult.HasValue && confirmResult.Value)
             {
                 // Delete from the database
-                //await Service.DeleteTimelineAsync(objTimeline.Id);
+                //AIStoryBuildersService.DeleteTimelineAsync(objTimeline.Id);
 
-                DialogService.Close(null);
+                dialogService.Close(null);
             }
         }
         catch (Exception ex)

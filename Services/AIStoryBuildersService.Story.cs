@@ -323,7 +323,14 @@ namespace AIStoryBuilders.Services
                     Timeline.TimelineName = TimelineName;
                     Timeline.TimelineDescription = TimelineDescription;
                     Timeline.StartDate = DateTime.Parse(TimelineStartTime);
-                    Timeline.StopDate = DateTime.Parse(TimelineStopTime);
+
+                    // use tryparse to try to parse TimelineStopTime
+                    DateTime TimelineStopDate;
+                    DateTime.TryParse(TimelineStopTime, out TimelineStopDate);
+                    if(TimelineStopDate != DateTime.MinValue)
+                    {
+                        Timeline.StopDate = DateTime.Parse(TimelineStopTime);
+                    }
 
                     // Add Timeline to collection
                     Timelines.Add(Timeline);
@@ -339,6 +346,24 @@ namespace AIStoryBuilders.Services
 
                 // File is empty
                 return new List<AIStoryBuilders.Models.Timeline>();
+            }
+        }
+
+        public void AddTimeline(Models.Timeline objTimeline)
+        {
+            try
+            {
+                string StoryPath = $"{BasePath}/{objTimeline.Story.Title}";
+                string TimelinesPath = $"{StoryPath}/Timelines.csv";
+
+                // Add Timeline to file
+                string TimelineContents = $"{objTimeline.TimelineName}|{objTimeline.TimelineDescription}|{objTimeline.StartDate}|{objTimeline.StopDate}" + Environment.NewLine;
+                File.AppendAllText(TimelinesPath, TimelineContents);
+            }
+            catch (Exception ex)
+            {
+                // Log error
+                LogService.WriteToLog(ex.Message);
             }
         }
         #endregion
