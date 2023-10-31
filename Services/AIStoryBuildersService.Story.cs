@@ -413,6 +413,96 @@ namespace AIStoryBuilders.Services
             }
         }
 
+        public void UpdateTimelineName(Models.Timeline objTimeline, string paramTimelineNameOriginal)
+        {
+            try
+            {
+                // ********************************************************
+                // Update in Timeline.csv file
+                // ********************************************************
+
+                // Get all Timelines from file
+                var ExistingTimelines = GetTimelines(objTimeline.Story);
+
+                // Get all Timelines except the one to update
+                ExistingTimelines = ExistingTimelines.Where(line => line.TimelineName != paramTimelineNameOriginal).ToList();
+
+                // Add the updated Timeline - It will have the updated name
+                ExistingTimelines.Add(objTimeline);
+
+                // Create the lines to write to the Timeline file
+                List<string> TimelineContents = new List<string>();
+
+                foreach (var timeline in ExistingTimelines)
+                {
+                    string StartTime = timeline.StartDate.Value.ToShortDateString() + " " + timeline.StartDate.Value.ToShortTimeString();
+
+                    string StopTime = "";
+
+                    if (timeline.StopDate.HasValue)
+                    {
+                        StopTime = timeline.StopDate.Value.ToShortDateString() + " " + timeline.StopDate.Value.ToShortTimeString();
+                    }
+
+                    string TimelineContentsLine = $"{timeline.TimelineName}|{timeline.TimelineDescription}|{StartTime}|{StopTime}";
+                    TimelineContents.Add(TimelineContentsLine);
+                }
+
+                // Write the file
+                string StoryPath = $"{BasePath}/{objTimeline.Story.Title}";
+                string TimelinesPath = $"{StoryPath}/Timelines.csv";
+                File.WriteAllLines(TimelinesPath, TimelineContents);
+
+                // ********************************************************
+                // Update Chapter files
+                // ********************************************************
+
+                // Loops through every Chapter and Paragraph and remove the Location
+                var Chapters = GetChapters(objTimeline.Story);
+
+                foreach (var Chapter in Chapters)
+                {
+                    var Paragraphs = GetParagraphs(Chapter);
+
+                    foreach (var Paragraph in Paragraphs)
+                    {
+                        // Create the path to the Paragraph file
+                        var ChapterNameParts = Chapter.ChapterName.Split(' ');
+                        string ChapterName = ChapterNameParts[0] + ChapterNameParts[1];
+                        string ParagraphPath = $"{StoryPath}/Chapters/{ChapterName}/Paragraph{Paragraph.Sequence}.txt";
+
+                        // Get the ParagraphContent from the file
+                        string[] ParagraphContent = File.ReadAllLines(ParagraphPath);
+
+                        // Remove all empty lines
+                        ParagraphContent = ParagraphContent.Where(line => line.Trim() != "").ToArray();
+
+                        // Get the Timeline from the file
+                        string[] ParagraphTimeline = ParagraphContent[0].Split('|');
+
+                        // If the Location is the one to update, then set it to new name
+                        if (ParagraphTimeline[1] == paramTimelineNameOriginal)
+                        {
+                            // Set to the new name
+                            ParagraphTimeline[1] = objTimeline.TimelineName;
+
+                            // Put the ParagraphContent back together
+                            ParagraphContent[0] = string.Join("|", ParagraphTimeline);
+
+                            // Write the ParagraphContent back to the file
+                            File.WriteAllLines(ParagraphPath, ParagraphContent);
+                        }
+                    }
+
+                }
+            }
+            catch (Exception ex)
+            {
+                // Log error
+                LogService.WriteToLog(ex.Message);
+            }
+        }
+
         #endregion
 
         #region *** Locations ***
