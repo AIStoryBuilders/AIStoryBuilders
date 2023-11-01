@@ -13,43 +13,43 @@
 }
 else
 {
-<RadzenRow Gap="1rem">
-    <RadzenColumn Size="12" SizeSM="12">
-        <RadzenStack>
-            <RadzenFormField Text="Timeline Name:" Variant=Variant.Outlined>
-                <RadzenTextBox MaxLength="200" @bind-Value="@objTimeline.TimelineName" />
-            </RadzenFormField>
-            <RadzenFormField Text="Description:" Variant=Variant.Outlined>
-                <RadzenTextArea Rows="2" MaxLength="200" @bind-Value="@objTimeline.TimelineDescription" class="w-100" />
-            </RadzenFormField>
-        </RadzenStack>
-        <RadzenRow Style="margin-top:10px">
-            <RadzenColumn Size="5" Offset="1">
-                <RadzenFormField Text="Start:" Variant=Variant.Outlined>
-                    <RadzenDatePicker AllowClear=false @bind-Value=objTimeline.StartDate />
+    <RadzenRow Gap="1rem">
+        <RadzenColumn Size="12" SizeSM="12">
+            <RadzenStack>
+                <RadzenFormField Text="Timeline Name:" Variant=Variant.Outlined>
+                    <RadzenTextBox MaxLength="200" @bind-Value="@objTimeline.TimelineName" />
                 </RadzenFormField>
-            </RadzenColumn>
-            <RadzenColumn Size="5">
-                <RadzenFormField Text="Stop:" Variant=Variant.Outlined>
-                    <RadzenDatePicker AllowClear=true @bind-Value=objTimeline.StopDate />
+                <RadzenFormField Text="Description:" Variant=Variant.Outlined>
+                    <RadzenTextArea Rows="2" MaxLength="200" @bind-Value="@objTimeline.TimelineDescription" class="w-100" />
                 </RadzenFormField>
-            </RadzenColumn>
-        </RadzenRow>
-    </RadzenColumn>
-</RadzenRow>
-<br />
-<div class="row">
-    <div class="col">
-        <RadzenButton Text="Save" ButtonStyle="ButtonStyle.Success"
-                      Click="TimelineSave"
-                      Style="margin-bottom: 10px; width: 150px" />&nbsp;&nbsp;
-        @if (objTimeline.Id > 0)
-        {
-            <RadzenButton Text="Delete" ButtonStyle="ButtonStyle.Danger"
-                          Click="TimelineDelete" />
-        }
+            </RadzenStack>
+            <RadzenRow Style="margin-top:10px">
+                <RadzenColumn Size="5" Offset="1">
+                    <RadzenFormField Text="Start:" Variant=Variant.Outlined>
+                        <RadzenDatePicker AllowClear=false @bind-Value=objTimeline.StartDate />
+                    </RadzenFormField>
+                </RadzenColumn>
+                <RadzenColumn Size="5">
+                    <RadzenFormField Text="Stop:" Variant=Variant.Outlined>
+                        <RadzenDatePicker AllowClear=true @bind-Value=objTimeline.StopDate />
+                    </RadzenFormField>
+                </RadzenColumn>
+            </RadzenRow>
+        </RadzenColumn>
+    </RadzenRow>
+    <br />
+    <div class="row">
+        <div class="col">
+            <RadzenButton Text="Save" ButtonStyle="ButtonStyle.Success"
+                          Click="TimelineSave"
+                          Style="margin-bottom: 10px; width: 150px" />&nbsp;&nbsp;
+            @if (objTimeline.Id > 0)
+            {
+                <RadzenButton Text="Delete" ButtonStyle="ButtonStyle.Danger"
+                              Click="TimelineDelete" />
+            }
+        </div>
     </div>
-</div>
 }
 @code {
     [Parameter] public Timeline objTimeline { get; set; }
@@ -97,6 +97,20 @@ else
                             Severity = NotificationSeverity.Error,
                             Summary = "Error",
                             Detail = "Timeline Name is required",
+                            Duration = 4000
+                        });
+                    return;
+                }
+
+                // Validate Start Date is not null
+                if (!objTimeline.StartDate.HasValue)
+                {
+                    NotificationService.Notify(
+                    new NotificationMessage
+                        {
+                            Severity = NotificationSeverity.Error,
+                            Summary = "Error",
+                            Detail = "Start Date is required",
                             Duration = 4000
                         });
                     return;
@@ -153,7 +167,6 @@ else
                 }
 
                 dialogService.Close(null);
-
             }
             else
             {

@@ -76,7 +76,7 @@
             var newTimeline = new Timeline();
             newTimeline.Id = -1; // So we know it is new
             newTimeline.Story = objStory;
-            newTimeline.StartDate = null;
+            newTimeline.StartDate = DateTime.Now;
             newTimeline.StopDate = null;
 
             var EditStoryResult = await dialogService.OpenAsync(

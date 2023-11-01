@@ -304,6 +304,7 @@ namespace AIStoryBuilders.Services
                 AIStoryBuildersTimelinesContent = AIStoryBuildersTimelinesContent.Where(line => line.Trim() != "").ToArray();
 
                 // Loop through each Timeline line
+                int i = 1;
                 foreach (var AIStoryBuildersTimelineLine in AIStoryBuildersTimelinesContent)
                 {
                     // Get the TimelineName from the line
@@ -321,6 +322,7 @@ namespace AIStoryBuilders.Services
 
                     // Create a Timeline
                     AIStoryBuilders.Models.Timeline Timeline = new AIStoryBuilders.Models.Timeline();
+                    Timeline.Id = i;
                     Timeline.TimelineName = TimelineName;
                     Timeline.TimelineDescription = TimelineDescription;
                     Timeline.StartDate = DateTime.Parse(TimelineStartTime);
@@ -335,6 +337,8 @@ namespace AIStoryBuilders.Services
 
                     // Add Timeline to collection
                     Timelines.Add(Timeline);
+
+                    i++;
                 }
 
                 // Return collection of Timelines
@@ -368,7 +372,6 @@ namespace AIStoryBuilders.Services
             }
         }
 
-        // Edit TimeLine
         public void UpdateTimeline(Models.Timeline objTimeline, string paramTimelineNameOriginal)
         {
             try
