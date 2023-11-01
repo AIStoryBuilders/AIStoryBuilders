@@ -139,7 +139,7 @@ else
                             StateHasChanged();
 
                             // Update the name
-                            AIStoryBuildersService.UpdateTimelineName(objTimeline, TimelineNameOriginal);
+                            await AIStoryBuildersService.UpdateTimelineAndTimelineNameAsync(objTimeline, TimelineNameOriginal);
 
                             InProgress = false;
                             StateHasChanged();
