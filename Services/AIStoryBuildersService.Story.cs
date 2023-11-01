@@ -134,7 +134,7 @@ namespace AIStoryBuilders.Services
                 foreach (var description in location.descriptions)
                 {
                     string VectorEmbedding = await OrchestratorMethods.GetVectorEmbedding(description, false);
-   
+
                     // We are deliberately not setting a LocationTimeline (therefore setting it to empty string)
                     // We did not ask the AI to set this value because it would have ben asking too much
                     var LocationDescriptionAndTimeline = $"{description}|";
@@ -328,7 +328,7 @@ namespace AIStoryBuilders.Services
                     // use tryparse to try to parse TimelineStopTime
                     DateTime TimelineStopDate;
                     DateTime.TryParse(TimelineStopTime, out TimelineStopDate);
-                    if(TimelineStopDate != DateTime.MinValue)
+                    if (TimelineStopDate != DateTime.MinValue)
                     {
                         Timeline.StopDate = DateTime.Parse(TimelineStopTime);
                     }
@@ -417,89 +417,88 @@ namespace AIStoryBuilders.Services
         {
             try
             {
-                //// ********************************************************
-                //// Update in Timeline.csv file
-                //// ********************************************************
+                // ********************************************************
+                // Update in Timeline.csv file
+                // ********************************************************
 
-                //// Get all Timelines from file
-                //var ExistingTimelines = GetTimelines(objTimeline.Story);
+                // Get all Timelines from file
+                var ExistingTimelines = GetTimelines(objTimeline.Story);
 
-                //// Get all Timelines except the one to update
-                //ExistingTimelines = ExistingTimelines.Where(line => line.TimelineName != paramTimelineNameOriginal).ToList();
+                // Get all Timelines except the one to update
+                ExistingTimelines = ExistingTimelines.Where(line => line.TimelineName != paramTimelineNameOriginal).ToList();
 
-                //// Add the updated Timeline - It will have the updated name
-                //ExistingTimelines.Add(objTimeline);
+                // Add the updated Timeline - It will have the updated name
+                ExistingTimelines.Add(objTimeline);
 
-                //// Create the lines to write to the Timeline file
-                //List<string> TimelineContents = new List<string>();
+                // Create the lines to write to the Timeline file
+                List<string> TimelineContents = new List<string>();
 
-                //foreach (var timeline in ExistingTimelines)
-                //{
-                //    string StartTime = timeline.StartDate.Value.ToShortDateString() + " " + timeline.StartDate.Value.ToShortTimeString();
+                foreach (var timeline in ExistingTimelines)
+                {
+                    string StartTime = timeline.StartDate.Value.ToShortDateString() + " " + timeline.StartDate.Value.ToShortTimeString();
 
-                //    string StopTime = "";
+                    string StopTime = "";
 
-                //    if (timeline.StopDate.HasValue)
-                //    {
-                //        StopTime = timeline.StopDate.Value.ToShortDateString() + " " + timeline.StopDate.Value.ToShortTimeString();
-                //    }
+                    if (timeline.StopDate.HasValue)
+                    {
+                        StopTime = timeline.StopDate.Value.ToShortDateString() + " " + timeline.StopDate.Value.ToShortTimeString();
+                    }
 
-                //    string TimelineContentsLine = $"{timeline.TimelineName}|{timeline.TimelineDescription}|{StartTime}|{StopTime}";
-                //    TimelineContents.Add(TimelineContentsLine);
-                //}
+                    string TimelineContentsLine = $"{timeline.TimelineName}|{timeline.TimelineDescription}|{StartTime}|{StopTime}";
+                    TimelineContents.Add(TimelineContentsLine);
+                }
 
-                //// Write the file
-                //string StoryPath = $"{BasePath}/{objTimeline.Story.Title}";
-                //string TimelinesPath = $"{StoryPath}/Timelines.csv";
-                //File.WriteAllLines(TimelinesPath, TimelineContents);
+                // Write the file
+                string StoryPath = $"{BasePath}/{objTimeline.Story.Title}";
+                string TimelinesPath = $"{StoryPath}/Timelines.csv";
+                File.WriteAllLines(TimelinesPath, TimelineContents);
 
-                //// ********************************************************
-                //// Update Chapter files
-                //// ********************************************************
+                // ********************************************************
+                // Update Chapter files
+                // ********************************************************
 
-                //// Loops through every Chapter and Paragraph and remove the Location
-                //var Chapters = GetChapters(objTimeline.Story);
+                // Loops through every Chapter and Paragraph and remove the Location
+                var Chapters = GetChapters(objTimeline.Story);
 
-                //foreach (var Chapter in Chapters)
-                //{
-                //    var Paragraphs = GetParagraphs(Chapter);
+                foreach (var Chapter in Chapters)
+                {
+                    var Paragraphs = GetParagraphs(Chapter);
 
-                //    foreach (var Paragraph in Paragraphs)
-                //    {
-                //        // Create the path to the Paragraph file
-                //        var ChapterNameParts = Chapter.ChapterName.Split(' ');
-                //        string ChapterName = ChapterNameParts[0] + ChapterNameParts[1];
-                //        string ParagraphPath = $"{StoryPath}/Chapters/{ChapterName}/Paragraph{Paragraph.Sequence}.txt";
+                    foreach (var Paragraph in Paragraphs)
+                    {
+                        // Create the path to the Paragraph file
+                        var ChapterNameParts = Chapter.ChapterName.Split(' ');
+                        string ChapterName = ChapterNameParts[0] + ChapterNameParts[1];
+                        string ParagraphPath = $"{StoryPath}/Chapters/{ChapterName}/Paragraph{Paragraph.Sequence}.txt";
 
-                //        // Get the ParagraphContent from the file
-                //        string[] ParagraphContent = File.ReadAllLines(ParagraphPath);
+                        // Get the ParagraphContent from the file
+                        string[] ParagraphContent = File.ReadAllLines(ParagraphPath);
 
-                //        // Remove all empty lines
-                //        ParagraphContent = ParagraphContent.Where(line => line.Trim() != "").ToArray();
+                        // Remove all empty lines
+                        ParagraphContent = ParagraphContent.Where(line => line.Trim() != "").ToArray();
 
-                //        // Get the Timeline from the file
-                //        string[] ParagraphTimeline = ParagraphContent[0].Split('|');
+                        // Get the Timeline from the file
+                        string[] ParagraphTimeline = ParagraphContent[0].Split('|');
 
-                //        // If the Location is the one to update, then set it to new name
-                //        if (ParagraphTimeline[1] == paramTimelineNameOriginal)
-                //        {
-                //            // Set to the new name
-                //            ParagraphTimeline[1] = objTimeline.TimelineName;
+                        // If the Location is the one to update, then set it to new name
+                        if (ParagraphTimeline[1] == paramTimelineNameOriginal)
+                        {
+                            // Set to the new name
+                            ParagraphTimeline[1] = objTimeline.TimelineName;
 
-                //            // Put the ParagraphContent back together
-                //            ParagraphContent[0] = string.Join("|", ParagraphTimeline);
+                            // Put the ParagraphContent back together
+                            ParagraphContent[0] = string.Join("|", ParagraphTimeline);
 
-                //            // Write the ParagraphContent back to the file
-                //            File.WriteAllLines(ParagraphPath, ParagraphContent);
-                //        }
-                //    }
-                //}
+                            // Write the ParagraphContent back to the file
+                            File.WriteAllLines(ParagraphPath, ParagraphContent);
+                        }
+                    }
+                }
 
                 // ********************************************************
                 // Update Location files
                 // ********************************************************
 
-                string StoryPath = $"{BasePath}/{objTimeline.Story.Title}";
                 string LocationsPath = $"{StoryPath}/Locations";
                 List<AIStoryBuilders.Models.Location> Locations = GetLocations(objTimeline.Story);
 
@@ -514,18 +513,18 @@ namespace AIStoryBuilders.Services
 
                         // Does the TimelineName element exist?
                         if (LocationDescription.Timeline != null)
-                        {                            
+                        {
                             // Is the TimelineName the one to update?
                             if (LocationDescription.Timeline.TimelineName == paramTimelineNameOriginal)
                             {
                                 // Update to new name
-                                LocationDescriptionAndTimeline = $"{LocationDescription.Description}|{objTimeline.TimelineName}";                                
+                                LocationDescriptionAndTimeline = $"{LocationDescription.Description}|{objTimeline.TimelineName}";
                             }
                             else
                             {
                                 // Use existing values
                                 LocationDescriptionAndTimeline = $"{LocationDescription.Description}|{LocationDescription.Timeline.TimelineName}";
-                            }                            
+                            }
                         }
                         else
                         {
@@ -536,12 +535,57 @@ namespace AIStoryBuilders.Services
                         string VectorEmbedding = await OrchestratorMethods.GetVectorEmbedding(LocationDescription.Description, false);
 
                         LocationContents.Add($"{LocationDescriptionAndTimeline}|{VectorEmbedding}" + Environment.NewLine);
-                    }               
+                    }
 
                     string LocationPath = $"{LocationsPath}/{AIStoryBuildersLocation.LocationName}.csv";
                     File.WriteAllLines(LocationPath, LocationContents);
                 }
 
+                // ********************************************************
+                // Update Character files
+                // ********************************************************
+
+                string CharactersPath = $"{StoryPath}/Characters";
+                List<AIStoryBuilders.Models.Character> Characters = GetCharacters(objTimeline.Story);
+
+                // Loop through each Character file
+                foreach (var AIStoryBuildersCharacter in Characters)
+                {
+                    List<string> CharacterContents = new List<string>();
+
+                    foreach (var CharacterDescription in AIStoryBuildersCharacter.CharacterBackground)
+                    {
+                        string CharacterDescriptionAndTimeline = "";
+
+                        // Does the TimelineName element exist?
+                        if (CharacterDescription.Timeline != null)
+                        {
+                            // Is the TimelineName the one to update?
+                            if (CharacterDescription.Timeline.TimelineName == paramTimelineNameOriginal)
+                            {
+                                // Update to new name
+                                CharacterDescriptionAndTimeline = $"{CharacterDescription.Type}|{objTimeline.TimelineName}|{CharacterDescription.Description}";
+                            }
+                            else
+                            {
+                                // Use existing values
+                                CharacterDescriptionAndTimeline = $"{CharacterDescription.Type}|{CharacterDescription.Timeline.TimelineName}|{CharacterDescription.Description}";
+                            }
+                        }
+                        else
+                        {
+                            // Use existing values - No TimelineName
+                            CharacterDescriptionAndTimeline = $"{CharacterDescription.Type}|{CharacterDescription.Description}|";
+                        }
+
+                        string VectorEmbedding = await OrchestratorMethods.GetVectorEmbedding(CharacterDescription.Description, false);
+
+                        CharacterContents.Add($"{CharacterDescriptionAndTimeline}|{VectorEmbedding}" + Environment.NewLine);
+                    }
+
+                    string CharacterPath = $"{CharactersPath}/{AIStoryBuildersCharacter.CharacterName}.csv";
+                    File.WriteAllLines(CharacterPath, CharacterContents);
+                }
             }
             catch (Exception ex)
             {
@@ -588,7 +632,7 @@ namespace AIStoryBuilders.Services
 
                     if (LocationDescriptionRaw.Count() > 0)
                     {
-                        int ii= 1;
+                        int ii = 1;
                         foreach (var description in LocationDescriptionRaw)
                         {
                             var DescriptionRaw = description.Select(x => x.Split('|')).ToArray();
@@ -608,7 +652,7 @@ namespace AIStoryBuilders.Services
 
                             Location.LocationDescription.Add(objLocationDescription);
                             ii++;
-                        }                        
+                        }
                     }
 
                     // Add Location to collection
@@ -645,7 +689,7 @@ namespace AIStoryBuilders.Services
                 {
                     // Get the LocationName from the file name
                     string LocationName = Path.GetFileNameWithoutExtension(AIStoryBuildersLocationFile);
-                                        
+
                     ExistingLocations.Add(LocationName.ToLower());
                 }
 
@@ -713,21 +757,21 @@ namespace AIStoryBuilders.Services
         public async Task UpdateLocationDescriptions(Models.Location objLocation)
         {
             try
-            { 
+            {
                 string StoryPath = $"{BasePath}/{objLocation.Story.Title}";
                 string LocationsPath = $"{StoryPath}/Locations";
 
                 // Add Location to file
                 List<string> LocationContents = new List<string>();
-                string LocationName = OrchestratorMethods.SanitizeFileName(objLocation.LocationName);  
-                
-                foreach(var description in objLocation.LocationDescription)
-                {                  
+                string LocationName = OrchestratorMethods.SanitizeFileName(objLocation.LocationName);
+
+                foreach (var description in objLocation.LocationDescription)
+                {
                     string VectorEmbedding = await OrchestratorMethods.GetVectorEmbedding(description.Description, false);
 
                     // Set TimelineName to empty string if null
                     string TimelineName = "";
-                    if(description.Timeline == null)
+                    if (description.Timeline == null)
                     {
                         TimelineName = "";
                     }
@@ -739,7 +783,7 @@ namespace AIStoryBuilders.Services
                     var LocationDescriptionAndTimeline = $"{description.Description}|{TimelineName}";
                     LocationContents.Add($"{LocationDescriptionAndTimeline}|{VectorEmbedding}" + Environment.NewLine);
                 }
-             
+
                 string LocationPath = $"{LocationsPath}/{LocationName}.csv";
                 File.WriteAllLines(LocationPath, LocationContents);
             }
@@ -793,7 +837,7 @@ namespace AIStoryBuilders.Services
 
                                 // Write the ParagraphContent back to the file
                                 File.WriteAllLines(ParagraphPath, ParagraphContent);
-                            }                        
+                            }
                         }
                     }
                 }
@@ -858,7 +902,7 @@ namespace AIStoryBuilders.Services
 
                     // Rename Location file
                     string NewLocationPath = $"{LocationsPath}/{objLocation.LocationName}.csv";
-                    File.Move(LocationPath, NewLocationPath);                    
+                    File.Move(LocationPath, NewLocationPath);
                 }
             }
             catch (Exception ex)
