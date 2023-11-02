@@ -16,7 +16,7 @@ else
 <RadzenButton Click=@(() => NewLocation()) Text="New Location" ButtonStyle="ButtonStyle.Success" />
 <br />
 <br />
-<RadzenDataList AllowVirtualization=false Style="height:100%;overflow:auto;"
+    <RadzenDataList @ref=LocationDataList AllowVirtualization=false Style="height:100%;overflow:auto;"
                 WrapItems=true AllowPaging=false
                 Data="@colLocations" TItem="Location">
     <Template Context="Location">
@@ -32,11 +32,13 @@ else
         </Template>
     </RadzenDataList>
     }
-    @code {
+@code {
     [Parameter] public Story objStory { get; set; }
 
     AIStoryBuildersService AIStoryBuildersService;
     OrchestratorMethods OrchestratorMethods;
+
+    RadzenDataList<Location> LocationDataList;
 
     bool InProgress = false;
     List<Location> colLocations = new List<Location>();
@@ -65,6 +67,16 @@ else
     public void LoadLocations(Story paramStory)
     {
         colLocations = AIStoryBuildersService.GetLocations(paramStory);
+
+        if (dialogService != null)
+        {
+            dialogService.Refresh();
+        }
+
+        if (LocationDataList != null)
+        {
+            LocationDataList.Reload();            
+        }
     }
 
     private async Task NewLocation()
