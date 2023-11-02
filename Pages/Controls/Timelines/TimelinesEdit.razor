@@ -207,7 +207,7 @@ else
                 StateHasChanged();
 
                 // Delete from the database
-                //AIStoryBuildersService.DeleteTimelineAsync(objTimeline.Id);
+                await AIStoryBuildersService.DeleteTimelineAndTimelineNameAsync(objTimeline, TimelineNameOriginal);
 
                 InProgress = false;
                 StateHasChanged();
