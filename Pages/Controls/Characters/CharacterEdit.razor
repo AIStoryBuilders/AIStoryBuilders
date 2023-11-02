@@ -34,7 +34,17 @@
 <div style="height:200px; overflow-y: scroll;border-width:0px">
     <RadzenDataList Data="@colCharacterBackground" TItem="CharacterBackground">
         <Template Context="characterbackground">
-            <CharacterBackgroundDisplay objCharacterBackground=@characterbackground />
+            <RadzenCard Style="width: 100%; padding: 1;">
+                <RadzenRow Gap="0">
+                    <RadzenColumn Size="2">
+                        <RadzenButton Text="Edit" Click=@(() => EditBackground(characterbackground))
+                                      ButtonStyle="ButtonStyle.Light" Style="width: 75px;height: 20px" />
+                    </RadzenColumn>
+                    <RadzenColumn>
+                        <RadzenText TextStyle=TextStyle.Body2>@(characterbackground.Description)</RadzenText>
+                    </RadzenColumn>
+                </RadzenRow>
+            </RadzenCard>
         </Template>
     </RadzenDataList>
 </div>
@@ -91,13 +101,14 @@
                 if (objCharacter.CharacterName.Length < 1)
                 {
                     NotificationService.Notify(
-            new NotificationMessage
-                    {
-                        Severity = NotificationSeverity.Error,
-                        Summary = "Error",
-                        Detail = "Character Name is required",
-                        Duration = 4000
-                    });
+                        new NotificationMessage
+                        {
+                            Severity = NotificationSeverity.Error,
+                            Summary = "Error",
+                            Detail = "Character Name is required",
+                            Duration = 4000
+                        });
+
                     return;
                 }
                 else
@@ -185,10 +196,29 @@
             CharacterBackground NewCharacterBackground = new CharacterBackground();
             NewCharacterBackground.Type = strType;
 
+            await EditBackground(NewCharacterBackground);
+
+        }
+        catch (Exception ex)
+        {
+            NotificationService.Notify(new NotificationMessage
+                {
+                    Severity = NotificationSeverity.Error,
+                    Summary = "Error",
+                    Detail = ex.Message,
+                    Duration = 4000
+                });
+        }
+    }
+
+    private async Task EditBackground(CharacterBackground paramCharacterBackground)
+    {
+        try
+        {
             var EditStoryResult = await DialogService.OpenAsync(
-        "Edit Character", ds =>
-    @<CharacterBackgroundEdit objCharacterBackground=NewCharacterBackground></CharacterBackgroundEdit>
-        , new DialogOptions() { Height = "500px", Width = "500px" });
+            $"Edit Character Background  - {strType}", ds =>
+            @<CharacterBackgroundEdit objCharacterBackground=paramCharacterBackground objStory="objCharacter.Story" DialogReference="ds"></CharacterBackgroundEdit>
+            , new DialogOptions() { Height = "300px", Width = "500px" });
 
             StateHasChanged();
         }

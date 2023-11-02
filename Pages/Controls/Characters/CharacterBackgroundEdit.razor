@@ -1,66 +1,67 @@
-﻿@using AIStoryBuilders.Models;
+﻿@using AIStoryBuilders.Model;
+@using AIStoryBuilders.Models;
+@using AIStoryBuilders.Pages.Controls;
+@using AIStoryBuilders.Services;
+@inherits OwningComponentBase
 @inject NotificationService NotificationService
 @inject DialogService DialogService
-<p><b>Description:</b> <RadzenDropDown Data=@colDescriptions @bind-Value="@objCharacterBackground.Description" /></p>
-<p> <RadzenTextBox @bind-Value="@objCharacterBackground.Description" /></p>
+<RadzenRow Gap="1rem">
+    <RadzenColumn Size="12" SizeSM="12">
+        <RadzenStack>
+            <RadzenFormField Text="Description:" Variant=Variant.Outlined>
+                <RadzenTextArea Rows="2" MaxLength="100" @bind-Value="@objCharacterBackground.Description" class="w-100" />
+            </RadzenFormField>
+            <RadzenFormField Text="Timeline:" Variant=Variant.Outlined>
+                <RadzenDropDown Data=@colTimelineNames @bind-Value="@SelectedTimeline" />
+            </RadzenFormField>
+        </RadzenStack>
+    </RadzenColumn>
+</RadzenRow>
+<br />
+<div class="row">
+    <div class="col">
+        <RadzenButton Text="Save" ButtonStyle="ButtonStyle.Success"
+                      Click="CharacterBackgroundSave"
+                      Style="margin-bottom: 10px; width: 150px" />&nbsp;&nbsp;
+        @if (@objCharacterBackground.Id > 0)
+        {
+            <RadzenButton Text="Delete" ButtonStyle="ButtonStyle.Danger"
+                          Click="CharacterBackgroundDelete" />
+        } 
+    </div>
+</div>
 @code {
     [Parameter] public CharacterBackground objCharacterBackground { get; set; }
+    [Parameter] public Story objStory { get; set; }
+    [Parameter] public DialogService DialogReference { get; set; }
+
+    AIStoryBuildersService AIStoryBuildersService;
+    OrchestratorMethods OrchestratorMethods;
 
     List<string> colDescriptions = new List<string>();
+    List<Timeline> colTimelines = new List<Timeline>();
+    List<string> colTimelineNames = new List<string>();
+    string SelectedTimeline = "";
 
     protected override void OnInitialized()
     {
         try
         {
-            // Add colDescriptions
-            switch (objCharacterBackground.Type)
-            {
-                case "Appearance":
-                    colDescriptions = new List<string>()
-                    {
-                        "Height",
-                        "Weight",
-                        "Hair Color",
-                        "Eye Color",
-                        "Ethnicity",
-                        "Race",
-                        "Disability",
-                        "Gender",
-                        "Sexuality",
-                        "Clothing",
-                        "Accessories",
-                        "Jewelry",
-                        "Makeup",
-                        "Scars",
-                        "Tattoos",
-                        "Birthmarks",
-                        "Other"
-                    };
-                    break;
-                case "Goals":
-                    colDescriptions = new List<string>()
-                    {
-                        "Strong Goal",
-                        "Weak Goal",
-                    };
-                    break;
-                case "History":
-                    colDescriptions = new List<string>()
-                    {
-                        "Experienced",
-                        "Remembered",
-                        "Recent",
-                        "Pleasant",
-                        "Painful",
-                    };
-                    break;
-                default:
-                    colDescriptions = new List<string>();
-                    break;
-            };
+            AIStoryBuildersService = (AIStoryBuildersService)ScopedServices.GetService(typeof(AIStoryBuildersService));
+            OrchestratorMethods = (OrchestratorMethods)ScopedServices.GetService(typeof(OrchestratorMethods));
 
-            // Set the default description
-            objCharacterBackground.Description = colDescriptions[0];
+            // Load Timelines
+            colTimelines = AIStoryBuildersService.GetTimelines(objStory);
+            colTimelineNames = colTimelines.Select(x => x.TimelineName).ToList();
+            colTimelineNames.Add("");
+
+            if (objCharacterBackground.Id > 0)
+            {
+                if (objCharacterBackground.Timeline != null)
+                {
+                    SelectedTimeline = objCharacterBackground.Timeline.TimelineName;
+                }
+            }
         }
         catch (Exception ex)
         {
@@ -73,4 +74,15 @@
                 });
         }
     }
+
+    private async Task CharacterBackgroundSave()
+    {
+        
+    }
+
+    private async Task CharacterBackgroundDelete()
+    {
+
+    }
+
 }

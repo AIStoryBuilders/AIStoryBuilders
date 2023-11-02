@@ -103,6 +103,8 @@
     {
         try
         {
+            paramCharacter.Story = objStory;
+
             var EditStoryResult = await dialogService.OpenAsync(
             "Edit Character", ds =>
             @<CharacterEdit objCharacter=paramCharacter DialogReference="ds"></CharacterEdit>
