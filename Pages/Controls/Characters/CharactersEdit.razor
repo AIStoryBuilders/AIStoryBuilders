@@ -8,7 +8,7 @@
 <RadzenButton Click=@(() => NewCharacter()) Text="New Character" ButtonStyle="ButtonStyle.Success" />
 <br />
 <br />
-<RadzenDataList AllowVirtualization=false Style="height:100%;overflow:auto;"
+<RadzenDataList @ref=CharacterDataList AllowVirtualization=false Style="height:100%;overflow:auto;"
                 WrapItems=true AllowPaging=false
                 Data="@colCharacters" TItem="Character">
     <Template Context="character">
@@ -27,6 +27,8 @@
     [Parameter] public Story objStory { get; set; }
     AIStoryBuildersService AIStoryBuildersService;
     OrchestratorMethods OrchestratorMethods;
+
+    RadzenDataList<Character> CharacterDataList;
 
     List<Character> colCharacters = new List<Character>();
 
@@ -54,6 +56,16 @@
     public void LoadCharacters(Story paramStory)
     {
         colCharacters = AIStoryBuildersService.GetCharacters(paramStory);
+
+        if (dialogService != null)
+        {
+            dialogService.Refresh();
+        }
+
+        if (CharacterDataList != null)
+        {
+            CharacterDataList.Reload();
+        }
     }
 
     private async Task NewCharacter()
