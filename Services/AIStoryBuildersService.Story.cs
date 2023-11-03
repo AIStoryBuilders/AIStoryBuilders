@@ -1164,64 +1164,42 @@ namespace AIStoryBuilders.Services
             }
         }
 
-        //public async Task<Character> GetCharacterAsync(int id)
-        //{
-        //    // Get Character
-        //    return await _context.Character.FindAsync(id);
-        //}
+        public async Task AddUpdateCharacterAsync(Character character)
+        {
+            string StoryPath = $"{BasePath}/{character.Story.Title}";
+            string CharactersPath = $"{StoryPath}/Characters";
+            string ChaptersPath = $"{StoryPath}/Chapters";
 
-        //public async Task<Character> AddCharacterAsync(Character character)
-        //{
-        //    // Ensure no duplicate CharacterName
-        //    var duplicateCharacter = await _context.Character
-        //        .AsNoTracking()
-        //        .Where(c => c.StoryId == character.StoryId)
-        //        .Where(c => c.CharacterName == character.CharacterName)
-        //        .FirstOrDefaultAsync();
+            // Add Character to file
+            string CharacterName = OrchestratorMethods.SanitizeFileName(character.CharacterName);
 
-        //    if (duplicateCharacter != null)
-        //    {
-        //        // Throw exception
-        //        throw new Exception("Duplicate CharacterName");
-        //    }
+            // Create Character file
+            string CharacterPath = $"{CharactersPath}/{CharacterName}.csv";
+            List<string> CharacterContents = new List<string>();
 
-        //    // Add Character
+            foreach (var description in character.CharacterBackground)
+            {
+                string description_type = description.Type ?? "";
 
-        //    Character newCharacter = new Character();
-        //    newCharacter.StoryId = character.StoryId;
-        //    newCharacter.CharacterName = character.CharacterName ?? "";
-        //    newCharacter.Description = character.Description ?? "";
-        //    newCharacter.Goals = character.Goals ?? "";
+                string TimeLineName = "";
 
-        //    _context.Character.Add(newCharacter);
-        //    await _context.SaveChangesAsync();
-        //    return newCharacter;
-        //}
+                if (description.Timeline != null)
+                {
+                    TimeLineName = description.Timeline.TimelineName ?? "";
+                }
 
-        //public async Task<Character> UpdateCharacterAsync(Character character)
-        //{
-        //    // Get Character
-        //    var characterToUpdate = await _context.Character.FindAsync(character.Id);
+                string timeline_name = TimeLineName;
+                string VectorDescriptionAndEmbedding = await OrchestratorMethods.GetVectorEmbedding(description.Description ?? "", true);
+                CharacterContents.Add($"{description_type}|{timeline_name}|{VectorDescriptionAndEmbedding}" + Environment.NewLine);
+            }
 
-        //    // Update each value
-        //    characterToUpdate.CharacterName = character.CharacterName ?? "";
-        //    characterToUpdate.Description = character.Description ?? "";
-        //    characterToUpdate.Goals = character.Goals ?? "";
+            File.WriteAllLines(CharacterPath, CharacterContents);
+        }
 
-        //    _context.Character.Update(characterToUpdate);
-        //    await _context.SaveChangesAsync();
+        public void DeleteCharacter(Character character)
+        {
 
-        //    return characterToUpdate;
-        //}
-
-        //public async Task<Character> DeleteCharacterAsync(int id)
-        //{
-        //    // Delete Character
-        //    var character = await _context.Character.FindAsync(id);
-        //    _context.Character.Remove(character);
-        //    await _context.SaveChangesAsync();
-        //    return character;
-        //}
+        }
         #endregion
 
         #region *** Chapter ***

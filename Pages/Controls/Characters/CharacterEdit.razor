@@ -84,18 +84,18 @@
 
         // Add colTypes
         colTypes = new List<string>()
-                            {
+                                {
             "Appearance",
             "Goals",
             "History",
             "Aliases",
             "Facts"
-                            };
+                                };
 
         colCharacterBackground = objCharacter.CharacterBackground.Where(x => x.Type == @strType);
     }
 
-    private void CharacterSave()
+    private async Task CharacterSave()
     {
         try
         {
@@ -103,14 +103,13 @@
             {
                 if (objCharacter.CharacterName.Length < 1)
                 {
-                    NotificationService.Notify(
-                new NotificationMessage
-                        {
-                            Severity = NotificationSeverity.Error,
-                            Summary = "Error",
-                            Detail = "Character Name is required",
-                            Duration = 4000
-                        });
+                    NotificationService.Notify(new NotificationMessage
+                            {
+                                Severity = NotificationSeverity.Error,
+                                Summary = "Error",
+                                Detail = "Character Name is required",
+                                Duration = 4000
+                            });
 
                     return;
                 }
@@ -119,30 +118,21 @@
                     // Always remove any pipe (|) characters
                     objCharacter.CharacterName = objCharacter.CharacterName.Replace("|", "");
 
-                    if (objCharacter.Id == -1)
-                    {
-                        // Add to the database
-                        //await Service.AddCharacterAsync(objCharacter);
-                    }
-                    else
-                    {
-                        // Save to the database
-                        //await Service.UpdateCharacterAsync(objCharacter);
-                    }
+                    // Save to the database
+                    await AIStoryBuildersService.AddUpdateCharacterAsync(objCharacter);
 
                     DialogService.Close(null);
                 }
             }
             else
             {
-                NotificationService.Notify(
-                new NotificationMessage
-                        {
-                            Severity = NotificationSeverity.Error,
-                            Summary = "Error",
-                            Detail = "Character Name is required",
-                            Duration = 4000
-                        });
+                NotificationService.Notify(new NotificationMessage
+                    {
+                        Severity = NotificationSeverity.Error,
+                        Summary = "Error",
+                        Detail = "Character Name is required",
+                        Duration = 4000
+                    });
 
                 return;
             }
@@ -169,8 +159,8 @@
 
             if (confirmResult.HasValue && confirmResult.Value)
             {
-                // Delete from the database
-                //await Service.DeleteCharacterAsync(objCharacter.Id);
+                // Delete
+                AIStoryBuildersService.DeleteCharacter(objCharacter);
 
                 DialogService.Close(null);
             }
@@ -221,9 +211,10 @@
         try
         {
             var EditStoryResult = await DialogService.OpenAsync(
-            $"Edit Character Background  - {strType}", ds =>
-    @<CharacterBackgroundEdit objCharacterBackground=paramCharacterBackground objStory="objCharacter.Story" DialogReference="ds"></CharacterBackgroundEdit>
-        , new DialogOptions() { Height = "300px", Width = "500px" });
+        $"Edit Character Background  - {strType}", ds =>
+    @<CharacterBackgroundEdit objCharacterBackground=paramCharacterBackground objStory="objCharacter.Story" DialogReference="ds">
+    </CharacterBackgroundEdit>
+    , new DialogOptions() { Height = "300px", Width = "500px" });
 
             if (EditStoryResult != null)
             {

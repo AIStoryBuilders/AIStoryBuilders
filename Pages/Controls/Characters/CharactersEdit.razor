@@ -74,6 +74,7 @@
         {
             var newCharacter = new Character();
             newCharacter.Id = -1; // So we know it is new
+            newCharacter.Story = objStory;
 
             var parms = new Dictionary<string, object>();
             parms.Add("objCharacter", newCharacter);
