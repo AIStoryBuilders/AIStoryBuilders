@@ -75,15 +75,19 @@
         }
     }
 
-    private async Task CharacterBackgroundSave()
+    private void CharacterBackgroundSave()
     {
         // Always remove any pipe (|) characters
         objCharacterBackground.Description = objCharacterBackground.Description.Replace("|", "");
+        objCharacterBackground.Timeline = colTimelines.Where(x => x.TimelineName == SelectedTimeline).FirstOrDefault();
+        DialogService.Close(objCharacterBackground);
     }
 
-    private async Task CharacterBackgroundDelete()
+    private void CharacterBackgroundDelete()
     {
-
+        // Mark the id 0 to indicate a delete
+        objCharacterBackground.Id = 0;
+        DialogService.Close(objCharacterBackground);
     }
 
 }

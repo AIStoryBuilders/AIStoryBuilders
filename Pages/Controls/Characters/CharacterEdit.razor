@@ -84,13 +84,13 @@
 
         // Add colTypes
         colTypes = new List<string>()
-                        {
+                            {
             "Appearance",
             "Goals",
             "History",
             "Aliases",
             "Facts"
-                        };
+                            };
 
         colCharacterBackground = objCharacter.CharacterBackground.Where(x => x.Type == @strType);
     }
@@ -104,13 +104,13 @@
                 if (objCharacter.CharacterName.Length < 1)
                 {
                     NotificationService.Notify(
-                    new NotificationMessage
-                            {
-                                Severity = NotificationSeverity.Error,
-                                Summary = "Error",
-                                Detail = "Character Name is required",
-                                Duration = 4000
-                            });
+                new NotificationMessage
+                        {
+                            Severity = NotificationSeverity.Error,
+                            Summary = "Error",
+                            Detail = "Character Name is required",
+                            Duration = 4000
+                        });
 
                     return;
                 }
@@ -136,13 +136,14 @@
             else
             {
                 NotificationService.Notify(
-    new NotificationMessage
-            {
-                Severity = NotificationSeverity.Error,
-                Summary = "Error",
-                Detail = "Character Name is required",
-                Duration = 4000
-            });
+                new NotificationMessage
+                        {
+                            Severity = NotificationSeverity.Error,
+                            Summary = "Error",
+                            Detail = "Character Name is required",
+                            Duration = 4000
+                        });
+
                 return;
             }
         }
@@ -164,7 +165,7 @@
         {
             // Ask for confirmation:
             var confirmResult = await DialogService.Confirm("Are you sure?", "Delete Character",
-      new ConfirmOptions() { OkButtonText = "Yes", CancelButtonText = "No" });
+        new ConfirmOptions() { OkButtonText = "Yes", CancelButtonText = "No" });
 
             if (confirmResult.HasValue && confirmResult.Value)
             {
@@ -197,6 +198,7 @@
         try
         {
             CharacterBackground NewCharacterBackground = new CharacterBackground();
+            NewCharacterBackground.Id = -1;
             NewCharacterBackground.Type = strType;
 
             await EditBackground(NewCharacterBackground);
@@ -219,9 +221,43 @@
         try
         {
             var EditStoryResult = await DialogService.OpenAsync(
-        $"Edit Character Background  - {strType}", ds =>
+            $"Edit Character Background  - {strType}", ds =>
     @<CharacterBackgroundEdit objCharacterBackground=paramCharacterBackground objStory="objCharacter.Story" DialogReference="ds"></CharacterBackgroundEdit>
-    , new DialogOptions() { Height = "300px", Width = "500px" });
+        , new DialogOptions() { Height = "300px", Width = "500px" });
+
+            if (EditStoryResult != null)
+            {
+                // Update existing CharacterBackground
+                if (paramCharacterBackground.Id > 0)
+                {
+                    // Find the CharacterBackground in the list
+                    var objCharacterBackground = objCharacter.CharacterBackground.Where(x => x.Id == paramCharacterBackground.Id).FirstOrDefault();
+
+                    if (objCharacterBackground != null)
+                    {
+                        objCharacterBackground.Description = paramCharacterBackground.Description;
+                        objCharacterBackground.Timeline = paramCharacterBackground.Timeline;
+                    }
+                }
+                else if (paramCharacterBackground.Id == -1)
+                {
+                    // Add new CharacterBackground
+                    int intMaxId = 0;
+                    if (objCharacter.CharacterBackground.Count > 0)
+                    {
+                        intMaxId = objCharacter.CharacterBackground.Max(x => x.Id);
+                    }
+
+                    paramCharacterBackground.Id = intMaxId + 1;
+
+                    objCharacter.CharacterBackground.Add(paramCharacterBackground);
+                }
+                else if (paramCharacterBackground.Id == 0)
+                {
+                    // Delete CharacterBackground
+                    objCharacter.CharacterBackground.Remove(paramCharacterBackground);
+                }
+            }
 
             StateHasChanged();
         }
