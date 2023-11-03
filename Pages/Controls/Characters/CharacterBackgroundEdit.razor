@@ -77,7 +77,8 @@
 
     private async Task CharacterBackgroundSave()
     {
-        
+        // Always remove any pipe (|) characters
+        objCharacterBackground.Description = objCharacterBackground.Description.Replace("|", "");
     }
 
     private async Task CharacterBackgroundDelete()

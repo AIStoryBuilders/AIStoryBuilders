@@ -5,33 +5,33 @@
 @inherits OwningComponentBase
 @inject NotificationService NotificationService
 @inject DialogService DialogService
-<RadzenRow Gap="1rem">
-    <RadzenColumn Size="12" SizeSM="12">
-        <RadzenStack>
-            <RadzenFormField Text="Character Name:" Variant=Variant.Outlined>
-                <RadzenTextBox @bind-Value="@objCharacter.CharacterName" />
-            </RadzenFormField>
-        </RadzenStack>
-    </RadzenColumn>
-</RadzenRow>
-<RadzenRow Gap="1rem">
-    <RadzenColumn Size="8" SizeSM="8">
-        <RadzenStack>
-            <RadzenFormField Text="Background Type:" Variant=Variant.Outlined>
-                <RadzenDropDown Data=@colTypes @bind-Value="@strType" Change="OnTypeChanged" />
-            </RadzenFormField>
-        </RadzenStack>
-    </RadzenColumn>
-    <RadzenColumn Size="4" SizeSM="4">
-        <RadzenStack>
-            <RadzenButton Text="Add Background" ButtonStyle="ButtonStyle.Secondary"
-                          Click="AddBackground"
-                          Style="margin-top: 10px; width: 150px" />
-        </RadzenStack>
-    </RadzenColumn>
-</RadzenRow>
-<br />
-<div style="height:200px; overflow-y: scroll;border-width:0px">
+<div style="height:400px; overflow-y: scroll;border-width:0px">
+    <RadzenRow Gap="1rem">
+        <RadzenColumn Size="12" SizeSM="12">
+            <RadzenStack>
+                <RadzenFormField Text="Character Name:" Variant=Variant.Outlined>
+                    <RadzenTextBox @bind-Value="@objCharacter.CharacterName" />
+                </RadzenFormField>
+            </RadzenStack>
+        </RadzenColumn>
+    </RadzenRow>
+    <RadzenRow Gap="1rem">
+        <RadzenColumn Size="8" SizeSM="8">
+            <RadzenStack>
+                <RadzenFormField Text="Background Type:" Variant=Variant.Outlined>
+                    <RadzenDropDown Data=@colTypes @bind-Value="@strType" Change="OnTypeChanged" />
+                </RadzenFormField>
+            </RadzenStack>
+        </RadzenColumn>
+        <RadzenColumn Size="4" SizeSM="4">
+            <RadzenStack>
+                <RadzenButton Text="Add Background" ButtonStyle="ButtonStyle.Secondary"
+                              Click="AddBackground"
+                              Style="margin-top: 10px; width: 150px" />
+            </RadzenStack>
+        </RadzenColumn>
+    </RadzenRow>
+    <br />
     <RadzenDataList Data="@colCharacterBackground" TItem="CharacterBackground">
         <Template Context="characterbackground">
             <RadzenCard Style="width: 100%; padding: 1;">
@@ -42,13 +42,16 @@
                     </RadzenColumn>
                     <RadzenColumn>
                         <RadzenText TextStyle=TextStyle.Body2>@(characterbackground.Description)</RadzenText>
+                            @if (characterbackground.Timeline != null)
+                        {
+                            <RadzenText TextStyle=TextStyle.Subtitle2>@(characterbackground.Timeline.TimelineName)</RadzenText>
+                        }
                     </RadzenColumn>
                 </RadzenRow>
             </RadzenCard>
         </Template>
     </RadzenDataList>
 </div>
-
 <br />
 <br />
 <div class="row">
@@ -81,13 +84,13 @@
 
         // Add colTypes
         colTypes = new List<string>()
-                    {
+                        {
             "Appearance",
             "Goals",
             "History",
             "Aliases",
             "Facts"
-                    };
+                        };
 
         colCharacterBackground = objCharacter.CharacterBackground.Where(x => x.Type == @strType);
     }
@@ -101,13 +104,13 @@
                 if (objCharacter.CharacterName.Length < 1)
                 {
                     NotificationService.Notify(
-                        new NotificationMessage
-                        {
-                            Severity = NotificationSeverity.Error,
-                            Summary = "Error",
-                            Detail = "Character Name is required",
-                            Duration = 4000
-                        });
+                    new NotificationMessage
+                            {
+                                Severity = NotificationSeverity.Error,
+                                Summary = "Error",
+                                Detail = "Character Name is required",
+                                Duration = 4000
+                            });
 
                     return;
                 }
@@ -133,13 +136,13 @@
             else
             {
                 NotificationService.Notify(
-        new NotificationMessage
-                {
-                    Severity = NotificationSeverity.Error,
-                    Summary = "Error",
-                    Detail = "Character Name is required",
-                    Duration = 4000
-                });
+    new NotificationMessage
+            {
+                Severity = NotificationSeverity.Error,
+                Summary = "Error",
+                Detail = "Character Name is required",
+                Duration = 4000
+            });
                 return;
             }
         }
@@ -161,7 +164,7 @@
         {
             // Ask for confirmation:
             var confirmResult = await DialogService.Confirm("Are you sure?", "Delete Character",
-          new ConfirmOptions() { OkButtonText = "Yes", CancelButtonText = "No" });
+      new ConfirmOptions() { OkButtonText = "Yes", CancelButtonText = "No" });
 
             if (confirmResult.HasValue && confirmResult.Value)
             {
@@ -202,12 +205,12 @@
         catch (Exception ex)
         {
             NotificationService.Notify(new NotificationMessage
-                {
-                    Severity = NotificationSeverity.Error,
-                    Summary = "Error",
-                    Detail = ex.Message,
-                    Duration = 4000
-                });
+                    {
+                        Severity = NotificationSeverity.Error,
+                        Summary = "Error",
+                        Detail = ex.Message,
+                        Duration = 4000
+                    });
         }
     }
 
@@ -216,9 +219,9 @@
         try
         {
             var EditStoryResult = await DialogService.OpenAsync(
-            $"Edit Character Background  - {strType}", ds =>
-            @<CharacterBackgroundEdit objCharacterBackground=paramCharacterBackground objStory="objCharacter.Story" DialogReference="ds"></CharacterBackgroundEdit>
-            , new DialogOptions() { Height = "300px", Width = "500px" });
+        $"Edit Character Background  - {strType}", ds =>
+    @<CharacterBackgroundEdit objCharacterBackground=paramCharacterBackground objStory="objCharacter.Story" DialogReference="ds"></CharacterBackgroundEdit>
+    , new DialogOptions() { Height = "300px", Width = "500px" });
 
             StateHasChanged();
         }

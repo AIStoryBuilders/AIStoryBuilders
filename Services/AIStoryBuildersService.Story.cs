@@ -1130,6 +1130,7 @@ namespace AIStoryBuilders.Services
 
                         CharacterBackground objCharacterBackground = new CharacterBackground();
 
+                        objCharacterBackground.Id = i;
                         objCharacterBackground.Sequence = i;
                         objCharacterBackground.Type = CharacterBackgroundParts[0];
                         objCharacterBackground.Timeline = new Models.Timeline() { TimelineName = CharacterBackgroundParts[1] };
