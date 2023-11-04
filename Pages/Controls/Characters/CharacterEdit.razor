@@ -5,6 +5,14 @@
 @inherits OwningComponentBase
 @inject NotificationService NotificationService
 @inject DialogService DialogService
+@if (@InProgress)
+{
+    <div class="rz-m-10">
+        <RadzenProgressBar Value="100" ShowValue="false" Mode="ProgressBarMode.Indeterminate" />
+    </div>
+}
+else
+{
 <div style="height:400px; overflow-y: scroll;border-width:0px">
     <RadzenRow Gap="1rem">
         <RadzenColumn Size="12" SizeSM="12">
@@ -66,6 +74,7 @@
         }
     </div>
 </div>
+}
 @code {
     [Parameter] public Character objCharacter { get; set; }
     [Parameter] public DialogService DialogReference { get; set; }
@@ -76,6 +85,7 @@
     IEnumerable<CharacterBackground> colCharacterBackground = new List<CharacterBackground>();
     List<string> colTypes = new List<string>();
     string strType = "Appearance";
+    bool InProgress = false;
 
     protected override void OnInitialized()
     {
@@ -118,8 +128,14 @@
                     // Always remove any pipe (|) characters
                     objCharacter.CharacterName = objCharacter.CharacterName.Replace("|", "");
 
+                    InProgress = true;
+                    StateHasChanged();
+
                     // Save to the database
                     await AIStoryBuildersService.AddUpdateCharacterAsync(objCharacter);
+
+                    InProgress = false;
+                    StateHasChanged();
 
                     DialogService.Close(null);
                 }
@@ -146,6 +162,9 @@
                         Detail = ex.Message,
                         Duration = 4000
                     });
+
+            InProgress = false;
+            StateHasChanged();
         }
     }
 
@@ -159,8 +178,14 @@
 
             if (confirmResult.HasValue && confirmResult.Value)
             {
+                InProgress = true;
+                StateHasChanged();
+
                 // Delete
                 AIStoryBuildersService.DeleteCharacter(objCharacter);
+
+                InProgress = false;
+                StateHasChanged();
 
                 DialogService.Close(null);
             }
@@ -174,6 +199,9 @@
                         Detail = ex.Message,
                         Duration = 4000
                     });
+
+            InProgress = false;
+            StateHasChanged();
         }
     }
 
