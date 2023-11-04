@@ -1164,14 +1164,14 @@ namespace AIStoryBuilders.Services
             }
         }
 
-        public async Task AddUpdateCharacterAsync(Character character)
+        public async Task AddUpdateCharacterAsync(Character character, string paramOrginalCharcterName)
         {
             string StoryPath = $"{BasePath}/{character.Story.Title}";
             string CharactersPath = $"{StoryPath}/Characters";
             string ChaptersPath = $"{StoryPath}/Chapters";
 
             // Add Character to file
-            string CharacterName = OrchestratorMethods.SanitizeFileName(character.CharacterName);
+            string CharacterName = OrchestratorMethods.SanitizeFileName(paramOrginalCharcterName);
 
             // Create Character file
             string CharacterPath = $"{CharactersPath}/{CharacterName}.csv";
@@ -1196,9 +1196,29 @@ namespace AIStoryBuilders.Services
             File.WriteAllLines(CharacterPath, CharacterContents);
         }
 
-        public void DeleteCharacter(Character character)
+        public void DeleteCharacter(Character character, string paramOrginalCharcterName)
         {
+            string StoryPath = $"{BasePath}/{character.Story.Title}";
+            string CharactersPath = $"{StoryPath}/Characters";
+            string ChaptersPath = $"{StoryPath}/Chapters";
 
+            // Add Character to file
+            string CharacterName = OrchestratorMethods.SanitizeFileName(paramOrginalCharcterName);
+
+            // Create Character file
+            string CharacterPath = $"{CharactersPath}/{CharacterName}.csv";
+        }
+        public void UpdateCharacterName(Character character, string paramOrginalCharcterName)
+        {
+            string StoryPath = $"{BasePath}/{character.Story.Title}";
+            string CharactersPath = $"{StoryPath}/Characters";
+            string ChaptersPath = $"{StoryPath}/Chapters";
+
+            // Add Character to file
+            string CharacterName = OrchestratorMethods.SanitizeFileName(paramOrginalCharcterName);
+
+            // Create Character file
+            string CharacterPath = $"{CharactersPath}/{CharacterName}.csv";
         }
         #endregion
 
