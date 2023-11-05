@@ -83,8 +83,7 @@
             parms,
             new DialogOptions() { Width = "650px" });
 
-            // Get the Characters from the database
-            //colCharacters = await Service.GetCharactersAsync(objStory);
+            LoadCharacters(objStory);
 
             StateHasChanged();
         }

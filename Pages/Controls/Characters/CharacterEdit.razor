@@ -128,8 +128,10 @@ else
                 }
                 else
                 {
-                    // Always remove any pipe (|) characters
+                    // Always remove any pipe (|) and [ and ] characters
                     objCharacter.CharacterName = objCharacter.CharacterName.Replace("|", "");
+                    objCharacter.CharacterName = objCharacter.CharacterName.Replace("[", "");
+                    objCharacter.CharacterName = objCharacter.CharacterName.Replace("]", "");
 
                     InProgress = true;
                     StateHasChanged();

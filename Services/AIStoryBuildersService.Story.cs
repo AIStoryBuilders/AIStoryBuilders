@@ -1208,17 +1208,78 @@ namespace AIStoryBuilders.Services
             // Create Character file
             string CharacterPath = $"{CharactersPath}/{CharacterName}.csv";
         }
+
         public void UpdateCharacterName(Character character, string paramOrginalCharcterName)
         {
             string StoryPath = $"{BasePath}/{character.Story.Title}";
             string CharactersPath = $"{StoryPath}/Characters";
             string ChaptersPath = $"{StoryPath}/Chapters";
+            string CharacterPath = $"{CharactersPath}/{paramOrginalCharcterName}.csv";
 
-            // Add Character to file
-            string CharacterName = OrchestratorMethods.SanitizeFileName(paramOrginalCharcterName);
+            if (character.CharacterName.Trim() != "")
+            {
+                // Loops through every Chapter and Paragraph and update the Character
+                var Chapters = GetChapters(character.Story);
 
-            // Create Character file
-            string CharacterPath = $"{CharactersPath}/{CharacterName}.csv";
+                foreach (var Chapter in Chapters)
+                {
+                    var Paragraphs = GetParagraphs(Chapter);
+
+                    foreach (var Paragraph in Paragraphs)
+                    {
+                        // Create the path to the Paragraph file
+                        var ChapterNameParts = Chapter.ChapterName.Split(' ');
+                        string ChapterName = ChapterNameParts[0] + ChapterNameParts[1];
+                        string ParagraphPath = $"{StoryPath}/Chapters/{ChapterName}/Paragraph{Paragraph.Sequence}.txt";
+
+                        // Get the ParagraphContent from the file
+                        string[] ParagraphContent = File.ReadAllLines(ParagraphPath);
+
+                        // Remove all empty lines
+                        ParagraphContent = ParagraphContent.Where(line => line.Trim() != "").ToArray();
+
+                        // Get the file as an array
+                        string[] ParagraphArray = ParagraphContent[0].Split('|');
+
+                        // Remove the [ and ] from the array
+                        ParagraphArray[2] = ParagraphArray[2].Replace("[", "");
+                        ParagraphArray[2] = ParagraphArray[2].Replace("]", "");
+
+                        // Get the Character array from the file
+                        string[] ParagraphCharacters = ParagraphArray[2].Split(',');
+
+                        // Loop through each Character to see if the Character is the one to update
+                        for (int i = 0; i < ParagraphCharacters.Length; i++)
+                        {
+                            // If the Character is the one to update, then set it to new name
+                            if (ParagraphCharacters[i] == paramOrginalCharcterName)
+                            {
+                                // Set to the new name
+                                ParagraphCharacters[i] = character.CharacterName;
+                            }
+                        }
+
+                        // Put the ParagraphCharacters back together
+                        string ParagraphCharacterString = string.Join(",", ParagraphCharacters);
+
+                        // Put the [ and ] back on the array
+                        ParagraphCharacterString = "[" + ParagraphCharacterString + "]";
+
+                        // Set the Character array back to the ParagraphArray
+                        ParagraphArray[2] = ParagraphCharacterString;
+
+                        // Put the ParagraphContent back together
+                        ParagraphContent[0] = string.Join("|", ParagraphArray);
+
+                        // Write the ParagraphContent back to the file
+                        File.WriteAllLines(ParagraphPath, ParagraphContent);
+                    }
+                }
+
+                // Rename Character file
+                string NewCharacterPath = $"{CharactersPath}/{character.CharacterName.Trim()}.csv";
+                File.Move(CharacterPath, NewCharacterPath);
+            }
         }
         #endregion
 
