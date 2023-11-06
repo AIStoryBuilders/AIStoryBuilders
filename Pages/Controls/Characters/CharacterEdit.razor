@@ -42,7 +42,6 @@ else
     <br />
     <RadzenDataList Data="@colCharacterBackground" TItem="CharacterBackground">
         <Template Context="characterbackground">
-            <RadzenCard Style="width: 100%; padding: 1;">
                 <RadzenRow Gap="0">
                     <RadzenColumn Size="2">
                         <RadzenButton Text="Edit" Click=@(() => EditBackground(characterbackground))
@@ -56,7 +55,6 @@ else
                         }
                     </RadzenColumn>
                 </RadzenRow>
-            </RadzenCard>
         </Template>
     </RadzenDataList>
 </div>
@@ -103,7 +101,7 @@ else
             "Facts"
                                 };
 
-        colCharacterBackground = objCharacter.CharacterBackground.Where(x => x.Type == @strType);
+        colCharacterBackground = objCharacter.CharacterBackground.Where(x => x.Type == strType);
 
         OriginalCharacterName = objCharacter.CharacterName;
     }
@@ -135,6 +133,13 @@ else
 
                     InProgress = true;
                     StateHasChanged();
+
+                    // If OriginalCharacterName is null, then this is a new Character
+                    if (OriginalCharacterName == null)
+                    {
+                        // Set the OriginalCharacterName to the CharacterName
+                        OriginalCharacterName = objCharacter.CharacterName;
+                    }
 
                     // Save to the database
                     await AIStoryBuildersService.AddUpdateCharacterAsync(objCharacter, OriginalCharacterName);
@@ -232,8 +237,12 @@ else
 
     private void OnTypeChanged()
     {
-        colCharacterBackground = objCharacter.CharacterBackground.Where(x => x.Type == @strType);
-        DialogReference.Refresh();
+        colCharacterBackground = objCharacter.CharacterBackground.Where(x => x.Type == strType);
+
+        if (DialogReference != null)
+        {
+            DialogReference.Refresh();
+        }
     }
 
     private async Task AddBackground()
