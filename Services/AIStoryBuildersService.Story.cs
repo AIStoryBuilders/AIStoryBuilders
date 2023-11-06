@@ -1110,6 +1110,7 @@ namespace AIStoryBuilders.Services
                 string[] AIStoryBuildersCharactersFiles = Directory.GetFiles(AIStoryBuildersCharactersPath, "*.csv", SearchOption.AllDirectories);
 
                 // Loop through each Character file
+                int i = 1;
                 foreach (var AIStoryBuildersCharacterFile in AIStoryBuildersCharactersFiles)
                 {
                     // Get the CharacterName from the file name
@@ -1121,7 +1122,7 @@ namespace AIStoryBuilders.Services
                     // Remove all empty lines
                     CharacterBackgroundContent = CharacterBackgroundContent.Where(line => line.Trim() != "").ToArray();
 
-                    int i = 1;
+                    int ii = 1;
                     List<CharacterBackground> colCharacterBackground = new List<CharacterBackground>();
                     foreach (var CharacterBackground in CharacterBackgroundContent)
                     {
@@ -1130,8 +1131,8 @@ namespace AIStoryBuilders.Services
 
                         CharacterBackground objCharacterBackground = new CharacterBackground();
 
-                        objCharacterBackground.Id = i;
-                        objCharacterBackground.Sequence = i;
+                        objCharacterBackground.Id = ii;
+                        objCharacterBackground.Sequence = ii;
                         objCharacterBackground.Type = CharacterBackgroundParts[0];
                         objCharacterBackground.Timeline = new Models.Timeline() { TimelineName = CharacterBackgroundParts[1] };
                         objCharacterBackground.Description = CharacterBackgroundParts[2];
@@ -1139,16 +1140,18 @@ namespace AIStoryBuilders.Services
                         objCharacterBackground.Character = new Character() { CharacterName = CharacterName };
 
                         colCharacterBackground.Add(objCharacterBackground);
-                        i++;
+                        ii++;
                     }
 
                     // Create a Character
                     AIStoryBuilders.Models.Character Character = new AIStoryBuilders.Models.Character();
+                    Character.Id = i;
                     Character.CharacterName = CharacterName;
                     Character.CharacterBackground = colCharacterBackground;
 
                     // Add Character to collection
                     Characters.Add(Character);
+                    i++;
                 }
 
                 // Return collection of Characters
@@ -1201,12 +1204,74 @@ namespace AIStoryBuilders.Services
             string StoryPath = $"{BasePath}/{character.Story.Title}";
             string CharactersPath = $"{StoryPath}/Characters";
             string ChaptersPath = $"{StoryPath}/Chapters";
+            string CharacterPath = $"{CharactersPath}/{paramOrginalCharcterName}.csv";
 
-            // Add Character to file
-            string CharacterName = OrchestratorMethods.SanitizeFileName(paramOrginalCharcterName);
+            if (character.CharacterName.Trim() != "")
+            {
+                // Loops through every Chapter and Paragraph and update the Character
+                var Chapters = GetChapters(character.Story);
 
-            // Create Character file
-            string CharacterPath = $"{CharactersPath}/{CharacterName}.csv";
+                foreach (var Chapter in Chapters)
+                {
+                    var Paragraphs = GetParagraphs(Chapter);
+
+                    foreach (var Paragraph in Paragraphs)
+                    {
+                        // Create the path to the Paragraph file
+                        var ChapterNameParts = Chapter.ChapterName.Split(' ');
+                        string ChapterName = ChapterNameParts[0] + ChapterNameParts[1];
+                        string ParagraphPath = $"{StoryPath}/Chapters/{ChapterName}/Paragraph{Paragraph.Sequence}.txt";
+
+                        // Get the ParagraphContent from the file
+                        string[] ParagraphContent = File.ReadAllLines(ParagraphPath);
+
+                        // Remove all empty lines
+                        ParagraphContent = ParagraphContent.Where(line => line.Trim() != "").ToArray();
+
+                        // Get the file as an array
+                        string[] ParagraphArray = ParagraphContent[0].Split('|');
+
+                        // Remove the [ and ] from the array
+                        ParagraphArray[2] = ParagraphArray[2].Replace("[", "");
+                        ParagraphArray[2] = ParagraphArray[2].Replace("]", "");
+
+                        // Get the Character array from the file
+                        string[] ParagraphCharacters = ParagraphArray[2].Split(',');
+
+                        // Loop through each Character to see if the Character is the one to delete
+                        for (int i = 0; i < ParagraphCharacters.Length; i++)
+                        {
+                            // If the Character is the one to update, then set it to new name
+                            if (ParagraphCharacters[i] == paramOrginalCharcterName)
+                            {
+                                // Remove the Character
+                                ParagraphCharacters[i] = "";
+                            }
+                        }
+
+                        // Create an array of Characters that are not empty
+                        ParagraphCharacters = ParagraphCharacters.Where(x => !string.IsNullOrEmpty(x)).ToArray();
+
+                        // Put the ParagraphCharacters back together
+                        string ParagraphCharacterString = string.Join(",", ParagraphCharacters);
+
+                        // Put the [ and ] back on the array
+                        ParagraphCharacterString = "[" + ParagraphCharacterString + "]";
+
+                        // Set the Character array back to the ParagraphArray
+                        ParagraphArray[2] = ParagraphCharacterString;
+
+                        // Put the ParagraphContent back together
+                        ParagraphContent[0] = string.Join("|", ParagraphArray);
+
+                        // Write the ParagraphContent back to the file
+                        File.WriteAllLines(ParagraphPath, ParagraphContent);
+                    }
+                }
+
+                // Delete the Character file
+                File.Delete(CharacterPath);
+            }
         }
 
         public void UpdateCharacterName(Character character, string paramOrginalCharcterName)
