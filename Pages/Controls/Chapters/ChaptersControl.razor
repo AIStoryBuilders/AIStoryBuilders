@@ -117,10 +117,19 @@
             newChapter.Id = -1; // So we know it is new
             newChapter.Story = objStory;
 
+            // Compute the next Chapter Number
+            int NewChapterNumber = 1;
+            if (colChapters.Count > 0) 
+            {
+                NewChapterNumber = colChapters.Count + 1;
+            }
+ 
+            string ChapterName = "Chapter " + NewChapterNumber.ToString();
+
             var EditStoryResult = await dialogService.OpenAsync(
-                "New Chapter", ds =>
+            ChapterName, ds =>
                 @<ChaptersEdit objChapter=newChapter DialogReference="ds"></ChaptersEdit>
-                , new DialogOptions() { Height = "500px", Width = "650px" });
+                , new DialogOptions() { Height = "300px", Width = "650px" });
 
             await LoadChapters(objStory);
 

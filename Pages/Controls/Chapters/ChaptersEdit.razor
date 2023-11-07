@@ -8,12 +8,13 @@
 <RadzenRow Gap="1rem">
     <RadzenColumn Size="12" SizeSM="12">
         <RadzenStack>
-            <RadzenFormField Text="Chapter Name:" Variant=Variant.Outlined>
-                <RadzenTextBox @bind-Value="@objChapter.ChapterName" />
+            <RadzenFormField Text="Synopsis:" Variant=Variant.Outlined>
+                <RadzenTextArea @bind-Value="@objChapter.Synopsis" MaxLength="1000" Rows="4" />
             </RadzenFormField>
         </RadzenStack>
     </RadzenColumn>
 </RadzenRow>
+
 <br />
 <br />
 <div class="row">
