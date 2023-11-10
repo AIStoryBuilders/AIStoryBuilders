@@ -46,6 +46,7 @@ namespace AIStoryBuilders.Services
                 return new List<Story>();
             }
         }
+
         public async Task AddStory(Story story)
         {
             // Create Characters, Chapters, Timelines, and Locations sub folders
@@ -1412,19 +1413,19 @@ namespace AIStoryBuilders.Services
             }
         }
 
-        //public async Task<Chapter> GetChapterAsync(int id)
-        //{
-        //    // Get Chapter
-        //    return await _context.Chapter.FindAsync(id);
-        //}
+        public async Task AddChapterAsync(Chapter objChapter, string ChapterName)
+        {
+            var AIStoryBuildersChaptersPath = $"{BasePath}/{objChapter.Story.Title}/Chapters";
 
-        //public async Task<Chapter> AddChapterAsync(Chapter chapter)
-        //{
-        //    // Add Chapter
-        //    _context.Chapter.Add(chapter);
-        //    await _context.SaveChangesAsync();
-        //    return chapter;
-        //}
+            // Create the Chapter folder
+            string ChapterPath = $"{AIStoryBuildersChaptersPath}/{ChapterName}";
+            Directory.CreateDirectory(ChapterPath);
+
+            // Create the Chapter file
+            string ChapterFilePath = $"{ChapterPath}/{ChapterName}.txt";
+            string ChapterSynopsisAndEmbedding = await OrchestratorMethods.GetVectorEmbedding(objChapter.Synopsis, true);
+            File.WriteAllText(ChapterFilePath, $"{ChapterSynopsisAndEmbedding}");
+        }
 
         //public async Task<Chapter> UpdateChapterAsync(Chapter chapter)
         //{

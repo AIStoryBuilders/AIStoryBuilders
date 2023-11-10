@@ -67,7 +67,7 @@
             AIStoryBuildersService = (AIStoryBuildersService)ScopedServices.GetService(typeof(AIStoryBuildersService));
             OrchestratorMethods = (OrchestratorMethods)ScopedServices.GetService(typeof(OrchestratorMethods));
 
-            await LoadChapters(objStory);
+            await LoadChapters(objStory, null);
         }
         catch (Exception ex)
         {
@@ -81,15 +81,30 @@
         }
     }
 
-    public async Task LoadChapters(Story paramStory)
+    public async Task LoadChapters(Story paramStory, string paramSelectedChapter)
     {
         colChapters = AIStoryBuildersService.GetChapters(paramStory);
 
         if (colChapters.Count > 0)
         {
-            SelectedChapter = colChapters.FirstOrDefault();
+            if (paramSelectedChapter != null)
+            {
+                // Put in a space after the word Chapter
+                paramSelectedChapter = paramSelectedChapter.Insert(7, " ");
 
-            await LoadParagraphs(SelectedChapter);
+                // Select the SelectedChapter chapter in the dropdown
+                SelectedChapter = colChapters.Where(x => x.ChapterName == paramSelectedChapter).FirstOrDefault();
+            }
+            else
+            {
+                // Select the first chapter in the dropdown
+                SelectedChapter = colChapters.FirstOrDefault();
+            }
+
+            if (SelectedChapter != null)
+            {
+                await LoadParagraphs(SelectedChapter);
+            }
         }
     }
 
@@ -124,14 +139,14 @@
                 NewChapterNumber = colChapters.Count + 1;
             }
  
-            string ChapterName = "Chapter " + NewChapterNumber.ToString();
+            string strChapterName = "Chapter" + NewChapterNumber.ToString();
 
             var EditStoryResult = await dialogService.OpenAsync(
-            ChapterName, ds =>
-                @<ChaptersEdit objChapter=newChapter DialogReference="ds"></ChaptersEdit>
-                , new DialogOptions() { Height = "300px", Width = "650px" });
+                strChapterName, ds =>
+                @<ChaptersEdit objChapter=@newChapter ChapterName=@strChapterName DialogReference="ds">
+                </ChaptersEdit>, new DialogOptions() { Height = "300px", Width = "650px" });
 
-            await LoadChapters(objStory);
+            await LoadChapters(objStory, EditStoryResult);
 
             StateHasChanged();
         }

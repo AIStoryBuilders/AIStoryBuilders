@@ -31,6 +31,7 @@
 </div>
 @code {
     [Parameter] public Chapter objChapter { get; set; }
+    [Parameter] public string ChapterName { get; set; }
     [Parameter] public DialogService DialogReference { get; set; }
 
     AIStoryBuildersService AIStoryBuildersService;
@@ -55,52 +56,22 @@
         }
     }
 
-    private void ChapterSave()
+    private async Task ChapterSave()
     {
         try
         {
-            if (objChapter.ChapterName != null)
+            if (objChapter.Id == -1)
             {
-                if (objChapter.ChapterName.Length < 1)
-                {
-                    NotificationService.Notify(
-                    new NotificationMessage
-                        {
-                            Severity = NotificationSeverity.Error,
-                            Summary = "Error",
-                            Detail = "Chapter Name is required",
-                            Duration = 4000
-                        });
-                    return;
-                }
-                else
-                {
-                    if (objChapter.Id == -1)
-                    {
-                        // Add to the database
-                        //await Service.AddChapterAsync(objChapter);
-                    }
-                    else
-                    {
-                        // Save to the database
-                        //await Service.UpdateChapterAsync(objChapter);
-                    }
-
-                    DialogService.Close(null);
-                }
+                // Add the chapter
+                await AIStoryBuildersService.AddChapterAsync(objChapter, ChapterName);
             }
             else
             {
-                NotificationService.Notify(
-                new NotificationMessage
-                    {
-                        Severity = NotificationSeverity.Error,
-                        Summary = "Error",
-                        Detail = "Chapter Name is required",
-                        Duration = 4000
-                    });
-                return;
+                // Save to the database
+                //AIStoryBuildersService.UpdateChapterAsync(objChapter);
             }
+
+            DialogService.Close(ChapterName);
         }
         catch (Exception ex)
         {
@@ -125,7 +96,7 @@
             if (confirmResult.HasValue && confirmResult.Value)
             {
                 // Delete from the database
-                //await Service.DeleteChapterAsync(objChapter.Id);
+                // AIStoryBuildersService.DeleteChapterAsync(objChapter.Id);
 
                 DialogService.Close(null);
             }
