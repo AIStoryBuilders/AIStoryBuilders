@@ -21,12 +21,7 @@
     <div class="col">
         <RadzenButton Text="Save" ButtonStyle="ButtonStyle.Success"
                       Click="ChapterSave"
-                      Style="margin-bottom: 10px; width: 150px" />&nbsp;&nbsp;
-        @if (objChapter.Id > 0)
-        {
-            <RadzenButton Text="Delete" ButtonStyle="ButtonStyle.Danger"
-                          Click="ChapterDelete" />
-        }
+                      Style="margin-bottom: 10px; width: 150px" />
     </div>
 </div>
 @code {
@@ -60,37 +55,39 @@
     {
         try
         {
-            // Add the chapter
-            await AIStoryBuildersService.AddChapterAsync(objChapter, ChapterName);
+            if (objChapter.Synopsis != null)
+            {
+                if (objChapter.Synopsis.Length < 1)
+                {
+                    NotificationService.Notify(
+                    new NotificationMessage
+                        {
+                            Severity = NotificationSeverity.Error,
+                            Summary = "Error",
+                            Detail = "Synopsis is required",
+                            Duration = 4000
+                        });
+                    return;
+                }
+                else
+                {
+                    // Add the chapter
+                    await AIStoryBuildersService.AddChapterAsync(objChapter, ChapterName);
 
-            DialogService.Close(ChapterName);
-        }
-        catch (Exception ex)
-        {
-            NotificationService.Notify(new NotificationMessage
+                    DialogService.Close(ChapterName);
+                }
+            }
+            else
+            {
+                NotificationService.Notify(
+                new NotificationMessage
                 {
                     Severity = NotificationSeverity.Error,
                     Summary = "Error",
-                    Detail = ex.Message,
+                    Detail = "Synopsis is required",
                     Duration = 4000
                 });
-        }
-    }
-
-    private async Task ChapterDelete()
-    {
-        try
-        {
-            // Ask for confirmation:
-            var confirmResult = await DialogService.Confirm("Are you sure?", "Delete Chapter",
-                  new ConfirmOptions() { OkButtonText = "Yes", CancelButtonText = "No" });
-
-            if (confirmResult.HasValue && confirmResult.Value)
-            {
-                // Delete from the database
-                // AIStoryBuildersService.DeleteChapterAsync(objChapter.Id);
-
-                DialogService.Close(null);
+                return;
             }
         }
         catch (Exception ex)
@@ -103,5 +100,5 @@
                     Duration = 4000
                 });
         }
-    }
+    }    
 }

@@ -1415,6 +1415,11 @@ namespace AIStoryBuilders.Services
 
         public async Task AddChapterAsync(Chapter objChapter, string ChapterName)
         {
+            if(objChapter.Synopsis == null)
+            {
+                objChapter.Synopsis = " ";
+            }
+
             var AIStoryBuildersChaptersPath = $"{BasePath}/{objChapter.Story.Title}/Chapters";
 
             // Create the Chapter folder
@@ -1438,14 +1443,16 @@ namespace AIStoryBuilders.Services
             File.WriteAllText(ChapterFilePath, $"{ChapterSynopsisAndEmbedding}");
         }
 
-        //public async Task<Chapter> DeleteChapterAsync(int id)
-        //{
-        //    // Delete Chapter
-        //    var chapter = await _context.Chapter.FindAsync(id);
-        //    _context.Chapter.Remove(chapter);
-        //    await _context.SaveChangesAsync();
-        //    return chapter;
-        //}
+        public void DeleteChapter(Chapter objChapter)
+        {
+            // Delete Chapter
+            string ChapterName = objChapter.ChapterName.Replace(" ", "");
+            var AIStoryBuildersChaptersPath = $"{BasePath}/{objChapter.Story.Title}/Chapters";
+            string ChapterPath = $"{AIStoryBuildersChaptersPath}/{ChapterName}";
+
+            // Delete folder
+            Directory.Delete(ChapterPath, true);
+        }
         #endregion
 
         #region *** Paragraph ***

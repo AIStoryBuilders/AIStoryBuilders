@@ -157,7 +157,8 @@
             var EditStoryResult = await dialogService.OpenAsync(
             strChapterName.Insert(7, " "), ds =>
                 @<ChaptersEdit objChapter=@newChapter ChapterName=@strChapterName DialogReference="ds">
-                </ChaptersEdit>, new DialogOptions() { Height = "300px", Width = "650px" });
+                </ChaptersEdit>
+                , new DialogOptions() { Height = "300px", Width = "650px" });
 
             await LoadChapters(objStory, EditStoryResult);
 
@@ -202,9 +203,47 @@
         }
     }
 
-    private void ChapterDelete()
+    private async Task ChapterDelete()
     {
+        try
+        {
+            // Ask for confirmation:
+            var confirmResult = await dialogService.Confirm("Are you sure?", $"Delete {SelectedChapter.ChapterName}?",
+                  new ConfirmOptions() { OkButtonText = "Yes", CancelButtonText = "No" });
 
+            if (confirmResult.HasValue && confirmResult.Value)
+            {
+                // Delete
+                AIStoryBuildersService.DeleteChapter(SelectedChapter);
+
+                // Find the previous chapter
+                var PreviousChapter = colChapters.Where(x => x.ChapterName != SelectedChapter.ChapterName).LastOrDefault();
+
+                if (PreviousChapter != null)
+                {
+                    // Load the previous chapter
+                    string ChapterName = PreviousChapter.ChapterName.Replace(" ", "");
+                    await LoadChapters(objStory, ChapterName);
+                }
+                else
+                {
+                    // Load the first chapter
+                    await LoadChapters(objStory, null);
+                }
+
+                StateHasChanged();
+            }
+        }
+        catch (Exception ex)
+        {
+            NotificationService.Notify(new NotificationMessage
+                {
+                    Severity = NotificationSeverity.Error,
+                    Summary = "Error",
+                    Detail = ex.Message,
+                    Duration = 4000
+                });
+        }
     }
 
     private async Task OnChapterChanged()
