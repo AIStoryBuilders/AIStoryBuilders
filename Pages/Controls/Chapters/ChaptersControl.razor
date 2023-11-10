@@ -11,8 +11,11 @@
                       Click=@(() => NewChapter()) />&nbsp;&nbsp;
         <RadzenButton Text="Save" ButtonStyle="ButtonStyle.Success"
                       Click="ChapterSave" />&nbsp;&nbsp;
-        <RadzenButton Text="Delete" ButtonStyle="ButtonStyle.Danger"
-                      Click="ChapterDelete" />
+        @if (HighestChapter)
+        {
+            <RadzenButton Text="Delete" ButtonStyle="ButtonStyle.Danger"
+            Click="ChapterDelete" />
+        }
     </div>
 </div>
 <br />
@@ -59,6 +62,7 @@
     Paragraph SelectedParagraph = new Paragraph();
 
     string SelectedCharacter = "";
+    bool HighestChapter = false;
 
     protected override async Task OnInitializedAsync()
     {
@@ -122,6 +126,15 @@
         {
             SelectedParagraph = colParagraphs.FirstOrDefault();
         }
+
+        if (colChapters.Count == SelectedChapter.Sequence)
+        {
+            HighestChapter = true;
+        }
+        else
+        {
+            HighestChapter = false;
+        }
     }
 
     private async Task NewChapter()
@@ -142,7 +155,7 @@
             string strChapterName = "Chapter" + NewChapterNumber.ToString();
 
             var EditStoryResult = await dialogService.OpenAsync(
-                strChapterName, ds =>
+            strChapterName.Insert(7, " "), ds =>
                 @<ChaptersEdit objChapter=@newChapter ChapterName=@strChapterName DialogReference="ds">
                 </ChaptersEdit>, new DialogOptions() { Height = "300px", Width = "650px" });
 
@@ -162,9 +175,31 @@
         }
     }
 
-    private void ChapterSave()
+    private async Task ChapterSave()
     {
+        try
+        {
+            // Update the chapter
+            await AIStoryBuildersService.UpdateChapterAsync(SelectedChapter);
 
+            NotificationService.Notify(new NotificationMessage
+                {
+                    Severity = NotificationSeverity.Success,
+                    Summary = "Update",
+                    Detail = "Saved",
+                    Duration = 2000
+                });
+        }
+        catch (Exception ex)
+        {
+            NotificationService.Notify(new NotificationMessage
+                {
+                    Severity = NotificationSeverity.Error,
+                    Summary = "Error",
+                    Detail = ex.Message,
+                    Duration = 4000
+                });
+        }
     }
 
     private void ChapterDelete()

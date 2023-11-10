@@ -1427,13 +1427,16 @@ namespace AIStoryBuilders.Services
             File.WriteAllText(ChapterFilePath, $"{ChapterSynopsisAndEmbedding}");
         }
 
-        //public async Task<Chapter> UpdateChapterAsync(Chapter chapter)
-        //{
-        //    // Update Chapter
-        //    _context.Entry(chapter).State = EntityState.Modified;
-        //    await _context.SaveChangesAsync();
-        //    return chapter;
-        //}
+        public async Task UpdateChapterAsync(Chapter objChapter)
+        {
+            string ChapterName = objChapter.ChapterName.Replace(" ", "");
+            var AIStoryBuildersChaptersPath = $"{BasePath}/{objChapter.Story.Title}/Chapters";
+            string ChapterPath = $"{AIStoryBuildersChaptersPath}/{ChapterName}";
+            string ChapterFilePath = $"{ChapterPath}/{ChapterName}.txt";
+
+            string ChapterSynopsisAndEmbedding = await OrchestratorMethods.GetVectorEmbedding(objChapter.Synopsis, true);
+            File.WriteAllText(ChapterFilePath, $"{ChapterSynopsisAndEmbedding}");
+        }
 
         //public async Task<Chapter> DeleteChapterAsync(int id)
         //{
