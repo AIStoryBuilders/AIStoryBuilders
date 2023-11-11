@@ -1,0 +1,49 @@
+﻿@using AIStoryBuilders.Model;
+@using AIStoryBuilders.Models;
+@using AIStoryBuilders.Pages.Controls;
+@using AIStoryBuilders.Services;
+@inherits OwningComponentBase
+@inject DialogService dialogService
+@inject NotificationService NotificationService
+@if(!InEditMode)
+{
+    <div id="ParagraphDiv" @onclick="onClickParagraph">
+        <span>@objParagraph.ParagraphContent</span>
+    </div>
+}
+else
+{
+    <RadzenTextArea @bind-Value="@objParagraph.ParagraphContent" MaxLength="1000" Rows="12" Style="width:100%;height:100%" />
+}
+
+@code {
+    [Parameter] public Paragraph objParagraph { get; set; }
+    AIStoryBuildersService AIStoryBuildersService;
+    OrchestratorMethods OrchestratorMethods;
+
+    bool InEditMode = false;
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            AIStoryBuildersService = (AIStoryBuildersService)ScopedServices.GetService(typeof(AIStoryBuildersService));
+            OrchestratorMethods = (OrchestratorMethods)ScopedServices.GetService(typeof(OrchestratorMethods));
+        }
+        catch (Exception ex)
+        {
+            NotificationService.Notify(new NotificationMessage
+                {
+                    Severity = NotificationSeverity.Error,
+                    Summary = "Error",
+                    Detail = ex.Message,
+                    Duration = 4000
+                });
+        }
+    }
+
+    private void onClickParagraph()
+    {
+        InEditMode = true;
+    }
+}

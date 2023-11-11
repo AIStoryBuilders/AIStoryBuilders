@@ -194,7 +194,7 @@
             parms.Add("objStory", paramStory);
 
             var EditStoryResult = await dialogService.OpenAsync<StoryControl>($"{paramStory.Title}", parms,
-            new DialogOptions() { Height = "700px", Width = "800px" });
+            new DialogOptions() { Height = "720px", Width = "800px" });
 
             colStorys = AIStoryBuildersService.GetStorys();
 

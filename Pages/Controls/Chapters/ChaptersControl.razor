@@ -1,6 +1,7 @@
 ﻿@using AIStoryBuilders.Model;
 @using AIStoryBuilders.Models;
 @using AIStoryBuilders.Pages.Controls;
+@using AIStoryBuilders.Pages.Controls.Paragraphs
 @using AIStoryBuilders.Services;
 @inherits OwningComponentBase
 @inject DialogService dialogService
@@ -32,20 +33,11 @@
     </RadzenColumn>
 </RadzenRow>
 <br />
-<RadzenDataList @ref=objDatalist AllowVirtualization=false Style="height:300px;overflow:auto;"
+<RadzenDataList @ref=objDatalist AllowVirtualization=false Style="height:320px;overflow:auto;"
                 WrapItems=false AllowPaging=false
                 Data="@colParagraphs" TItem="Paragraph">
     <Template Context="paragraph">
-        @if (paragraph.Sequence == 2)
-        {
-            <RadzenTextArea @bind-Value="@(paragraph.ParagraphContent)" MaxLength="1000" Rows="3" Style="width: 100%;" />
-            <br />
-            <span>Characters: <RadzenDropDown Data=paragraph.Characters @bind-Value="@SelectedCharacter" /></span>
-        }
-        else
-        {
-            <RadzenText>@(paragraph.ParagraphContent)</RadzenText>
-        }
+            <ParagraphEdit objParagraph=@paragraph />
     </Template>
 </RadzenDataList>
 @code {
