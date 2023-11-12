@@ -13,37 +13,48 @@
 }
 else
 {
+    <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" Gap="1rem" Wrap="FlexWrap.Wrap" Style="margin-bottom:10px" >
+        <RadzenSpeechToTextButton Change="@(args => OnSpeechCaptured(args, false, "TextToSpeech"))"  />
+        <RadzenButton Click="onClickClose" Icon="privacy_tip" ButtonStyle="ButtonStyle.Warning" Size="ButtonSize.Medium" />
+
+        <RadzenButton Click="onClickClose" Text="Characters" ButtonStyle="ButtonStyle.Light" Size="ButtonSize.Medium" />
+        <RadzenButton Click="onClickClose" Text="Location" ButtonStyle="ButtonStyle.Light" Size="ButtonSize.Medium" />
+        <RadzenButton Click="onClickClose" Text="Timeline" ButtonStyle="ButtonStyle.Light" Size="ButtonSize.Medium" />
+
+        <RadzenButton Click="onClickClose" Icon="check_circle" ButtonStyle="ButtonStyle.Success" Size="ButtonSize.Medium" />
+        <RadzenButton Click="onClickClose" Icon="delete" ButtonStyle="ButtonStyle.Danger" Size="ButtonSize.Medium" />
+        <RadzenButton Click="onClickClose" Icon="exit_to_app" ButtonStyle="ButtonStyle.Primary" Size="ButtonSize.Medium" />
+    </RadzenStack>    
+
     <RadzenTextArea @bind-Value="@objParagraph.ParagraphContent" MaxLength="1000" Rows="12" Style="width:100%;height:100%" />
+    <br>
+    <RadzenDropDown Data=@colCharacters TValue=Character TextProperty="CharacterName" />
+    <RadzenDropDown Data=@colLocations TValue=Location TextProperty="LocationName" />
+    <RadzenDropDown Data=@colTimelines TValue=Timeline TextProperty="TimelineName" />
 }
 
 @code {
     [Parameter] public Paragraph objParagraph { get; set; }
-    AIStoryBuildersService AIStoryBuildersService;
-    OrchestratorMethods OrchestratorMethods;
+    [Parameter] public List<Character> colCharacters { get; set; }
+    [Parameter] public List<Location> colLocations { get; set; }
+    [Parameter] public List<Timeline> colTimelines { get; set; }
 
     bool InEditMode = false;
 
-    protected override async Task OnInitializedAsync()
-    {
-        try
-        {
-            AIStoryBuildersService = (AIStoryBuildersService)ScopedServices.GetService(typeof(AIStoryBuildersService));
-            OrchestratorMethods = (OrchestratorMethods)ScopedServices.GetService(typeof(OrchestratorMethods));
-        }
-        catch (Exception ex)
-        {
-            NotificationService.Notify(new NotificationMessage
-                {
-                    Severity = NotificationSeverity.Error,
-                    Summary = "Error",
-                    Detail = ex.Message,
-                    Duration = 4000
-                });
-        }
-    }
+    // Events
 
     private void onClickParagraph()
     {
         InEditMode = true;
+    }
+
+    private void onClickClose()
+    {
+        InEditMode = false;
+    }
+
+    void OnSpeechCaptured(string speechValue, bool updateTextArea, string name)
+    {
+
     }
 }

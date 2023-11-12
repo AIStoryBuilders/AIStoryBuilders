@@ -1479,7 +1479,7 @@ namespace AIStoryBuilders.Services
                     // Put in a space after the word ParagraphName
                     ParagraphName = ParagraphName.Insert(9, " ");
 
-                    // Get sequence number from folder name
+                    // Get sequence number from Paragraph Name
                     string ParagraphSequence = ParagraphName.Split(' ')[1];
                     int ParagraphSequenceNumber = int.Parse(ParagraphSequence);
 

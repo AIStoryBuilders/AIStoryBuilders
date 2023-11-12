@@ -15,7 +15,7 @@
         @if (HighestChapter)
         {
             <RadzenButton Text="Delete" ButtonStyle="ButtonStyle.Danger"
-            Click="ChapterDelete" />
+                          Click="ChapterDelete" />
         }
     </div>
 </div>
@@ -37,7 +37,7 @@
                 WrapItems=false AllowPaging=false
                 Data="@colParagraphs" TItem="Paragraph">
     <Template Context="paragraph">
-            <ParagraphEdit objParagraph=@paragraph />
+        <ParagraphEdit objParagraph=@paragraph colCharacters=@colAllCharacters colLocations=@colAllLocations colTimelines=@colAllTimelines />
     </Template>
 </RadzenDataList>
 @code {
@@ -51,9 +51,11 @@
     List<Chapter> colChapters = new List<Chapter>();
     List<Paragraph> colParagraphs = new List<Paragraph>();
     Chapter SelectedChapter = new Chapter();
-    Paragraph SelectedParagraph = new Paragraph();
 
-    string SelectedCharacter = "";
+    List<Character> colAllCharacters { get; set; }
+    List<Location> colAllLocations { get; set; }
+    List<Timeline> colAllTimelines { get; set; }
+
     bool HighestChapter = false;
 
     protected override async Task OnInitializedAsync()
@@ -68,12 +70,12 @@
         catch (Exception ex)
         {
             NotificationService.Notify(new NotificationMessage
-                {
-                    Severity = NotificationSeverity.Error,
-                    Summary = "Error",
-                    Detail = ex.Message,
-                    Duration = 4000
-                });
+                    {
+                        Severity = NotificationSeverity.Error,
+                        Summary = "Error",
+                        Detail = ex.Message,
+                        Duration = 4000
+                    });
         }
     }
 
@@ -106,17 +108,21 @@
 
     public async Task LoadParagraphs(Chapter paramChapter)
     {
+        // Load colAllCharacters
+        colAllCharacters = AIStoryBuildersService.GetCharacters(objStory);
+
+        // Load colAllLocations
+        colAllLocations = AIStoryBuildersService.GetLocations(objStory);
+
+        // Load colAllTimelines
+        colAllTimelines = AIStoryBuildersService.GetTimelines(objStory);
+
         colParagraphs = AIStoryBuildersService.GetParagraphs(paramChapter);
 
         if (objDatalist != null)
         {
             await objDatalist.Reload();
             dialogService.Refresh();
-        }
-
-        if (colParagraphs.Count > 0)
-        {
-            SelectedParagraph = colParagraphs.FirstOrDefault();
         }
 
         if (colChapters.Count == SelectedChapter.Sequence)
@@ -139,18 +145,18 @@
 
             // Compute the next Chapter Number
             int NewChapterNumber = 1;
-            if (colChapters.Count > 0) 
+            if (colChapters.Count > 0)
             {
                 NewChapterNumber = colChapters.Count + 1;
             }
- 
+
             string strChapterName = "Chapter" + NewChapterNumber.ToString();
 
             var EditStoryResult = await dialogService.OpenAsync(
-            strChapterName.Insert(7, " "), ds =>
-                @<ChaptersEdit objChapter=@newChapter ChapterName=@strChapterName DialogReference="ds">
-                </ChaptersEdit>
-                , new DialogOptions() { Height = "300px", Width = "650px" });
+        strChapterName.Insert(7, " "), ds =>
+    @<ChaptersEdit objChapter=@newChapter ChapterName=@strChapterName DialogReference="ds">
+    </ChaptersEdit>
+        , new DialogOptions() { Height = "300px", Width = "650px" });
 
             await LoadChapters(objStory, EditStoryResult);
 
