@@ -153,10 +153,10 @@
             string strChapterName = "Chapter" + NewChapterNumber.ToString();
 
             var EditStoryResult = await dialogService.OpenAsync(
-        strChapterName.Insert(7, " "), ds =>
-    @<ChaptersEdit objChapter=@newChapter ChapterName=@strChapterName DialogReference="ds">
-    </ChaptersEdit>
-        , new DialogOptions() { Height = "300px", Width = "650px" });
+                strChapterName.Insert(7, " "), ds =>
+                @<ChaptersEdit objChapter=@newChapter ChapterName=@strChapterName DialogReference="ds">
+                </ChaptersEdit>
+                , new DialogOptions() { Height = "300px", Width = "650px" });
 
             await LoadChapters(objStory, EditStoryResult);
 

@@ -1,6 +1,7 @@
 ﻿@using AIStoryBuilders.Model;
 @using AIStoryBuilders.Models;
 @using AIStoryBuilders.Pages.Controls;
+@using AIStoryBuilders.Pages.Controls.Characters
 @using AIStoryBuilders.Services;
 @inherits OwningComponentBase
 @inject DialogService dialogService
@@ -17,7 +18,7 @@ else
         <RadzenSpeechToTextButton Change="@(args => OnSpeechCaptured(args, false, "TextToSpeech"))"  />
         <RadzenButton Click="onClickClose" Icon="privacy_tip" ButtonStyle="ButtonStyle.Warning" Size="ButtonSize.Medium" />
 
-        <RadzenButton Click="onClickClose" Text="Characters" ButtonStyle="ButtonStyle.Light" Size="ButtonSize.Medium" />
+        <RadzenButton Click="onClickCharacter" Text="Characters" ButtonStyle="ButtonStyle.Light" Size="ButtonSize.Medium" />
         <RadzenButton Click="onClickClose" Text="Location" ButtonStyle="ButtonStyle.Light" Size="ButtonSize.Medium" />
         <RadzenButton Click="onClickClose" Text="Timeline" ButtonStyle="ButtonStyle.Light" Size="ButtonSize.Medium" />
 
@@ -51,6 +52,18 @@ else
     private void onClickClose()
     {
         InEditMode = false;
+    }
+
+    private async Task onClickCharacter()
+    {
+        // Turn objParagraph.Characters into a list of strings
+        var CharacterList = objParagraph.Characters.Select(c => c.CharacterName).ToList();
+
+         var EditStoryResult = await dialogService.OpenAsync(
+             "Character Edit", ds =>
+             @<CharacterSelecter colCharacters="@colCharacters" SelectedCharacters="@CharacterList" DialogReference="ds">
+             </CharacterSelecter>
+             , new DialogOptions() { Height = "250px", Width = "500px" });
     }
 
     void OnSpeechCaptured(string speechValue, bool updateTextArea, string name)
