@@ -1,0 +1,19 @@
+﻿@using AIStoryBuilders.Models;
+<div class="rz-text-align-center">
+    <RadzenDropDown Data=@colLocations @bind-Value="@SelectedLocation" />
+</div>
+<br />
+<div class="rz-text-align-center">
+    <RadzenButton Text="Close" ButtonStyle="ButtonStyle.Secondary"
+                  Click=@CloseDialog />
+</div>
+@code {
+    [Parameter] public IEnumerable<string> colLocations { get; set; }
+    [Parameter] public DialogService DialogReference { get; set; }
+    [Parameter] public string SelectedLocation { get; set; }
+
+    private void CloseDialog()
+    {
+        DialogReference.Close();
+    }
+}

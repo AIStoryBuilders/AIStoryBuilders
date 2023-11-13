@@ -6,7 +6,7 @@
 @inherits OwningComponentBase
 @inject DialogService dialogService
 @inject NotificationService NotificationService
-@if(!InEditMode)
+@if (!InEditMode)
 {
     <div id="ParagraphDiv" @onclick="onClickParagraph">
         <span>@objParagraph.ParagraphContent</span>
@@ -14,24 +14,20 @@
 }
 else
 {
-    <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" Gap="1rem" Wrap="FlexWrap.Wrap" Style="margin-bottom:10px" >
-        <RadzenSpeechToTextButton Change="@(args => OnSpeechCaptured(args, false, "TextToSpeech"))"  />
+    <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" Gap="1rem" Wrap="FlexWrap.Wrap" Style="margin-bottom:10px">
+        <RadzenSpeechToTextButton Change="@(args => OnSpeechCaptured(args, false, "TextToSpeech"))" />
         <RadzenButton Click="onClickClose" Icon="privacy_tip" ButtonStyle="ButtonStyle.Warning" Size="ButtonSize.Medium" />
 
         <RadzenButton Click="onClickCharacter" Text="Characters" ButtonStyle="ButtonStyle.Light" Size="ButtonSize.Medium" />
-        <RadzenButton Click="onClickClose" Text="Location" ButtonStyle="ButtonStyle.Light" Size="ButtonSize.Medium" />
-        <RadzenButton Click="onClickClose" Text="Timeline" ButtonStyle="ButtonStyle.Light" Size="ButtonSize.Medium" />
+        <RadzenButton Click="onClickLocation" Text="Location" ButtonStyle="ButtonStyle.Light" Size="ButtonSize.Medium" />
+        <RadzenButton Click="onClickTimeline" Text="Timeline" ButtonStyle="ButtonStyle.Light" Size="ButtonSize.Medium" />
 
-        <RadzenButton Click="onClickClose" Icon="check_circle" ButtonStyle="ButtonStyle.Success" Size="ButtonSize.Medium" />
-        <RadzenButton Click="onClickClose" Icon="delete" ButtonStyle="ButtonStyle.Danger" Size="ButtonSize.Medium" />
+        <RadzenButton Click="onClickSave" Text="Save" Icon="check_circle" ButtonStyle="ButtonStyle.Success" Size="ButtonSize.Medium" />
+        <RadzenButton Click="onClickDelete" Icon="delete" ButtonStyle="ButtonStyle.Danger" Size="ButtonSize.Medium" />
         <RadzenButton Click="onClickClose" Icon="exit_to_app" ButtonStyle="ButtonStyle.Primary" Size="ButtonSize.Medium" />
-    </RadzenStack>    
+    </RadzenStack>
 
     <RadzenTextArea @bind-Value="@objParagraph.ParagraphContent" MaxLength="1000" Rows="12" Style="width:100%;height:100%" />
-    <br>
-    <RadzenDropDown Data=@colCharacters TValue=Character TextProperty="CharacterName" />
-    <RadzenDropDown Data=@colLocations TValue=Location TextProperty="LocationName" />
-    <RadzenDropDown Data=@colTimelines TValue=Timeline TextProperty="TimelineName" />
 }
 
 @code {
@@ -56,18 +52,107 @@ else
 
     private async Task onClickCharacter()
     {
-        // Turn objParagraph.Characters into a list of strings
-        var CharacterList = objParagraph.Characters.Select(c => c.CharacterName).ToList();
+        // Turn colCharacters into a list of strings
+        var AllCharacterList = colCharacters.Select(c => c.CharacterName).ToList();
 
-         var EditStoryResult = await dialogService.OpenAsync(
-             "Character Edit", ds =>
-             @<CharacterSelecter colCharacters="@colCharacters" SelectedCharacters="@CharacterList" DialogReference="ds">
-             </CharacterSelecter>
-             , new DialogOptions() { Height = "250px", Width = "500px" });
+        // Turn objParagraph.Characters into a list of strings
+        var SelectedCharacterList = objParagraph.Characters.Select(c => c.CharacterName).OrderBy(x => x).ToList();
+
+        var EditStoryResult = await dialogService.OpenAsync(
+         "Select Characters", ds =>
+         @<CharacterSelector colCharacters="@AllCharacterList" SelectedCharacters="@SelectedCharacterList" DialogReference="ds">
+         </CharacterSelector>
+         , new DialogOptions() { Height = "350px", Width = "500px" });
+    }
+
+    private async Task onClickLocation()
+    {
+        // Turn colLocations into a list of strings
+        var AllLocationList = colLocations.Select(c => c.LocationName).OrderBy(x => x).ToList();
+        AllLocationList.Add("");
+
+        // Get SelectedLocation
+        var SelectedLocation = objParagraph.Location.LocationName;
+
+        var EditStoryResult = await dialogService.OpenAsync(
+        "Select Location", ds =>
+        @<LocationSelector colLocations="@AllLocationList" SelectedLocation="@SelectedLocation" DialogReference="ds">
+        </LocationSelector>
+        , new DialogOptions() { Height = "200px", Width = "500px" });
+    }
+
+    private async Task onClickTimeline()
+    {
+        // Turn colTimelines into a list of strings
+        var AllTimelineList = colTimelines.Select(c => c.TimelineName).OrderBy(x => x).ToList();
+        AllTimelineList.Add("");
+
+        // Get SelectedTimeline
+        var SelectedTimeline = objParagraph.Timeline.TimelineName;
+
+        var EditStoryResult = await dialogService.OpenAsync(
+        "Select Timeline", ds =>
+        @<TimelineSelector colTimelines="@AllTimelineList" SelectedTimeline="@SelectedTimeline" DialogReference="ds">
+        </TimelineSelector>
+        , new DialogOptions() { Height = "200px", Width = "500px" });
     }
 
     void OnSpeechCaptured(string speechValue, bool updateTextArea, string name)
     {
 
+    }
+
+    private void onClickSave()
+    {
+        try
+        {
+            // Save
+            InEditMode = false;
+
+            NotificationService.Notify(new NotificationMessage
+                {
+                    Severity = NotificationSeverity.Success,
+                    Summary = "Update",
+                    Detail = "Saved",
+                    Duration = 2000
+                });
+        }
+        catch (Exception ex)
+        {
+            NotificationService.Notify(new NotificationMessage
+                {
+                    Severity = NotificationSeverity.Error,
+                    Summary = "Error",
+                    Detail = ex.Message,
+                    Duration = 4000
+                });
+        }
+    }
+
+    private async Task onClickDelete()
+    {
+        try
+        {
+            // Ask for confirmation:
+            var confirmResult = await dialogService.Confirm("Are you sure?", $"Delete Paragraph",
+                  new ConfirmOptions() { OkButtonText = "Yes", CancelButtonText = "No" });
+
+            if (confirmResult.HasValue && confirmResult.Value)
+            {
+                // Delete
+
+                StateHasChanged();
+            }
+        }
+        catch (Exception ex)
+        {
+            NotificationService.Notify(new NotificationMessage
+                {
+                    Severity = NotificationSeverity.Error,
+                    Summary = "Error",
+                    Detail = ex.Message,
+                    Duration = 4000
+                });
+        }
     }
 }
