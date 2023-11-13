@@ -34,6 +34,8 @@ else
 }
 
 @code {
+    [Parameter] public EventCallback LoadParagraphs { get; set; }
+
     [Parameter] public Paragraph objParagraph { get; set; }
     [Parameter] public Chapter objChapter { get; set; }
     [Parameter] public List<Character> colCharacters { get; set; }
@@ -41,7 +43,6 @@ else
     [Parameter] public List<Timeline> colTimelines { get; set; }
 
     AIStoryBuildersService AIStoryBuildersService;
-    OrchestratorMethods OrchestratorMethods;
 
     bool InEditMode = false;
     bool Deleteable = false;
@@ -51,8 +52,6 @@ else
         try
         {
             AIStoryBuildersService = (AIStoryBuildersService)ScopedServices.GetService(typeof(AIStoryBuildersService));
-            OrchestratorMethods = (OrchestratorMethods)ScopedServices.GetService(typeof(OrchestratorMethods));
-
         }
         catch (Exception ex)
         {
@@ -172,6 +171,8 @@ else
             if (confirmResult.HasValue && confirmResult.Value)
             {
                 // Delete
+                AIStoryBuildersService.DeleteParagraph(objChapter, objParagraph);
+                await LoadParagraphs.InvokeAsync();
 
                 StateHasChanged();
             }

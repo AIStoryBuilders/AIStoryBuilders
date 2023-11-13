@@ -37,11 +37,12 @@
                 WrapItems=false AllowPaging=false
                 Data="@colParagraphs" TItem="Paragraph">
     <Template Context="paragraph">
-        <ParagraphEdit objParagraph=@paragraph objChapter=@SelectedChapter colCharacters=@colAllCharacters colLocations=@colAllLocations colTimelines=@colAllTimelines />
+        <ParagraphEdit LoadParagraphs="@LoadParagraphsHandler" objParagraph=@paragraph objChapter=@SelectedChapter colCharacters=@colAllCharacters colLocations=@colAllLocations colTimelines=@colAllTimelines />
     </Template>
 </RadzenDataList>
 @code {
     [Parameter] public Story objStory { get; set; }
+
     AIStoryBuildersService AIStoryBuildersService;
     OrchestratorMethods OrchestratorMethods;
 
@@ -246,6 +247,11 @@
     }
 
     private async Task OnChapterChanged()
+    {
+        await LoadParagraphs(SelectedChapter);
+    }
+
+    private async Task LoadParagraphsHandler()
     {
         await LoadParagraphs(SelectedChapter);
     }

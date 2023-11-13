@@ -1555,6 +1555,26 @@ namespace AIStoryBuilders.Services
                 return 0;
             }
         }
+
+        public void DeleteParagraph(Chapter chapter, Paragraph Paragraph)
+        {
+            try
+            {
+                var ChapterNameParts = chapter.ChapterName.Split(' ');
+                string ChapterName = ChapterNameParts[0] + ChapterNameParts[1];
+
+                var AIStoryBuildersParagraphsPath = $"{BasePath}/{chapter.Story.Title}/Chapters/{ChapterName}";
+
+                // Delete the Paragraph file
+                string ParagraphPath = $"{AIStoryBuildersParagraphsPath}/Paragraph{Paragraph.Sequence}.txt";
+                File.Delete(ParagraphPath);
+            }
+            catch (Exception ex)
+            {
+                // Log error
+                LogService.WriteToLog(ex.Message);
+            }
+        }
         #endregion
     }
 }
