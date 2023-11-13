@@ -37,7 +37,7 @@
                 WrapItems=false AllowPaging=false
                 Data="@colParagraphs" TItem="Paragraph">
     <Template Context="paragraph">
-        <ParagraphEdit objParagraph=@paragraph colCharacters=@colAllCharacters colLocations=@colAllLocations colTimelines=@colAllTimelines />
+        <ParagraphEdit objParagraph=@paragraph objChapter=@SelectedChapter colCharacters=@colAllCharacters colLocations=@colAllLocations colTimelines=@colAllTimelines />
     </Template>
 </RadzenDataList>
 @code {
@@ -117,6 +117,7 @@
         // Load colAllTimelines
         colAllTimelines = AIStoryBuildersService.GetTimelines(objStory);
 
+        // Load colParagraphs
         colParagraphs = AIStoryBuildersService.GetParagraphs(paramChapter);
 
         if (objDatalist != null)

@@ -23,7 +23,10 @@ else
         <RadzenButton Click="onClickTimeline" Text="Timeline" ButtonStyle="ButtonStyle.Light" Size="ButtonSize.Medium" />
 
         <RadzenButton Click="onClickSave" Text="Save" Icon="check_circle" ButtonStyle="ButtonStyle.Success" Size="ButtonSize.Medium" />
-        <RadzenButton Click="onClickDelete" Icon="delete" ButtonStyle="ButtonStyle.Danger" Size="ButtonSize.Medium" />
+        @if (Deleteable)
+        {
+            <RadzenButton Click="onClickDelete" Icon="delete" ButtonStyle="ButtonStyle.Danger" Size="ButtonSize.Medium" />
+        }
         <RadzenButton Click="onClickClose" Icon="exit_to_app" ButtonStyle="ButtonStyle.Primary" Size="ButtonSize.Medium" />
     </RadzenStack>
 
@@ -32,17 +35,46 @@ else
 
 @code {
     [Parameter] public Paragraph objParagraph { get; set; }
+    [Parameter] public Chapter objChapter { get; set; }
     [Parameter] public List<Character> colCharacters { get; set; }
     [Parameter] public List<Location> colLocations { get; set; }
     [Parameter] public List<Timeline> colTimelines { get; set; }
 
+    AIStoryBuildersService AIStoryBuildersService;
+    OrchestratorMethods OrchestratorMethods;
+
     bool InEditMode = false;
+    bool Deleteable = false;
+
+    protected override void OnInitialized()
+    {
+        try
+        {
+            AIStoryBuildersService = (AIStoryBuildersService)ScopedServices.GetService(typeof(AIStoryBuildersService));
+            OrchestratorMethods = (OrchestratorMethods)ScopedServices.GetService(typeof(OrchestratorMethods));
+
+        }
+        catch (Exception ex)
+        {
+            NotificationService.Notify(new NotificationMessage
+                    {
+                        Severity = NotificationSeverity.Error,
+                        Summary = "Error",
+                        Detail = ex.Message,
+                        Duration = 4000
+                    });
+        }
+    }
 
     // Events
 
     private void onClickParagraph()
     {
         InEditMode = true;
+
+        // Compute Deleteable
+        int CountOfParagraphs = AIStoryBuildersService.CountParagraphs(objChapter);
+        Deleteable = (objParagraph.Sequence == CountOfParagraphs);
     }
 
     private void onClickClose()

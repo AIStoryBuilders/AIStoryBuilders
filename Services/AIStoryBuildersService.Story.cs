@@ -1527,6 +1527,34 @@ namespace AIStoryBuilders.Services
                 return new List<AIStoryBuilders.Models.Paragraph>();
             }
         }
+
+        public int CountParagraphs(Chapter chapter)
+        {
+            int ParagraphCount = 0;
+
+            try
+            {
+                var ChapterNameParts = chapter.ChapterName.Split(' ');
+                string ChapterName = ChapterNameParts[0] + ChapterNameParts[1];
+
+                var AIStoryBuildersParagraphsPath = $"{BasePath}/{chapter.Story.Title}/Chapters/{ChapterName}";
+
+                // Get a list of all the Paragraph files
+                string[] AIStoryBuildersParagraphsFiles = Directory.GetFiles(AIStoryBuildersParagraphsPath, "Paragraph*.txt", SearchOption.AllDirectories);
+
+                ParagraphCount = AIStoryBuildersParagraphsFiles.Count();
+
+                return ParagraphCount;
+            }
+            catch (Exception ex)
+            {
+                // Log error
+                LogService.WriteToLog(ex.Message);
+
+                // File is empty
+                return 0;
+            }
+        }
         #endregion
     }
 }
