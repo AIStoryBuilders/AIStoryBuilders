@@ -94,6 +94,16 @@ else
          @<CharacterSelector colCharacters="@AllCharacterList" SelectedCharacters="@SelectedCharacterList" DialogReference="ds">
          </CharacterSelector>
          , new DialogOptions() { Height = "350px", Width = "500px" });
+
+        // Set objParagraph.Characters 
+        if (EditStoryResult != null)
+        {
+            objParagraph.Characters = new List<Character>();
+            foreach (var character in EditStoryResult)
+            {
+                objParagraph.Characters.Add(new Character() { CharacterName = character });
+            }
+        }
     }
 
     private async Task onClickLocation()
@@ -110,6 +120,9 @@ else
         @<LocationSelector colLocations="@AllLocationList" SelectedLocation="@SelectedLocation" DialogReference="ds">
         </LocationSelector>
         , new DialogOptions() { Height = "200px", Width = "500px" });
+
+        // Set objParagraph.Location.LocationName to SelectedLocation
+        objParagraph.Location.LocationName = SelectedLocation;
     }
 
     private async Task onClickTimeline()
@@ -126,6 +139,9 @@ else
         @<TimelineSelector colTimelines="@AllTimelineList" SelectedTimeline="@SelectedTimeline" DialogReference="ds">
         </TimelineSelector>
         , new DialogOptions() { Height = "200px", Width = "500px" });
+
+        // Set objParagraph.Timeline.TimelineName to SelectedTimeline
+        objParagraph.Timeline.TimelineName = SelectedTimeline;
     }
 
     void OnSpeechCaptured(string speechValue, bool updateTextArea, string name)
