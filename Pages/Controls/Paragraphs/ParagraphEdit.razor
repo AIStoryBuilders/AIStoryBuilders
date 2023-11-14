@@ -122,7 +122,10 @@ else
         , new DialogOptions() { Height = "200px", Width = "500px" });
 
         // Set objParagraph.Location.LocationName to SelectedLocation
-        objParagraph.Location.LocationName = SelectedLocation;
+        if (EditStoryResult != null)
+        {
+            objParagraph.Location.LocationName = EditStoryResult;
+        }
     }
 
     private async Task onClickTimeline()
@@ -141,7 +144,10 @@ else
         , new DialogOptions() { Height = "200px", Width = "500px" });
 
         // Set objParagraph.Timeline.TimelineName to SelectedTimeline
-        objParagraph.Timeline.TimelineName = SelectedTimeline;
+        if (EditStoryResult != null)
+        {
+            objParagraph.Timeline.TimelineName = EditStoryResult;
+        }
     }
 
     void OnSpeechCaptured(string speechValue, bool updateTextArea, string name)
