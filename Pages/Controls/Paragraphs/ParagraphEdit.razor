@@ -130,13 +130,28 @@ else
 
     void OnSpeechCaptured(string speechValue, bool updateTextArea, string name)
     {
-
+        // Append to objParagraph.ParagraphContent
+        objParagraph.ParagraphContent += speechValue;
     }
 
     private void onClickSave()
     {
         try
         {
+            // Validate ParagraphContent
+            if (objParagraph.ParagraphContent.Trim().Length < 1)
+            {
+                NotificationService.Notify(
+                new NotificationMessage
+                    {
+                        Severity = NotificationSeverity.Error,
+                        Summary = "Error",
+                        Detail = "Paragraph content is required",
+                        Duration = 4000
+                    });
+                return;
+            }
+
             // Save
             InEditMode = false;
 
