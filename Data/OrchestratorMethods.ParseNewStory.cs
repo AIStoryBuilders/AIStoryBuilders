@@ -15,8 +15,8 @@ namespace AIStoryBuilders.Model
 {
     public partial class OrchestratorMethods
     {
-        #region public async Task<string> ParseNewStory(string paramStoryTitle, string paramStoryText)
-        public async Task<string> ParseNewStory(string paramStoryTitle, string paramStoryText)
+        #region public async Task<Message> ParseNewStory(string paramStoryTitle, string paramStoryText)
+        public async Task<Message> ParseNewStory(string paramStoryTitle, string paramStoryText)
         {
             LogService.WriteToLog("ParseNewStory - Start");
             string Organization = SettingsService.Organization;
@@ -56,13 +56,14 @@ namespace AIStoryBuilders.Model
             ReadTextEvent?.Invoke(this, new ReadTextEventArgs($"Calling ChatGPT...", 30));
 
             // Get a response from ChatGPT 
-            var FinalChatRequest = new ChatRequest(
+            var FinalChatRequest = new ChatRequest(                
                 chatPrompts,
-                model: "gpt-4",
+                model: "gpt-4-1106-preview",
                 temperature: 0.0,
                 topP: 1,
                 frequencyPenalty: 0,
-                presencePenalty: 0);
+                presencePenalty: 0,
+                responseFormat: ChatResponseFormat.Json);
 
             ChatResponseResult = await api.ChatEndpoint.GetCompletionAsync(FinalChatRequest);
 
@@ -70,7 +71,7 @@ namespace AIStoryBuilders.Model
 
             LogService.WriteToLog($"TotalTokens: {ChatResponseResult.Usage.TotalTokens} - ChatResponseResult - {ChatResponseResult.FirstChoice.Message.Content}");
 
-            return ChatResponseResult.FirstChoice.Message.Content;
+            return ChatResponseResult.FirstChoice.Message;
         }
         #endregion
 

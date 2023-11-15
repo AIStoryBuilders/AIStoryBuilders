@@ -53,11 +53,13 @@ namespace AIStoryBuilders.Model
             // Get a response from ChatGPT 
             var FinalChatRequest = new ChatRequest(
                 chatPrompts,
-                model: "gpt-4",
+                model: "gpt-4-1106-preview",
                 temperature: 0.0,
                 topP: 1,
                 frequencyPenalty: 0,
-                presencePenalty: 0);
+                presencePenalty: 0,
+                responseFormat: ChatResponseFormat.Json);
+
 
             ChatResponseResult = await api.ChatEndpoint.GetCompletionAsync(FinalChatRequest);
 
@@ -65,7 +67,7 @@ namespace AIStoryBuilders.Model
 
             LogService.WriteToLog($"TotalTokens: {ChatResponseResult.Usage.TotalTokens} - ChatResponseResult - {ChatResponseResult.FirstChoice.Message.Content}");
 
-            return ChatResponseResult.FirstChoice.Message.Content;
+            return ChatResponseResult.FirstChoice.Message.Content.ToString();
         }
         #endregion
 

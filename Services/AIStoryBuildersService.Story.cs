@@ -80,18 +80,18 @@ namespace AIStoryBuilders.Services
             LogService.WriteToLog($"Story created {story.Title}");
 
             //  ********** Call the LLM to Parse the Story to create the files **********
-            var ParsedStoryJSON = await OrchestratorMethods.ParseNewStory(story.Title, story.Synopsis);
+            OpenAI.Chat.Message ParsedStoryJSON = await OrchestratorMethods.ParseNewStory(story.Title, story.Synopsis);
 
             JSONStory ParsedNewStory = new JSONStory();
 
             // Convert the JSON to a dynamic object
-            ParsedNewStory = ParseJSONNewStory(GetOnlyJSON(ParsedStoryJSON));
+            ParsedNewStory = ParseJSONNewStory(GetOnlyJSON(ParsedStoryJSON.Content.ToString()));
 
             // Test to see that something was returned
             if (ParsedNewStory.characters.Length == 0)
             {
                 // Clean the JSON
-                ParsedStoryJSON = await OrchestratorMethods.CleanJSON(GetOnlyJSON(ParsedStoryJSON));
+                ParsedStoryJSON = await OrchestratorMethods.CleanJSON(GetOnlyJSON(ParsedStoryJSON.Content.ToString()));
 
                 // Convert the JSON to a dynamic object
                 ParsedNewStory = ParseJSONNewStory(GetOnlyJSON(ParsedStoryJSON));
