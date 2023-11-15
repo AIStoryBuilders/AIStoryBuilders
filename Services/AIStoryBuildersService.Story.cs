@@ -169,21 +169,21 @@ namespace AIStoryBuilders.Services
             //// **** Create the First Paragraph and the Chapters
 
             // Call ChatGPT
-            var ParsedChaptersJSON = await OrchestratorMethods.CreateNewChapters(ParsedStoryJSON, story.ChapterCount);
+            OpenAI.Chat.Message ParsedChaptersJSON = await OrchestratorMethods.CreateNewChapters(ParsedStoryJSON, story.ChapterCount);
 
             JSONChapters ParsedNewChapters = new JSONChapters();
 
             // Convert the JSON to a dynamic object
-            ParsedNewChapters = ParseJSONNewChapters(GetOnlyJSON(ParsedChaptersJSON));
+            ParsedNewChapters = ParseJSONNewChapters(GetOnlyJSON(ParsedChaptersJSON.Content.ToString()));
 
             // Test to see that something was returned
             if (ParsedNewChapters.chapter.Length == 0)
             {
                 // Clean the JSON
-                ParsedChaptersJSON = await OrchestratorMethods.CleanJSON(GetOnlyJSON(ParsedChaptersJSON));
+                ParsedChaptersJSON = await OrchestratorMethods.CleanJSON(GetOnlyJSON(ParsedChaptersJSON.Content.ToString()));
 
                 // Convert the JSON to a dynamic object
-                ParsedNewChapters = ParseJSONNewChapters(GetOnlyJSON(ParsedChaptersJSON));
+                ParsedNewChapters = ParseJSONNewChapters(GetOnlyJSON(ParsedChaptersJSON.Content.ToString()));
             }
 
             //// **** Create the Files

@@ -13,8 +13,8 @@ namespace AIStoryBuilders.Model
 {
     public partial class OrchestratorMethods
     {
-        #region public async Task<string> CreateNewChapters(string JSONNewStory, string ChapterCount)
-        public async Task<string> CreateNewChapters(string JSONNewStory, string ChapterCount)
+        #region public async Task<Message> CreateNewChapters(string JSONNewStory, string ChapterCount)
+        public async Task<Message> CreateNewChapters(string JSONNewStory, string ChapterCount)
         {
             LogService.WriteToLog("CreateNewChapters - Start");
             string Organization = SettingsService.Organization;
@@ -67,7 +67,7 @@ namespace AIStoryBuilders.Model
 
             LogService.WriteToLog($"TotalTokens: {ChatResponseResult.Usage.TotalTokens} - ChatResponseResult - {ChatResponseResult.FirstChoice.Message.Content}");
 
-            return ChatResponseResult.FirstChoice.Message.Content.ToString();
+            return ChatResponseResult.FirstChoice.Message;
         }
         #endregion
 
