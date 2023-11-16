@@ -1,0 +1,128 @@
+﻿@using AIStoryBuilders.Model;
+@using AIStoryBuilders.Models;
+@using AIStoryBuilders.Services;
+@inherits OwningComponentBase
+@inject DialogService dialogService
+@inject NotificationService NotificationService
+<RadzenButton Click=@(() => NewTimeline()) Text="New Timeline" ButtonStyle="ButtonStyle.Success" />
+<br />
+<br />
+<RadzenDataList AllowVirtualization=false Style="height:100%;overflow:auto;"
+                WrapItems=true AllowPaging=false
+                Data="@colTimelines" TItem="Timeline">
+    <Template Context="timeline">
+        <RadzenCard Style="width: 100%; padding: 1;">
+            <RadzenRow Gap="0">
+                <RadzenColumn Size="2">
+                    <RadzenButton Text="Edit" Click=@(() => EditTimeline(timeline))
+                                  ButtonStyle="ButtonStyle.Light" Style="width: 75px;height: 20px" />
+                </RadzenColumn>
+                <RadzenColumn>
+                    <RadzenText TextStyle=TextStyle.DisplayH6>@(timeline.TimelineName)</RadzenText>
+                    @if (!timeline.StopDate.HasValue)
+                    {
+                        string strStartDate = timeline.StartDate.Value.ToShortDateString() + ' ' + timeline.StartDate.Value.ToShortTimeString();
+                        <RadzenText TextStyle=TextStyle.Subtitle2>@strStartDate</RadzenText>
+                    }
+                    else
+                    {
+                        string strStartDate = timeline.StartDate.Value.ToShortDateString() + ' ' + timeline.StartDate.Value.ToShortTimeString();
+                        string strStopDate = timeline.StopDate.Value.ToShortDateString() + ' ' + timeline.StopDate.Value.ToShortTimeString();
+                        <RadzenText TextStyle=TextStyle.Subtitle2>@($"{strStartDate} - {strStopDate}")</RadzenText>
+                    }
+                </RadzenColumn>
+            </RadzenRow>
+        </RadzenCard>
+    </Template>
+</RadzenDataList>
+@code {
+    [Parameter] public Story objStory { get; set; }
+    AIStoryBuildersService AIStoryBuildersService;
+    OrchestratorMethods OrchestratorMethods;
+
+    List<Timeline> colTimelines = new List<Timeline>();
+
+    protected override void OnInitialized()
+    {
+        try
+        {
+            AIStoryBuildersService = (AIStoryBuildersService)ScopedServices.GetService(typeof(AIStoryBuildersService));
+            OrchestratorMethods = (OrchestratorMethods)ScopedServices.GetService(typeof(OrchestratorMethods));
+
+            LoadTimelines(objStory);
+        }
+        catch (Exception ex)
+        {
+            NotificationService.Notify(new NotificationMessage
+                    {
+                        Severity = NotificationSeverity.Error,
+                        Summary = "Error",
+                        Detail = ex.Message,
+                        Duration = 4000
+                    });
+        }
+    }
+
+    public void LoadTimelines(Story paramStory)
+    {
+        colTimelines = AIStoryBuildersService.GetTimelines(paramStory);
+    }
+
+    private async Task NewTimeline()
+    {
+        try
+        {
+            var newTimeline = new Timeline();
+            newTimeline.Id = -1; // So we know it is new
+            newTimeline.Story = objStory;
+            newTimeline.StartDate = DateTime.Now;
+            newTimeline.StopDate = null;
+
+            var EditStoryResult = await dialogService.OpenAsync(
+            "New Timeline", ds =>
+    @<TimelinesEdit objTimeline=newTimeline DialogReference="ds"></TimelinesEdit>
+            , new DialogOptions() { Height = "350px", Width = "650px" });
+
+            LoadTimelines(objStory);
+
+            StateHasChanged();
+        }
+        catch (Exception ex)
+        {
+            NotificationService.Notify(new NotificationMessage
+                    {
+                        Severity = NotificationSeverity.Error,
+                        Summary = "Error",
+                        Detail = ex.Message,
+                        Duration = 4000
+                    });
+        }
+    }
+
+    private async Task EditTimeline(Timeline paramTimeline)
+    {
+        try
+        {
+            paramTimeline.Story = objStory;
+
+            var EditStoryResult = await dialogService.OpenAsync(
+        "Edit Timeline", ds =>
+    @<TimelinesEdit objTimeline=paramTimeline DialogReference="ds"></TimelinesEdit>
+    , new DialogOptions() { Height = "350px", Width = "650px" });
+
+            LoadTimelines(objStory);
+
+            StateHasChanged();
+        }
+        catch (Exception ex)
+        {
+            NotificationService.Notify(new NotificationMessage
+                {
+                    Severity = NotificationSeverity.Error,
+                    Summary = "Error",
+                    Detail = ex.Message,
+                    Duration = 4000
+                });
+        }
+    }
+}

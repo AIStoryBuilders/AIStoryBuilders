@@ -1,0 +1,103 @@
+﻿@using AIStoryBuilders.Model;
+@using AIStoryBuilders.Models;
+@using AIStoryBuilders.Services;
+@inherits OwningComponentBase
+@inject NotificationService NotificationService
+@inject DialogService DialogService
+<RadzenRow Gap="1rem">
+    <RadzenColumn Size="12" SizeSM="12">
+        <RadzenStack>
+            <RadzenFormField Text="Synopsis:" Variant=Variant.Outlined>
+                <RadzenTextArea @bind-Value="@objChapter.Synopsis" MaxLength="1000" Rows="4" />
+            </RadzenFormField>
+        </RadzenStack>
+    </RadzenColumn>
+</RadzenRow>
+
+<br />
+<br />
+<div class="row">
+    <div class="col">
+        <RadzenButton Text="Save" ButtonStyle="ButtonStyle.Success"
+                      Click="ChapterSave"
+                      Style="margin-bottom: 10px; width: 150px" />
+    </div>
+</div>
+@code {
+    [Parameter] public Chapter objChapter { get; set; }
+    [Parameter] public string ChapterName { get; set; }
+    [Parameter] public DialogService DialogReference { get; set; }
+
+    AIStoryBuildersService AIStoryBuildersService;
+    OrchestratorMethods OrchestratorMethods;
+
+    protected override void OnInitialized()
+    {
+        try
+        {
+            AIStoryBuildersService = (AIStoryBuildersService)ScopedServices.GetService(typeof(AIStoryBuildersService));
+            OrchestratorMethods = (OrchestratorMethods)ScopedServices.GetService(typeof(OrchestratorMethods));
+        }
+        catch (Exception ex)
+        {
+            NotificationService.Notify(new NotificationMessage
+                {
+                    Severity = NotificationSeverity.Error,
+                    Summary = "Error",
+                    Detail = ex.Message,
+                    Duration = 4000
+                });
+        }
+    }
+
+    private async Task ChapterSave()
+    {
+        try
+        {
+            if (objChapter.Synopsis != null)
+            {
+                if (objChapter.Synopsis.Length < 1)
+                {
+                    NotificationService.Notify(
+                    new NotificationMessage
+                        {
+                            Severity = NotificationSeverity.Error,
+                            Summary = "Error",
+                            Detail = "Synopsis is required",
+                            Duration = 4000
+                        });
+                    return;
+                }
+                else
+                {
+                    // Add the chapter
+                    await AIStoryBuildersService.AddChapterAsync(objChapter, ChapterName);
+
+                    DialogService.Close(ChapterName);
+                }
+            }
+            else
+            {
+                NotificationService.Notify(
+                new NotificationMessage
+                {
+                    Severity = NotificationSeverity.Error,
+                    Summary = "Error",
+                    Detail = "Synopsis is required",
+                    Duration = 4000
+                });
+                return;
+            }
+        }
+        catch (Exception ex)
+        {
+            NotificationService.Notify(new NotificationMessage
+                {
+                    Severity = NotificationSeverity.Error,
+                    Summary = "Error",
+                    Detail = ex.Message,
+                    Duration = 4000
+                });
+        }
+    }    
+}

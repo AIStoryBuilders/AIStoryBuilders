@@ -1,0 +1,150 @@
+@using AIStoryBuilders.Model;
+@using AIStoryBuilders.Models;
+@using AIStoryBuilders.Services;
+@inherits OwningComponentBase
+@inject NotificationService NotificationService
+@inject DialogService DialogService
+<RadzenRow Gap="1rem">
+    <RadzenColumn Size="12" SizeSM="12">
+        <RadzenStack>
+            <RadzenFormField Text="Location Description:" Variant=Variant.Outlined>
+                <RadzenTextArea Rows="2" MaxLength="100" @bind-Value="@objLocationDescription.Description" class="w-100" />
+            </RadzenFormField>
+            <RadzenFormField Text="Timeline:" Variant=Variant.Outlined>
+                <RadzenDropDown Data=@colTimelineNames @bind-Value="@SelectedTimeline" />
+            </RadzenFormField>
+        </RadzenStack>
+    </RadzenColumn>
+</RadzenRow>
+<br />
+<div class="row">
+    <div class="col">
+        <RadzenButton Text="Save" ButtonStyle="ButtonStyle.Success"
+                      Click="LocationDescriptionSave"
+                      Style="margin-bottom: 10px; width: 150px" />&nbsp;&nbsp;
+        @if (@objLocationDescription.Id > 0)
+        {
+            <RadzenButton Text="Delete" ButtonStyle="ButtonStyle.Danger"
+                          Click="LocationDescriptionDelete" />
+        }
+   </div>
+</div>
+@code {
+    [Parameter] public LocationDescription objLocationDescription { get; set; }
+    [Parameter] public Story objStory { get; set; }
+    [Parameter] public DialogService DialogReference { get; set; }
+
+    AIStoryBuildersService AIStoryBuildersService;
+    OrchestratorMethods OrchestratorMethods;
+
+    List<Timeline> colTimelines = new List<Timeline>();
+    List<string> colTimelineNames = new List<string>();
+    string SelectedTimeline = "";
+
+    protected override void OnInitialized()
+    {
+        try
+        {
+            AIStoryBuildersService = (AIStoryBuildersService)ScopedServices.GetService(typeof(AIStoryBuildersService));
+            OrchestratorMethods = (OrchestratorMethods)ScopedServices.GetService(typeof(OrchestratorMethods));
+
+            // Load Timelines
+            colTimelines = AIStoryBuildersService.GetTimelines(objStory);
+            colTimelineNames = colTimelines.Select(x => x.TimelineName).ToList();
+            colTimelineNames.Add("");
+
+            if (objLocationDescription.Id > 0)
+            {
+                if (objLocationDescription.Timeline != null)
+                {
+                    SelectedTimeline = objLocationDescription.Timeline.TimelineName;
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            NotificationService.Notify(new NotificationMessage
+                {
+                    Severity = NotificationSeverity.Error,
+                    Summary = "Error",
+                    Detail = ex.Message,
+                    Duration = 4000
+                });
+        }
+    }
+
+    private void LocationDescriptionSave()
+    {
+        try
+        {
+            if (objLocationDescription.Description != null)
+            {
+                if (objLocationDescription.Description.Length < 1)
+                {
+                    NotificationService.Notify(
+                        new NotificationMessage
+                            {
+                                Severity = NotificationSeverity.Error,
+                                Summary = "Error",
+                                Detail = "Description is required",
+                                Duration = 4000
+                            });
+
+                    return;
+                }
+            }
+
+            UpdateLocationTimeline();
+            DialogService.Close(objLocationDescription);
+        }
+        catch (Exception ex)
+        {
+            NotificationService.Notify(new NotificationMessage
+                {
+                    Severity = NotificationSeverity.Error,
+                    Summary = "Error",
+                    Detail = ex.Message,
+                    Duration = 4000
+                });
+        }
+    }
+
+    private async Task LocationDescriptionDelete()
+    {
+        try
+        {
+            // Ask for confirmation:
+            var confirmResult = await DialogService.Confirm("Are you sure?", "Delete Description",
+                  new ConfirmOptions() { OkButtonText = "Yes", CancelButtonText = "No" });
+
+            if (confirmResult.HasValue && confirmResult.Value)
+            {
+                // Change the Id to 0 so we know this is to be deleted                
+                objLocationDescription.Id = 0;
+                DialogService.Close(objLocationDescription);
+            }
+        }
+        catch (Exception ex)
+        {
+            NotificationService.Notify(new NotificationMessage
+                {
+                    Severity = NotificationSeverity.Error,
+                    Summary = "Error",
+                    Detail = ex.Message,
+                    Duration = 4000
+                });
+        }
+    }
+
+    private void UpdateLocationTimeline()
+    {
+        if (SelectedTimeline.Length > 0)
+        {
+            objLocationDescription.Timeline = new Timeline() { TimelineName = SelectedTimeline };
+        }
+        else
+        {
+            objLocationDescription.Timeline = null;
+        }
+    }
+}

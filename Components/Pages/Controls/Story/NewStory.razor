@@ -1,0 +1,14 @@
+﻿@using AIStoryBuilders.Models;
+@inject DialogService dialogService
+@inject NotificationService NotificationService
+
+<StoryEdit objStory="objStory" StoryUpdated="Save" />
+
+@code {
+    Story objStory = new Story() { Id = -1 };
+
+    private void Save(Story paramStory)
+    {
+        dialogService.Close(paramStory);
+    }
+}

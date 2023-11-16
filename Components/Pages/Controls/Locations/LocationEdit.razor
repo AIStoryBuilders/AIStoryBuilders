@@ -1,0 +1,330 @@
+﻿@using AIStoryBuilders.Model;
+@using AIStoryBuilders.Models;
+@using AIStoryBuilders.Services;
+@inherits OwningComponentBase
+@inject NotificationService NotificationService
+@inject DialogService dialogService
+@if (@InProgress)
+{
+    <div class="rz-m-10">
+        <RadzenProgressBar Value="100" ShowValue="false" Mode="ProgressBarMode.Indeterminate" />
+    </div>
+}
+else
+{
+    <RadzenButton Click=@(() => NewLocationDescription()) Text="New Description" ButtonStyle="ButtonStyle.Success" />
+    <br />
+    <br />
+    <RadzenRow Gap="1rem">
+        <RadzenColumn Size="12" SizeSM="12">
+            <RadzenStack>
+                <RadzenFormField Text="Location Name:" Variant=Variant.Outlined>
+                    <RadzenTextBox @bind-Value="@objLocation.LocationName" MaxLength="100" />
+                </RadzenFormField>
+                @if (@objLocation.Id > 0)
+                {
+                    <RadzenDataList AllowVirtualization=false Style="height:100%;overflow:auto;"
+                                    WrapItems=true AllowPaging=false
+                                    Data="@objLocation.LocationDescription" TItem="LocationDescription">
+                        <Template Context="Location">
+                            <RadzenCard Style="width: 100%;">
+                                <RadzenRow Gap="0">
+                                    <RadzenColumn Size="2">
+                                        <RadzenButton Text="Edit" Click=@(() => EditLocationDescription(Location))
+                                                      ButtonStyle="ButtonStyle.Light" Style="width: 75px;height: 20px" />
+                                    </RadzenColumn>
+                                    <RadzenColumn>
+                                        <RadzenText>@(Location.Description)</RadzenText>
+                                        @if(Location.Timeline != null)
+                                        {
+                                            <RadzenText TextStyle=TextStyle.Subtitle2>@(Location.Timeline.TimelineName)</RadzenText>
+                                        }
+                                    </RadzenColumn>
+                                </RadzenRow>
+                            </RadzenCard>
+                        </Template>
+                    </RadzenDataList>
+                }
+            </RadzenStack>
+        </RadzenColumn>
+    </RadzenRow>
+    <br />
+    <div class="row">
+        <div class="col">
+            <RadzenButton Text="Save" ButtonStyle="ButtonStyle.Success"
+                          Click="LocationSave"
+                          Style="margin-bottom: 10px; width: 150px" />&nbsp;&nbsp;
+            @if (objLocation.Id > 0)
+            {
+                <RadzenButton Text="Delete" ButtonStyle="ButtonStyle.Danger"
+                              Click="LocationDelete" />
+            }
+        </div>
+    </div>
+}
+@code {
+    [Parameter] public Location objLocation { get; set; }
+    [Parameter] public Location objOrginalLocation { get; set; }
+    [Parameter] public DialogService DialogReference { get; set; }
+
+    AIStoryBuildersService AIStoryBuildersService;
+    OrchestratorMethods OrchestratorMethods;
+
+    bool InProgress = false;
+    string strOriginalLocationName = "";
+
+    protected override void OnInitialized()
+    {
+        try
+        {
+            AIStoryBuildersService = (AIStoryBuildersService)ScopedServices.GetService(typeof(AIStoryBuildersService));
+            OrchestratorMethods = (OrchestratorMethods)ScopedServices.GetService(typeof(OrchestratorMethods));
+
+            strOriginalLocationName = objOrginalLocation.LocationName;
+        }
+        catch (Exception ex)
+        {
+            NotificationService.Notify(new NotificationMessage
+                    {
+                        Severity = NotificationSeverity.Error,
+                        Summary = "Error",
+                        Detail = ex.Message,
+                        Duration = 4000
+                    });
+        }
+    }
+
+    private async Task NewLocationDescription()
+    {
+        try
+        {
+            var newLocationDescription = new LocationDescription();
+            newLocationDescription.Id = -1; // So we know it is new
+            newLocationDescription.Timeline = new Timeline();
+
+            await EditLocationDescription(newLocationDescription);
+        }
+        catch (Exception ex)
+        {
+            NotificationService.Notify(new NotificationMessage
+                    {
+                        Severity = NotificationSeverity.Error,
+                        Summary = "Error",
+                        Detail = ex.Message,
+                        Duration = 4000
+                    });
+        }
+    }
+
+    private async Task EditLocationDescription(LocationDescription paramLocationDescription)
+    {
+        try
+        {
+            var EditLocationDescriptionResult = await dialogService.OpenAsync(
+                "Edit Location Description", ds =>
+                @<LocationDescriptionEdit objLocationDescription=paramLocationDescription objStory=objLocation.Story DialogReference="ds"></LocationDescriptionEdit>
+                , new DialogOptions() { Height = "300px", Width = "650px" });
+
+            if (EditLocationDescriptionResult != null)
+            {
+                if (EditLocationDescriptionResult.Id == -1)
+                {
+                    // This is a new locationDescription so it needs to be added
+                    // First Change its Id to someting other than -1
+                    // Get the current higest Id and add 1
+                    int intNewId = 1;
+                    if (objLocation.LocationDescription.Count > 0)
+                    {
+                        intNewId = objLocation.LocationDescription.Max(x => x.Id) + 1;
+                    }
+
+                    EditLocationDescriptionResult.Id = intNewId;
+
+                    // Add the new LocationDescription to the Location
+                    objLocation.LocationDescription.Add(paramLocationDescription);
+                }
+                else if (EditLocationDescriptionResult.Id == 0)
+                {
+                    // If the result is null then the user is deleteing
+                    objLocation.LocationDescription.Remove(paramLocationDescription);
+                }
+                else
+                {
+                    // This is an existing LocationDescription so it needs to be updated
+                    // Find the LocationDescription in the Location
+                    var objLocationDescription = objLocation.LocationDescription.Where(x => x.Id == EditLocationDescriptionResult.Id).FirstOrDefault();
+
+                    // Update the LocationDescription
+                    objLocationDescription.Description = EditLocationDescriptionResult.Description;
+                    objLocationDescription.Timeline = EditLocationDescriptionResult.Timeline;
+                }
+            }
+
+            StateHasChanged();
+        }
+        catch (Exception ex)
+        {
+            NotificationService.Notify(new NotificationMessage
+                {
+                    Severity = NotificationSeverity.Error,
+                    Summary = "Error",
+                    Detail = ex.Message,
+                    Duration = 4000
+                });
+        }
+    }
+
+    private async Task LocationSave()
+    {
+        try
+        {
+            // Always trim
+            objLocation.LocationName = objLocation.LocationName.Trim();
+
+            // Always remove any pipe (|) characters
+            objLocation.LocationName = objLocation.LocationName.Replace("|", "");
+
+            if (objLocation.LocationName != null)
+            {
+                if (objLocation.LocationName.Length < 1)
+                {
+                    NotificationService.Notify(
+                    new NotificationMessage
+                        {
+                            Severity = NotificationSeverity.Error,
+                            Summary = "Error",
+                            Detail = "Location Name is required",
+                            Duration = 4000
+                        });
+                    return;
+                }
+                else
+                {
+                    InProgress = true;
+                    StateHasChanged();
+
+                    if (objLocation.Id == -1) // New Location
+                    {
+                        // Check that there is not already a Location with the same name
+                        bool LocationExists = AIStoryBuildersService.LocationExists(objLocation);
+
+                        if (LocationExists)
+                        {
+                            NotificationService.Notify(
+                            new NotificationMessage
+                                {
+                                    Severity = NotificationSeverity.Error,
+                                    Summary = "Validation Error",
+                                    Detail = "Location Name already exists. Choose a new name",
+                                    Duration = 4000
+                                });
+
+                            return;
+                        }
+
+                        // Add to the database
+                        await AIStoryBuildersService.AddLocationAsync(objLocation);
+                    }
+                    else // Existing Location
+                    {
+                        if (objLocation.LocationName != strOriginalLocationName)
+                        {
+                            // Ask for confirmation:
+                            var confirmResult = await dialogService.Confirm("Are you sure? The entire story will be updated to update the Location.", "Location Name Change",
+                                  new ConfirmOptions() { OkButtonText = "Yes", CancelButtonText = "No" });
+
+                            if (confirmResult.HasValue && confirmResult.Value)
+                            {
+                                InProgress = true;
+                                StateHasChanged();
+
+                                // Update the name 
+                                AIStoryBuildersService.UpdateLocationName(objLocation, strOriginalLocationName);
+
+                                await AIStoryBuildersService.UpdateLocationDescriptions(objLocation);
+
+                                InProgress = false;
+                                StateHasChanged();
+                            }
+                        }
+                        else
+                        {
+                            InProgress = true;
+                            StateHasChanged();
+
+                            // Only the Descriptions are being updated
+                            await AIStoryBuildersService.UpdateLocationDescriptions(objLocation);
+
+                            InProgress = false;
+                            StateHasChanged();
+                        }
+                    }
+
+                    dialogService.Close(null);
+                }
+            }
+            else
+            {
+                NotificationService.Notify(
+                new NotificationMessage
+                    {
+                        Severity = NotificationSeverity.Error,
+                        Summary = "Error",
+                        Detail = "Location Name is required",
+                        Duration = 4000
+                    });
+
+                InProgress = false;
+                StateHasChanged();
+                return;
+            }
+        }
+        catch (Exception ex)
+        {
+            NotificationService.Notify(new NotificationMessage
+                {
+                    Severity = NotificationSeverity.Error,
+                    Summary = "Error",
+                    Detail = ex.Message,
+                    Duration = 4000
+                });
+        }
+    }
+
+    private async Task LocationDelete()
+    {
+        try
+        {
+            // Ask for confirmation:
+            var confirmResult = await dialogService.Confirm("Are you sure? The entire story will be updated to remove the Location.", "Delete Location",
+                  new ConfirmOptions() { OkButtonText = "Yes", CancelButtonText = "No" });
+
+            if (confirmResult.HasValue && confirmResult.Value)
+            {
+                InProgress = true;
+                StateHasChanged();
+
+                // Delete from the database
+                AIStoryBuildersService.DeleteLocation(objLocation);
+
+                InProgress = false;
+                StateHasChanged();
+
+                dialogService.Close(null);
+            }
+        }
+        catch (Exception ex)
+        {
+            NotificationService.Notify(new NotificationMessage
+                {
+                    Severity = NotificationSeverity.Error,
+                    Summary = "Error",
+                    Detail = ex.Message,
+                    Duration = 4000
+                });
+
+            InProgress = false;
+            StateHasChanged();
+        }
+    }
+}

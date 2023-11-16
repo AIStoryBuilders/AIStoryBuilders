@@ -1,0 +1,161 @@
+﻿@using AIStoryBuilders.Model;
+@using AIStoryBuilders.Models;
+@using AIStoryBuilders.Components.Pages.Controls;
+@using AIStoryBuilders.Components.Pages.Controls.AI;
+@using AIStoryBuilders.Components.Pages.Controls.Chapters;
+@using AIStoryBuilders.Components.Pages.Controls.Characters
+@using AIStoryBuilders.Components.Pages.Controls.Locations;
+@using AIStoryBuilders.Components.Pages.Controls.Story
+@using AIStoryBuilders.Components.Pages.Controls.Timelines;
+@using AIStoryBuilders.Services;
+@using static AIStoryBuilders.Model.OrchestratorMethods;
+@inherits OwningComponentBase
+@inject DialogService dialogService
+@inject NotificationService NotificationService
+@implements IDisposable
+<PageTitle>@objStory.Title</PageTitle>
+
+<RadzenTabs Change=@OnTabChange TabPosition=TabPosition.Top RenderMode="TabRenderMode.Client">
+    <Tabs>
+        <RadzenTabsItem Text="Details">
+            <StoryEdit @ref="ctrlStoryEdit" objStory="objStory" StoryUpdated="SaveStory" StoryDeleted="DeleteStory" />
+        </RadzenTabsItem>
+        <RadzenTabsItem Text="Timelines">
+            <TimelinesControl @ref="timelinesControl" objStory="objStory" />
+        </RadzenTabsItem>
+        <RadzenTabsItem Text="Locations">
+            <LocationsControl @ref="locationsControl" objStory="objStory" />
+        </RadzenTabsItem>
+        <RadzenTabsItem Text="Characters">
+            <CharactersEdit @ref="CtrlCharactersEdit" objStory="objStory" />
+        </RadzenTabsItem>
+        <RadzenTabsItem Text="Chapters">
+            <ChaptersControl @ref="chaptersControl" objStory="objStory" />
+        </RadzenTabsItem>
+        <RadzenTabsItem Text="AI">
+            <AIControl @ref="aIControl" objStory="objStory" />
+        </RadzenTabsItem>
+    </Tabs>
+</RadzenTabs>
+@code {
+    [Parameter] public Story objStory { get; set; }
+
+    StoryEdit ctrlStoryEdit;
+    CharactersEdit CtrlCharactersEdit;
+    TimelinesControl timelinesControl;
+    LocationsControl locationsControl;
+    ChaptersControl chaptersControl;
+    AIControl aIControl;
+
+    AIStoryBuildersService AIStoryBuildersService;
+    OrchestratorMethods OrchestratorMethods;
+
+    List<Character> colCharacters = new List<Character>();
+
+    protected override void OnInitialized()
+    {
+        AIStoryBuildersService = (AIStoryBuildersService)ScopedServices.GetService(typeof(AIStoryBuildersService));
+        OrchestratorMethods = (OrchestratorMethods)ScopedServices.GetService(typeof(OrchestratorMethods));
+
+        OrchestratorMethods.ReadTextEvent += OrchestratorMethods_ReadTextEvent;
+    }
+
+    private void SaveStory()
+    {
+        try
+        {
+            // Update the Story
+            AIStoryBuildersService.UpdateStory(objStory);
+
+            NotificationService.Notify(new NotificationMessage
+                {
+                    Severity = NotificationSeverity.Success,
+                    Summary = "Story",
+                    Detail = "Updated!",
+                    Duration = 2000
+                });
+        }
+        catch (Exception ex)
+        {
+            NotificationService.Notify(new NotificationMessage
+                {
+                    Severity = NotificationSeverity.Error,
+                    Summary = "Error",
+                    Detail = ex.Message,
+                    Duration = 4000
+                });
+        }
+    }
+
+    private void DeleteStory()
+    {
+        try
+        {
+            // Delete the Story from the database
+            AIStoryBuildersService.DeleteStory(objStory.Title);
+
+            dialogService.Close(null);
+        }
+        catch (Exception ex)
+        {
+            NotificationService.Notify(new NotificationMessage
+                {
+                    Severity = NotificationSeverity.Error,
+                    Summary = "Error",
+                    Detail = ex.Message,
+                    Duration = 4000
+                });
+        }
+    }
+
+    private async Task OnTabChange(int index)
+    {
+        switch (index)
+        {
+            case 0:
+                // Story
+                break;
+            case 1:
+                // Timelines
+                timelinesControl.LoadTimelines(objStory);
+                break;
+            case 2:
+                // Locations
+                locationsControl.LoadLocations(objStory);
+                break;
+            case 3:
+                // Characters
+                CtrlCharactersEdit.LoadCharacters(objStory);
+                break;
+            case 4:
+                // Chapters
+                await chaptersControl.LoadChapters(objStory, null);
+                break;
+            case 5:
+                // AI
+                break;
+            default:
+                break;
+        }
+    }
+
+    // Events
+
+    private void OrchestratorMethods_ReadTextEvent(object sender, EventArgs e)
+    {
+        ReadTextEventArgs ReadTextEventArguments = (ReadTextEventArgs)e;
+
+        NotificationService.Notify(new NotificationMessage
+            {
+                Severity = NotificationSeverity.Info,
+                Summary = "Info",
+                Detail = ReadTextEventArguments.Message,
+                Duration = 4000
+            });
+    }
+
+    public void Dispose()
+    {
+        OrchestratorMethods.ReadTextEvent -= OrchestratorMethods_ReadTextEvent;
+    }
+}

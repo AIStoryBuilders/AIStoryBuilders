@@ -1,0 +1,257 @@
+﻿@using AIStoryBuilders.Model;
+@using AIStoryBuilders.Models;
+@using AIStoryBuilders.Services;
+@using AIStoryBuilders.Components.Pages.Controls.Paragraphs;
+@inherits OwningComponentBase
+@inject DialogService dialogService
+@inject NotificationService NotificationService
+<div class="row">
+    <div class="col">
+        <RadzenButton Text="New Chapter" ButtonStyle="ButtonStyle.Success"
+                      Click=@(() => NewChapter()) />&nbsp;&nbsp;
+        <RadzenButton Text="Save" ButtonStyle="ButtonStyle.Success"
+                      Click="ChapterSave" />&nbsp;&nbsp;
+        @if (HighestChapter)
+        {
+            <RadzenButton Text="Delete" ButtonStyle="ButtonStyle.Danger"
+                          Click="ChapterDelete" />
+        }
+    </div>
+</div>
+<br />
+<RadzenRow Gap="1rem">
+    <RadzenColumn Size="12" SizeSM="12">
+        <RadzenStack>
+            <RadzenFormField Text="Chapters:" Variant="@variant">
+                <RadzenDropDown Data=@colChapters @bind-Value="@SelectedChapter" TextProperty="ChapterName" Change="OnChapterChanged" />
+            </RadzenFormField>
+            <RadzenFormField Text="Synopsis:" Variant="@variant">
+                <RadzenTextArea @bind-Value="@SelectedChapter.Synopsis" MaxLength="1000" Rows="2" />
+            </RadzenFormField>
+        </RadzenStack>
+    </RadzenColumn>
+</RadzenRow>
+<br />
+<RadzenDataList @ref=objDatalist AllowVirtualization=false Style="height:320px;overflow:auto;"
+                WrapItems=false AllowPaging=false
+                Data="@colParagraphs" TItem="Paragraph">
+    <Template Context="paragraph">
+        <ParagraphEdit LoadParagraphs="@LoadParagraphsHandler" objParagraph=@paragraph objChapter=@SelectedChapter colCharacters=@colAllCharacters colLocations=@colAllLocations colTimelines=@colAllTimelines />
+    </Template>
+</RadzenDataList>
+@code {
+    [Parameter] public Story objStory { get; set; }
+
+    AIStoryBuildersService AIStoryBuildersService;
+    OrchestratorMethods OrchestratorMethods;
+
+    RadzenDataList<Paragraph> objDatalist;
+    Variant variant = Variant.Outlined;
+
+    List<Chapter> colChapters = new List<Chapter>();
+    List<Paragraph> colParagraphs = new List<Paragraph>();
+    Chapter SelectedChapter = new Chapter();
+
+    List<Character> colAllCharacters { get; set; }
+    List<Location> colAllLocations { get; set; }
+    List<Timeline> colAllTimelines { get; set; }
+
+    bool HighestChapter = false;
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            AIStoryBuildersService = (AIStoryBuildersService)ScopedServices.GetService(typeof(AIStoryBuildersService));
+            OrchestratorMethods = (OrchestratorMethods)ScopedServices.GetService(typeof(OrchestratorMethods));
+
+            await LoadChapters(objStory, null);
+        }
+        catch (Exception ex)
+        {
+            NotificationService.Notify(new NotificationMessage
+                    {
+                        Severity = NotificationSeverity.Error,
+                        Summary = "Error",
+                        Detail = ex.Message,
+                        Duration = 4000
+                    });
+        }
+    }
+
+    public async Task LoadChapters(Story paramStory, string paramSelectedChapter)
+    {
+        colChapters = AIStoryBuildersService.GetChapters(paramStory);
+
+        if (colChapters.Count > 0)
+        {
+            if (paramSelectedChapter != null)
+            {
+                // Put in a space after the word Chapter
+                paramSelectedChapter = paramSelectedChapter.Insert(7, " ");
+
+                // Select the SelectedChapter chapter in the dropdown
+                SelectedChapter = colChapters.Where(x => x.ChapterName == paramSelectedChapter).FirstOrDefault();
+            }
+            else
+            {
+                // Select the first chapter in the dropdown
+                SelectedChapter = colChapters.FirstOrDefault();
+            }
+
+            if (SelectedChapter != null)
+            {
+                await LoadParagraphs(SelectedChapter);
+            }
+        }
+    }
+
+    public async Task LoadParagraphs(Chapter paramChapter)
+    {
+        // Load colAllCharacters
+        colAllCharacters = AIStoryBuildersService.GetCharacters(objStory);
+
+        // Load colAllLocations
+        colAllLocations = AIStoryBuildersService.GetLocations(objStory);
+
+        // Load colAllTimelines
+        colAllTimelines = AIStoryBuildersService.GetTimelines(objStory);
+
+        // Load colParagraphs
+        colParagraphs = AIStoryBuildersService.GetParagraphs(paramChapter);
+
+        if (objDatalist != null)
+        {
+            await objDatalist.Reload();
+            dialogService.Refresh();
+        }
+
+        if (colChapters.Count == SelectedChapter.Sequence)
+        {
+            HighestChapter = true;
+        }
+        else
+        {
+            HighestChapter = false;
+        }
+    }
+
+    private async Task NewChapter()
+    {
+        try
+        {
+            var newChapter = new Chapter();
+            newChapter.Id = -1; // So we know it is new
+            newChapter.Story = objStory;
+
+            // Compute the next Chapter Number
+            int NewChapterNumber = 1;
+            if (colChapters.Count > 0)
+            {
+                NewChapterNumber = colChapters.Count + 1;
+            }
+
+            string strChapterName = "Chapter" + NewChapterNumber.ToString();
+
+            var EditStoryResult = await dialogService.OpenAsync(
+                strChapterName.Insert(7, " "), ds =>
+                @<ChaptersEdit objChapter=@newChapter ChapterName=@strChapterName DialogReference="ds">
+                </ChaptersEdit>
+                , new DialogOptions() { Height = "300px", Width = "650px" });
+
+            await LoadChapters(objStory, EditStoryResult);
+
+            StateHasChanged();
+        }
+        catch (Exception ex)
+        {
+            NotificationService.Notify(new NotificationMessage
+                {
+                    Severity = NotificationSeverity.Error,
+                    Summary = "Error",
+                    Detail = ex.Message,
+                    Duration = 4000
+                });
+        }
+    }
+
+    private async Task ChapterSave()
+    {
+        try
+        {
+            // Update the chapter
+            await AIStoryBuildersService.UpdateChapterAsync(SelectedChapter);
+
+            NotificationService.Notify(new NotificationMessage
+                {
+                    Severity = NotificationSeverity.Success,
+                    Summary = "Update",
+                    Detail = "Saved",
+                    Duration = 2000
+                });
+        }
+        catch (Exception ex)
+        {
+            NotificationService.Notify(new NotificationMessage
+                {
+                    Severity = NotificationSeverity.Error,
+                    Summary = "Error",
+                    Detail = ex.Message,
+                    Duration = 4000
+                });
+        }
+    }
+
+    private async Task ChapterDelete()
+    {
+        try
+        {
+            // Ask for confirmation:
+            var confirmResult = await dialogService.Confirm("Are you sure?", $"Delete {SelectedChapter.ChapterName}?",
+                  new ConfirmOptions() { OkButtonText = "Yes", CancelButtonText = "No" });
+
+            if (confirmResult.HasValue && confirmResult.Value)
+            {
+                // Delete
+                AIStoryBuildersService.DeleteChapter(SelectedChapter);
+
+                // Find the previous chapter
+                var PreviousChapter = colChapters.Where(x => x.ChapterName != SelectedChapter.ChapterName).LastOrDefault();
+
+                if (PreviousChapter != null)
+                {
+                    // Load the previous chapter
+                    string ChapterName = PreviousChapter.ChapterName.Replace(" ", "");
+                    await LoadChapters(objStory, ChapterName);
+                }
+                else
+                {
+                    // Load the first chapter
+                    await LoadChapters(objStory, null);
+                }
+
+                StateHasChanged();
+            }
+        }
+        catch (Exception ex)
+        {
+            NotificationService.Notify(new NotificationMessage
+                {
+                    Severity = NotificationSeverity.Error,
+                    Summary = "Error",
+                    Detail = ex.Message,
+                    Duration = 4000
+                });
+        }
+    }
+
+    private async Task OnChapterChanged()
+    {
+        await LoadParagraphs(SelectedChapter);
+    }
+
+    private async Task LoadParagraphsHandler()
+    {
+        await LoadParagraphs(SelectedChapter);
+    }
+}

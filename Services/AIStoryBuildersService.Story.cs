@@ -1,12 +1,6 @@
 ﻿using AIStoryBuilders.Model;
 using AIStoryBuilders.Models;
 using AIStoryBuilders.Models.JSON;
-using Microsoft.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore.Metadata;
-using Microsoft.Maui.Devices.Sensors;
-using Microsoft.UI.Xaml.Media.Animation;
-using Newtonsoft.Json;
-using OpenAI.Files;
 using static AIStoryBuilders.Model.OrchestratorMethods;
 using Character = AIStoryBuilders.Models.Character;
 
