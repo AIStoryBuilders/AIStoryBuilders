@@ -125,9 +125,13 @@ namespace AIStoryBuilders
                     streamWriter.WriteLine(
                     """
                         {
-                         "OpenAIServiceOptions": {
-                         "Organization": "",
-                         "ApiKey": "" } 
+                          "OpenAIServiceOptions": {
+                            "Organization": "",
+                            "ApiKey": ""
+                          },
+                          "ApplicationSettings": {
+                            "AutomaticAttributeDetection": "true"
+                          }
                         }
                         """
                     );

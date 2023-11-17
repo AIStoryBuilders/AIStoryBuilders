@@ -16,6 +16,11 @@
             <RadzenTextBox @bind-Value="@ApiKey" @oninput="APIKeyDetection" style="width:450px;" />
         </RadzenFormField>
     </div>
+    <div class="col-12">
+        <br />
+        <span>Automatic Attribute Detection:</span><br />
+        <RadzenLabel Text="True" /><RadzenSwitch @bind-Value=@AutoAttributeDetection style="width:25px;" /><RadzenLabel Text="False" />
+    </div>
 </div>
 <br />
 @if (!IsSettingsEntered)
@@ -44,14 +49,17 @@ else
 
     string Organization = "";
     string ApiKey = "";
+    bool AutoAttributeDetection = false;
 
     bool IsSettingsEntered = false;
 
     protected override void OnInitialized()
     {
         SettingsService.LoadSettings();
+
         Organization = SettingsService.Organization;
         ApiKey = SettingsService.ApiKey;
+        AutoAttributeDetection = SettingsService.AutomaticAttributeDetection;
 
         if(ApiKey.Length > 1)
         {
@@ -86,7 +94,7 @@ else
         try
         {
             // Update Settings
-            await SettingsService.SaveSettings(Organization, ApiKey);
+            await SettingsService.SaveSettings(Organization, ApiKey, AutoAttributeDetection);
 
             NotificationService.Notify(new NotificationMessage
                 {
