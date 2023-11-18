@@ -7,9 +7,8 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using static AIStoryBuilders.Model.OrchestratorMethods;
 
-namespace AIStoryBuilders.Model
+namespace AIStoryBuilders.AI
 {
     public partial class OrchestratorMethods
     {

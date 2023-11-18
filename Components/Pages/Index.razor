@@ -1,4 +1,5 @@
 ﻿@page "/"
+@using AIStoryBuilders.AI
 @using AIStoryBuilders.Model;
 @using AIStoryBuilders.Models;
 @using AIStoryBuilders.Models.JSON;
@@ -6,8 +7,8 @@
 @using AIStoryBuilders.Components.Pages.Controls;
 @using AIStoryBuilders.Components.Pages.Controls.Story;
 @using Newtonsoft.Json;
+@using static AIStoryBuilders.AI.OrchestratorMethods
 @using static AIStoryBuilders.Services.AIStoryBuildersService;
-@using static AIStoryBuilders.Model.OrchestratorMethods;
 @inherits OwningComponentBase
 @inject DialogService dialogService
 @inject NotificationService NotificationService
@@ -151,7 +152,7 @@
                     parms.Add("objStory", objStory);
 
                     var EditStoryResult = await dialogService.OpenAsync<StoryControl>($"{objStory.Title}", parms,
-                    new DialogOptions() { Height = "650px", Width = "800px" });
+                    new DialogOptions() { Height = "650px", Width = "850px" });
                 }
 
                 colStorys = AIStoryBuildersService.GetStorys();
@@ -194,7 +195,7 @@
             parms.Add("objStory", paramStory);
 
             var EditStoryResult = await dialogService.OpenAsync<StoryControl>($"{paramStory.Title}", parms,
-            new DialogOptions() { Height = "720px", Width = "800px" });
+            new DialogOptions() { Height = "720px", Width = "850px" });
 
             colStorys = AIStoryBuildersService.GetStorys();
 

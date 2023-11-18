@@ -7,11 +7,11 @@ using System.Text.RegularExpressions;
 using System.Text.Json.Nodes;
 using System.Text.Json;
 using Newtonsoft.Json;
-using static AIStoryBuilders.Model.OrchestratorMethods;
 using Microsoft.Maui.Storage;
 using System.Collections.Generic;
+using AIStoryBuilders.Model;
 
-namespace AIStoryBuilders.Model
+namespace AIStoryBuilders.AI
 {
     public partial class OrchestratorMethods
     {

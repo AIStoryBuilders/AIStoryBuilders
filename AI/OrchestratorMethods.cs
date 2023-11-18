@@ -1,8 +1,9 @@
+using AIStoryBuilders.Model;
 using Newtonsoft.Json;
 using OpenAI;
 using System.Text.RegularExpressions;
 
-namespace AIStoryBuilders.Model
+namespace AIStoryBuilders.AI
 {
     public partial class OrchestratorMethods
     {
@@ -250,11 +251,11 @@ namespace AIStoryBuilders.Model
         }
         #endregion
 
-        #region public static string SanitizeFileName(string input)
+        #region public string SanitizeFileName(string input)
         private static readonly char[] InvalidFileNameChars = System.IO.Path.GetInvalidFileNameChars();
         private static readonly string[] ReservedNames = { "CON", "PRN", "AUX", "NUL", "COM1", "COM2", "COM3", "COM4", "COM5", "COM6", "COM7", "COM8", "COM9", "LPT1", "LPT2", "LPT3", "LPT4", "LPT5", "LPT6", "LPT7", "LPT8", "LPT9" };
 
-        public static string SanitizeFileName(string input)
+        public string SanitizeFileName(string input)
         {
             // Strip out invalid characters
             string sanitized = new string(input.Where(ch => !InvalidFileNameChars.Contains(ch)).ToArray());

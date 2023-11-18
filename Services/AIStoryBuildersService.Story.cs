@@ -1,7 +1,7 @@
 ﻿using AIStoryBuilders.Model;
 using AIStoryBuilders.Models;
 using AIStoryBuilders.Models.JSON;
-using static AIStoryBuilders.Model.OrchestratorMethods;
+using static AIStoryBuilders.AI.OrchestratorMethods;
 using Character = AIStoryBuilders.Models.Character;
 
 namespace AIStoryBuilders.Services
@@ -186,7 +186,7 @@ namespace AIStoryBuilders.Services
             foreach (var chapter in ParsedNewChapters.chapter)
             {
                 // Create a folder in Chapters/
-                string ChapterPath = $"{ChaptersPath}/{chapter.chapter_name}";
+                string ChapterPath = $"{ChaptersPath}/Chapter{ChapterNumber}";
                 CreateDirectory(ChapterPath);
 
                 TextEvent?.Invoke(this, new TextEventArgs($"Create Chapter {ChapterNumber}", 5));

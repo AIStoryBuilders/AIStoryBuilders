@@ -1,8 +1,9 @@
-﻿using AIStoryBuilders.Model;
+﻿using AIStoryBuilders.AI;
+using AIStoryBuilders.Model;
 using AIStoryBuilders.Models;
+using static AIStoryBuilders.AI.OrchestratorMethods;
 using AIStoryBuilders.Models.JSON;
 using Newtonsoft.Json;
-using static AIStoryBuilders.Model.OrchestratorMethods;
 
 namespace AIStoryBuilders.Services
 {

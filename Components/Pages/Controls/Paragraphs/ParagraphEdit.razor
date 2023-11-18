@@ -41,6 +41,7 @@ else
     [Parameter] public List<Timeline> colTimelines { get; set; }
 
     AIStoryBuildersService AIStoryBuildersService;
+    SettingsService SettingsService;
 
     bool InEditMode = false;
     bool Deleteable = false;
@@ -50,6 +51,7 @@ else
         try
         {
             AIStoryBuildersService = (AIStoryBuildersService)ScopedServices.GetService(typeof(AIStoryBuildersService));
+            SettingsService = (SettingsService)ScopedServices.GetService(typeof(SettingsService));
         }
         catch (Exception ex)
         {
@@ -174,6 +176,16 @@ else
 
             // Save
             InEditMode = false;
+
+            // Is AutoAttributeDetection on?
+            if (SettingsService.AutomaticAttributeDetection)
+            {
+                // Yes, so detect attributes
+                // Pass in all existing Characters and detect new ones and/or attributes
+                //AIStoryBuildersService.DetectCharacterAttributes(objParagraph, colCharacters);
+            }
+
+            //AIStoryBuildersService.UpdateParagraph(objChapter, objParagraph);
 
             NotificationService.Notify(new NotificationMessage
                 {
