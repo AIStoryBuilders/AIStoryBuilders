@@ -1,4 +1,5 @@
-﻿@using AIStoryBuilders.Model;
+﻿@using AIStoryBuilders.AI
+@using AIStoryBuilders.Model;
 @using AIStoryBuilders.Models;
 @using AIStoryBuilders.Services;
 @inherits OwningComponentBase
@@ -41,6 +42,7 @@ else
     [Parameter] public List<Timeline> colTimelines { get; set; }
 
     AIStoryBuildersService AIStoryBuildersService;
+    OrchestratorMethods OrchestratorMethods;
     SettingsService SettingsService;
 
     bool InEditMode = false;
@@ -51,6 +53,7 @@ else
         try
         {
             AIStoryBuildersService = (AIStoryBuildersService)ScopedServices.GetService(typeof(AIStoryBuildersService));
+            OrchestratorMethods = (OrchestratorMethods)ScopedServices.GetService(typeof(OrchestratorMethods));
             SettingsService = (SettingsService)ScopedServices.GetService(typeof(SettingsService));
         }
         catch (Exception ex)
@@ -156,7 +159,7 @@ else
         objParagraph.ParagraphContent += speechValue;
     }
 
-    private void onClickSave()
+    private async Task onClickSave()
     {
         try
         {
@@ -182,7 +185,7 @@ else
             {
                 // Yes, so detect attributes
                 // Pass in all existing Characters and detect new ones and/or attributes
-                //AIStoryBuildersService.DetectCharacterAttributes(objParagraph, colCharacters);
+                var result = await OrchestratorMethods.DetectCharacterAttributes(objParagraph, colCharacters);
             }
 
             //AIStoryBuildersService.UpdateParagraph(objChapter, objParagraph);
