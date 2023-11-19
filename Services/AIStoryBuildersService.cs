@@ -97,5 +97,43 @@ namespace AIStoryBuilders.Services
             }
         }
         #endregion
+
+        #region public List<Models.Character> SimplifyCharacter(List<Models.Character> colCharacters, Paragraph objParagraph)
+        public List<Models.Character> SimplifyCharacter(List<Models.Character> colCharacters, Paragraph objParagraph)
+        {
+            // If the Paragraph has a Timeline selected, filter the CharacterBackground 
+            // to only those that are in the Timeline or empty Timeline
+            List<Models.Character> colCharactersInTimeline = new List<Models.Character>();
+
+            if (objParagraph.Timeline.TimelineName != null && objParagraph.Timeline.TimelineName.Length > 0)
+            {
+                foreach (var character in colCharacters)
+                {
+                    Models.Character objCharacter = new Models.Character();
+
+                    objCharacter.CharacterName = character.CharacterName;
+
+                    objCharacter.CharacterBackground = new List<CharacterBackground>();
+
+                    foreach (var background in character.CharacterBackground)
+                    {
+                        if ((background.Timeline.TimelineName == objParagraph.Timeline.TimelineName) ||
+                        (background.Timeline.TimelineName == null || background.Timeline.TimelineName == ""))
+                        {
+                            objCharacter.CharacterBackground.Add(background);
+                        }
+                    }
+
+                    colCharactersInTimeline.Add(objCharacter);
+                }
+            }
+            else
+            {
+                colCharactersInTimeline = colCharacters;
+            }
+
+            return colCharactersInTimeline;
+        }
+        #endregion
     }
 }

@@ -196,9 +196,6 @@ else
             // Is AutoAttributeDetection on?
             if (SettingsService.AutomaticAttributeDetection)
             {
-                // Yes, so detect attributes
-                // Pass in all existing Characters and detect new ones and/or attributes
-
                 //Calling ChatGPT to detect Attributes...
                 NotificationService.Notify(new NotificationMessage
                     {
@@ -208,36 +205,10 @@ else
                         Duration = 2000
                     });
 
-                // If the Paragraph has a Timeline selected, filter the CharacterBackground 
-                // to only those that are in the Timeline or empty Timeline
-                List<Character> colCharactersInTimeline = new List<Character>();
-                if (objParagraph.Timeline.TimelineName != null && objParagraph.Timeline.TimelineName.Length > 0)
-                {
-                    foreach (var character in colCharacters)
-                    {
-                        Character objCharacter = new Character();
+                // Simplify Characters to only CharacterName and CharacterType and value
+                var colCharactersInTimeline = AIStoryBuildersService.SimplifyCharacter(colCharacters,objParagraph);
 
-                        objCharacter.CharacterName = character.CharacterName;
-
-                        objCharacter.CharacterBackground = new List<CharacterBackground>();
-
-                        foreach (var background in character.CharacterBackground)
-                        {
-                            if ((background.Timeline.TimelineName == objParagraph.Timeline.TimelineName) || 
-                            (background.Timeline.TimelineName == null || background.Timeline.TimelineName == ""))
-                            {
-                                objCharacter.CharacterBackground.Add(background);
-                            }
-                        }
-
-                        colCharactersInTimeline.Add(objCharacter);
-                    }
-                }
-                else
-                {
-                    colCharactersInTimeline = colCharacters;                
-                }
-
+                // Pass in all existing Characters and detect new ones and/or attributes
                 List<SimpleCharacter> result = await OrchestratorMethods.DetectCharacterAttributes(objParagraph, colCharactersInTimeline);
             }
 
