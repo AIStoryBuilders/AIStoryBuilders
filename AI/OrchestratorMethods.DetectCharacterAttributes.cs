@@ -53,8 +53,6 @@ namespace AIStoryBuilders.AI
                 )
             );
 
-            ReadTextEvent?.Invoke(this, new ReadTextEventArgs($"Calling ChatGPT...", 70));
-
             // Get a response from ChatGPT 
             var FinalChatRequest = new ChatRequest(
                 chatPrompts,
@@ -111,6 +109,7 @@ namespace AIStoryBuilders.AI
 
         // Utility
 
+        #region  public static class CharacterJsonSerializer
         public static class CharacterJsonSerializer
         {
             public static string Serialize(List<SimpleCharacter> characters)
@@ -122,7 +121,9 @@ namespace AIStoryBuilders.AI
                 });
             }
         }
+        #endregion
 
+        #region public List<SimpleCharacter> ProcessCharacters(List<Models.Character> inputCharacters)
         public List<SimpleCharacter> ProcessCharacters(List<Models.Character> inputCharacters)
         {
             return inputCharacters.Select(character => new SimpleCharacter
@@ -135,19 +136,24 @@ namespace AIStoryBuilders.AI
                 }).ToList()
             }).ToList();
         }
+        #endregion
 
         // Classes
 
+        #region public class SimpleCharacter
         public class SimpleCharacter
         {
             public string CharacterName { get; set; }
             public List<SimpleCharacterBackground> CharacterBackground { get; set; }
         }
+        #endregion
 
+        #region public class SimpleCharacterBackground
         public class SimpleCharacterBackground
         {
             public string Type { get; set; }
             public string Description { get; set; }
-        }
+        } 
+        #endregion
     }
 }

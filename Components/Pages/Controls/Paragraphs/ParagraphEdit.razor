@@ -5,33 +5,41 @@
 @inherits OwningComponentBase
 @inject DialogService dialogService
 @inject NotificationService NotificationService
-@if (!InEditMode)
+@if (@InProgress)
 {
-    <div id="ParagraphDiv" @onclick="onClickParagraph">
-        <span>@objParagraph.ParagraphContent</span>
+    <div class="rz-m-10">
+        <RadzenProgressBar Value="100" ShowValue="false" Mode="ProgressBarMode.Indeterminate" />
     </div>
 }
 else
 {
-    <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" Gap="1rem" Wrap="FlexWrap.Wrap" Style="margin-bottom:10px">
-        <RadzenSpeechToTextButton Change="@(args => OnSpeechCaptured(args, false, "TextToSpeech"))" />
-        <RadzenButton Click="onClickClose" Icon="privacy_tip" ButtonStyle="ButtonStyle.Warning" Size="ButtonSize.Medium" />
+    @if (!InEditMode)
+    {
+        <div id="ParagraphDiv" @onclick="onClickParagraph">
+            <span>@objParagraph.ParagraphContent</span>
+        </div>
+    }
+    else
+    {
+        <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" Gap="1rem" Wrap="FlexWrap.Wrap" Style="margin-bottom:10px">
+            <RadzenSpeechToTextButton Change="@(args => OnSpeechCaptured(args, false, "TextToSpeech"))" />
+            <RadzenButton Click="onClickClose" Icon="privacy_tip" ButtonStyle="ButtonStyle.Warning" Size="ButtonSize.Medium" />
 
-        <RadzenButton Click="onClickCharacter" Text="Characters" ButtonStyle="ButtonStyle.Light" Size="ButtonSize.Medium" />
-        <RadzenButton Click="onClickLocation" Text="Location" ButtonStyle="ButtonStyle.Light" Size="ButtonSize.Medium" />
-        <RadzenButton Click="onClickTimeline" Text="Timeline" ButtonStyle="ButtonStyle.Light" Size="ButtonSize.Medium" />
+            <RadzenButton Click="onClickCharacter" Text="Characters" ButtonStyle="ButtonStyle.Light" Size="ButtonSize.Medium" />
+            <RadzenButton Click="onClickLocation" Text="Location" ButtonStyle="ButtonStyle.Light" Size="ButtonSize.Medium" />
+            <RadzenButton Click="onClickTimeline" Text="Timeline" ButtonStyle="ButtonStyle.Light" Size="ButtonSize.Medium" />
 
-        <RadzenButton Click="onClickSave" Text="Save" Icon="check_circle" ButtonStyle="ButtonStyle.Success" Size="ButtonSize.Medium" />
-        @if (Deleteable)
-        {
-            <RadzenButton Click="onClickDelete" Icon="delete" ButtonStyle="ButtonStyle.Danger" Size="ButtonSize.Medium" />
-        }
-        <RadzenButton Click="onClickClose" Icon="exit_to_app" ButtonStyle="ButtonStyle.Primary" Size="ButtonSize.Medium" />
-    </RadzenStack>
+            <RadzenButton Click="onClickSave" Text="Save" Icon="check_circle" ButtonStyle="ButtonStyle.Success" Size="ButtonSize.Medium" />
+            @if (Deleteable)
+            {
+                <RadzenButton Click="onClickDelete" Icon="delete" ButtonStyle="ButtonStyle.Danger" Size="ButtonSize.Medium" />
+            }
+            <RadzenButton Click="onClickClose" Icon="exit_to_app" ButtonStyle="ButtonStyle.Primary" Size="ButtonSize.Medium" />
+        </RadzenStack>
 
-    <RadzenTextArea @bind-Value="@objParagraph.ParagraphContent" MaxLength="1000" Rows="12" Style="width:100%;height:100%" />
+        <RadzenTextArea @bind-Value="@objParagraph.ParagraphContent" MaxLength="1000" Rows="12" Style="width:100%;height:100%" />
+    }
 }
-
 @code {
     [Parameter] public EventCallback LoadParagraphs { get; set; }
 
@@ -47,6 +55,7 @@ else
 
     bool InEditMode = false;
     bool Deleteable = false;
+    bool InProgress = false;
 
     protected override void OnInitialized()
     {
@@ -93,12 +102,12 @@ else
         var SelectedCharacterList = objParagraph.Characters.Select(c => c.CharacterName).OrderBy(x => x).ToList();
 
         var EditStoryResult = await dialogService.OpenAsync(
-         "Select Characters", ds =>
-         @<CharacterSelector colCharacters="@AllCharacterList" SelectedCharacters="@SelectedCharacterList" DialogReference="ds">
-         </CharacterSelector>
-         , new DialogOptions() { Height = "350px", Width = "500px" });
+     "Select Characters", ds =>
+    @<CharacterSelector colCharacters="@AllCharacterList" SelectedCharacters="@SelectedCharacterList" DialogReference="ds">
+    </CharacterSelector>
+     , new DialogOptions() { Height = "350px", Width = "500px" });
 
-        // Set objParagraph.Characters 
+        // Set objParagraph.Characters
         if (EditStoryResult != null)
         {
             objParagraph.Characters = new List<Character>();
@@ -119,10 +128,10 @@ else
         var SelectedLocation = objParagraph.Location.LocationName;
 
         var EditStoryResult = await dialogService.OpenAsync(
-        "Select Location", ds =>
-        @<LocationSelector colLocations="@AllLocationList" SelectedLocation="@SelectedLocation" DialogReference="ds">
-        </LocationSelector>
-        , new DialogOptions() { Height = "200px", Width = "500px" });
+    "Select Location", ds =>
+    @<LocationSelector colLocations="@AllLocationList" SelectedLocation="@SelectedLocation" DialogReference="ds">
+    </LocationSelector>
+    , new DialogOptions() { Height = "200px", Width = "500px" });
 
         // Set objParagraph.Location.LocationName to SelectedLocation
         if (EditStoryResult != null)
@@ -141,10 +150,10 @@ else
         var SelectedTimeline = objParagraph.Timeline.TimelineName;
 
         var EditStoryResult = await dialogService.OpenAsync(
-        "Select Timeline", ds =>
-        @<TimelineSelector colTimelines="@AllTimelineList" SelectedTimeline="@SelectedTimeline" DialogReference="ds">
-        </TimelineSelector>
-        , new DialogOptions() { Height = "200px", Width = "500px" });
+    "Select Timeline", ds =>
+    @<TimelineSelector colTimelines="@AllTimelineList" SelectedTimeline="@SelectedTimeline" DialogReference="ds">
+    </TimelineSelector>
+    , new DialogOptions() { Height = "200px", Width = "500px" });
 
         // Set objParagraph.Timeline.TimelineName to SelectedTimeline
         if (EditStoryResult != null)
@@ -180,23 +189,61 @@ else
             // Save
             InEditMode = false;
 
+            InProgress = true;
+            StateHasChanged();
+
             // Is AutoAttributeDetection on?
             if (SettingsService.AutomaticAttributeDetection)
             {
                 // Yes, so detect attributes
                 // Pass in all existing Characters and detect new ones and/or attributes
-                var result = await OrchestratorMethods.DetectCharacterAttributes(objParagraph, colCharacters);
+
+                //Calling ChatGPT to detect Attributes...
+                NotificationService.Notify(new NotificationMessage
+                    {
+                        Severity = NotificationSeverity.Success,
+                        Summary = "Info",
+                        Detail = "Calling ChatGPT to detect Attributes...",
+                        Duration = 2000
+                    });
+
+                // If the Paragraph has a Timeline selected, filter the CharacterBackground 
+                // to only those that are in the Timeline or empty Timeline
+                List<Character> colCharactersInTimeline = new List<Character>();
+                if (objParagraph.Timeline.TimelineName != null && objParagraph.Timeline.TimelineName.Length > 0)
+                {
+                    foreach (var character in colCharacters)
+                    {
+                        Character objCharacter = new Character();
+
+                        objCharacter.CharacterName = character.CharacterName;
+
+                        objCharacter.CharacterBackground = new List<CharacterBackground>();
+
+                        foreach (var background in character.CharacterBackground)
+                        {
+                            if ((background.Timeline.TimelineName == objParagraph.Timeline.TimelineName) || 
+                            (background.Timeline.TimelineName == null || background.Timeline.TimelineName == ""))
+                            {
+                                objCharacter.CharacterBackground.Add(background);
+                            }
+                        }
+
+                        colCharactersInTimeline.Add(objCharacter);
+                    }
+                }
+                else
+                {
+                    colCharactersInTimeline = colCharacters;                
+                }
+
+                var result = await OrchestratorMethods.DetectCharacterAttributes(objParagraph, colCharactersInTimeline);
             }
 
             //AIStoryBuildersService.UpdateParagraph(objChapter, objParagraph);
 
-            NotificationService.Notify(new NotificationMessage
-                {
-                    Severity = NotificationSeverity.Success,
-                    Summary = "Update",
-                    Detail = "Saved",
-                    Duration = 2000
-                });
+            InProgress = false;
+            StateHasChanged();
         }
         catch (Exception ex)
         {
