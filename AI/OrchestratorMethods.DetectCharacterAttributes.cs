@@ -8,6 +8,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using AIStoryBuilders.Models;
+using System.Text.Json;
 
 namespace AIStoryBuilders.AI
 {
@@ -34,8 +35,12 @@ namespace AIStoryBuilders.AI
             // *****************************************************
             dynamic Databasefile = AIStoryBuildersDatabaseObject;
 
+            // Serialize the Characters to JSON
+            var SimpleCharacters = ProcessCharacters(colCharacters);
+            string json = CharacterJsonSerializer.Serialize(SimpleCharacters);
+
             // Update System Message
-            SystemMessage = CreateDetectCharacterAttributes("");
+            SystemMessage = CreateDetectCharacterAttributes(objParagraph.ParagraphContent, json);
 
             LogService.WriteToLog($"Prompt: {SystemMessage}");
 
@@ -73,36 +78,76 @@ namespace AIStoryBuilders.AI
 
         // Methods
 
-        #region private string CreateDetectCharacterAttributes(string param)
-        private string CreateDetectCharacterAttributes(string param)
+        #region private string CreateDetectCharacterAttributes(string paramParagraphContent, string CharacterJSON)
+        private string CreateDetectCharacterAttributes(string paramParagraphContent, string CharacterJSON)
         {
-            return "Given a story with the following structure: \n" +
-                    "[ \n" +
-                    $"{param} \n" +
-                    "] \n" +
-                    "Using only this information please: \n" +
-                    $"#1 Create {param} chapters in a format like this: Chapter1, Chapter2, Chapter3. \n" +
-                    "#2 A short chapter_synopsis description. \n" +
-                    "#3 A short first paragraph for each chapter. \n" +
-                    "#4 A single timeline_name for each paragraph. \n" +
-                    "#5 The list of character names that appear in each paragraph. \n" +
-                    "Output JSON nothing else. \n" +
-                    "Provide the results in the following JSON format: \n" +
-                    "{ \n" +
-                    "\"chapter\": [\n" +
-                    "{ \n" +
-                    "\"chapter_name\": chapter_name, \n" +
-                    "\"chapter_synopsis\": chapter_synopsis, \n" +
-                    "\"paragraphs\": [\n" +
-                    "{ \n" +
-                    "\"contents\": contents, \n" +
-                    "\"location_name\": location_name, \n" +
-                    "\"timeline_name\": timeline_name, \n" +
-                    "\"character_names\": [character_names] \n" +
-                    "} \n" +
-                    "] \n" +
-                    "} \n";
+            return "You are a function that will produce only JSON. \n" +
+            "You are a function that will analyze a paragraph of text (given as #paramParagraphContent) \n" +
+            "and a JSON string representing a list of characters (given as #CharacterJSON). \n" +
+            "Identify any characters and or attributes mentioned in the paragraph \n" +
+            "that are not already present in the JSON data. \n" +
+            "Parse the characters in #CharacterJSON to create a list of known characters. \n" +
+            "Then analyze #paramParagraphContent to extract character names. \n" +
+            "Next, compare these extracted names against the list of known \n" +
+            "characters derived from #CharacterJSON. \n" +
+            "Characters found in #paramParagraphContent but not in #CharacterJSON will be identified. \n" +
+            $"### This is the content of #paramParagraphContent: {paramParagraphContent} \n" +
+            $"### This is the content of #CharacterJSON: {CharacterJSON} \n" +
+            "Provide the results in the following JSON format: \n" +
+            "\"characters\": [\n" +
+            "{ \n" +
+            "\"name\": name, \n" +
+            "\"descriptions\": [\n" +
+            "{ \n" +
+            "\"description_type\": description_type, \n" +
+            "\"enum\": [\"Appearance\",\"Goals\",\"History\",\"Aliases\",\"Facts\"], \n" +
+            "\"description\": description \n" +
+            "} \n" +
+            "] \n" +
+            "} \n" +
+            "] \n";
         }
         #endregion
+
+        // Utility
+
+        public static class CharacterJsonSerializer
+        {
+            public static string Serialize(List<SimpleCharacter> characters)
+            {
+                return JsonSerializer.Serialize(characters, new JsonSerializerOptions
+                {
+                    WriteIndented = true, // for pretty printing; set to false for compact JSON
+                    ReferenceHandler = System.Text.Json.Serialization.ReferenceHandler.IgnoreCycles // to handle circular references
+                });
+            }
+        }
+
+        public List<SimpleCharacter> ProcessCharacters(List<Models.Character> inputCharacters)
+        {
+            return inputCharacters.Select(character => new SimpleCharacter
+            {
+                CharacterName = character.CharacterName,
+                CharacterBackground = character.CharacterBackground.Select(bg => new SimpleCharacterBackground
+                {
+                    Type = bg.Type,
+                    Description = bg.Description
+                }).ToList()
+            }).ToList();
+        }
+
+        // Classes
+
+        public class SimpleCharacter
+        {
+            public string CharacterName { get; set; }
+            public List<SimpleCharacterBackground> CharacterBackground { get; set; }
+        }
+
+        public class SimpleCharacterBackground
+        {
+            public string Type { get; set; }
+            public string Description { get; set; }
+        }
     }
 }
