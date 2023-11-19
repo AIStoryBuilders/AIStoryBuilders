@@ -2,6 +2,7 @@
 @using AIStoryBuilders.Model;
 @using AIStoryBuilders.Models;
 @using AIStoryBuilders.Services;
+@using static AIStoryBuilders.AI.OrchestratorMethods
 @inherits OwningComponentBase
 @inject DialogService dialogService
 @inject NotificationService NotificationService
@@ -237,7 +238,7 @@ else
                     colCharactersInTimeline = colCharacters;                
                 }
 
-                var result = await OrchestratorMethods.DetectCharacterAttributes(objParagraph, colCharactersInTimeline);
+                List<SimpleCharacter> result = await OrchestratorMethods.DetectCharacterAttributes(objParagraph, colCharactersInTimeline);
             }
 
             //AIStoryBuildersService.UpdateParagraph(objChapter, objParagraph);

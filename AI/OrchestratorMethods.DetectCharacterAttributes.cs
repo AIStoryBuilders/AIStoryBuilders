@@ -9,13 +9,14 @@ using System.Text;
 using System.Threading.Tasks;
 using AIStoryBuilders.Models;
 using System.Text.Json;
+using Newtonsoft.Json.Linq;
 
 namespace AIStoryBuilders.AI
 {
     public partial class OrchestratorMethods
     {
-        #region public async Task<Message> DetectCharacterAttributes(Paragraph objParagraph, List<Models.Character> colCharacters)
-        public async Task<Message> DetectCharacterAttributes(Paragraph objParagraph, List<Models.Character> colCharacters)
+        #region public async Task<List<SimpleCharacter>> DetectCharacterAttributes(Paragraph objParagraph, List<Models.Character> colCharacters)
+        public async Task<List<SimpleCharacter>> DetectCharacterAttributes(Paragraph objParagraph, List<Models.Character> colCharacters)
         {
             LogService.WriteToLog("Detect Character Attributes - Start");
             string Organization = SettingsService.Organization;
@@ -70,7 +71,35 @@ namespace AIStoryBuilders.AI
 
             LogService.WriteToLog($"TotalTokens: {ChatResponseResult.Usage.TotalTokens} - ChatResponseResult - {ChatResponseResult.FirstChoice.Message.Content}");
 
-            return ChatResponseResult.FirstChoice.Message;
+            // Convert the JSON to a list of SimpleCharacters
+
+            var JSONResult = ChatResponseResult.FirstChoice.Message.Content.ToString();
+
+            List<SimpleCharacter> simpleCharacters = new List<SimpleCharacter>();
+
+            dynamic data = JObject.Parse(JSONResult);
+
+            foreach (var character in data.characters)
+            {
+                SimpleCharacter objSimpleCharacter = new SimpleCharacter();
+                objSimpleCharacter.CharacterName = character.name.ToString();
+
+                objSimpleCharacter.CharacterBackground = new List<SimpleCharacterBackground>();
+
+                foreach (var description in character.descriptions)
+                {
+                    SimpleCharacterBackground objSimpleCharacterBackground = new SimpleCharacterBackground();
+
+                    objSimpleCharacterBackground.Type = description.description_type.ToString();
+                    objSimpleCharacterBackground.Description = description.description.ToString();
+                    
+                    objSimpleCharacter.CharacterBackground.Add(objSimpleCharacterBackground);
+                }
+
+                simpleCharacters.Add(objSimpleCharacter);
+            }
+
+            return simpleCharacters;
         }
         #endregion
 
@@ -155,5 +184,7 @@ namespace AIStoryBuilders.AI
             public string Description { get; set; }
         } 
         #endregion
+
+
     }
 }
