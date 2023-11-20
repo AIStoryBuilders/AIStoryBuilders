@@ -1,21 +1,37 @@
 ﻿@using AIStoryBuilders.Models;
 @using static AIStoryBuilders.AI.OrchestratorMethods
 <div Style="height:190px;overflow:auto;">
-    <RadzenListBox Data=@colCharacters @bind-Value=@SelectedCharacters
-                   Multiple=true AllowClear=true AllowSelectAll=false Style="width: 100%; height: 100%" />
+    <RadzenTree AllowCheckBoxes="true" @bind-CheckedValues=@CheckedValues Style="width: 100%; height: 300px" Data=@colCharacters>
+        <RadzenTreeLevel TextProperty="CharacterName" ChildrenProperty="CharacterBackground" HasChildren=@(e => (e as SimpleCharacterSelector).CharacterBackground.Any()) />
+        <RadzenTreeLevel HasChildren=@(CharacterBackground => false) />
+    </RadzenTree>
 </div>
 <br />
 <div class="rz-text-align-center">
-    <RadzenButton Text="Close" ButtonStyle="ButtonStyle.Secondary"
+    <RadzenButton Text="Save Selections" ButtonStyle="ButtonStyle.Primary"
                   Click=@CloseDialog />
 </div>
 @code {
-    [Parameter] public IEnumerable<SimpleCharacter> colCharacters { get; set; }
+    [Parameter] public IEnumerable<SimpleCharacterSelector> colCharacters { get; set; }
     [Parameter] public DialogService DialogReference { get; set; }
-    [Parameter] public IEnumerable<string> SelectedCharacters { get; set; }
+
+    IEnumerable<object> checkedValues;
+
+    IEnumerable<object> CheckedValues
+    {
+        get => checkedValues;
+        set
+        {
+            checkedValues = value;
+            if (checkedValues != null)
+            {
+                //console.Log($"CheckedValues Changed {string.Join(Environment.NewLine, value.Select(GetText))}");
+            }
+        }
+    }
 
     private void CloseDialog()
     {
-        DialogReference.Close(SelectedCharacters);
+        DialogReference.Close(CheckedValues);
     }
 }

@@ -103,10 +103,10 @@ else
         var SelectedCharacterList = objParagraph.Characters.Select(c => c.CharacterName).OrderBy(x => x).ToList();
 
         var EditStoryResult = await dialogService.OpenAsync(
-     "Select Characters", ds =>
+         "Select Characters", ds =>
     @<CharacterSelector colCharacters="@AllCharacterList" SelectedCharacters="@SelectedCharacterList" DialogReference="ds">
     </CharacterSelector>
-     , new DialogOptions() { Height = "350px", Width = "500px" });
+         , new DialogOptions() { Height = "350px", Width = "500px" });
 
         // Set objParagraph.Characters
         if (EditStoryResult != null)
@@ -129,10 +129,10 @@ else
         var SelectedLocation = objParagraph.Location.LocationName;
 
         var EditStoryResult = await dialogService.OpenAsync(
-    "Select Location", ds =>
+        "Select Location", ds =>
     @<LocationSelector colLocations="@AllLocationList" SelectedLocation="@SelectedLocation" DialogReference="ds">
     </LocationSelector>
-    , new DialogOptions() { Height = "200px", Width = "500px" });
+        , new DialogOptions() { Height = "200px", Width = "500px" });
 
         // Set objParagraph.Location.LocationName to SelectedLocation
         if (EditStoryResult != null)
@@ -151,7 +151,7 @@ else
         var SelectedTimeline = objParagraph.Timeline.TimelineName;
 
         var EditStoryResult = await dialogService.OpenAsync(
-    "Select Timeline", ds =>
+        "Select Timeline", ds =>
     @<TimelineSelector colTimelines="@AllTimelineList" SelectedTimeline="@SelectedTimeline" DialogReference="ds">
     </TimelineSelector>
     , new DialogOptions() { Height = "200px", Width = "500px" });
@@ -206,10 +206,32 @@ else
                     });
 
                 // Simplify Characters to only CharacterName and CharacterType and value
-                var colCharactersInTimeline = AIStoryBuildersService.SimplifyCharacter(colCharacters,objParagraph);
+                var colCharactersInTimeline = AIStoryBuildersService.SimplifyCharacter(colCharacters, objParagraph);
 
                 // Pass in all existing Characters and detect new ones and/or attributes
-                List<SimpleCharacter> result = await OrchestratorMethods.DetectCharacterAttributes(objParagraph, colCharactersInTimeline);
+                List<SimpleCharacter> colSimpleCharacter = await OrchestratorMethods.DetectCharacterAttributes(objParagraph, colCharactersInTimeline);
+
+                // Convert result to SimpleCharacterSelector (to be used in CharacterAttributes component)
+                var colSimpleCharacterSelector = AIStoryBuildersService.ConvertToSimpleCharacterSelector(colSimpleCharacter);
+
+                if (colSimpleCharacterSelector.Count > 0)
+                {
+                    // Open CharacterAttributes dialog
+                    var EditStoryResult = await dialogService.OpenAsync(
+                        "Select Character Attributes", ds =>
+                        @<CharacterAttributes colCharacters=@colSimpleCharacterSelector DialogReference="ds">
+                        </CharacterAttributes>
+                        , new DialogOptions() { Height = "350px", Width = "500px" });
+
+                    if (EditStoryResult != null)
+                    {
+                        objParagraph.Characters = new List<Character>();
+                        foreach (var character in EditStoryResult)
+                        {
+                            var value = character;
+                        }
+                    }
+                }
             }
 
             //AIStoryBuildersService.UpdateParagraph(objChapter, objParagraph);

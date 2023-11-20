@@ -165,26 +165,7 @@ namespace AIStoryBuilders.AI
                 }).ToList()
             }).ToList();
         }
-        #endregion
-
-        // Classes
-
-        #region public class SimpleCharacter
-        public class SimpleCharacter
-        {
-            public string CharacterName { get; set; }
-            public List<SimpleCharacterBackground> CharacterBackground { get; set; }
-        }
-        #endregion
-
-        #region public class SimpleCharacterBackground
-        public class SimpleCharacterBackground
-        {
-            public string Type { get; set; }
-            public string Description { get; set; }
-        } 
-        #endregion
-
+        #endregion 
 
     }
 }
