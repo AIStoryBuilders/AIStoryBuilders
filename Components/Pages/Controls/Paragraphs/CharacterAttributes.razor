@@ -1,14 +1,14 @@
 ﻿@using AIStoryBuilders.Models;
 @using static AIStoryBuilders.AI.OrchestratorMethods
-<div Style="height:190px;overflow:auto;">
-    <RadzenTree AllowCheckBoxes="true" @bind-CheckedValues=@CheckedValues Style="width: 100%; height: 300px" Data=@colCharacters>
-        <RadzenTreeLevel TextProperty="CharacterName" ChildrenProperty="CharacterBackground" HasChildren=@(e => (e as SimpleCharacterSelector).CharacterBackground.Any()) />
+<div Style="height:150px;overflow:auto;">
+    <RadzenTree AllowCheckBoxes="true" @bind-CheckedValues=@CheckedValues Style="width: 100%; height: 140px" Data=@colCharacters>
+        <RadzenTreeLevel TextProperty="CharacterName" ChildrenProperty="CharacterBackground" Expanded="@(data => true)" HasChildren=@(e => (e as SimpleCharacterSelector).CharacterBackground.Any()) />
         <RadzenTreeLevel HasChildren=@(CharacterBackground => false) />
     </RadzenTree>
 </div>
 <br />
 <div class="rz-text-align-center">
-    <RadzenButton Text="Save Selections" ButtonStyle="ButtonStyle.Primary"
+    <RadzenButton Text="Add Characters and Attributes" ButtonStyle="ButtonStyle.Primary"
                   Click=@CloseDialog />
 </div>
 @code {
