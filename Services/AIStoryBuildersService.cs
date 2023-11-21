@@ -193,6 +193,5 @@ namespace AIStoryBuilders.Services
             return colCharacters;
         } 
         #endregion
-
     }
 }
