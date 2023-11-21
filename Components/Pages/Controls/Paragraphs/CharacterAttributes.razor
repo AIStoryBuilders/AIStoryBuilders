@@ -1,5 +1,7 @@
 ﻿@using AIStoryBuilders.Models;
+@using AIStoryBuilders.Services
 @using static AIStoryBuilders.AI.OrchestratorMethods
+@inherits OwningComponentBase
 <div Style="height:150px;overflow:auto;">
     <RadzenTree AllowCheckBoxes="true" @bind-CheckedValues=@CheckedValues Style="width: 100%; height: 140px" Data=@colCharacters>
         <RadzenTreeLevel TextProperty="CharacterName" ChildrenProperty="CharacterBackground" Expanded="@(data => true)" HasChildren=@(e => (e as SimpleCharacterSelector).CharacterBackground.Any()) />
@@ -15,8 +17,9 @@
     [Parameter] public IEnumerable<SimpleCharacterSelector> colCharacters { get; set; }
     [Parameter] public DialogService DialogReference { get; set; }
 
-    IEnumerable<object> checkedValues;
+    AIStoryBuildersService AIStoryBuildersService;
 
+    IEnumerable<object> checkedValues;
     IEnumerable<object> CheckedValues
     {
         get => checkedValues;
@@ -30,8 +33,30 @@
         }
     }
 
+    protected override void OnInitialized()
+    {
+            AIStoryBuildersService = (AIStoryBuildersService)ScopedServices.GetService(typeof(AIStoryBuildersService));       
+    }
+
     private void CloseDialog()
     {
-        DialogReference.Close(CheckedValues);
+        var SelectedChracters = (from item in CheckedValues
+                         select new AIStoryBuilders.Models.SimpleCharacterSelector())
+                        .ToList();
+
+        // Get all the CheckedValues that are of type SimpleCharacterSelector
+        List<SimpleCharacterSelector> SelectedCharacters = new List<SimpleCharacterSelector>();
+        foreach (var item in CheckedValues)
+        {
+            if (item.GetType() == typeof(SimpleCharacterSelector))
+            {
+                SelectedCharacters.Add((SimpleCharacterSelector)item);
+            }
+        }
+
+        // Convert result to SimpleCharacter 
+        var colSimpleCharacter = AIStoryBuildersService.ConvertToSimpleCharacter(SelectedCharacters);
+
+        DialogReference.Close(colSimpleCharacter);
     }
 }

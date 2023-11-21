@@ -160,5 +160,39 @@ namespace AIStoryBuilders.Services
             return colSimpleCharacterSelector;
         }
         #endregion
+
+        #region public List<Models.SimpleCharacter> ConvertToSimpleCharacter(List<Models.SimpleCharacterSelector> colSimpleCharacterSelector)
+        public List<Models.SimpleCharacter> ConvertToSimpleCharacter(List<Models.SimpleCharacterSelector> colSimpleCharacterSelector)
+        {
+            List<Models.SimpleCharacter> colCharacters = new List<Models.SimpleCharacter>();
+
+            foreach (var selector in colSimpleCharacterSelector)
+            {
+                Models.SimpleCharacter character = new Models.SimpleCharacter();
+
+                character.CharacterName = selector.CharacterName;
+
+                character.CharacterBackground = new List<SimpleCharacterBackground>();
+
+                foreach (var background in selector.CharacterBackground)
+                {
+                    var splitBackground = background.Split('|');
+                    if (splitBackground.Length == 2)
+                    {
+                        character.CharacterBackground.Add(new SimpleCharacterBackground
+                        {
+                            Type = splitBackground[0],
+                            Description = splitBackground[1]
+                        });
+                    }
+                }
+
+                colCharacters.Add(character);
+            }
+
+            return colCharacters;
+        } 
+        #endregion
+
     }
 }
