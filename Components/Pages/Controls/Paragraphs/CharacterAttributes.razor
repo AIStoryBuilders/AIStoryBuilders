@@ -4,7 +4,7 @@
 @inherits OwningComponentBase
 <div Style="height:160px;overflow:auto;">
     <RadzenTree AllowCheckBoxes="true" AllowCheckChildren=false @bind-CheckedValues=@CheckedValues Style="width: 100%; height: 150px" Data=@colCharacters>
-        <RadzenTreeLevel Expanded="@(data => true)" HasChildren="@(data => false)" />
+        <RadzenTreeLevel TextProperty="CharacterDisplay" Expanded="@(data => true)" HasChildren="@(data => false)" />
     </RadzenTree>
 </div>
 <br />
@@ -16,7 +16,7 @@
     <p class="rz-text-align-center" style="font-size:xx-small">(Automatic attribute detection can be disabled in Settings.)</p>
 </div>
 @code {
-    [Parameter] public IEnumerable<string> colCharacters { get; set; }
+    [Parameter] public IEnumerable<SimpleCharacterSelector> colCharacters { get; set; }
     [Parameter] public DialogService DialogReference { get; set; }
 
     AIStoryBuildersService AIStoryBuildersService;
@@ -38,11 +38,6 @@
 
     private void CloseDialog()
     {
-        var SelectedCharacters = (from item in CheckedValues
-                                  select new AIStoryBuilders.Models.SimpleCharacterSelector())
-                        .ToList();
-
-        var value = SelectedCharacters;
-        //DialogReference.Close(colSimpleCharacter);
+        DialogReference.Close(CheckedValues);
     }
 }

@@ -8,7 +8,7 @@ namespace AIStoryBuilders.Models
 {
     public class SimpleCharacterSelector
     {
-        public string CharacterName { get; set; }
-        public List<string> CharacterBackground { get; set; }
+        public string CharacterDisplay { get; set; }
+        public string CharacterValue { get; set; }
     }
 }

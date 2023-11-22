@@ -15,8 +15,8 @@ namespace AIStoryBuilders.AI
 {
     public partial class OrchestratorMethods
     {
-        #region public async Task<List<string>> DetectCharacterAttributes(Paragraph objParagraph, List<Models.Character> colCharacters)
-        public async Task<List<string>> DetectCharacterAttributes(Paragraph objParagraph, List<Models.Character> colCharacters)
+        #region public async Task<List<SimpleCharacterSelector>> DetectCharacterAttributes(Paragraph objParagraph, List<Models.Character> colCharacters)
+        public async Task<List<SimpleCharacterSelector>> DetectCharacterAttributes(Paragraph objParagraph, List<Models.Character> colCharacters)
         {
             LogService.WriteToLog("Detect Character Attributes - Start");
             string Organization = SettingsService.Organization;
@@ -75,7 +75,7 @@ namespace AIStoryBuilders.AI
 
             var JSONResult = ChatResponseResult.FirstChoice.Message.Content.ToString();
 
-            List<string> colCharacterOutput = new List<string>();
+            List<SimpleCharacterSelector> colCharacterOutput = new List<SimpleCharacterSelector>();
 
             dynamic data = JObject.Parse(JSONResult);
 
@@ -84,6 +84,15 @@ namespace AIStoryBuilders.AI
                 string CharacterName = character.name.ToString();
                 string CharacterAction = character.action.ToString();
 
+                if (CharacterAction == "New Character")
+                {
+                    colCharacterOutput.Add(new SimpleCharacterSelector { CharacterDisplay = $"Add {CharacterName}", CharacterValue = $"{CharacterName}|{CharacterAction}||" });
+                }
+                else
+                {
+                    colCharacterOutput.Add(new SimpleCharacterSelector { CharacterDisplay = $"{CharacterAction} {CharacterName}", CharacterValue = $"{CharacterName}|{CharacterAction}||" });
+                }
+
                 if (character.descriptions.Count > 0)
                 {
                     foreach (var description in character.descriptions)
@@ -91,13 +100,9 @@ namespace AIStoryBuilders.AI
                         string description_type = description.description_type.ToString();
                         string description_text = description.description.ToString();
 
-                        colCharacterOutput.Add($"{CharacterName}|{CharacterAction}|{description_type}|{description_text}");
+                        colCharacterOutput.Add(new SimpleCharacterSelector { CharacterDisplay = $"{CharacterName} - ({description_type}) {description_text}", CharacterValue = $"{CharacterName}|{CharacterAction}|{description_type}|{description_text}" });
                     }
-                }
-                else
-                {
-                    colCharacterOutput.Add($"{CharacterName}|{CharacterAction}||");
-                }                
+                }                               
             }
 
             return colCharacterOutput;

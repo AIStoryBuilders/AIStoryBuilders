@@ -209,7 +209,7 @@ else
                 var colCharactersInTimeline = AIStoryBuildersService.SimplifyCharacter(colCharacters, objParagraph);
 
                 // Pass in all existing Characters and detect new ones and/or attributes
-                List<string> colCharacterOutput = await OrchestratorMethods.DetectCharacterAttributes(objParagraph, colCharactersInTimeline);
+                List<SimpleCharacterSelector> colCharacterOutput = await OrchestratorMethods.DetectCharacterAttributes(objParagraph, colCharactersInTimeline);
 
                 if (colCharacterOutput.Count > 0)
                 {
@@ -222,9 +222,10 @@ else
 
                     if (EditStoryResult != null)
                     {
-                        foreach (var result in EditStoryResult)
+                        foreach (SimpleCharacterSelector result in EditStoryResult)
                         {
-                            var value = result;
+                            var CharacterDisplay = result.CharacterDisplay;
+                            var CharacterValue = result.CharacterValue;
                         }
                     }
                 }
