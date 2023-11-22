@@ -209,26 +209,22 @@ else
                 var colCharactersInTimeline = AIStoryBuildersService.SimplifyCharacter(colCharacters, objParagraph);
 
                 // Pass in all existing Characters and detect new ones and/or attributes
-                List<SimpleCharacter> colSimpleCharacter = await OrchestratorMethods.DetectCharacterAttributes(objParagraph, colCharactersInTimeline);
+                List<string> colCharacterOutput = await OrchestratorMethods.DetectCharacterAttributes(objParagraph, colCharactersInTimeline);
 
-                // Convert result to SimpleCharacterSelector (to be used in CharacterAttributes component)
-                var colSimpleCharacterSelector = AIStoryBuildersService.ConvertToSimpleCharacterSelector(colSimpleCharacter);
-
-                if (colSimpleCharacterSelector.Count > 0)
+                if (colCharacterOutput.Count > 0)
                 {
                     // Open CharacterAttributes dialog
                     var EditStoryResult = await dialogService.OpenAsync(
                         "Select Character Attributes", ds =>
-                        @<CharacterAttributes colCharacters=@colSimpleCharacterSelector DialogReference="ds">
+                        @<CharacterAttributes colCharacters=@colCharacterOutput DialogReference="ds">
                         </CharacterAttributes>
                         , new DialogOptions() { Height = "360px", Width = "500px" });
 
                     if (EditStoryResult != null)
                     {
-                        objParagraph.Characters = new List<Character>();
-                        foreach (var character in EditStoryResult)
+                        foreach (var result in EditStoryResult)
                         {
-                            var value = character;
+                            var value = result;
                         }
                     }
                 }

@@ -15,8 +15,8 @@ namespace AIStoryBuilders.AI
 {
     public partial class OrchestratorMethods
     {
-        #region public async Task<List<SimpleCharacter>> DetectCharacterAttributes(Paragraph objParagraph, List<Models.Character> colCharacters)
-        public async Task<List<SimpleCharacter>> DetectCharacterAttributes(Paragraph objParagraph, List<Models.Character> colCharacters)
+        #region public async Task<List<string>> DetectCharacterAttributes(Paragraph objParagraph, List<Models.Character> colCharacters)
+        public async Task<List<string>> DetectCharacterAttributes(Paragraph objParagraph, List<Models.Character> colCharacters)
         {
             LogService.WriteToLog("Detect Character Attributes - Start");
             string Organization = SettingsService.Organization;
@@ -75,31 +75,32 @@ namespace AIStoryBuilders.AI
 
             var JSONResult = ChatResponseResult.FirstChoice.Message.Content.ToString();
 
-            List<SimpleCharacter> simpleCharacters = new List<SimpleCharacter>();
+            List<string> colCharacterOutput = new List<string>();
 
             dynamic data = JObject.Parse(JSONResult);
 
             foreach (var character in data.characters)
             {
-                SimpleCharacter objSimpleCharacter = new SimpleCharacter();
-                objSimpleCharacter.CharacterName = character.name.ToString();
+                string CharacterName = character.name.ToString();
+                string CharacterAction = character.action.ToString();
 
-                objSimpleCharacter.CharacterBackground = new List<SimpleCharacterBackground>();
-
-                foreach (var description in character.descriptions)
+                if (character.descriptions.Count > 0)
                 {
-                    SimpleCharacterBackground objSimpleCharacterBackground = new SimpleCharacterBackground();
+                    foreach (var description in character.descriptions)
+                    {
+                        string description_type = description.description_type.ToString();
+                        string description_text = description.description.ToString();
 
-                    objSimpleCharacterBackground.Type = description.description_type.ToString();
-                    objSimpleCharacterBackground.Description = description.description.ToString();
-                    
-                    objSimpleCharacter.CharacterBackground.Add(objSimpleCharacterBackground);
+                        colCharacterOutput.Add($"{CharacterName}|{CharacterAction}|{description_type}|{description_text}");
+                    }
                 }
-
-                simpleCharacters.Add(objSimpleCharacter);
+                else
+                {
+                    colCharacterOutput.Add($"{CharacterName}|{CharacterAction}||");
+                }                
             }
 
-            return simpleCharacters;
+            return colCharacterOutput;
         }
         #endregion
 
@@ -124,6 +125,8 @@ namespace AIStoryBuilders.AI
             "\"characters\": [\n" +
             "{ \n" +
             "\"name\": name, \n" +
+            "\"action\": action, \n" +
+            "\"enum\": [\"New Character\",\"Add Attribute\"], \n" +
             "\"descriptions\": [\n" +
             "{ \n" +
             "\"description_type\": description_type, \n" +
@@ -166,6 +169,5 @@ namespace AIStoryBuilders.AI
             }).ToList();
         }
         #endregion 
-
     }
 }

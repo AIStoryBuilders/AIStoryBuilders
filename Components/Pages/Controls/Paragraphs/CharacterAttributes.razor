@@ -4,8 +4,7 @@
 @inherits OwningComponentBase
 <div Style="height:160px;overflow:auto;">
     <RadzenTree AllowCheckBoxes="true" AllowCheckChildren=false @bind-CheckedValues=@CheckedValues Style="width: 100%; height: 150px" Data=@colCharacters>
-        <RadzenTreeLevel TextProperty="CharacterName" ChildrenProperty="CharacterBackground" Expanded="@(data => true)" HasChildren=@(e => (e as SimpleCharacterSelector).CharacterBackground.Any()) />
-        <RadzenTreeLevel HasChildren=@(CharacterBackground => false) />
+        <RadzenTreeLevel Expanded="@(data => true)" HasChildren="@(data => false)" />
     </RadzenTree>
 </div>
 <br />
@@ -17,7 +16,7 @@
     <p class="rz-text-align-center" style="font-size:xx-small">(Automatic attribute detection can be disabled in Settings.)</p>
 </div>
 @code {
-    [Parameter] public IEnumerable<SimpleCharacterSelector> colCharacters { get; set; }
+    [Parameter] public IEnumerable<string> colCharacters { get; set; }
     [Parameter] public DialogService DialogReference { get; set; }
 
     AIStoryBuildersService AIStoryBuildersService;
@@ -29,37 +28,21 @@
         set
         {
             checkedValues = value;
-            if (checkedValues != null)
-            {
-                //console.Log($"CheckedValues Changed {string.Join(Environment.NewLine, value.Select(GetText))}");
-            }
         }
     }
 
     protected override void OnInitialized()
     {
-            AIStoryBuildersService = (AIStoryBuildersService)ScopedServices.GetService(typeof(AIStoryBuildersService));       
+        AIStoryBuildersService = (AIStoryBuildersService)ScopedServices.GetService(typeof(AIStoryBuildersService));
     }
 
     private void CloseDialog()
     {
-        var SelectedChracters = (from item in CheckedValues
-                         select new AIStoryBuilders.Models.SimpleCharacterSelector())
+        var SelectedCharacters = (from item in CheckedValues
+                                  select new AIStoryBuilders.Models.SimpleCharacterSelector())
                         .ToList();
 
-        // Get all the CheckedValues that are of type SimpleCharacterSelector
-        List<SimpleCharacterSelector> SelectedCharacters = new List<SimpleCharacterSelector>();
-        foreach (var item in CheckedValues)
-        {
-            if (item.GetType() == typeof(SimpleCharacterSelector))
-            {
-                SelectedCharacters.Add((SimpleCharacterSelector)item);
-            }
-        }
-
-        // Convert result to SimpleCharacter 
-        var colSimpleCharacter = AIStoryBuildersService.ConvertToSimpleCharacter(SelectedCharacters);
-
-        DialogReference.Close(colSimpleCharacter);
+        var value = SelectedCharacters;
+        //DialogReference.Close(colSimpleCharacter);
     }
 }
