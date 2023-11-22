@@ -5,23 +5,21 @@
 @inject SettingsService SettingsService
 @inject IJSRuntime JSRuntime
 <h3>Settings</h3>
-<div class="container-fluid">
-    <div>
-        <RadzenFormField Text="OpenAI Organization:" Variant="@variant">
-            <RadzenTextBox @bind-Value="@Organization" style="width:300px;" />
-        </RadzenFormField>
-    </div>
-    <div class="col-12">
-        <RadzenFormField Text="OpenAI ApiKey:" Variant="@variant">
-            <RadzenTextBox @bind-Value="@ApiKey" @oninput="APIKeyDetection" style="width:450px;" />
-        </RadzenFormField>
-    </div>
-    <div class="col-12">
-        <br />
-        <span>Automatic Attribute Detection:</span><br />
-        <RadzenLabel Text="Off" /><RadzenSwitch @bind-Value=@AutoAttributeDetection style="width:25px;" /><RadzenLabel Text="On" />
-    </div>
-</div>
+<RadzenRow AlignItems="AlignItems.Start" Wrap="FlexWrap.Wrap" Gap="1rem" Class="rz-p-sm-12">
+    <RadzenColumn Size="8" SizeSM="4">
+        <RadzenStack>
+            <RadzenFormField Text="OpenAI Organization:" Variant="@variant">
+                <RadzenTextBox @bind-Value="@Organization" style="width:300px;" />
+            </RadzenFormField>
+            <RadzenFormField Text="OpenAI ApiKey:" Variant="@variant">
+                <RadzenTextBox @bind-Value="@ApiKey" @oninput="APIKeyDetection" style="width:450px;" />
+            </RadzenFormField>
+            <RadzenFormField Text="Automatic Attribute Detection:" style="width:200px" Variant="@variant">
+                <RadzenLabel Text="Off" style="text-align:right" /><RadzenSwitch @bind-Value=@AutoAttributeDetection style="width:25px;margin:8px" /><RadzenLabel Text="On" style="width:20px;" />
+            </RadzenFormField>
+        </RadzenStack>
+    </RadzenColumn>
+</RadzenRow>
 <br />
 @if (!IsSettingsEntered)
 {
@@ -35,13 +33,13 @@
 }
 else
 {
-<div class="row">
-    <div class="col">
-        <RadzenButton Text="Save" ButtonStyle="ButtonStyle.Success"
-                      Click="SettingsSave"
-                      Style="margin-bottom: 10px; width: 150px" />&nbsp;&nbsp;
+    <div class="row">
+        <div class="col">
+            <RadzenButton Text="Save" ButtonStyle="ButtonStyle.Success"
+                          Click="SettingsSave"
+                          Style="margin-bottom: 10px; width: 150px" />&nbsp;&nbsp;
+        </div>
     </div>
-</div>
 }
 @code {
 
@@ -61,7 +59,7 @@ else
         ApiKey = SettingsService.ApiKey;
         AutoAttributeDetection = SettingsService.AutomaticAttributeDetection;
 
-        if(ApiKey.Length > 1)
+        if (ApiKey.Length > 1)
         {
             IsSettingsEntered = true;
         }
