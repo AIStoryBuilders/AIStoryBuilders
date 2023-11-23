@@ -135,8 +135,8 @@ else
 
         var EditStoryResult = await dialogService.OpenAsync(
         "Select Location", ds =>
-    @<LocationSelector colLocations="@AllLocationList" SelectedLocation="@SelectedLocation" DialogReference="ds">
-    </LocationSelector>
+        @<LocationSelector colLocations="@AllLocationList" SelectedLocation="@SelectedLocation" DialogReference="ds">
+        </LocationSelector>
         , new DialogOptions() { Height = "200px", Width = "500px" });
 
         // Set objParagraph.Location.LocationName to SelectedLocation
@@ -221,43 +221,86 @@ else
                     if (colCharacterOutput.Count > 0)
                     {
                         // Open CharacterAttributes dialog
-                        List<SimpleCharacterSelector> EditStoryResult = await dialogService.OpenAsync(
+                        var EditStoryResult = await dialogService.OpenAsync(
                             "Select Character Attributes", ds =>
                             @<CharacterAttributes colCharacters=@colCharacterOutput DialogReference="ds">
-                            </CharacterAttributes>
-                            , new DialogOptions() { Height = "360px", Width = "500px" });
+                            </CharacterAttributes>, new DialogOptions() { Height = "360px", Width = "500px" });
 
                         if (EditStoryResult != null)
                         {
+
+                            // (1) First add any new Characters 
                             foreach (SimpleCharacterSelector result in EditStoryResult)
                             {
                                 var objCharacter = result.CharacterValue.ToString().Split("|");
 
-                                var Character = objCharacter[0];
+                                var CharacterName = objCharacter[0];
                                 var Action = objCharacter[1];
                                 var description_type = objCharacter[2];
                                 var description_text = objCharacter[3];
 
+                                // Always remove any pipe (|) and [ and ] characters
+                                CharacterName = CharacterName.Replace("|", "");
+                                CharacterName = CharacterName.Replace("[", "");
+                                CharacterName = CharacterName.Replace("]", "");
+
+                                if ((Action == "New Character") && (description_type == ""))
+                                {
+                                    // Ensure this character doesn't already exist
+                                    var ExistingCharacter = colCharacters.Where(x => x.CharacterName == CharacterName).FirstOrDefault();
+
+                                    if (ExistingCharacter == null)
+                                    {
+                                        // Add Character to the Paragraph
+                                        objParagraph.Characters.Add(new Character() { CharacterName = CharacterName });
+
+                                        // Add a new Character to the collection
+                                        Character objNewCharacter = new Character();
+                                        objNewCharacter.CharacterName = CharacterName;
+                                        objNewCharacter.CharacterBackground = new List<CharacterBackground>();
+
+                                        // Add Character to the collection
+                                        colCharacters.Add(objNewCharacter);
+                                    }
+                                }
                             }
 
-                            // // Always remove any pipe (|) and [ and ] characters
-                            // objCharacter.CharacterName = objCharacter.CharacterName.Replace("|", "");
-                            // objCharacter.CharacterName = objCharacter.CharacterName.Replace("[", "");
-                            // objCharacter.CharacterName = objCharacter.CharacterName.Replace("]", "");
+                            // (2) First add any new Attributes to Characters
+                            foreach (SimpleCharacterSelector result in EditStoryResult)
+                            {
+                                var objCharacter = result.CharacterValue.ToString().Split("|");
 
-                            // InProgress = true;
-                            // StateHasChanged();
+                                var CharacterName = objCharacter[0];
+                                var Action = objCharacter[1];
+                                var description_type = objCharacter[2];
+                                var description_text = objCharacter[3];
 
-                            // // If OriginalCharacterName is null, then this is a new Character
-                            // if (OriginalCharacterName == null)
-                            // {
-                            //     // Set the OriginalCharacterName to the CharacterName
-                            //     OriginalCharacterName = objCharacter.CharacterName;
-                            // }
+                                if (description_type != "")
+                                {
+                                    // Note: The Character must already exist in the Characters collection
+                                    // If they don't then any attributes will be ignored
+                                    var ExistingCharacter = colCharacters.Where(x => x.CharacterName == CharacterName).FirstOrDefault();
 
-                            // // Save to the database
-                            // await AIStoryBuildersService.AddUpdateCharacterAsync(objCharacter, OriginalCharacterName);
+                                    if (ExistingCharacter != null)
+                                    {
+                                        // Add Attribute to the Character
+                                        ExistingCharacter.CharacterBackground.Add(new CharacterBackground() { Type = description_type, Description = description_text, Character = ExistingCharacter });
+                                    }
+                                }    
+                            }
 
+                            // (3) Save all the Characters
+                            // This will add any new Characters and update any existing ones
+                            foreach (Character objCharacter in colCharacters)
+                            {
+                                // Is this Character in the Paragraph?
+                                var CharacterInParagraph = objParagraph.Characters.Where(x => x.CharacterName == objCharacter.CharacterName).FirstOrDefault();
+
+                                if (CharacterInParagraph != null)
+                                {
+                                    //await AIStoryBuildersService.AddUpdateCharacterAsync(objCharacter, objCharacter.CharacterName);
+                                }   
+                            }
                         }
                     }
                 }

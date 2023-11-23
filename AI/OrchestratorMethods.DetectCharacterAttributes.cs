@@ -98,15 +98,22 @@ namespace AIStoryBuilders.AI
                         colCharacterOutput.Add(new SimpleCharacterSelector { CharacterDisplay = $"Add - {CharacterName}", CharacterValue = $"{CharacterName}|{CharacterAction}||" });
                     }
 
-                    if (character.descriptions.Count > 0)
+                    try
                     {
-                        foreach (var description in character.descriptions)
+                        if (character.descriptions.Count > 0)
                         {
-                            string description_type = description.description_type.ToString();
-                            string description_text = description.description.ToString();
+                            foreach (var description in character.descriptions)
+                            {
+                                string description_type = description.description_type.ToString();
+                                string description_text = description.description.ToString();
 
-                            colCharacterOutput.Add(new SimpleCharacterSelector { CharacterDisplay = $"{CharacterName} - ({description_type}) {description_text}", CharacterValue = $"{CharacterName}|{CharacterAction}|{description_type}|{description_text}" });
+                                colCharacterOutput.Add(new SimpleCharacterSelector { CharacterDisplay = $"{CharacterName} - ({description_type}) {description_text}", CharacterValue = $"{CharacterName}|{CharacterAction}|{description_type}|{description_text}" });
+                            }
                         }
+                    }
+                    catch
+                    {
+                        // Do nothing - sometimes there are no descriptions
                     }
                 }
             }
@@ -115,7 +122,33 @@ namespace AIStoryBuilders.AI
                 LogService.WriteToLog($"Error - DetectCharacterAttributes: {ex.Message} {ex.StackTrace ?? ""}");
             }
 
-            return colCharacterOutput;
+            // Loop through the characters and remove any existing characters from the list that do not have any descriptions
+            List<SimpleCharacterSelector> colFinalCharacterOutput = new List<SimpleCharacterSelector>();
+
+            foreach (var character in colCharacterOutput)
+            {
+                var objCharacter = character.CharacterValue.ToString().Split("|");
+
+                var CharacterName = objCharacter[0];
+                var Action = objCharacter[1];
+                var description_type = objCharacter[2];
+                var description_text = objCharacter[3];
+
+                if (Action == "New Character")
+                {
+                    colFinalCharacterOutput.Add(character);
+                }
+                else
+                {
+                    // If not a new character, only add if there is a description
+                    if (description_type != "")
+                    {
+                        colFinalCharacterOutput.Add(character);
+                    }
+                }
+            }
+
+            return colFinalCharacterOutput;
         }
         #endregion
 
@@ -134,23 +167,28 @@ namespace AIStoryBuilders.AI
             "Next, compare these extracted names against the list of known \n" +
             "characters derived from #CharacterJSON. \n" +
             "Characters found in #paramParagraphContent but not in #CharacterJSON will be identified. \n" +
+            "Their [Action] in the JSON will be set to New Character. \n" +
+            "If the character already exists in #CharacterJSON their [Action] in the JSON will be set to Existing Character. \n" +
+            "Only output each character once in the JSON. \n" +
             $"### This is the content of #paramParagraphContent: {paramParagraphContent} \n" +
             $"### This is the content of #CharacterJSON: {CharacterJSON} \n" +
             "Provide the results in the following JSON format: \n" +
+            "{\n" +
             "\"characters\": [\n" +
             "{ \n" +
-            "\"name\": name, \n" +
-            "\"action\": action, \n" +
-            "\"enum\": [\"New Character\",\"Add Attribute\"], \n" +
+            "\"name\": \"[Name]\", \n" +
+            "\"action\": \"[Action]\", \n" +
+            "\"enum\": [\"New Character\",\"Existing Character\",\"Add Attribute\"], \n" +
             "\"descriptions\": [\n" +
             "{ \n" +
-            "\"description_type\": description_type, \n" +
+            "\"description_type\": \"[DescriptionType]\", \n" +
             "\"enum\": [\"Appearance\",\"Goals\",\"History\",\"Aliases\",\"Facts\"], \n" +
-            "\"description\": description \n" +
+            "\"description\": \"[Description]\" \n" +
             "} \n" +
             "] \n" +
             "} \n" +
-            "] \n";
+            "] \n" +
+            "}";
         }
         #endregion
 

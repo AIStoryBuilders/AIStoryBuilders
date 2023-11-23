@@ -1174,14 +1174,14 @@ namespace AIStoryBuilders.Services
             }
         }
 
-        public async Task AddUpdateCharacterAsync(Character character, string paramOrginalCharcterName)
+        public async Task AddUpdateCharacterAsync(Character character, string paramOrginalCharacterName)
         {
             string StoryPath = $"{BasePath}/{character.Story.Title}";
             string CharactersPath = $"{StoryPath}/Characters";
             string ChaptersPath = $"{StoryPath}/Chapters";
 
             // Add Character to file
-            string CharacterName = OrchestratorMethods.SanitizeFileName(paramOrginalCharcterName);
+            string CharacterName = OrchestratorMethods.SanitizeFileName(paramOrginalCharacterName);
 
             // Create Character file
             string CharacterPath = $"{CharactersPath}/{CharacterName}.csv";

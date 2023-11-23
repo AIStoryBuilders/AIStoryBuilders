@@ -273,10 +273,10 @@ else
         try
         {
             var EditStoryResult = await DialogService.OpenAsync(
-        $"Edit Character Background  - {strType}", ds =>
-    @<CharacterBackgroundEdit objCharacterBackground=paramCharacterBackground objStory="objCharacter.Story" DialogReference="ds">
-    </CharacterBackgroundEdit>
-    , new DialogOptions() { Height = "300px", Width = "500px" });
+                $"Edit Character Background  - {strType}", ds =>
+                @<CharacterBackgroundEdit objCharacterBackground=paramCharacterBackground objStory="objCharacter.Story" DialogReference="ds">
+                </CharacterBackgroundEdit>
+                , new DialogOptions() { Height = "300px", Width = "500px" });
 
             if (EditStoryResult != null)
             {

@@ -60,7 +60,7 @@ namespace AIStoryBuilders.AI
                 )
             );
 
-            ReadTextEvent?.Invoke(this, new ReadTextEventArgs($"Calling ChatGPT...", 30));
+            ReadTextEvent?.Invoke(this, new ReadTextEventArgs($"Calling ChatGPT to Parse new Story...", 30));
 
             // Get a response from ChatGPT 
             var FinalChatRequest = new ChatRequest(                
