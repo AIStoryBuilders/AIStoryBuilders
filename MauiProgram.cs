@@ -131,7 +131,7 @@ namespace AIStoryBuilders
                             "ApiKey": ""
                           },
                           "ApplicationSettings": {
-                            "AutomaticAttributeDetection": "true"
+                            "FastMode": "false"
                           }
                         }
                         """

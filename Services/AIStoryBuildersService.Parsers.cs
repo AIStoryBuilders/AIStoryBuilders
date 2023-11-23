@@ -23,16 +23,16 @@ namespace AIStoryBuilders.Services
                 int timelinesCount = 1;
 
                 if (ParsedJSON.characters != null)
-                {
-                    charactersCount = ParsedJSON.characters.Count;
+                {                    
+                    charactersCount = ((Newtonsoft.Json.Linq.JContainer)ParsedJSON.characters).Count;
                 }
                 if (ParsedJSON.locations != null)
                 {
-                    locationsCount = ParsedJSON.locations.Count;
+                    locationsCount = ((Newtonsoft.Json.Linq.JContainer)ParsedJSON.locations).Count;
                 }
                 if (ParsedJSON.timelines != null)
                 {
-                    timelinesCount = ParsedJSON.timelines.Count;
+                    timelinesCount = ((Newtonsoft.Json.Linq.JContainer)ParsedJSON.timelines).Count;
                 }
 
                 ParsedNewStory.characters = new Character[charactersCount];

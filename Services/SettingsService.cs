@@ -8,7 +8,7 @@ namespace AIStoryBuilders.Model
         // Properties
         public string Organization { get; set; }
         public string ApiKey { get; set; }
-        public bool AutomaticAttributeDetection { get; set; }
+        public bool FastMode { get; set; }
 
         // Constructor
         public SettingsService() 
@@ -35,10 +35,10 @@ namespace AIStoryBuilders.Model
 
             Organization = AIStoryBuildersSettingsObject.OpenAIServiceOptions.Organization;
             ApiKey = AIStoryBuildersSettingsObject.OpenAIServiceOptions.ApiKey;
-            AutomaticAttributeDetection = AIStoryBuildersSettingsObject.ApplicationSettings.AutomaticAttributeDetection;
+            FastMode = AIStoryBuildersSettingsObject.ApplicationSettings.FastMode;
         }
 
-        public async Task SaveSettings(string paramOrganization, string paramApiKey, bool paramAutomaticAttributeDetection)
+        public async Task SaveSettings(string paramOrganization, string paramApiKey, bool paramFastMode)
         {
             // Get OpenAI API key from appsettings.json
             // AIStoryBuilders Directory
@@ -58,7 +58,7 @@ namespace AIStoryBuilders.Model
             // Update the dynamic object
             AIStoryBuildersSettingsObject.OpenAIServiceOptions.Organization = paramOrganization;
             AIStoryBuildersSettingsObject.OpenAIServiceOptions.ApiKey = paramApiKey;
-            AIStoryBuildersSettingsObject.ApplicationSettings.AutomaticAttributeDetection = paramAutomaticAttributeDetection;
+            AIStoryBuildersSettingsObject.ApplicationSettings.FastMode = paramFastMode;
 
             // Convert the dynamic object back to JSON
             AIStoryBuildersSettings = JsonConvert.SerializeObject(AIStoryBuildersSettingsObject, Formatting.Indented);
@@ -72,7 +72,7 @@ namespace AIStoryBuilders.Model
             // Update the properties
             Organization = paramOrganization;
             ApiKey = paramApiKey;
-            AutomaticAttributeDetection = paramAutomaticAttributeDetection;
+            FastMode = paramFastMode;
         }
     }
 }

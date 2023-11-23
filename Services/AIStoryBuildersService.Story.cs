@@ -79,16 +79,16 @@ namespace AIStoryBuilders.Services
             JSONStory ParsedNewStory = new JSONStory();
 
             // Convert the JSON to a dynamic object
-            ParsedNewStory = ParseJSONNewStory(GetOnlyJSON(ParsedStoryJSON.Content.ToString()));
+            ParsedNewStory = ParseJSONNewStory(ParsedStoryJSON.Content.ToString());
 
             // Test to see that something was returned
             if (ParsedNewStory.characters.Length == 0)
             {
                 // Clean the JSON
-                ParsedStoryJSON = await OrchestratorMethods.CleanJSON(GetOnlyJSON(ParsedStoryJSON.Content.ToString()));
+                ParsedStoryJSON = await OrchestratorMethods.CleanJSON(ParsedStoryJSON.Content.ToString());
 
                 // Convert the JSON to a dynamic object
-                ParsedNewStory = ParseJSONNewStory(GetOnlyJSON(ParsedStoryJSON));
+                ParsedNewStory = ParseJSONNewStory(ParsedStoryJSON);
             }
 
             // *****************************************************

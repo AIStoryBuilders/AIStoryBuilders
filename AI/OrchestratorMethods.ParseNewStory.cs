@@ -17,13 +17,20 @@ namespace AIStoryBuilders.AI
     {
         #region public async Task<Message> ParseNewStory(string paramStoryTitle, string paramStoryText)
         public async Task<Message> ParseNewStory(string paramStoryTitle, string paramStoryText)
-        {
-            LogService.WriteToLog("ParseNewStory - Start");
+        {            
             string Organization = SettingsService.Organization;
             string ApiKey = SettingsService.ApiKey;
             string SystemMessage = "";
+            string GPTModel = "gpt-4-1106-preview";
 
             ChatMessages = new List<ChatMessage>();
+
+            if(SettingsService.FastMode == true)
+            {
+                GPTModel = "gpt-3.5-turbo-1106";
+            }
+
+            LogService.WriteToLog($"ParseNewStory using {GPTModel} - Start");
 
             // Create a new OpenAIClient object
             // with the provided API key and organization
@@ -58,7 +65,7 @@ namespace AIStoryBuilders.AI
             // Get a response from ChatGPT 
             var FinalChatRequest = new ChatRequest(                
                 chatPrompts,
-                model: "gpt-4-1106-preview",
+                model: GPTModel,
                 temperature: 0.0,
                 topP: 1,
                 frequencyPenalty: 0,

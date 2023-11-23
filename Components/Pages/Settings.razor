@@ -14,8 +14,8 @@
             <RadzenFormField Text="OpenAI ApiKey:" Variant="@variant">
                 <RadzenTextBox @bind-Value="@ApiKey" @oninput="APIKeyDetection" style="width:450px;" />
             </RadzenFormField>
-            <RadzenFormField Text="Automatic Attribute Detection:" style="width:200px" Variant="@variant">
-                <RadzenLabel Text="Off" style="text-align:right" /><RadzenSwitch @bind-Value=@AutoAttributeDetection style="width:25px;margin:8px" /><RadzenLabel Text="On" style="width:20px;" />
+            <RadzenFormField Text="Fast Mode:" style="width:120px" Variant="@variant">
+                <RadzenLabel Text="Off" style="text-align:right" /><RadzenSwitch @bind-Value=@FastMode style="width:25px;margin:8px" /><RadzenLabel Text="On" style="width:20px;" />
             </RadzenFormField>
         </RadzenStack>
     </RadzenColumn>
@@ -47,7 +47,7 @@ else
 
     string Organization = "";
     string ApiKey = "";
-    bool AutoAttributeDetection = false;
+    bool FastMode = false;
 
     bool IsSettingsEntered = false;
 
@@ -57,7 +57,7 @@ else
 
         Organization = SettingsService.Organization;
         ApiKey = SettingsService.ApiKey;
-        AutoAttributeDetection = SettingsService.AutomaticAttributeDetection;
+        FastMode = SettingsService.FastMode;
 
         if (ApiKey.Length > 1)
         {
@@ -92,7 +92,7 @@ else
         try
         {
             // Update Settings
-            await SettingsService.SaveSettings(Organization, ApiKey, AutoAttributeDetection);
+            await SettingsService.SaveSettings(Organization, ApiKey, FastMode);
 
             NotificationService.Notify(new NotificationMessage
                 {
