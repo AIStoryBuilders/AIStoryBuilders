@@ -2,8 +2,8 @@
 @using AIStoryBuilders.Services
 @using static AIStoryBuilders.AI.OrchestratorMethods
 @inherits OwningComponentBase
-<div Style="height:160px;overflow:auto;">
-    <RadzenTree AllowCheckBoxes="true" AllowCheckChildren=false @bind-CheckedValues=@CheckedValues Style="width: 100%; height: 150px" Data=@colCharacters>
+<div Style="height:170px;overflow:auto;">
+    <RadzenTree AllowCheckBoxes="true" AllowCheckChildren=false @bind-CheckedValues=@CheckedValues Style="width: 100%; height: 160px" Data=@colCharacters>
         <RadzenTreeLevel TextProperty="CharacterDisplay" Expanded="@(data => true)" HasChildren="@(data => false)" />
     </RadzenTree>
 </div>
@@ -11,9 +11,6 @@
 <div class="rz-text-align-center">
     <RadzenButton Text="Add Characters and Attributes" ButtonStyle="ButtonStyle.Primary"
                   Click=@CloseDialog />
-</div>
-<div>
-    <p class="rz-text-align-center" style="font-size:xx-small">(Automatic attribute detection can be disabled in Settings.)</p>
 </div>
 @code {
     [Parameter] public IEnumerable<SimpleCharacterSelector> colCharacters { get; set; }

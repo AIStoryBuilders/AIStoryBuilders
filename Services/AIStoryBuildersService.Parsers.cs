@@ -144,7 +144,7 @@ namespace AIStoryBuilders.Services
             catch (Exception ex)
             {
                 // Log error
-                LogService.WriteToLog("ParseJSONNewStory: " + ex.Message);
+                LogService.WriteToLog("ParseJSONNewStory: " + ex.Message + " " + ex.StackTrace ?? "" + " " + ex.InnerException.StackTrace ?? "");
 
                 JSONStory ParsedNewStory = new JSONStory();
                 ParsedNewStory.characters = new Character[0];

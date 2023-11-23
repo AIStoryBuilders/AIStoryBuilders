@@ -30,7 +30,12 @@ else
             <RadzenButton Click="onClickLocation" Text="Location" ButtonStyle="ButtonStyle.Light" Size="ButtonSize.Medium" />
             <RadzenButton Click="onClickTimeline" Text="Timeline" ButtonStyle="ButtonStyle.Light" Size="ButtonSize.Medium" />
 
-            <RadzenButton Click="onClickSave" Text="Save" Icon="check_circle" ButtonStyle="ButtonStyle.Success" Size="ButtonSize.Medium" />
+            <RadzenSplitButton Icon="save" Click=@(args => onClickSave(args)) Text="Save" ButtonStyle="ButtonStyle.Success" Size="ButtonSize.Medium">
+                <ChildContent>
+                    <RadzenSplitButtonItem Text="Autodetect Attributes" Value="Autodetect" />
+                </ChildContent>
+            </RadzenSplitButton>
+
             @if (Deleteable)
             {
                 <RadzenButton Click="onClickDelete" Icon="delete" ButtonStyle="ButtonStyle.Danger" Size="ButtonSize.Medium" />
@@ -169,7 +174,7 @@ else
         objParagraph.ParagraphContent += speechValue;
     }
 
-    private async Task onClickSave()
+    private async Task onClickSave(RadzenSplitButtonItem item)
     {
         try
         {
@@ -194,38 +199,41 @@ else
             StateHasChanged();
 
             // Use AutoAttributeDetection?
-            if (true)
+            if (item != null)
             {
-                //Calling ChatGPT to detect Attributes...
-                NotificationService.Notify(new NotificationMessage
-                    {
-                        Severity = NotificationSeverity.Success,
-                        Summary = "Info",
-                        Detail = "Calling ChatGPT to detect Attributes...",
-                        Duration = 2000
-                    });
-
-                // Simplify Characters to only CharacterName and CharacterType and value
-                var colCharactersInTimeline = AIStoryBuildersService.SimplifyCharacter(colCharacters, objParagraph);
-
-                // Pass in all existing Characters and detect new ones and/or attributes
-                List<SimpleCharacterSelector> colCharacterOutput = await OrchestratorMethods.DetectCharacterAttributes(objParagraph, colCharactersInTimeline);
-
-                if (colCharacterOutput.Count > 0)
+                if (item.Value == "Autodetect")
                 {
-                    // Open CharacterAttributes dialog
-                    var EditStoryResult = await dialogService.OpenAsync(
-                        "Select Character Attributes", ds =>
-                        @<CharacterAttributes colCharacters=@colCharacterOutput DialogReference="ds">
-                        </CharacterAttributes>
-                        , new DialogOptions() { Height = "360px", Width = "500px" });
-
-                    if (EditStoryResult != null)
-                    {
-                        foreach (SimpleCharacterSelector result in EditStoryResult)
+                    //Calling ChatGPT to detect Attributes...
+                    NotificationService.Notify(new NotificationMessage
                         {
-                            var CharacterDisplay = result.CharacterDisplay;
-                            var CharacterValue = result.CharacterValue;
+                            Severity = NotificationSeverity.Success,
+                            Summary = "Info",
+                            Detail = "Calling ChatGPT to detect Attributes...",
+                            Duration = 2000
+                        });
+
+                    // Simplify Characters to only CharacterName and CharacterType and value
+                    var colCharactersInTimeline = AIStoryBuildersService.SimplifyCharacter(colCharacters, objParagraph);
+
+                    // Pass in all existing Characters and detect new ones and/or attributes
+                    List<SimpleCharacterSelector> colCharacterOutput = await OrchestratorMethods.DetectCharacterAttributes(objParagraph, colCharactersInTimeline);
+
+                    if (colCharacterOutput.Count > 0)
+                    {
+                        // Open CharacterAttributes dialog
+                        var EditStoryResult = await dialogService.OpenAsync(
+                            "Select Character Attributes", ds =>
+                            @<CharacterAttributes colCharacters=@colCharacterOutput DialogReference="ds">
+                            </CharacterAttributes>
+                            , new DialogOptions() { Height = "360px", Width = "500px" });
+
+                        if (EditStoryResult != null)
+                        {
+                            foreach (SimpleCharacterSelector result in EditStoryResult)
+                            {
+                                var CharacterDisplay = result.CharacterDisplay;
+                                var CharacterValue = result.CharacterValue;
+                            }
                         }
                     }
                 }
