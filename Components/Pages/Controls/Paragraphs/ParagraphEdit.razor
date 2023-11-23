@@ -298,7 +298,8 @@ else
 
                                 if (CharacterInParagraph != null)
                                 {
-                                    //await AIStoryBuildersService.AddUpdateCharacterAsync(objCharacter, objCharacter.CharacterName);
+                                    objCharacter.Story = objChapter.Story;
+                                    await AIStoryBuildersService.AddUpdateCharacterAsync(objCharacter, objCharacter.CharacterName);
                                 }   
                             }
                         }
