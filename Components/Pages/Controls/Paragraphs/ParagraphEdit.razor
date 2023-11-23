@@ -221,7 +221,7 @@ else
                     if (colCharacterOutput.Count > 0)
                     {
                         // Open CharacterAttributes dialog
-                        var EditStoryResult = await dialogService.OpenAsync(
+                        List<SimpleCharacterSelector> EditStoryResult = await dialogService.OpenAsync(
                             "Select Character Attributes", ds =>
                             @<CharacterAttributes colCharacters=@colCharacterOutput DialogReference="ds">
                             </CharacterAttributes>
@@ -231,9 +231,33 @@ else
                         {
                             foreach (SimpleCharacterSelector result in EditStoryResult)
                             {
-                                var CharacterDisplay = result.CharacterDisplay;
-                                var CharacterValue = result.CharacterValue;
+                                var objCharacter = result.CharacterValue.ToString().Split("|");
+
+                                var Character = objCharacter[0];
+                                var Action = objCharacter[1];
+                                var description_type = objCharacter[2];
+                                var description_text = objCharacter[3];
+
                             }
+
+                            // // Always remove any pipe (|) and [ and ] characters
+                            // objCharacter.CharacterName = objCharacter.CharacterName.Replace("|", "");
+                            // objCharacter.CharacterName = objCharacter.CharacterName.Replace("[", "");
+                            // objCharacter.CharacterName = objCharacter.CharacterName.Replace("]", "");
+
+                            // InProgress = true;
+                            // StateHasChanged();
+
+                            // // If OriginalCharacterName is null, then this is a new Character
+                            // if (OriginalCharacterName == null)
+                            // {
+                            //     // Set the OriginalCharacterName to the CharacterName
+                            //     OriginalCharacterName = objCharacter.CharacterName;
+                            // }
+
+                            // // Save to the database
+                            // await AIStoryBuildersService.AddUpdateCharacterAsync(objCharacter, OriginalCharacterName);
+
                         }
                     }
                 }

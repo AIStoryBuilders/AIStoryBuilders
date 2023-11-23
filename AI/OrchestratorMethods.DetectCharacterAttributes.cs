@@ -34,7 +34,7 @@ namespace AIStoryBuilders.AI
 
             // Create a new OpenAIClient object
             // with the provided API key and organization
-            var api = new OpenAIClient(new OpenAIAuthentication(ApiKey, Organization),null,new HttpClient() { Timeout= TimeSpan.FromSeconds(520) });
+            var api = new OpenAIClient(new OpenAIAuthentication(ApiKey, Organization), null, new HttpClient() { Timeout = TimeSpan.FromSeconds(520) });
 
             // Create a colection of chatPrompts
             ChatResponse ChatResponseResult = new ChatResponse();
@@ -78,38 +78,41 @@ namespace AIStoryBuilders.AI
 
             LogService.WriteToLog($"TotalTokens: {ChatResponseResult.Usage.TotalTokens} - ChatResponseResult - {ChatResponseResult.FirstChoice.Message.Content}");
 
-            // Convert the JSON to a list of SimpleCharacters
-
-            var JSONResult = ChatResponseResult.FirstChoice.Message.Content.ToString();
-
             List<SimpleCharacterSelector> colCharacterOutput = new List<SimpleCharacterSelector>();
 
-            dynamic data = JObject.Parse(JSONResult);
-
-            foreach (var character in data.characters)
+            try
             {
-                string CharacterName = character.name.ToString();
-                string CharacterAction = character.action.ToString();
+                // Convert the JSON to a list of SimpleCharacters
 
-                if (CharacterAction == "New Character")
-                {
-                    colCharacterOutput.Add(new SimpleCharacterSelector { CharacterDisplay = $"Add {CharacterName}", CharacterValue = $"{CharacterName}|{CharacterAction}||" });
-                }
-                else
-                {
-                    colCharacterOutput.Add(new SimpleCharacterSelector { CharacterDisplay = $"{CharacterAction} {CharacterName}", CharacterValue = $"{CharacterName}|{CharacterAction}||" });
-                }
+                var JSONResult = ChatResponseResult.FirstChoice.Message.Content.ToString();
 
-                if (character.descriptions.Count > 0)
+                dynamic data = JObject.Parse(JSONResult);
+
+                foreach (var character in data.characters)
                 {
-                    foreach (var description in character.descriptions)
+                    string CharacterName = character.name.ToString();
+                    string CharacterAction = character.action.ToString();
+
+                    if (CharacterAction == "New Character")
                     {
-                        string description_type = description.description_type.ToString();
-                        string description_text = description.description.ToString();
-
-                        colCharacterOutput.Add(new SimpleCharacterSelector { CharacterDisplay = $"{CharacterName} - ({description_type}) {description_text}", CharacterValue = $"{CharacterName}|{CharacterAction}|{description_type}|{description_text}" });
+                        colCharacterOutput.Add(new SimpleCharacterSelector { CharacterDisplay = $"Add - {CharacterName}", CharacterValue = $"{CharacterName}|{CharacterAction}||" });
                     }
-                }                               
+
+                    if (character.descriptions.Count > 0)
+                    {
+                        foreach (var description in character.descriptions)
+                        {
+                            string description_type = description.description_type.ToString();
+                            string description_text = description.description.ToString();
+
+                            colCharacterOutput.Add(new SimpleCharacterSelector { CharacterDisplay = $"{CharacterName} - ({description_type}) {description_text}", CharacterValue = $"{CharacterName}|{CharacterAction}|{description_type}|{description_text}" });
+                        }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                LogService.WriteToLog($"Error - DetectCharacterAttributes: {ex.Message} {ex.StackTrace ?? ""}");
             }
 
             return colCharacterOutput;
