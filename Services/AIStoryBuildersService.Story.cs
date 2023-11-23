@@ -126,13 +126,25 @@ namespace AIStoryBuilders.Services
                 string LocationPath = $"{LocationsPath}/{LocationName}.csv";
                 List<string> LocationContents = new List<string>();
 
-                foreach (var description in location.descriptions)
+                if (location.descriptions != null)
                 {
-                    string VectorEmbedding = await OrchestratorMethods.GetVectorEmbedding(description, false);
+                    foreach (var description in location.descriptions)
+                    {
+                        string VectorEmbedding = await OrchestratorMethods.GetVectorEmbedding(description, false);
+
+                        // We are deliberately not setting a LocationTimeline (therefore setting it to empty string)
+                        // We did not ask the AI to set this value because it would have ben asking too much
+                        var LocationDescriptionAndTimeline = $"{description}|";
+                        LocationContents.Add($"{LocationDescriptionAndTimeline}|{VectorEmbedding}" + Environment.NewLine);
+                    }
+                }
+                else
+                {
+                    string VectorEmbedding = await OrchestratorMethods.GetVectorEmbedding(location.name, false);
 
                     // We are deliberately not setting a LocationTimeline (therefore setting it to empty string)
                     // We did not ask the AI to set this value because it would have ben asking too much
-                    var LocationDescriptionAndTimeline = $"{description}|";
+                    var LocationDescriptionAndTimeline = $"{location.name}|";
                     LocationContents.Add($"{LocationDescriptionAndTimeline}|{VectorEmbedding}" + Environment.NewLine);
                 }
 

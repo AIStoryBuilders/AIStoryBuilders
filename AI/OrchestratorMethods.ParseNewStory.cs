@@ -88,40 +88,34 @@ namespace AIStoryBuilders.AI
         private string CreateSystemMessageParseNewStory(string paramStoryTitle, string paramStoryText)
         {
             return "Given a story titled: \n" +
-                    "[ \n" +
-                    $"{paramStoryTitle} \n" +
-                    "] \n" +
+                    $"[ {paramStoryTitle} ] \n" +
                     "With the story text: \n" +
-                    "[ \n" +
-                    $"{paramStoryText} \n" +
-                    "] \n" +
+                    $"[ {paramStoryText} ] \n" +
                     "Using only this information please identify: \n" +
                     "#1 Locations mentioned in the story with a short description of each location. \n" +
-                    "#2 A short timelines name and a short sentance description to identify specific chronological events of the story. \n" +
+                    "#2 A short timeline's name and a short sentence description to identify specific chronological events of the story. \n" +
                     "#3 Characters present in the story. \n" +
                     "#4 For each Character a description_type with a description and the timeline_name from timelines. \n" +
                     "Provide the results in the following JSON format: \n" +
                     "{ \n" +
-                    "\"locations\":  \n" +
-                    "\"name\": name, \n" +
-                    "\"descriptions\": [descriptions] \n" +
-                    "}, \n" +
-                    "\"timelines\":  \n" +
-                    "\"name\": name, \n" +
-                    "\"description\": description \n" +
-                    "}, \n" +
-                    "{ \n" +
-                    "\"characters\": \n" +
-                    "{ \n" +
-                    "\"name\": name, \n" +
-                    "\"descriptions\": \n" +
-                    "{ \n" +
-                    "\"description_type\": description_type, \n" +
-                    "\"enum\": [\"Appearance\",\"Goals\",\"History\",\"Aliases\",\"Facts\"], \n" +
-                    "\"description\": description, \n" +
-                    "\"timeline_name\": timeline_name \n" +
-                    "} \n" +
-                    "} \n";
+                    "  \"locations\": [{ \n" +
+                    "    \"name\": \"name\", \n" +
+                    "    \"description\": \"description\" \n" +
+                    "  }], \n" +
+                    "  \"timelines\": [{ \n" +
+                    "    \"name\": \"name\", \n" +
+                    "    \"description\": \"description\" \n" +
+                    "  }], \n" +
+                    "  \"characters\": [{ \n" +
+                    "    \"name\": \"name\", \n" +
+                    "    \"descriptions\": [{ \n" +
+                    "      \"description_type\": \"description_type\", \n" +
+                    "      \"enum\": [\"Appearance\", \"Goals\", \"History\", \"Aliases\", \"Facts\"], \n" +
+                    "      \"description\": \"description\", \n" +
+                    "      \"timeline_name\": \"timeline_name\" \n" +
+                    "    }] \n" +
+                    "  }] \n" +
+                    "}";
         }
         #endregion
     }
