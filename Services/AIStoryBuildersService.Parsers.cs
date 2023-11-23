@@ -1,5 +1,6 @@
 ﻿using AIStoryBuilders.Models.JSON;
 using Newtonsoft.Json;
+using System.Text.Json;
 
 namespace AIStoryBuilders.Services
 {
@@ -86,17 +87,20 @@ namespace AIStoryBuilders.Services
                 {
                     // Add the character to the new story
                     ParsedNewStory.characters[i] = new Character();
-                    ParsedNewStory.characters[i].name = character.name;
+                    ParsedNewStory.characters[i].name = character.Name;
 
-                    if (character.descriptions != null)
+                    // Parse the JSON as a dynamic object
+                    dynamic ParsedCharacterJSON = JsonConvert.DeserializeObject(character.Value.ToString());
+
+                    if (ParsedCharacterJSON.descriptions != null)
                     {
                         // See if there is more than one description
-                        if (character.descriptions.Count > 1)
+                        if (ParsedCharacterJSON.descriptions.Count > 1)
                         {
                             // Loop through the descriptions
                             ii = 0;
-                            ParsedNewStory.characters[i].descriptions = new Descriptions[character.descriptions.Count];
-                            foreach (dynamic description in character.descriptions)
+                            ParsedNewStory.characters[i].descriptions = new Descriptions[ParsedCharacterJSON.descriptions.Count];
+                            foreach (dynamic description in ParsedCharacterJSON.descriptions)
                             {
                                 // Add the description to the character
                                 ParsedNewStory.characters[i].descriptions[ii] = new Descriptions();
@@ -113,21 +117,21 @@ namespace AIStoryBuilders.Services
                             ParsedNewStory.characters[i].descriptions = new Descriptions[1];
                             ParsedNewStory.characters[i].descriptions[0] = new Descriptions();
 
-                            if (((Newtonsoft.Json.Linq.JContainer)character.descriptions).HasValues)
+                            if (((Newtonsoft.Json.Linq.JContainer)ParsedCharacterJSON.descriptions).HasValues)
                             {
                                 try
                                 {
-                                    ParsedNewStory.characters[i].descriptions[0].description_type = character.descriptions.description_type;
-                                    ParsedNewStory.characters[i].descriptions[0]._enum = character.descriptions._enum;
-                                    ParsedNewStory.characters[i].descriptions[0].description = character.descriptions.description;
-                                    ParsedNewStory.characters[i].descriptions[0].timeline_name = character.descriptions.timeline_name;
+                                    ParsedNewStory.characters[i].descriptions[0].description_type = ParsedCharacterJSON.descriptions.description_type;
+                                    ParsedNewStory.characters[i].descriptions[0]._enum = ParsedCharacterJSON.descriptions._enum;
+                                    ParsedNewStory.characters[i].descriptions[0].description = ParsedCharacterJSON.descriptions.description;
+                                    ParsedNewStory.characters[i].descriptions[0].timeline_name = ParsedCharacterJSON.descriptions.timeline_name;
                                 }
                                 catch
                                 {
-                                    ParsedNewStory.characters[i].descriptions[0].description_type = character.descriptions[0].description_type;
-                                    ParsedNewStory.characters[i].descriptions[0]._enum = character.descriptions[0]._enum;
-                                    ParsedNewStory.characters[i].descriptions[0].description = character.descriptions[0].description;
-                                    ParsedNewStory.characters[i].descriptions[0].timeline_name = character.descriptions[0].timeline_name;
+                                    ParsedNewStory.characters[i].descriptions[0].description_type = ParsedCharacterJSON.descriptions[0].description_type;
+                                    ParsedNewStory.characters[i].descriptions[0]._enum = ParsedCharacterJSON.descriptions[0]._enum;
+                                    ParsedNewStory.characters[i].descriptions[0].description = ParsedCharacterJSON.descriptions[0].description;
+                                    ParsedNewStory.characters[i].descriptions[0].timeline_name = ParsedCharacterJSON.descriptions[0].timeline_name;
                                 }
                             }
                         }
