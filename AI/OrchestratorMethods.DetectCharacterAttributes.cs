@@ -136,7 +136,14 @@ namespace AIStoryBuilders.AI
 
                 if (Action == "New Character")
                 {
-                    colFinalCharacterOutput.Add(character);
+                    // Sometimes the LLM will think a character is new when it is not
+                    // Only add a new character if they are not in the colCharacters collection
+                    var objCharacterExists = colCharacters.Where(x => x.CharacterName == CharacterName).FirstOrDefault();
+
+                    if (objCharacterExists == null)
+                    {
+                        colFinalCharacterOutput.Add(character);
+                    }
                 }
                 else
                 {
