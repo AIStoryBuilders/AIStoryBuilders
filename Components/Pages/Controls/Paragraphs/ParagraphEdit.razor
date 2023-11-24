@@ -198,7 +198,9 @@ else
             InProgress = true;
             StateHasChanged();
 
-            // Use AutoAttributeDetection?
+            // ********************************
+            // **** Use AutoAttributeDetection?
+            // ********************************
             if (item != null)
             {
                 if (item.Value == "Autodetect")
@@ -228,7 +230,6 @@ else
 
                         if (EditStoryResult != null)
                         {
-
                             // (1) First add any new Characters 
                             foreach (SimpleCharacterSelector result in EditStoryResult)
                             {
@@ -302,6 +303,23 @@ else
                                     await AIStoryBuildersService.AddUpdateCharacterAsync(objCharacter, objCharacter.CharacterName);
                                 }   
                             }
+                        }
+                    }
+
+                    // **** Add any existing Characters that are mentioned in the Paragraph but not on the Character list
+                    // Loop through all colCharacters that are not already in the objParagraph.Characters collection
+                    var colCharactersNotInParagraph = colCharacters.Where(x => !objParagraph.Characters.Any(y => y.CharacterName == x.CharacterName)).ToList();
+
+                    // Loop through all colCharactersNotInParagraph
+                    foreach (Character objCharacter in colCharactersNotInParagraph)
+                    {
+                        // Search through the Paragraph contents to see if the Chcrater is mentioned
+                        var CharacterInParagraph = objParagraph.ParagraphContent.Contains(objCharacter.CharacterName);
+
+                        if (CharacterInParagraph)
+                        {
+                            // Add Character to the Paragraph
+                            objParagraph.Characters.Add(objCharacter);
                         }
                     }
                 }
