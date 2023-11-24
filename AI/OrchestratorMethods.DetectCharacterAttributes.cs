@@ -165,19 +165,15 @@ namespace AIStoryBuilders.AI
         private string CreateDetectCharacterAttributes(string paramParagraphContent, string CharacterJSON)
         {
             return "You are a function that will produce only JSON. \n" +
-            "You are a function that will analyze a paragraph of text (given as #paramParagraphContent) \n" +
-            "and a JSON string representing a list of characters (given as #CharacterJSON). \n" +
-            "You will identify any new characters and or any new attributes for existing characters mentioned in the paragraph \n" +
-            "that are not already present in the JSON data. \n" +
-            "Parse the characters in #CharacterJSON to create a list of known characters. \n" +
-            "Then analyze #paramParagraphContent to extract character names. \n" +
-            "Next, compare these extracted names against the list of known \n" +
-            "characters derived from #CharacterJSON. \n" +
-            "New characters found in #paramParagraphContent but not in #CharacterJSON will be identified and \n" +
-            "their [Action] in the JSON will be set to New Character. \n" +
-            "If the character already exists in #CharacterJSON their [Action] in the JSON will be set to Existing Character. \n" +
-            "Only output each character once in the JSON. \n" +
-            "Foe existing characters only output new attributes. \n" +
+            "Please analyze a paragraph of text (given as #paramParagraphContent) and a JSON string representing a list of characters and their current attributes (given as #CharacterJSON). \n" +
+            "#1 Identify any new characters, and or any new attributes for existing characters, mentioned in the paragraph that are not already present in #CharacterJSON. \n" +
+            "#2 Parse the characters in #CharacterJSON to create a list of known characters. \n" +
+            "#3 analyze #paramParagraphContent to extract character names. \n" +
+            "#4 Compare these extracted names against the list of known characters derived from #CharacterJSON. \n" +
+            "#5 New characters found in #paramParagraphContent but not in #CharacterJSON will be identified and their [Action] in the JSON will be set to New Character. \n" +
+            "#6 If the character already exists in #CharacterJSON their [Action] in the JSON will be set to Existing Character. \n" +
+            "#7 Only output each character once in the JSON. For existing characters only output new attributes for the character not found for the character in #CharacterJSON. \n" +
+            "#8 Do not output any attributes for characters that is already in #CharacterJSON. \n" +
             $"### This is the content of #paramParagraphContent: {paramParagraphContent} \n" +
             $"### This is the content of #CharacterJSON: {CharacterJSON} \n" +
             "Provide the results in the following JSON format: \n" +
