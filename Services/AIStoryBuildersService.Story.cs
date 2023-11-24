@@ -1562,6 +1562,32 @@ namespace AIStoryBuilders.Services
             }
         }
 
+        public async Task UpdateParagraph(Chapter chapter, Paragraph Paragraph)
+        {
+            try
+            {
+                var ChapterNameParts = chapter.ChapterName.Split(' ');
+                string ChapterName = ChapterNameParts[0] + ChapterNameParts[1];
+
+                var AIStoryBuildersParagraphsPath = $"{BasePath}/{chapter.Story.Title}/Chapters/{ChapterName}";
+
+                // Create the Paragraph file
+                string ParagraphPath = $"{AIStoryBuildersParagraphsPath}/Paragraph{Paragraph.Sequence}.txt";
+
+                // Create the ParagraphContent
+                string VectorDescriptionAndEmbedding = await OrchestratorMethods.GetVectorEmbedding(Paragraph.ParagraphContent, true);
+                string ParagraphContent = $"{Paragraph.Location.LocationName ?? ""}|{Paragraph.Timeline.TimelineName ?? ""}|[{string.Join(",", Paragraph.Characters.Select(x => x.CharacterName))}]|{VectorDescriptionAndEmbedding}";
+
+                // Write the ParagraphContent to the file
+                File.WriteAllText(ParagraphPath, ParagraphContent);
+            }
+            catch (Exception ex)
+            {
+                // Log error
+                LogService.WriteToLog(ex.Message);
+            }
+        }
+
         public void DeleteParagraph(Chapter chapter, Paragraph Paragraph)
         {
             try
