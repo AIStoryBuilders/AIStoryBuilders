@@ -226,7 +226,11 @@ else
                             Duration = 2000
                         });
 
+                    // Get all Characters in the Paragraph
+                    List<SimpleCharacterSelector> colAllCharactersInParagraph = await OrchestratorMethods.DetectCharacters(objParagraph);
+
                     // Simplify Characters to only CharacterName and CharacterType and value
+                    // Pass Paragraph so we only get CharacterBackground in the selected or null Timelines
                     var colCharactersInTimeline = AIStoryBuildersService.SimplifyCharacter(colCharacters, objParagraph);
 
                     // Pass in all existing Characters and detect new ones and/or attributes
