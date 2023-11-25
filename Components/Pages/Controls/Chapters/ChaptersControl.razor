@@ -28,6 +28,7 @@
                 }
             </div>
         </div>
+        <br />
         <RadzenRow Gap="1rem">
             <RadzenColumn Size="12" SizeSM="12">
                 <RadzenStack>
@@ -42,7 +43,7 @@
         </RadzenRow>
     </ChildContent>
 </RadzenPanel>
-<RadzenDataList @ref=objDatalist AllowVirtualization=false Style="height:320px;overflow:auto;"
+<RadzenDataList @ref=objDatalist AllowVirtualization=false Style="height:100%;overflow:auto;"
                 WrapItems=false AllowPaging=false
                 Data="@colParagraphs" TItem="Paragraph">
     <Template Context="paragraph">
@@ -274,5 +275,15 @@
     private async Task LoadParagraphsHandler()
     {
         await LoadParagraphs(SelectedChapter);
+    }
+
+    private void ExpandHeader()
+    {
+        
+    }
+
+    private void CollapseHeader()
+    {
+        
     }
 }
