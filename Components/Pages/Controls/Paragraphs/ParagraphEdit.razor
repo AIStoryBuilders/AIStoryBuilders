@@ -120,10 +120,10 @@ else
         var SelectedCharacterList = objParagraph.Characters.Select(c => c.CharacterName).OrderBy(x => x).ToList();
 
         var EditStoryResult = await dialogService.OpenAsync(
-         "Select Characters", ds =>
-         @<CharacterSelector colCharacters="@AllCharacterList" SelectedCharacters="@SelectedCharacterList" DialogReference="ds">
-         </CharacterSelector>
-         , new DialogOptions() { Height = "350px", Width = "500px" });
+     "Select Characters", ds =>
+    @<CharacterSelector colCharacters="@AllCharacterList" SelectedCharacters="@SelectedCharacterList" DialogReference="ds">
+    </CharacterSelector>
+     , new DialogOptions() { Height = "350px", Width = "500px" });
 
         // Set objParagraph.Characters
         if (EditStoryResult != null)
@@ -146,10 +146,10 @@ else
         var SelectedLocation = objParagraph.Location.LocationName;
 
         var EditStoryResult = await dialogService.OpenAsync(
-        "Select Location", ds =>
-        @<LocationSelector colLocations="@AllLocationList" SelectedLocation="@SelectedLocation" DialogReference="ds">
-        </LocationSelector>
-        , new DialogOptions() { Height = "200px", Width = "500px" });
+    "Select Location", ds =>
+    @<LocationSelector colLocations="@AllLocationList" SelectedLocation="@SelectedLocation" DialogReference="ds">
+    </LocationSelector>
+    , new DialogOptions() { Height = "200px", Width = "500px" });
 
         // Set objParagraph.Location.LocationName to SelectedLocation
         if (EditStoryResult != null)
@@ -168,10 +168,10 @@ else
         var SelectedTimeline = objParagraph.Timeline.TimelineName;
 
         var EditStoryResult = await dialogService.OpenAsync(
-        "Select Timeline", ds =>
-        @<TimelineSelector colTimelines="@AllTimelineList" SelectedTimeline="@SelectedTimeline" DialogReference="ds">
-        </TimelineSelector>
-        , new DialogOptions() { Height = "200px", Width = "500px" });
+    "Select Timeline", ds =>
+    @<TimelineSelector colTimelines="@AllTimelineList" SelectedTimeline="@SelectedTimeline" DialogReference="ds">
+    </TimelineSelector>
+    , new DialogOptions() { Height = "200px", Width = "500px" });
 
         // Set objParagraph.Timeline.TimelineName to SelectedTimeline
         if (EditStoryResult != null)
@@ -194,7 +194,7 @@ else
             if (objParagraph.ParagraphContent.Trim().Length < 1)
             {
                 NotificationService.Notify(
-                new NotificationMessage
+            new NotificationMessage
                     {
                         Severity = NotificationSeverity.Error,
                         Summary = "Error",
@@ -217,21 +217,56 @@ else
             {
                 if (item.Value == "Autodetect")
                 {
+                    // Make a collection of all Characters and Attributes
+                    List<SimpleCharacterSelector> colAllCharactersAndAttributes = new List<SimpleCharacterSelector>();
+
                     //Calling ChatGPT to detect Attributes...
                     NotificationService.Notify(new NotificationMessage
-                        {
-                            Severity = NotificationSeverity.Success,
-                            Summary = "Info",
-                            Detail = "Calling ChatGPT to detect Attributes...",
-                            Duration = 2000
-                        });
+                            {
+                                Severity = NotificationSeverity.Success,
+                                Summary = "Info",
+                                Detail = "Calling ChatGPT to detect Attributes...",
+                                Duration = 2000
+                            });
 
                     // Get all Characters in the Paragraph
-                    List<SimpleCharacterSelector> colAllCharactersInParagraph = await OrchestratorMethods.DetectCharacters(objParagraph);
+                    List<Character> colAllCharactersInParagraph = await OrchestratorMethods.DetectCharacters(objParagraph);
+
+                    // Get all Characters in the Paragraph that are not in the Characters collection
+                    List<Character> colNewCharactersInParagraph = colAllCharactersInParagraph.Where(x => !colCharacters.Any(y => y.CharacterName == x.CharacterName)).ToList();
+
+                    if (colNewCharactersInParagraph != null)
+                    {
+                        if (colNewCharactersInParagraph.Count > 0)
+                        {
+                            NotificationService.Notify(new NotificationMessage
+                                {
+                                    Severity = NotificationSeverity.Success,
+                                    Summary = "Info",
+                                    Detail = "Detecting attributes on new characters…",
+                                    Duration = 2000
+                                });
+
+                            // Pass all new Characters and detect  attributes
+                            List<SimpleCharacterSelector> colnewCharactersAndAttributes = await OrchestratorMethods.DetectCharacterAttributes(objParagraph, colNewCharactersInParagraph);
+
+                            if (colnewCharactersAndAttributes != null)
+                            {
+                                if (colnewCharactersAndAttributes.Count > 0)
+                                {
+                                    // Add new Characters and Attributes to colAllCharactersAndAttributes
+                                    colAllCharactersAndAttributes.AddRange(colnewCharactersAndAttributes);
+                                }
+                            }
+                        }
+                    }
+
+                    // Get all Characters in the Paragraph that are in the Characters collection
+                    List<Character> colExistingCharactersInParagraph = colCharacters.Where(x => colAllCharactersInParagraph.Any(y => y.CharacterName == x.CharacterName)).ToList();
 
                     // Simplify Characters to only CharacterName and CharacterType and value
                     // Pass Paragraph so we only get CharacterBackground in the selected or null Timelines
-                    var colCharactersInTimeline = AIStoryBuildersService.SimplifyCharacter(colCharacters, objParagraph);
+                    var colCharactersInTimeline = AIStoryBuildersService.SimplifyCharacter(colExistingCharactersInParagraph, objParagraph);
 
                     // Pass in all existing Characters and detect new ones and/or attributes
                     List<SimpleCharacterSelector> colCharacterOutput = await OrchestratorMethods.DetectCharacterAttributes(objParagraph, colCharactersInTimeline);
@@ -241,15 +276,14 @@ else
                     // ********************************
                     if (colCharacterOutput.Count > 0)
                     {
-                        // Open CharacterAttributes dialog
-                        var EditStoryResult = await dialogService.OpenAsync(
-                            "Select Character Attributes", ds =>
-                            @<CharacterAttributes colCharacters=@colCharacterOutput DialogReference="ds">
-                            </CharacterAttributes>, new DialogOptions() { Height = "360px", Width = "500px" });
+                        // Open CharacterAttributes dialog -- passing colAllCharactersAndAttributes
+                        var EditStoryResult = await dialogService.OpenAsync("Select Character Attributes", ds =>
+                        @<CharacterAttributes colCharacters=@colAllCharactersAndAttributes DialogReference="ds">
+                        </CharacterAttributes>, new DialogOptions() { Height = "360px", Width = "500px" });
 
                         if (EditStoryResult != null)
                         {
-                            // (1) First add any new Characters 
+                            // (1) First add any new Characters
                             foreach (SimpleCharacterSelector result in EditStoryResult)
                             {
                                 var objCharacter = result.CharacterValue.ToString().Split("|");
@@ -306,7 +340,7 @@ else
                                         // Add Attribute to the Character
                                         ExistingCharacter.CharacterBackground.Add(new CharacterBackground() { Type = description_type, Description = description_text, Character = ExistingCharacter });
                                     }
-                                }    
+                                }
                             }
 
                             // (3) Save all the Characters
@@ -320,7 +354,7 @@ else
                                 {
                                     objCharacter.Story = objChapter.Story;
                                     await AIStoryBuildersService.AddUpdateCharacterAsync(objCharacter, objCharacter.CharacterName);
-                                }   
+                                }
                             }
                         }
                     }

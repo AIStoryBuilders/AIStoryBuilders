@@ -15,8 +15,8 @@ namespace AIStoryBuilders.AI
 {
     public partial class OrchestratorMethods
     {
-        #region public async Task<List<SimpleCharacterSelector>> DetectCharacters(Paragraph objParagraph)
-        public async Task<List<SimpleCharacterSelector>> DetectCharacters(Paragraph objParagraph)
+        #region public async Task<List<Models.Character>> DetectCharacters(Paragraph objParagraph)
+        public async Task<List<Models.Character>> DetectCharacters(Paragraph objParagraph)
         {
             string Organization = SettingsService.Organization;
             string ApiKey = SettingsService.ApiKey;
@@ -74,7 +74,7 @@ namespace AIStoryBuilders.AI
 
             LogService.WriteToLog($"TotalTokens: {ChatResponseResult.Usage.TotalTokens} - ChatResponseResult - {ChatResponseResult.FirstChoice.Message.Content}");
 
-            List<SimpleCharacterSelector> colCharacterOutput = new List<SimpleCharacterSelector>();
+            List<Models.Character> colCharacterOutput = new List<Models.Character>();
 
             try
             {
@@ -87,7 +87,7 @@ namespace AIStoryBuilders.AI
                 foreach (var character in data.characters)
                 {
                     string CharacterName = character.name.ToString();
-                    colCharacterOutput.Add(new SimpleCharacterSelector { CharacterDisplay = $"{CharacterName}", CharacterValue = $"{CharacterName}" });
+                    colCharacterOutput.Add(new Models.Character { CharacterName = $"{CharacterName}", CharacterBackground = new List<CharacterBackground>() });
                 }
             }
             catch (Exception ex)
