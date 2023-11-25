@@ -335,6 +335,14 @@ else
                         {
                             // Add Character to the Paragraph
                             objParagraph.Characters.Add(objCharacter);
+
+                            NotificationService.Notify(new NotificationMessage
+                                {
+                                    Severity = NotificationSeverity.Success,
+                                    Summary = "Info",
+                                    Detail = $"Adding {objCharacter.CharacterName}",
+                                    Duration = 2000
+                                });
                         }
                     }
                 }

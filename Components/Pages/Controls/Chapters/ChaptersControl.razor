@@ -6,33 +6,42 @@
 @inherits OwningComponentBase
 @inject DialogService dialogService
 @inject NotificationService NotificationService
-<div class="row">
-    <div class="col">
-        <RadzenButton Text="New Chapter" ButtonStyle="ButtonStyle.Success"
-                      Click=@(() => NewChapter()) />&nbsp;&nbsp;
-        <RadzenButton Text="Save" ButtonStyle="ButtonStyle.Success"
-                      Click="ChapterSave" />&nbsp;&nbsp;
-        @if (HighestChapter)
-        {
-            <RadzenButton Text="Delete" ButtonStyle="ButtonStyle.Danger"
-                          Click="ChapterDelete" />
-        }
-    </div>
-</div>
-<br />
-<RadzenRow Gap="1rem">
-    <RadzenColumn Size="12" SizeSM="12">
-        <RadzenStack>
-            <RadzenFormField Text="Chapters:" Variant="@variant">
-                <RadzenDropDown Data=@colChapters @bind-Value="@SelectedChapter" TextProperty="ChapterName" Change="OnChapterChanged" />
-            </RadzenFormField>
-            <RadzenFormField Text="Synopsis:" Variant="@variant">
-                <RadzenTextArea @bind-Value="@SelectedChapter.Synopsis" MaxLength="1000" Rows="2" />
-            </RadzenFormField>
-        </RadzenStack>
-    </RadzenColumn>
-</RadzenRow>
-<br />
+<style>.rz-panel-titlebar { flex-direction: row-reverse; justify-content: left; }</style>
+<RadzenPanel AllowCollapse="true" Style="width: 100%;">
+    <HeaderTemplate>
+        <RadzenText TextStyle="TextStyle.H6" Class="rz-display-flex rz-align-items-center rz-m-0">
+            &nbsp;&nbsp;<b>Edit Chapter</b>
+        </RadzenText>
+    </HeaderTemplate>
+    <ChildContent>
+        <br />
+        <div class="row">
+            <div class="col">
+                <RadzenButton Text="New Chapter" ButtonStyle="ButtonStyle.Success"
+                              Click=@(() => NewChapter()) />&nbsp;&nbsp;
+                <RadzenButton Text="Save" ButtonStyle="ButtonStyle.Success"
+                              Click="ChapterSave" />&nbsp;&nbsp;
+                @if (HighestChapter)
+                {
+                    <RadzenButton Text="Delete" ButtonStyle="ButtonStyle.Danger"
+                                  Click="ChapterDelete" />
+                }
+            </div>
+        </div>
+        <RadzenRow Gap="1rem">
+            <RadzenColumn Size="12" SizeSM="12">
+                <RadzenStack>
+                    <RadzenFormField Text="Chapters:" Variant="@variant">
+                        <RadzenDropDown Data=@colChapters @bind-Value="@SelectedChapter" TextProperty="ChapterName" Change="OnChapterChanged" />
+                    </RadzenFormField>
+                    <RadzenFormField Text="Synopsis:" Variant="@variant">
+                        <RadzenTextArea @bind-Value="@SelectedChapter.Synopsis" MaxLength="1000" Rows="2" />
+                    </RadzenFormField>
+                </RadzenStack>
+            </RadzenColumn>
+        </RadzenRow>
+    </ChildContent>
+</RadzenPanel>
 <RadzenDataList @ref=objDatalist AllowVirtualization=false Style="height:320px;overflow:auto;"
                 WrapItems=false AllowPaging=false
                 Data="@colParagraphs" TItem="Paragraph">
@@ -166,10 +175,10 @@
             string strChapterName = "Chapter" + NewChapterNumber.ToString();
 
             var EditStoryResult = await dialogService.OpenAsync(
-                strChapterName.Insert(7, " "), ds =>
-                @<ChaptersEdit objChapter=@newChapter ChapterName=@strChapterName DialogReference="ds">
-                </ChaptersEdit>
-                , new DialogOptions() { Height = "300px", Width = "650px" });
+            strChapterName.Insert(7, " "), ds =>
+    @<ChaptersEdit objChapter=@newChapter ChapterName=@strChapterName DialogReference="ds">
+    </ChaptersEdit>
+        , new DialogOptions() { Height = "300px", Width = "650px" });
 
             await LoadChapters(objStory, EditStoryResult);
 
