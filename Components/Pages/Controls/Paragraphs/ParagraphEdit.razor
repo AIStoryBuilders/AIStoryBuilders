@@ -40,7 +40,10 @@ else
             {
                 <RadzenButton Click="onClickDelete" Icon="delete" ButtonStyle="ButtonStyle.Danger" Size="ButtonSize.Medium" />
             }
-            <RadzenButton Click="onClickClose" Icon="exit_to_app" ButtonStyle="ButtonStyle.Primary" Size="ButtonSize.Medium" />
+            @if (Closeable)
+            {
+                <RadzenButton Click="onClickClose" Icon="exit_to_app" ButtonStyle="ButtonStyle.Primary" Size="ButtonSize.Medium" />
+            }
         </RadzenStack>
 
         <RadzenTextArea @bind-Value="@objParagraph.ParagraphContent" MaxLength="1000" Rows="12" Style="width:100%;height:100%" />
@@ -61,6 +64,7 @@ else
 
     bool InEditMode = false;
     bool Deleteable = false;
+    bool Closeable = true;
     bool InProgress = false;
 
     protected override void OnInitialized()
@@ -70,6 +74,14 @@ else
             AIStoryBuildersService = (AIStoryBuildersService)ScopedServices.GetService(typeof(AIStoryBuildersService));
             OrchestratorMethods = (OrchestratorMethods)ScopedServices.GetService(typeof(OrchestratorMethods));
             SettingsService = (SettingsService)ScopedServices.GetService(typeof(SettingsService));
+
+            // If this is a new Paragraph put it in Edit mode
+            if (objParagraph.Id == -1)
+            {
+                InEditMode = true;
+                Deleteable = false;
+                Closeable = false;
+            }
         }
         catch (Exception ex)
         {
@@ -109,8 +121,8 @@ else
 
         var EditStoryResult = await dialogService.OpenAsync(
          "Select Characters", ds =>
-    @<CharacterSelector colCharacters="@AllCharacterList" SelectedCharacters="@SelectedCharacterList" DialogReference="ds">
-    </CharacterSelector>
+         @<CharacterSelector colCharacters="@AllCharacterList" SelectedCharacters="@SelectedCharacterList" DialogReference="ds">
+         </CharacterSelector>
          , new DialogOptions() { Height = "350px", Width = "500px" });
 
         // Set objParagraph.Characters
@@ -157,9 +169,9 @@ else
 
         var EditStoryResult = await dialogService.OpenAsync(
         "Select Timeline", ds =>
-    @<TimelineSelector colTimelines="@AllTimelineList" SelectedTimeline="@SelectedTimeline" DialogReference="ds">
-    </TimelineSelector>
-    , new DialogOptions() { Height = "200px", Width = "500px" });
+        @<TimelineSelector colTimelines="@AllTimelineList" SelectedTimeline="@SelectedTimeline" DialogReference="ds">
+        </TimelineSelector>
+        , new DialogOptions() { Height = "200px", Width = "500px" });
 
         // Set objParagraph.Timeline.TimelineName to SelectedTimeline
         if (EditStoryResult != null)
@@ -220,6 +232,9 @@ else
                     // Pass in all existing Characters and detect new ones and/or attributes
                     List<SimpleCharacterSelector> colCharacterOutput = await OrchestratorMethods.DetectCharacterAttributes(objParagraph, colCharactersInTimeline);
 
+                    // ********************************
+                    // **** DIALOG - Add any new Characters and Attributes
+                    // ********************************
                     if (colCharacterOutput.Count > 0)
                     {
                         // Open CharacterAttributes dialog
@@ -327,6 +342,9 @@ else
 
             await AIStoryBuildersService.UpdateParagraph(objChapter, objParagraph);
 
+            // Reload the Paragraphs
+            await LoadParagraphs.InvokeAsync();
+
             InProgress = false;
             StateHasChanged();
         }
@@ -354,6 +372,8 @@ else
             {
                 // Delete
                 AIStoryBuildersService.DeleteParagraph(objChapter, objParagraph);
+
+                // Reload the Paragraphs
                 await LoadParagraphs.InvokeAsync();
 
                 StateHasChanged();
