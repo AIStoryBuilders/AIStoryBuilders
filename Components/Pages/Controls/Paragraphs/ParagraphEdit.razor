@@ -24,7 +24,7 @@ else
     {
         <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" Gap="1rem" Wrap="FlexWrap.Wrap" Style="margin-bottom:10px">
             <RadzenSpeechToTextButton Change="@(args => OnSpeechCaptured(args, false, "TextToSpeech"))" />
-            <RadzenButton Click="onClickClose" Icon="privacy_tip" ButtonStyle="ButtonStyle.Warning" Size="ButtonSize.Medium" />
+            <RadzenButton Click="onClickAI" Icon="privacy_tip" ButtonStyle="ButtonStyle.Warning" Size="ButtonSize.Medium" />
 
             <RadzenButton Click="onClickCharacter" Text="Characters" ButtonStyle="ButtonStyle.Light" Size="ButtonSize.Medium" />
             <RadzenButton Click="onClickLocation" Text="Location" ButtonStyle="ButtonStyle.Light" Size="ButtonSize.Medium" />
@@ -441,6 +441,45 @@ else
 
                 StateHasChanged();
             }
+        }
+        catch (Exception ex)
+        {
+            NotificationService.Notify(new NotificationMessage
+                {
+                    Severity = NotificationSeverity.Error,
+                    Summary = "Error",
+                    Detail = ex.Message,
+                    Duration = 4000
+                });
+        }
+    }
+
+    private async Task onClickAI()
+    {
+        try
+        {
+            string AIPrompt = "";
+
+            // Display inline dialog to capture text
+            var AIPromptResult = await dialogService.OpenAsync("Describe Paragraph (optional)", ds =>
+            @<RadzenStack Gap="1.5rem">
+                <RadzenTextArea @bind-Value="@AIPrompt" class="w-100" Style="height:100px" MaxLength="500" />
+                <RadzenStack Orientation="Orientation.Horizontal" Gap="0.5rem" AlignItems="AlignItems.Center" JustifyContent="JustifyContent.SpaceBetween">
+                    <RadzenStack Orientation="Orientation.Horizontal">
+                    <RadzenButton Text="Save" ButtonStyle="ButtonStyle.Success" Click="() => ds.Close(AIPrompt)" Style="width: 80px;" />
+                    </RadzenStack>
+                </RadzenStack>
+            </RadzenStack>);
+
+            if (AIPromptResult != null)
+            {
+                // Call AIStoryBuildersService
+                //var AIStoryResult = await AIStoryBuildersService.WriteParagraph(objParagraph, AIPromptResult);
+
+                // Update objParagraph.ParagraphContent
+                objParagraph.ParagraphContent = AIPromptResult;
+            }
+
         }
         catch (Exception ex)
         {
