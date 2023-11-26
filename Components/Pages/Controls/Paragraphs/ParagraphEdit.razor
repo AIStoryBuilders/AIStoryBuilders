@@ -248,7 +248,7 @@ else
                                 });
 
                             // Pass all new Characters and detect  attributes
-                            List<SimpleCharacterSelector> colnewCharactersAndAttributes = await OrchestratorMethods.DetectCharacterAttributes(objParagraph, colNewCharactersInParagraph);
+                            List<SimpleCharacterSelector> colnewCharactersAndAttributes = await OrchestratorMethods.DetectCharacterAttributes(objParagraph, colNewCharactersInParagraph, "New Character");
 
                             if (colnewCharactersAndAttributes != null)
                             {
@@ -269,7 +269,7 @@ else
                     var colCharactersInTimeline = AIStoryBuildersService.SimplifyCharacter(colExistingCharactersInParagraph, objParagraph);
 
                     // Pass in all existing Characters and detect new ones and/or attributes
-                    List<SimpleCharacterSelector> colCharacterOutput = await OrchestratorMethods.DetectCharacterAttributes(objParagraph, colCharactersInTimeline);
+                    List<SimpleCharacterSelector> colCharacterOutput = await OrchestratorMethods.DetectCharacterAttributes(objParagraph, colCharactersInTimeline, "Existing Character");
 
                     // ********************************
                     // **** DIALOG - Add any new Characters and Attributes

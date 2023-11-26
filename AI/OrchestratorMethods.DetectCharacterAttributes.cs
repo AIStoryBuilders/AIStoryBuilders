@@ -15,8 +15,8 @@ namespace AIStoryBuilders.AI
 {
     public partial class OrchestratorMethods
     {
-        #region public async Task<List<SimpleCharacterSelector>> DetectCharacterAttributes(Paragraph objParagraph, List<Models.Character> colCharacters)
-        public async Task<List<SimpleCharacterSelector>> DetectCharacterAttributes(Paragraph objParagraph, List<Models.Character> colCharacters)
+        #region public async Task<List<SimpleCharacterSelector>> DetectCharacterAttributes(Paragraph objParagraph, List<Models.Character> colCharacters, string objDetectionType)
+        public async Task<List<SimpleCharacterSelector>> DetectCharacterAttributes(Paragraph objParagraph, List<Models.Character> colCharacters, string objDetectionType)
         {
             string Organization = SettingsService.Organization;
             string ApiKey = SettingsService.ApiKey;
@@ -91,12 +91,8 @@ namespace AIStoryBuilders.AI
                 foreach (var character in data.characters)
                 {
                     string CharacterName = character.name.ToString();
-                    string CharacterAction = character.action.ToString();
 
-                    if (CharacterAction == "New Character")
-                    {
-                        colCharacterOutput.Add(new SimpleCharacterSelector { CharacterDisplay = $"Add - {CharacterName}", CharacterValue = $"{CharacterName}|{CharacterAction}||" });
-                    }
+                    colCharacterOutput.Add(new SimpleCharacterSelector { CharacterDisplay = $"Add - {CharacterName}", CharacterValue = $"{CharacterName}|{objDetectionType}||" });
 
                     try
                     {
@@ -107,7 +103,7 @@ namespace AIStoryBuilders.AI
                                 string description_type = description.description_type.ToString();
                                 string description_text = description.description.ToString();
 
-                                colCharacterOutput.Add(new SimpleCharacterSelector { CharacterDisplay = $"{CharacterName} - ({description_type}) {description_text}", CharacterValue = $"{CharacterName}|{CharacterAction}|{description_type}|{description_text}" });
+                                colCharacterOutput.Add(new SimpleCharacterSelector { CharacterDisplay = $"{CharacterName} - ({description_type}) {description_text}", CharacterValue = $"{CharacterName}|{objDetectionType}|{description_type}|{description_text}" });
                             }
                         }
                     }
@@ -120,42 +116,9 @@ namespace AIStoryBuilders.AI
             catch (Exception ex)
             {
                 LogService.WriteToLog($"Error - DetectCharacterAttributes: {ex.Message} {ex.StackTrace ?? ""}");
-            }
+            }            
 
-            // Loop through the characters and remove any existing characters from the list that do not have any descriptions
-            List<SimpleCharacterSelector> colFinalCharacterOutput = new List<SimpleCharacterSelector>();
-
-            foreach (var character in colCharacterOutput)
-            {
-                var objCharacter = character.CharacterValue.ToString().Split("|");
-
-                var CharacterName = objCharacter[0];
-                var Action = objCharacter[1];
-                var description_type = objCharacter[2];
-                var description_text = objCharacter[3];
-
-                if (Action == "New Character")
-                {
-                    // Sometimes the LLM will think a character is new when it is not
-                    // Only add a new character if they are not in the colCharacters collection
-                    var objCharacterExists = colCharacters.Where(x => x.CharacterName == CharacterName).FirstOrDefault();
-
-                    if (objCharacterExists == null)
-                    {
-                        colFinalCharacterOutput.Add(character);
-                    }
-                }
-                else
-                {
-                    // If not a new character, only add if there is a description
-                    if (description_type != "")
-                    {
-                        colFinalCharacterOutput.Add(character);
-                    }
-                }
-            }
-
-            return colFinalCharacterOutput;
+            return colCharacterOutput;
         }
         #endregion
 
@@ -165,15 +128,11 @@ namespace AIStoryBuilders.AI
         private string CreateDetectCharacterAttributes(string paramParagraphContent, string CharacterJSON)
         {
             return "You are a function that will produce only JSON. \n" +
-            "Please analyze a paragraph of text (given as #paramParagraphContent) and a JSON string representing a list of characters and their current attributes (given as #CharacterJSON). \n" +
-            "#1 Identify any new characters, and or any new attributes for existing characters, mentioned in the paragraph that are not already present in #CharacterJSON. \n" +
-            "#2 Parse the characters in #CharacterJSON to create a list of known characters. \n" +
-            "#3 analyze #paramParagraphContent to extract character names. \n" +
-            "#4 Compare these extracted names against the list of known characters derived from #CharacterJSON. \n" +
-            "#5 New characters found in #paramParagraphContent but not in #CharacterJSON will be identified and their [Action] in the JSON will be set to New Character. \n" +
-            "#6 If the character already exists in #CharacterJSON their [Action] in the JSON will be set to Existing Character. \n" +
-            "#7 Only output each character once in the JSON. For existing characters only output new attributes for the character not found for the character in #CharacterJSON. \n" +
-            "#8 Do not output any attributes for characters that is already in #CharacterJSON. \n" +
+            "#1 Please analyze a paragraph of text (given as #paramParagraphContent) and a JSON string representing a list of characters and their current attributes (given as #CharacterJSON). \n" +
+            "#2 Ignore any Characters not present in #CharacterJSON. \n" +
+            "#3 Identify any new attributes for each character in #CharacterJSON, mentioned in #paramParagraphContent that are not already present for the character in #CharacterJSON. \n" +
+            "#4 Only output each character once in the JSON. \n" +
+            "#5 Do not output any attributes for characters that is already in #CharacterJSON. \n" +
             $"### This is the content of #paramParagraphContent: {paramParagraphContent} \n" +
             $"### This is the content of #CharacterJSON: {CharacterJSON} \n" +
             "Provide the results in the following JSON format: \n" +
@@ -181,8 +140,6 @@ namespace AIStoryBuilders.AI
             "\"characters\": [\n" +
             "{ \n" +
             "\"name\": \"[Name]\", \n" +
-            "\"action\": \"[Action]\", \n" +
-            "\"enum\": [\"New Character\",\"Existing Character\",\"Add Attribute\"], \n" +
             "\"descriptions\": [\n" +
             "{ \n" +
             "\"description_type\": \"[DescriptionType]\", \n" +
