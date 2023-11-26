@@ -33,9 +33,9 @@
         <RadzenTabsItem Text="Chapters">
             <ChaptersControl @ref="chaptersControl" objStory="objStory" />
         </RadzenTabsItem>
-        <RadzenTabsItem Text="AI">
+@*         <RadzenTabsItem Text="AI">
             <AIControl @ref="aIControl" objStory="objStory" />
-        </RadzenTabsItem>
+        </RadzenTabsItem> *@
     </Tabs>
 </RadzenTabs>
 @code {
@@ -46,7 +46,7 @@
     TimelinesControl timelinesControl;
     LocationsControl locationsControl;
     ChaptersControl chaptersControl;
-    AIControl aIControl;
+    // AIControl aIControl;
 
     AIStoryBuildersService AIStoryBuildersService;
     OrchestratorMethods OrchestratorMethods;

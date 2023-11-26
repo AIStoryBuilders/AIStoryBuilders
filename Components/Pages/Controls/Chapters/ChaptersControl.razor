@@ -131,15 +131,58 @@
         // Load colParagraphs
         colParagraphs = AIStoryBuildersService.GetParagraphs(paramChapter);
 
+        // *******************
         // Add a blank paragraph to the end of the Paragraphs collection
         var objParagraph = new Paragraph();
         objParagraph.Id = -1; // So we know it is new
         objParagraph.Chapter = paramChapter;
         objParagraph.Sequence = colParagraphs.Count + 1;
-        objParagraph.Location = new Location();
-        objParagraph.Characters = new List<Character>();
-        objParagraph.Timeline = new Timeline();
         objParagraph.ParagraphContent = "";
+
+        var LastParagraph = colParagraphs.LastOrDefault();
+
+        if (LastParagraph != null)
+        {
+            var LastParagraphCharacters = LastParagraph.Characters;
+
+            if (LastParagraphCharacters != null)
+            {
+                objParagraph.Characters = LastParagraphCharacters;
+            }
+            else
+            {
+                objParagraph.Characters = new List<Character>();
+            }
+        }
+
+        if (LastParagraph != null)
+        {
+            var LastParagraphTimeline = LastParagraph.Timeline;
+
+            if (LastParagraphTimeline != null)
+            {
+                objParagraph.Timeline = LastParagraphTimeline;
+            }
+            else
+            {
+                objParagraph.Timeline = new Timeline();
+            }
+        }
+
+        if (LastParagraph != null)
+        {
+            var LastParagraphLocation = LastParagraph.Location; 
+
+            if (LastParagraphLocation != null)
+            {
+                objParagraph.Location = LastParagraphLocation;
+            }
+            else
+            {
+                objParagraph.Location = new Location();
+            }
+        }
+
         colParagraphs.Add(objParagraph);
 
         if (objDatalist != null)
