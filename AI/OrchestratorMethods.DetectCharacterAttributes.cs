@@ -92,7 +92,18 @@ namespace AIStoryBuilders.AI
                 {
                     string CharacterName = character.name.ToString();
 
-                    colCharacterOutput.Add(new SimpleCharacterSelector { CharacterDisplay = $"Add - {CharacterName}", CharacterValue = $"{CharacterName}|{objDetectionType}||" });
+                    // If the CharacterName is not in the list of colCharacters, then don't add it to the list
+                    // The LLM added a new character even though it was not in the list of characters passed to it
+                    if (colCharacters.Where(x => x.CharacterName == CharacterName).Count() == 0)
+                    {
+                        continue;
+                    }
+
+                    // We only create a Add character element if we are in "New Character" mode
+                    if (objDetectionType == "New Character")
+                    {
+                        colCharacterOutput.Add(new SimpleCharacterSelector { CharacterDisplay = $"Add - {CharacterName}", CharacterValue = $"{CharacterName}|{objDetectionType}||" });
+                    }
 
                     try
                     {
@@ -128,11 +139,12 @@ namespace AIStoryBuilders.AI
         private string CreateDetectCharacterAttributes(string paramParagraphContent, string CharacterJSON)
         {
             return "You are a function that will produce only JSON. \n" +
-            "#1 Please analyze a paragraph of text (given as #paramParagraphContent) and a JSON string representing a list of characters and their current attributes (given as #CharacterJSON). \n" +
-            "#2 Ignore any Characters not present in #CharacterJSON. \n" +
-            "#3 Identify any new attributes for each character in #CharacterJSON, mentioned in #paramParagraphContent that are not already present for the character in #CharacterJSON. \n" +
-            "#4 Only output each character once in the JSON. \n" +
-            "#5 Do not output any attributes for characters that is already in #CharacterJSON. \n" +
+            "#1 Please analyze a paragraph of text (given as #paramParagraphContent) and a JSON string representing a list of characters and their current descriptions (given as #CharacterJSON). \n" +
+            "#2 Output a new JSON containing only new descriptions. \n" +
+            "#3 Do not output CharacterName not present in #CharacterJSON. \n" +
+            "#4 Identify any new descriptions for each character in #CharacterJSON, mentioned in #paramParagraphContent that are not already present for the CharacterName in #CharacterJSON. \n" +
+            "#5 Only output each character once in the JSON. \n" +
+            "#6 Do not output any descriptions for any CharacterName that is already in #CharacterJSON for that CharacterName. \n" +
             $"### This is the content of #paramParagraphContent: {paramParagraphContent} \n" +
             $"### This is the content of #CharacterJSON: {CharacterJSON} \n" +
             "Provide the results in the following JSON format: \n" +

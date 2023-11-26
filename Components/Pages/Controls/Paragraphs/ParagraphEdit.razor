@@ -261,20 +261,37 @@ else
                         }
                     }
 
-                    // Get all Characters in the Paragraph that are in the Characters collection
+                    // Get all existing Characters in the Paragraph that are in the Characters collection
                     List<Character> colExistingCharactersInParagraph = colCharacters.Where(x => colAllCharactersInParagraph.Any(y => y.CharacterName == x.CharacterName)).ToList();
 
-                    // Simplify Characters to only CharacterName and CharacterType and value
-                    // Pass Paragraph so we only get CharacterBackground in the selected or null Timelines
-                    var colCharactersInTimeline = AIStoryBuildersService.SimplifyCharacter(colExistingCharactersInParagraph, objParagraph);
+                    if (colExistingCharactersInParagraph != null)
+                    {
+                        if (colExistingCharactersInParagraph.Count > 0)
+                        {
+                            NotificationService.Notify(new NotificationMessage
+                                {
+                                    Severity = NotificationSeverity.Success,
+                                    Summary = "Info",
+                                    Detail = "Detecting attributes on existing characters…",
+                                    Duration = 2000
+                                });
 
-                    // Pass in all existing Characters and detect new ones and/or attributes
-                    List<SimpleCharacterSelector> colCharacterOutput = await OrchestratorMethods.DetectCharacterAttributes(objParagraph, colCharactersInTimeline, "Existing Character");
+                            // Simplify Characters to only CharacterName and CharacterType and value
+                            // Pass Paragraph so we only get CharacterBackground in the selected or null Timelines
+                            var colCharactersInTimeline = AIStoryBuildersService.SimplifyCharacter(colExistingCharactersInParagraph, objParagraph);
+
+                            // Pass in all existing Characters and detect new ones and/or attributes
+                            List<SimpleCharacterSelector> colCharacterOutput = await OrchestratorMethods.DetectCharacterAttributes(objParagraph, colCharactersInTimeline, "Existing Character");
+
+                            // Add existing Characters and Attributes to colAllCharactersAndAttributes
+                            colAllCharactersAndAttributes.AddRange(colCharacterOutput);
+                        }
+                    }
 
                     // ********************************
                     // **** DIALOG - Add any new Characters and Attributes
                     // ********************************
-                    if (colCharacterOutput.Count > 0)
+                    if (colAllCharactersAndAttributes.Count > 0)
                     {
                         // Open CharacterAttributes dialog -- passing colAllCharactersAndAttributes
                         var EditStoryResult = await dialogService.OpenAsync("Select Character Attributes", ds =>
