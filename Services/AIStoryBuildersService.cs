@@ -142,82 +142,45 @@ namespace AIStoryBuilders.Services
         #region public List<Models.JSON.Character> ConvertToJSONCharacter(List<Models.Character> colCharacters, Paragraph objParagraph)
         public List<Models.JSON.Character> ConvertToJSONCharacter(List<Models.Character> colCharacters, Paragraph objParagraph)
         {
-            // If the Paragraph has a Timeline selected, filter the CharacterBackground 
-            // to only those that are in the Timeline or empty Timeline
             List<Models.JSON.Character> colCharactersInTimeline = new List<Models.JSON.Character>();
 
-            if (objParagraph.Timeline.TimelineName != null && objParagraph.Timeline.TimelineName.Length > 0)
+            foreach (var character in colCharacters)
             {
-                foreach (var character in colCharacters)
+                Models.JSON.Character objCharacter = new Models.JSON.Character
                 {
-                    Models.JSON.Character objCharacter = new Models.JSON.Character();
+                    name = character.CharacterName,
+                    descriptions = character.CharacterBackground != null ? new Descriptions[character.CharacterBackground.Count] : new Descriptions[0]
+                };
 
-                    objCharacter.name = character.CharacterName;
-
-                    int CharacterBackgroundCount = 0;
-
-                    if (character.CharacterBackground != null)
-                    {
-                        CharacterBackgroundCount = character.CharacterBackground.Count;
-                    }
-
-                    objCharacter.descriptions = new Descriptions[CharacterBackgroundCount];
-
-                    int i = 0;
-                    foreach (var background in character.CharacterBackground)
-                    {
-                        if ((background.Timeline.TimelineName == objParagraph.Timeline.TimelineName) ||
-                        (background.Timeline.TimelineName == null || background.Timeline.TimelineName == ""))
-                        {
-                            Descriptions objDescriptions = new Descriptions();
-
-                            objDescriptions.description = background.Description.Replace("\n", " ");
-                            objDescriptions.description_type = background.Type.Replace("\n", " ");
-
-                            objCharacter.descriptions[i] = objDescriptions;
-
-                            i++;
-                        }
-                    }
-
-                    colCharactersInTimeline.Add(objCharacter);
-                }
-            }
-            else
-            {
-                foreach (var character in colCharacters)
+                int i = 0;
+                foreach (var background in character.CharacterBackground ?? Enumerable.Empty<CharacterBackground>())
                 {
-                    Models.JSON.Character objCharacter = new Models.JSON.Character();
+                    bool shouldAddDescription = objParagraph.Timeline.TimelineName == null ||
+                                                objParagraph.Timeline.TimelineName.Length == 0 ||
+                                                background.Timeline.TimelineName == objParagraph.Timeline.TimelineName ||
+                                                string.IsNullOrEmpty(background.Timeline.TimelineName);
 
-                    objCharacter.name = character.CharacterName;
-
-                    int CharacterBackgroundCount = 0;
-
-                    if (character.CharacterBackground != null)
+                    if (shouldAddDescription)
                     {
-                        CharacterBackgroundCount = character.CharacterBackground.Count;
-                    }
+                        string strTimelineName = "";
 
-                    objCharacter.descriptions = new Descriptions[CharacterBackgroundCount];
-
-                    if (character.CharacterBackground != null)
-                    {
-                        int i = 0;
-                        foreach (var background in character.CharacterBackground)
+                        if (background.Timeline != null)
                         {
-                            Descriptions objDescriptions = new Descriptions();
-
-                            objDescriptions.description = background.Description.Replace("\n", " ");
-                            objDescriptions.description_type = background.Type.Replace("\n", " ");
-
-                            objCharacter.descriptions[i] = objDescriptions;
-
-                            i++;
+                            strTimelineName = objParagraph.Timeline.TimelineName;
                         }
-                    }
 
-                    colCharactersInTimeline.Add(objCharacter);
+                        Descriptions objDescriptions = new Descriptions
+                        {       
+                            description = background.Description.Replace("\n", " "),
+                            description_type = background.Type.Replace("\n", " "),
+                            timeline_name = strTimelineName
+                        };
+
+                        objCharacter.descriptions[i++] = objDescriptions;
+                    }
                 }
+
+                colCharactersInTimeline.Add(objCharacter);
             }
 
             return colCharactersInTimeline;
