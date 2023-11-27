@@ -194,12 +194,13 @@ else
             if (objParagraph.ParagraphContent.Trim().Length < 1)
             {
                 NotificationService.Notify(
-            new NotificationMessage
+                    new NotificationMessage
                     {
                         Severity = NotificationSeverity.Error,
                         Summary = "Error",
                         Detail = "Paragraph content is required",
                         Duration = 4000
+
                     });
                 return;
             }
@@ -247,7 +248,7 @@ else
                                     Duration = 2000
                                 });
 
-                            // Pass all new Characters and detect  attributes
+                            // Pass all new Characters and detect attributes
                             List<SimpleCharacterSelector> colnewCharactersAndAttributes = await OrchestratorMethods.DetectCharacterAttributes(objParagraph, colNewCharactersInParagraph, "New Character");
 
                             if (colnewCharactersAndAttributes != null)
@@ -473,8 +474,18 @@ else
 
             if (AIPromptResult != null)
             {
+                // Get All Paragraphs In Chapter
+                var colAllParagraphsInChapter = AIStoryBuildersService.GetParagraphs(objChapter);
+
+                // Limit to only Paragraphs that come before the current Paragraph
+                var colParagraphsBeforeCurrent = colAllParagraphsInChapter.Where(x => x.Sequence < objParagraph.Sequence).ToList();
+
+                // Get all existing Characters in the Paragraph that are in the Characters collection
+                List<Character> colExistingCharactersInParagraph = colCharacters.Where(x => objParagraph.Characters.Any(y => y.CharacterName == x.CharacterName)).ToList();
+
+                // ********************************
                 // Call AIStoryBuildersService
-                //var AIStoryResult = await AIStoryBuildersService.WriteParagraph(objParagraph, AIPromptResult);
+                var objMasterStory = await AIStoryBuildersService.CreateMasterStory(objChapter, objParagraph, colExistingCharactersInParagraph, colParagraphsBeforeCurrent);
 
                 // Update objParagraph.ParagraphContent
                 objParagraph.ParagraphContent = AIPromptResult;

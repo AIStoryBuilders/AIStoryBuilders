@@ -220,9 +220,9 @@
 
             var EditStoryResult = await dialogService.OpenAsync(
             strChapterName.Insert(7, " "), ds =>
-    @<ChaptersEdit objChapter=@newChapter ChapterName=@strChapterName DialogReference="ds">
-    </ChaptersEdit>
-        , new DialogOptions() { Height = "300px", Width = "650px" });
+            @<ChaptersEdit objChapter=@newChapter ChapterName=@strChapterName DialogReference="ds">
+            </ChaptersEdit>
+            , new DialogOptions() { Height = "300px", Width = "650px" });
 
             await LoadChapters(objStory, EditStoryResult);
 
@@ -318,15 +318,5 @@
     private async Task LoadParagraphsHandler()
     {
         await LoadParagraphs(SelectedChapter);
-    }
-
-    private void ExpandHeader()
-    {
-        
-    }
-
-    private void CollapseHeader()
-    {
-        
     }
 }

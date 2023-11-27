@@ -4,6 +4,7 @@ using AIStoryBuilders.Models;
 using static AIStoryBuilders.AI.OrchestratorMethods;
 using AIStoryBuilders.Models.JSON;
 using Newtonsoft.Json;
+using System.Linq;
 
 namespace AIStoryBuilders.Services
 {
@@ -133,6 +134,176 @@ namespace AIStoryBuilders.Services
             }
 
             return colCharactersInTimeline;
+        }
+        #endregion
+
+        // JSON Conversion Methods
+
+        #region public List<Models.JSON.Character> ConvertToJSONCharacter(List<Models.Character> colCharacters, Paragraph objParagraph)
+        public List<Models.JSON.Character> ConvertToJSONCharacter(List<Models.Character> colCharacters, Paragraph objParagraph)
+        {
+            // If the Paragraph has a Timeline selected, filter the CharacterBackground 
+            // to only those that are in the Timeline or empty Timeline
+            List<Models.JSON.Character> colCharactersInTimeline = new List<Models.JSON.Character>();
+
+            if (objParagraph.Timeline.TimelineName != null && objParagraph.Timeline.TimelineName.Length > 0)
+            {
+                foreach (var character in colCharacters)
+                {
+                    Models.JSON.Character objCharacter = new Models.JSON.Character();
+
+                    objCharacter.name = character.CharacterName;
+
+                    int CharacterBackgroundCount = 0;
+
+                    if (character.CharacterBackground != null)
+                    {
+                        CharacterBackgroundCount = character.CharacterBackground.Count;
+                    }
+
+                    objCharacter.descriptions = new Descriptions[CharacterBackgroundCount];
+
+                    int i = 0;
+                    foreach (var background in character.CharacterBackground)
+                    {
+                        if ((background.Timeline.TimelineName == objParagraph.Timeline.TimelineName) ||
+                        (background.Timeline.TimelineName == null || background.Timeline.TimelineName == ""))
+                        {
+                            Descriptions objDescriptions = new Descriptions();
+
+                            objDescriptions.description = background.Description.Replace("\n", " ");
+                            objDescriptions.description_type = background.Type.Replace("\n", " ");
+
+                            objCharacter.descriptions[i] = objDescriptions;
+
+                            i++;
+                        }
+                    }
+
+                    colCharactersInTimeline.Add(objCharacter);
+                }
+            }
+            else
+            {
+                foreach (var character in colCharacters)
+                {
+                    Models.JSON.Character objCharacter = new Models.JSON.Character();
+
+                    objCharacter.name = character.CharacterName;
+
+                    int CharacterBackgroundCount = 0;
+
+                    if (character.CharacterBackground != null)
+                    {
+                        CharacterBackgroundCount = character.CharacterBackground.Count;
+                    }
+
+                    objCharacter.descriptions = new Descriptions[CharacterBackgroundCount];
+
+                    if (character.CharacterBackground != null)
+                    {
+                        int i = 0;
+                        foreach (var background in character.CharacterBackground)
+                        {
+                            Descriptions objDescriptions = new Descriptions();
+
+                            objDescriptions.description = background.Description.Replace("\n", " ");
+                            objDescriptions.description_type = background.Type.Replace("\n", " ");
+
+                            objCharacter.descriptions[i] = objDescriptions;
+
+                            i++;
+                        }
+                    }
+
+                    colCharactersInTimeline.Add(objCharacter);
+                }
+            }
+
+            return colCharactersInTimeline;
+        }
+        #endregion
+
+        #region public Models.JSON.Paragraphs ConvertToJSONParagraph(Paragraph objParagraph)
+        public Models.JSON.Paragraphs ConvertToJSONParagraph(Paragraph objParagraph)
+        {
+            Models.JSON.Paragraphs objParagraphs = new Models.JSON.Paragraphs();
+
+            objParagraphs.contents = objParagraph.ParagraphContent.Replace("\n", " ");
+            objParagraphs.sequence = objParagraph.Sequence;
+            objParagraphs.character_names = objParagraph.Characters.Select(x => x.CharacterName).ToArray();
+            objParagraphs.location_name = objParagraph.Location.LocationName;
+            objParagraphs.timeline_name = objParagraph.Timeline.TimelineName;
+
+            return objParagraphs;
+        }
+        #endregion
+
+        #region public Models.JSON.JSONChapter ConvertToJSONChapter(Chapter paramChapter)
+        public Models.JSON.JSONChapter ConvertToJSONChapter(Chapter paramChapter)
+        {
+            Models.JSON.JSONChapter objChapter = new Models.JSON.JSONChapter();
+
+            objChapter.chapter_name = paramChapter.ChapterName.Replace("\n", " ");
+            objChapter.chapter_synopsis = paramChapter.Synopsis.Replace("\n", " ");
+
+            int ParagraphCount = 0;
+
+            if (paramChapter.Paragraph != null)
+            {
+                ParagraphCount = paramChapter.Paragraph.Count;
+            }
+
+            objChapter.paragraphs = new Models.JSON.Paragraphs[ParagraphCount];
+
+            for (int i = 0; i < ParagraphCount; i++)
+            {
+                objChapter.paragraphs[i] = ConvertToJSONParagraph(paramChapter.Paragraph[i]);
+            }
+
+            return objChapter;
+        }
+        #endregion
+
+        #region public Models.JSON.Locations ConvertToJSONLocation(Models.Location objLocation)
+        public Models.JSON.Locations ConvertToJSONLocation(Models.Location objLocation)
+        {
+            Models.JSON.Locations objLocations = new Models.JSON.Locations();
+
+            objLocations.name = objLocation.LocationName.Replace("\n", " ");
+
+            if (objLocation.LocationDescription != null)
+            {
+                objLocations.descriptions = new string[objLocation.LocationDescription.Count];
+            }
+            else
+            {
+                objLocations.descriptions = new string[0];
+            }
+
+            if (objLocation.LocationDescription != null)
+            {
+                int i = 0;
+                foreach (var location in objLocation.LocationDescription)
+                {
+                    objLocations.descriptions[i] = location.Description;
+                    i++;
+                }
+            }
+
+            return objLocations;
+        }
+        #endregion
+
+        #region public Models.JSON.Timelines ConvertToJSONTimelines(Timeline objTimeline)
+        public Models.JSON.Timelines ConvertToJSONTimelines(Timeline objTimeline)
+        {
+            Models.JSON.Timelines objTimelines = new Models.JSON.Timelines();
+
+            objTimelines.name = objTimeline.TimelineName.Replace("\n", " ");
+            objTimelines.description = objTimeline.TimelineDescription.Replace("\n", " ");
+
+            return objTimelines;
         }
         #endregion
     }
