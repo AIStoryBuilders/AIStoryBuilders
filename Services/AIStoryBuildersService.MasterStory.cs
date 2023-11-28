@@ -24,14 +24,23 @@ namespace AIStoryBuilders.Services
                 objMasterStory.CurrentParagraph = ConvertToJSONParagraph(objParagraph);
                 objMasterStory.CurrentChapter = ConvertToJSONChapter(objChapter);
 
+                // PreviousParagraphs
                 objMasterStory.PreviousParagraphs = new List<Paragraphs>();
 
                 foreach (var paragraph in colParagraphs)
                 {
                     objMasterStory.PreviousParagraphs.Add(ConvertToJSONParagraph(paragraph));
                 }
-                
-                //objMasterStory.RelatedParagraphs = await OrchestratorMethods.GetRelatedParagraphs(objChapter, colParagraphs);
+
+                // RelatedParagraphs
+                objMasterStory.RelatedParagraphs = new List<Paragraphs>();
+
+                var RelatedParagraphs = await OrchestratorMethods.GetRelatedParagraphs(objChapter, objParagraph);
+
+                foreach (var paragraph in RelatedParagraphs)
+                {
+                    objMasterStory.RelatedParagraphs.Add(ConvertToJSONParagraph(paragraph));
+                }
             }
             catch (Exception ex)
             {

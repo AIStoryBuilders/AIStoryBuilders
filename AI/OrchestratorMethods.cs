@@ -1,6 +1,8 @@
 using AIStoryBuilders.Model;
+using AIStoryBuilders.Models;
 using Newtonsoft.Json;
 using OpenAI;
+using System.Collections.Generic;
 using System.Text.RegularExpressions;
 
 namespace AIStoryBuilders.AI
@@ -149,6 +151,93 @@ namespace AIStoryBuilders.AI
         }
         #endregion
 
+        #region public async Task<string> GetVectorEmbeddingAsFloats(string EmbeddingContent)
+        public async Task<float[]> GetVectorEmbeddingAsFloats(string EmbeddingContent)
+        {
+            // **** Call OpenAI and get embeddings for the memory text
+            // Create an instance of the OpenAI client
+            var api = new OpenAIClient(new OpenAIAuthentication(SettingsService.ApiKey, SettingsService.Organization));
+            // Get the model details
+            var model = await api.ModelsEndpoint.GetModelDetailsAsync("text-embedding-ada-002");
+            // Get embeddings for the text
+            var embeddings = await api.EmbeddingsEndpoint.CreateEmbeddingAsync(EmbeddingContent, model);
+            // Get embeddings as an array of floats
+            var EmbeddingVectors = embeddings.Data[0].Embedding.Select(d => (float)d).ToArray();
+
+            return EmbeddingVectors;
+        }
+        #endregion
+
+        // Story
+
+        #region public async Task<List<Paragraph>> GetRelatedParagraphs(Chapter objChapter, Paragraph objParagraph)
+        public async Task<List<Paragraph>> GetRelatedParagraphs(Chapter objChapter, Paragraph objParagraph)
+        {
+            List<Paragraph> colParagraph = new List<Paragraph>();
+
+            // Get the vector embedding for the paragraph content
+            var ParagraphContentEmbeddingVectors = await GetVectorEmbeddingAsFloats(objParagraph.ParagraphContent);
+
+            // ************************************************************************************
+            // Read all Paragraph files in memory for Chapters that come before the current Chapter
+            // Perform vector search on PreviousParagraphs and all Paragraph files in memory
+            // Add only the top 10 Paragraphs (include their Timelines)
+
+            Dictionary<string, string> AIStoryBuildersMemory = new Dictionary<string, string>();
+
+            // Clear the memory
+            this.AIStoryBuildersMemory = new Dictionary<string, string>();
+
+            // Read the lines from the .csv file
+            var AIStoryBuildersMemoryPath =
+            $"{Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments)}/AIStoryBuilders/AIStoryBuildersDatabase.json";
+
+            // ****************************
+            // TO DO: Read all Paragraph files into AIStoryBuildersDatabase.json memory for Chapters that come before the current Chapter
+            // ****************************
+
+            // Read the lines from the .csv file
+            foreach (var line in System.IO.File.ReadAllLines(AIStoryBuildersMemoryPath))
+            {
+                var splitLine = line.Split('|');
+                var KEY = splitLine[0];
+                var VALUE = splitLine[1];
+
+                AIStoryBuildersMemory.Add(KEY, VALUE);
+            }
+
+            // Reset the similarities list
+            similarities = new List<(string, float)>();
+
+            // Calculate the similarity between the prompt's
+            // embedding and each existing embedding
+            foreach (var embedding in AIStoryBuildersMemory)
+            {
+                if (embedding.Value != null)
+                {
+                    if (embedding.Value != "")
+                    {
+                        var ConvertEmbeddingToFloats = JsonConvert.DeserializeObject<List<float>>(embedding.Value);
+
+                        var similarity =
+                        CosineSimilarity(
+                            ParagraphContentEmbeddingVectors,
+                        ConvertEmbeddingToFloats.ToArray());
+
+                        similarities.Add((embedding.Key, similarity));
+                    }
+                }
+            }
+
+            // Sort the results by similarity in descending order
+            similarities.Sort((a, b) => b.Item2.CompareTo(a.Item2));
+
+            var Top10similarities = similarities.Take(10).ToList();
+
+            return colParagraph;
+        }
+        #endregion
+
         // Utility Methods
 
         #region public static float CosineSimilarity(float[] vector1, float[] vector2)
@@ -182,7 +271,7 @@ namespace AIStoryBuilders.AI
             // Calculate and return cosine similarity by dividing
             // dot product by the product of magnitudes
             return dotProduct / (magnitude1 * magnitude2);
-        } 
+        }
         #endregion
 
         #region private string CombineAndSortLists(string paramExistingList, string paramNewList)
@@ -275,7 +364,7 @@ namespace AIStoryBuilders.AI
 
             // Convert the array to a List<string> and return
             return new List<string>(items);
-        } 
+        }
         #endregion
 
         #region public class ReadTextEventArgs : EventArgs
