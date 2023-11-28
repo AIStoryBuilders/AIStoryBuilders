@@ -139,13 +139,13 @@ else
     private async Task onClickLocation()
     {
         // Turn colLocations into a list of strings
-        var AllLocationList = colLocations.Select(c => c.LocationName).OrderBy(x => x).ToList();
-        AllLocationList.Add("");
+        var AllLocationList = colLocations.OrderBy(x => x.LocationName).ToList();
+        AllLocationList.Add(new Location() { Id = -1, LocationName = ""});
 
         // Get SelectedLocation
-        var SelectedLocation = objParagraph.Location.LocationName;
+        var SelectedLocation = objParagraph.Location;
 
-        var EditStoryResult = await dialogService.OpenAsync(
+        Location EditStoryResult = await dialogService.OpenAsync(
     "Select Location", ds =>
     @<LocationSelector colLocations="@AllLocationList" SelectedLocation="@SelectedLocation" DialogReference="ds">
     </LocationSelector>
@@ -154,7 +154,9 @@ else
         // Set objParagraph.Location.LocationName to SelectedLocation
         if (EditStoryResult != null)
         {
-            objParagraph.Location.LocationName = EditStoryResult;
+            // Get the Location from the collection because the one returned from the dialog is not the same
+            // and is missing the Descriptions
+            objParagraph.Location = colLocations.Where(x => x.LocationName == EditStoryResult.LocationName).FirstOrDefault();
         }
     }
 

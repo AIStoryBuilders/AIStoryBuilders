@@ -1,6 +1,6 @@
 ﻿@using AIStoryBuilders.Models;
 <div class="rz-text-align-center">
-    <RadzenDropDown Data=@colLocations @bind-Value="@SelectedLocation" />
+    <RadzenDropDown Data=@colLocations TextProperty="LocationName" @bind-Value="@SelectedLocation" />
 </div>
 <br />
 <div class="rz-text-align-center">
@@ -8,9 +8,9 @@
                   Click=@CloseDialog />
 </div>
 @code {
-    [Parameter] public IEnumerable<string> colLocations { get; set; }
+    [Parameter] public IEnumerable<Location> colLocations { get; set; }
     [Parameter] public DialogService DialogReference { get; set; }
-    [Parameter] public string SelectedLocation { get; set; }
+    [Parameter] public Location SelectedLocation { get; set; }
 
     private void CloseDialog()
     {

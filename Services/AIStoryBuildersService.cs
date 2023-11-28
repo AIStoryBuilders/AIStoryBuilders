@@ -5,6 +5,7 @@ using static AIStoryBuilders.AI.OrchestratorMethods;
 using AIStoryBuilders.Models.JSON;
 using Newtonsoft.Json;
 using System.Linq;
+using static System.Windows.Forms.VisualStyles.VisualStyleElement.TrayNotify;
 
 namespace AIStoryBuilders.Services
 {
@@ -226,8 +227,8 @@ namespace AIStoryBuilders.Services
         }
         #endregion
 
-        #region public Models.JSON.Locations ConvertToJSONLocation(Models.Location objLocation)
-        public Models.JSON.Locations ConvertToJSONLocation(Models.Location objLocation)
+        #region public Models.JSON.Locations ConvertToJSONLocation(Models.Location objLocation, Paragraph objParagraph)
+        public Models.JSON.Locations ConvertToJSONLocation(Models.Location objLocation, Paragraph objParagraph)
         {
             Models.JSON.Locations objLocations = new Models.JSON.Locations();
 
@@ -247,8 +248,14 @@ namespace AIStoryBuilders.Services
                 int i = 0;
                 foreach (var location in objLocation.LocationDescription)
                 {
-                    objLocations.descriptions[i] = location.Description;
-                    i++;
+                    bool shouldAddDescription = ((objParagraph.Timeline.TimelineName == null || objParagraph.Timeline.TimelineName.Length == 0) && string.IsNullOrEmpty(location.Timeline.TimelineName)
+                                    || location.Timeline.TimelineName == objParagraph.Timeline.TimelineName);
+
+                    if (shouldAddDescription)
+                    {
+                        objLocations.descriptions[i] = location.Description.Replace("\n", " ");
+                        i++;
+                    }                    
                 }
             }
 

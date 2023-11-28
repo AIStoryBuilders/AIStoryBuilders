@@ -19,7 +19,7 @@ namespace AIStoryBuilders.Services
                 objMasterStory.StoryTitle = objChapter.Story.Title;
                 objMasterStory.StorySynopsis = objChapter.Story.Synopsis;
 
-                objMasterStory.CurrentLocation = ConvertToJSONLocation(objParagraph.Location);
+                objMasterStory.CurrentLocation = ConvertToJSONLocation(objParagraph.Location, objParagraph);
                 objMasterStory.CharacterList = ConvertToJSONCharacter(colCharacter, objParagraph);
                 objMasterStory.CurrentParagraph = ConvertToJSONParagraph(objParagraph);
                 objMasterStory.CurrentChapter = ConvertToJSONChapter(objChapter);
