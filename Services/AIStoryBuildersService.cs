@@ -155,10 +155,8 @@ namespace AIStoryBuilders.Services
                 int i = 0;
                 foreach (var background in character.CharacterBackground ?? Enumerable.Empty<CharacterBackground>())
                 {
-                    bool shouldAddDescription = objParagraph.Timeline.TimelineName == null ||
-                                                objParagraph.Timeline.TimelineName.Length == 0 ||
-                                                background.Timeline.TimelineName == objParagraph.Timeline.TimelineName ||
-                                                string.IsNullOrEmpty(background.Timeline.TimelineName);
+                    bool shouldAddDescription = ((objParagraph.Timeline.TimelineName == null || objParagraph.Timeline.TimelineName.Length == 0) && string.IsNullOrEmpty(background.Timeline.TimelineName)
+                                                || background.Timeline.TimelineName == objParagraph.Timeline.TimelineName);
 
                     if (shouldAddDescription)
                     {
