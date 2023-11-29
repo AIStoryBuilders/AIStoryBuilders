@@ -192,8 +192,16 @@ namespace AIStoryBuilders.Services
             objParagraphs.contents = objParagraph.ParagraphContent.Replace("\n", " ");
             objParagraphs.sequence = objParagraph.Sequence;
             objParagraphs.character_names = objParagraph.Characters.Select(x => x.CharacterName).ToArray();
-            objParagraphs.location_name = objParagraph.Location.LocationName;
-            objParagraphs.timeline_name = objParagraph.Timeline.TimelineName;
+
+            if(objParagraph.Location != null)
+            {
+                objParagraphs.location_name = objParagraph.Location.LocationName;
+            }
+
+            if(objParagraph.Timeline != null)
+            {
+                objParagraphs.timeline_name = objParagraph.Timeline.TimelineName;
+            }            
 
             return objParagraphs;
         }
@@ -226,34 +234,37 @@ namespace AIStoryBuilders.Services
         #endregion
 
         #region public Models.JSON.Locations ConvertToJSONLocation(Models.Location objLocation, Paragraph objParagraph)
-        public Models.JSON.Locations ConvertToJSONLocation(Models.Location objLocation, Paragraph objParagraph)
+        public Models.JSON.Locations ConvertToJSONLocation(Models.Location objParamLocation, Paragraph objParagraph)
         {
             Models.JSON.Locations objLocations = new Models.JSON.Locations();
 
-            objLocations.name = objLocation.LocationName.Replace("\n", " ");
+            if (objParamLocation != null)
+            {
+                objLocations.name = objParamLocation.LocationName.Replace("\n", " ");
 
-            if (objLocation.LocationDescription != null)
-            {
-                objLocations.descriptions = new string[objLocation.LocationDescription.Count];
-            }
-            else
-            {
-                objLocations.descriptions = new string[0];
-            }
-
-            if (objLocation.LocationDescription != null)
-            {
-                int i = 0;
-                foreach (var location in objLocation.LocationDescription)
+                if (objParamLocation.LocationDescription != null)
                 {
-                    bool shouldAddDescription = ((objParagraph.Timeline.TimelineName == null || objParagraph.Timeline.TimelineName.Length == 0) 
-                                    || location.Timeline.TimelineName == objParagraph.Timeline.TimelineName);
+                    objLocations.descriptions = new string[objParamLocation.LocationDescription.Count];
+                }
+                else
+                {
+                    objLocations.descriptions = new string[0];
+                }
 
-                    if (shouldAddDescription)
+                if (objParamLocation.LocationDescription != null)
+                {
+                    int i = 0;
+                    foreach (var location in objParamLocation.LocationDescription)
                     {
-                        objLocations.descriptions[i] = location.Description.Replace("\n", " ");
-                        i++;
-                    }                    
+                        bool shouldAddDescription = ((objParagraph.Timeline.TimelineName == null || objParagraph.Timeline.TimelineName.Length == 0)
+                                        || location.Timeline.TimelineName == objParagraph.Timeline.TimelineName);
+
+                        if (shouldAddDescription)
+                        {
+                            objLocations.descriptions[i] = location.Description.Replace("\n", " ");
+                            i++;
+                        }
+                    }
                 }
             }
 
