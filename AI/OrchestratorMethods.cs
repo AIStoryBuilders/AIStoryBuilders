@@ -169,82 +169,10 @@ namespace AIStoryBuilders.AI
         }
         #endregion
 
-        // Story
-
-        #region public async Task<List<Paragraph>> GetRelatedParagraphs(Chapter objChapter, Paragraph objParagraph)
-        public async Task<List<Paragraph>> GetRelatedParagraphs(Chapter objChapter, Paragraph objParagraph)
-        {
-            List<Paragraph> colParagraph = new List<Paragraph>();
-
-            // Get the vector embedding for the paragraph content
-            var ParagraphContentEmbeddingVectors = await GetVectorEmbeddingAsFloats(objParagraph.ParagraphContent);
-
-            // ************************************************************************************
-            // Read all Paragraph files in memory for Chapters that come before the current Chapter
-            // Perform vector search on PreviousParagraphs and all Paragraph files in memory
-            // Add only the top 10 Paragraphs (include their Timelines)
-
-            Dictionary<string, string> AIStoryBuildersMemory = new Dictionary<string, string>();
-
-            string ParagraphLocationName = "";
-
-            if (objParagraph.Location != null)
-            {
-                ParagraphLocationName = objParagraph.Location.LocationName;
-            }
-
-            //var AllChapters = AIStoryBuildersService.GetChapters(objChapter.Story);
-
-            //foreach (var chapter in AllChapters)
-            //{
-            //    if (chapter.Sequence < objChapter.Sequence)
-            //    {
-            //        // Get all the paragraphs for the chapter on the Timeline
-            //        var colPargraphs = AIStoryBuildersService.GetParagraphVectors(chapter, ParagraphLocationName);
-
-            //        foreach (var paragraph in colPargraphs)
-            //        {
-            //            AIStoryBuildersMemory.Add(paragraph.contents, paragraph.vectors);
-            //        }
-            //    }
-            //}
-
-            //// Reset the similarities list
-            //similarities = new List<(string, float)>();
-
-            //// Calculate the similarity between the prompt's
-            //// embedding and each existing embedding
-            //foreach (var embedding in AIStoryBuildersMemory)
-            //{
-            //    if (embedding.Value != null)
-            //    {
-            //        if (embedding.Value != "")
-            //        {
-            //            var ConvertEmbeddingToFloats = JsonConvert.DeserializeObject<List<float>>(embedding.Value);
-
-            //            var similarity =
-            //            CosineSimilarity(
-            //                ParagraphContentEmbeddingVectors,
-            //            ConvertEmbeddingToFloats.ToArray());
-
-            //            similarities.Add((embedding.Key, similarity));
-            //        }
-            //    }
-            //}
-
-            //// Sort the results by similarity in descending order
-            //similarities.Sort((a, b) => b.Item2.CompareTo(a.Item2));
-
-            //var Top10similarities = similarities.Take(10).ToList();
-
-            return colParagraph;
-        }
-        #endregion
-
         // Utility Methods
 
-        #region public static float CosineSimilarity(float[] vector1, float[] vector2)
-        public static float CosineSimilarity(float[] vector1, float[] vector2)
+        #region public float CosineSimilarity(float[] vector1, float[] vector2)
+        public float CosineSimilarity(float[] vector1, float[] vector2)
         {
             // Initialize variables for dot product and
             // magnitudes of the vectors
