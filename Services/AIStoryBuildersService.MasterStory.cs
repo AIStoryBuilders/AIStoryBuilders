@@ -25,7 +25,7 @@ namespace AIStoryBuilders.Services
                 objMasterStory.CurrentChapter = ConvertToJSONChapter(objChapter);
 
                 // PreviousParagraphs
-                objMasterStory.PreviousParagraphs = new List<Paragraphs>();
+                objMasterStory.PreviousParagraphs = new List<JSONParagraphs>();
 
                 foreach (var paragraph in colParagraphs)
                 {
@@ -33,7 +33,7 @@ namespace AIStoryBuilders.Services
                 }
 
                 // RelatedParagraphs
-                objMasterStory.RelatedParagraphs = new List<Paragraphs>();
+                objMasterStory.RelatedParagraphs = new List<JSONParagraphs>();
 
                 var RelatedParagraphs = await OrchestratorMethods.GetRelatedParagraphs(objChapter, objParagraph);
 

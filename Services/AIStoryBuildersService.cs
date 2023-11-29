@@ -14,7 +14,6 @@ namespace AIStoryBuilders.Services
 
         private readonly AppMetadata _appMetadata;
         private LogService LogService { get; set; }
-
         private OrchestratorMethods OrchestratorMethods { get; set; }
 
         public string BasePath = $"{Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments)}/AIStoryBuilders";
@@ -186,9 +185,9 @@ namespace AIStoryBuilders.Services
         #endregion
 
         #region public Models.JSON.Paragraphs ConvertToJSONParagraph(Paragraph objParagraph)
-        public Models.JSON.Paragraphs ConvertToJSONParagraph(Paragraph objParagraph)
+        public Models.JSON.JSONParagraphs ConvertToJSONParagraph(Paragraph objParagraph)
         {
-            Models.JSON.Paragraphs objParagraphs = new Models.JSON.Paragraphs();
+            Models.JSON.JSONParagraphs objParagraphs = new Models.JSON.JSONParagraphs();
 
             objParagraphs.contents = objParagraph.ParagraphContent.Replace("\n", " ");
             objParagraphs.sequence = objParagraph.Sequence;
@@ -215,7 +214,7 @@ namespace AIStoryBuilders.Services
                 ParagraphCount = paramChapter.Paragraph.Count;
             }
 
-            objChapter.paragraphs = new Models.JSON.Paragraphs[ParagraphCount];
+            objChapter.paragraphs = new Models.JSON.JSONParagraphs[ParagraphCount];
 
             for (int i = 0; i < ParagraphCount; i++)
             {

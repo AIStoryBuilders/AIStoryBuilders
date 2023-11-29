@@ -1,5 +1,6 @@
 using AIStoryBuilders.Model;
 using AIStoryBuilders.Models;
+using AIStoryBuilders.Services;
 using Newtonsoft.Json;
 using OpenAI;
 using System.Collections.Generic;
@@ -185,54 +186,56 @@ namespace AIStoryBuilders.AI
 
             Dictionary<string, string> AIStoryBuildersMemory = new Dictionary<string, string>();
 
-            // Clear the memory
-            this.AIStoryBuildersMemory = new Dictionary<string, string>();
+            string ParagraphLocationName = "";
 
-            // Read the lines from the .csv file
-            var AIStoryBuildersMemoryPath =
-            $"{Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments)}/AIStoryBuilders/AIStoryBuildersDatabase.json";
-
-            // ****************************
-            // TO DO: Read all Paragraph files into AIStoryBuildersDatabase.json memory for Chapters that come before the current Chapter
-            // ****************************
-
-            // Read the lines from the .csv file
-            foreach (var line in System.IO.File.ReadAllLines(AIStoryBuildersMemoryPath))
+            if (objParagraph.Location != null)
             {
-                var splitLine = line.Split('|');
-                var KEY = splitLine[0];
-                var VALUE = splitLine[1];
-
-                AIStoryBuildersMemory.Add(KEY, VALUE);
+                ParagraphLocationName = objParagraph.Location.LocationName;
             }
 
-            // Reset the similarities list
-            similarities = new List<(string, float)>();
+            //var AllChapters = AIStoryBuildersService.GetChapters(objChapter.Story);
 
-            // Calculate the similarity between the prompt's
-            // embedding and each existing embedding
-            foreach (var embedding in AIStoryBuildersMemory)
-            {
-                if (embedding.Value != null)
-                {
-                    if (embedding.Value != "")
-                    {
-                        var ConvertEmbeddingToFloats = JsonConvert.DeserializeObject<List<float>>(embedding.Value);
+            //foreach (var chapter in AllChapters)
+            //{
+            //    if (chapter.Sequence < objChapter.Sequence)
+            //    {
+            //        // Get all the paragraphs for the chapter on the Timeline
+            //        var colPargraphs = AIStoryBuildersService.GetParagraphVectors(chapter, ParagraphLocationName);
 
-                        var similarity =
-                        CosineSimilarity(
-                            ParagraphContentEmbeddingVectors,
-                        ConvertEmbeddingToFloats.ToArray());
+            //        foreach (var paragraph in colPargraphs)
+            //        {
+            //            AIStoryBuildersMemory.Add(paragraph.contents, paragraph.vectors);
+            //        }
+            //    }
+            //}
 
-                        similarities.Add((embedding.Key, similarity));
-                    }
-                }
-            }
+            //// Reset the similarities list
+            //similarities = new List<(string, float)>();
 
-            // Sort the results by similarity in descending order
-            similarities.Sort((a, b) => b.Item2.CompareTo(a.Item2));
+            //// Calculate the similarity between the prompt's
+            //// embedding and each existing embedding
+            //foreach (var embedding in AIStoryBuildersMemory)
+            //{
+            //    if (embedding.Value != null)
+            //    {
+            //        if (embedding.Value != "")
+            //        {
+            //            var ConvertEmbeddingToFloats = JsonConvert.DeserializeObject<List<float>>(embedding.Value);
 
-            var Top10similarities = similarities.Take(10).ToList();
+            //            var similarity =
+            //            CosineSimilarity(
+            //                ParagraphContentEmbeddingVectors,
+            //            ConvertEmbeddingToFloats.ToArray());
+
+            //            similarities.Add((embedding.Key, similarity));
+            //        }
+            //    }
+            //}
+
+            //// Sort the results by similarity in descending order
+            //similarities.Sort((a, b) => b.Item2.CompareTo(a.Item2));
+
+            //var Top10similarities = similarities.Take(10).ToList();
 
             return colParagraph;
         }

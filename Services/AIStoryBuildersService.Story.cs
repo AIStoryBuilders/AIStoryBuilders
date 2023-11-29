@@ -1516,7 +1516,7 @@ namespace AIStoryBuilders.Services
                     Paragraph.Location = new Models.Location() { LocationName = ParagraphLocation };
                     Paragraph.Timeline = new Models.Timeline() { TimelineName = ParagraphTimeline };
                     Paragraph.Characters = Characters;
-                    Paragraph.ParagraphContent = ParagraphContent;
+                    Paragraph.ParagraphContent = ParagraphContent;                    
 
                     // Add Paragraph to collection
                     colParagraphs.Add(Paragraph);
@@ -1531,6 +1531,86 @@ namespace AIStoryBuilders.Services
 
                 // File is empty
                 return new List<AIStoryBuilders.Models.Paragraph>();
+            }
+        }
+
+        public List<AIParagraph> GetParagraphVectors(Chapter chapter, string TimelineName)
+        {
+            List<AIParagraph> colParagraphs = new List<AIParagraph>();
+
+            try
+            {
+                var ChapterNameParts = chapter.ChapterName.Split(' ');
+                string ChapterName = ChapterNameParts[0] + ChapterNameParts[1];
+
+                var AIStoryBuildersParagraphsPath = $"{BasePath}/{chapter.Story.Title}/Chapters/{ChapterName}";
+
+                // Get a list of all the Paragraph files
+                string[] AIStoryBuildersParagraphsFiles = Directory.GetFiles(AIStoryBuildersParagraphsPath, "Paragraph*.txt", SearchOption.AllDirectories);
+
+                // Loop through each Paragraph file
+                foreach (var AIStoryBuildersParagraphFile in AIStoryBuildersParagraphsFiles)
+                {
+                    // Get the ParagraphName from the file name
+                    string ParagraphName = Path.GetFileNameWithoutExtension(AIStoryBuildersParagraphFile);
+
+                    // Put in a space after the word ParagraphName
+                    ParagraphName = ParagraphName.Insert(9, " ");
+
+                    // Get sequence number from Paragraph Name
+                    string ParagraphSequence = ParagraphName.Split(' ')[1];
+                    int ParagraphSequenceNumber = int.Parse(ParagraphSequence);
+
+                    // Get the ChapterContent from the file
+                    string[] ChapterContent = File.ReadAllLines(AIStoryBuildersParagraphFile);
+
+                    // Remove all empty lines
+                    ChapterContent = ChapterContent.Where(line => line.Trim() != "").ToArray();
+
+                    var ParagraphLocation = ChapterContent.Select(x => x.Split('|')).Select(x => x[0]).FirstOrDefault();
+                    var ParagraphTimeline = ChapterContent.Select(x => x.Split('|')).Select(x => x[1]).FirstOrDefault();
+                    var ParagraphCharactersRaw = ChapterContent.Select(x => x.Split('|')).Select(x => x[2]).FirstOrDefault();
+                    var ParagraphContent = ChapterContent.Select(x => x.Split('|')).Select(x => x[3]).FirstOrDefault();
+                    var ParagraphVectors = ChapterContent.Select(x => x.Split('|')).Select(x => x[4]).FirstOrDefault();
+
+                    // Only get Paragraphs for the specified Timeline
+                    if (TimelineName == ParagraphTimeline)
+                    {
+                        // Convert ParagraphCharactersRaw to a List
+                        List<string> ParagraphCharacters = ParseStringToList(ParagraphCharactersRaw);
+
+                        // Convert to List<Models.Character>
+                        string[] CharactersArray = new string[ParagraphCharacters.Count()];
+                        int i = 0;
+                        foreach (var ParagraphCharacter in ParagraphCharacters)
+                        {
+                            CharactersArray[i] = ParagraphCharacter;
+                            i++;
+                        }
+
+                        // Create a Paragraph
+                        AIParagraph Paragraph = new AIParagraph();
+                        Paragraph.sequence = ParagraphSequenceNumber;
+                        Paragraph.location_name = ParagraphLocation;
+                        Paragraph.timeline_name = ParagraphTimeline;
+                        Paragraph.character_names = CharactersArray;
+                        Paragraph.contents = ParagraphContent;
+                        Paragraph.vectors = ParagraphVectors;
+
+                        // Add Paragraph to collection
+                        colParagraphs.Add(Paragraph);
+                    }
+                }
+
+                return colParagraphs.OrderBy(x => x.sequence).ToList();
+            }
+            catch (Exception ex)
+            {
+                // Log error
+                LogService.WriteToLog(ex.Message);
+
+                // File is empty
+                return new List<AIParagraph>();
             }
         }
 

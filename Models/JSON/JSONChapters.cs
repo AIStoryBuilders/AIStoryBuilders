@@ -8,10 +8,10 @@
     {
         public string chapter_name { get; set; }
         public string chapter_synopsis { get; set; }
-        public Paragraphs[] paragraphs { get; set; }
+        public JSONParagraphs[] paragraphs { get; set; }
     }
 
-    public class Paragraphs
+    public class JSONParagraphs
     {
         public int sequence { get; set; }
         public string contents { get; set; }

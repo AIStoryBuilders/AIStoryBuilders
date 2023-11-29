@@ -205,12 +205,12 @@ namespace AIStoryBuilders.Services
                                     {
                                         // Loop through the paragraphs
                                         ii = 0;
-                                        ParsedNewChapters.chapter[i].paragraphs = new Paragraphs[chapter.paragraphs.Count];
+                                        ParsedNewChapters.chapter[i].paragraphs = new JSONParagraphs[chapter.paragraphs.Count];
 
                                         foreach (dynamic paragraph in chapter.paragraphs)
                                         {
                                             // Add the paragraph to the chapter
-                                            ParsedNewChapters.chapter[i].paragraphs[ii] = new Paragraphs();
+                                            ParsedNewChapters.chapter[i].paragraphs[ii] = new JSONParagraphs();
                                             ParsedNewChapters.chapter[i].paragraphs[ii].contents = paragraph.contents;
                                             ParsedNewChapters.chapter[i].paragraphs[ii].location_name = paragraph.location_name;
                                             ParsedNewChapters.chapter[i].paragraphs[ii].timeline_name = paragraph.timeline_name;
@@ -245,8 +245,8 @@ namespace AIStoryBuilders.Services
                                     else
                                     {
                                         // Add the paragraph to the chapter
-                                        ParsedNewChapters.chapter[i].paragraphs = new Paragraphs[1];
-                                        ParsedNewChapters.chapter[i].paragraphs[0] = new Paragraphs();
+                                        ParsedNewChapters.chapter[i].paragraphs = new JSONParagraphs[1];
+                                        ParsedNewChapters.chapter[i].paragraphs[0] = new JSONParagraphs();
                                         ParsedNewChapters.chapter[i].paragraphs[0].contents = chapter[i].paragraphs.contents;
                                         ParsedNewChapters.chapter[i].paragraphs[0].location_name = chapter[i].paragraphs.location_name;
                                         ParsedNewChapters.chapter[i].paragraphs[0].timeline_name = chapter[i].paragraphs.timeline_name;
@@ -303,12 +303,12 @@ namespace AIStoryBuilders.Services
                                     {
                                         // Loop through the paragraphs
                                         ii = 0;
-                                        ParsedNewChapters.chapter[i].paragraphs = new Paragraphs[chapter.chapter.paragraphs.Count];
+                                        ParsedNewChapters.chapter[i].paragraphs = new JSONParagraphs[chapter.chapter.paragraphs.Count];
 
                                         foreach (dynamic paragraph in chapter.chapter.paragraphs)
                                         {
                                             // Add the paragraph to the chapter
-                                            ParsedNewChapters.chapter[i].paragraphs[ii] = new Paragraphs();
+                                            ParsedNewChapters.chapter[i].paragraphs[ii] = new JSONParagraphs();
                                             ParsedNewChapters.chapter[i].paragraphs[ii].contents = paragraph[ii].contents;
                                             ParsedNewChapters.chapter[i].paragraphs[ii].location_name = paragraph[ii].location_name;
                                             ParsedNewChapters.chapter[i].paragraphs[ii].timeline_name = paragraph[ii].timeline_name;
@@ -343,8 +343,8 @@ namespace AIStoryBuilders.Services
                                     else
                                     {
                                         // Add the paragraph to the chapter
-                                        ParsedNewChapters.chapter[i].paragraphs = new Paragraphs[1];
-                                        ParsedNewChapters.chapter[i].paragraphs[0] = new Paragraphs();
+                                        ParsedNewChapters.chapter[i].paragraphs = new JSONParagraphs[1];
+                                        ParsedNewChapters.chapter[i].paragraphs[0] = new JSONParagraphs();
                                         ParsedNewChapters.chapter[i].paragraphs[0].contents = chapter.chapter.paragraphs.contents;
                                         ParsedNewChapters.chapter[i].paragraphs[0].location_name = chapter.chapter.paragraphs.location_name;
                                         ParsedNewChapters.chapter[i].paragraphs[0].timeline_name = chapter.chapter.paragraphs.timeline_name;
