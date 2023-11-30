@@ -120,6 +120,24 @@ namespace AIStoryBuilders.Services
 
             var Top10similarities = similarities.Take(10).ToList();
 
+            if(Top10similarities.Count > 0)
+            {
+                int i = 0;
+                foreach (var similarity in Top10similarities)
+                {
+                    // Create a Paragraph
+                    Paragraph AISimilaritiesParagraph = new Paragraph();
+                    AISimilaritiesParagraph.Sequence = i;
+                    AISimilaritiesParagraph.Location = new Models.Location();
+                    AISimilaritiesParagraph.Timeline = new Timeline() { TimelineName = ParagraphTimelineName };
+                    AISimilaritiesParagraph.Characters = new List<Models.Character>();
+                    AISimilaritiesParagraph.ParagraphContent = similarity.Item1;
+
+                    colParagraph.Add(AISimilaritiesParagraph);
+                    i++;
+                }
+            }
+
             return colParagraph;
         }
         #endregion
