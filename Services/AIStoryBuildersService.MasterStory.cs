@@ -69,11 +69,11 @@ namespace AIStoryBuilders.Services
 
             Dictionary<string, string> AIStoryBuildersMemory = new Dictionary<string, string>();
 
-            string ParagraphLocationName = "";
+            string ParagraphTimelineName = "";
 
-            if (objParagraph.Location != null)
+            if (objParagraph.Timeline != null)
             {
-                ParagraphLocationName = objParagraph.Location.LocationName;
+                ParagraphTimelineName = objParagraph.Timeline.TimelineName;
             }
 
             var AllChapters = GetChapters(objChapter.Story);
@@ -83,7 +83,7 @@ namespace AIStoryBuilders.Services
                 if (chapter.Sequence < objChapter.Sequence)
                 {
                     // Get all the paragraphs for the chapter on the Timeline
-                    var colPargraphs = GetParagraphVectors(chapter, ParagraphLocationName);
+                    var colPargraphs = GetParagraphVectors(chapter, ParagraphTimelineName);
 
                     foreach (var paragraph in colPargraphs)
                     {
