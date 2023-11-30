@@ -1,7 +1,6 @@
 # AIStoryBuilders
 ![AIStoryBuildersLogo-white](https://github.com/ADefWebserver/AIStoryBuilders/assets/1857799/851988f5-a226-4058-8cb7-d0154752d354)
 ### [AIStoryBuilders.com](https://AIStoryBuilders.com)
-### A parent project of [AIStoryBuilders](https://github.com/ADefWebserver/AIStoryBuilders)
 #
 ![image](https://github.com/ADefWebserver/AIStoryBuilders/assets/1857799/1e9e7b28-ed00-42da-b038-063d0d0b45d7)
 
