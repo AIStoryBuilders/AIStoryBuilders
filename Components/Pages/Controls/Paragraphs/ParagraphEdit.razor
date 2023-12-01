@@ -46,7 +46,7 @@ else
             }
         </RadzenStack>
 
-        <RadzenTextArea @bind-Value="@objParagraph.ParagraphContent" MaxLength="1000" Rows="12" Style="width:100%;height:100%" />
+        <RadzenTextArea @bind-Value="@objParagraph.ParagraphContent" MaxLength="5000" Rows="12" Style="width:100%;height:100%" />
     }
 }
 @code {
@@ -486,13 +486,17 @@ else
                 List<Character> colExistingCharactersInParagraph = colCharacters.Where(x => objParagraph.Characters.Any(y => y.CharacterName == x.CharacterName)).ToList();
 
                 // ********************************
-                // Call AIStoryBuildersService
+                // Create a objMasterStory object
                 var objMasterStory = await AIStoryBuildersService.CreateMasterStory(objChapter, objParagraph, colExistingCharactersInParagraph, colParagraphsBeforeCurrent);
 
-                // Update objParagraph.ParagraphContent
-                objParagraph.ParagraphContent = AIPromptResult;
-            }
+                // ********************************
+                // **** Call ChatGPT
+                // ********************************
+                var NewParagraph = await OrchestratorMethods.WriteParagraph(objMasterStory, AIPrompt.Trim());
 
+                // Update objParagraph.ParagraphContent
+                objParagraph.ParagraphContent = NewParagraph;
+            }
         }
         catch (Exception ex)
         {

@@ -11,6 +11,7 @@ namespace AIStoryBuilders.Services
 {
     public partial class AIStoryBuildersService
     {
+        #region public async Task<JSONMasterStory> CreateMasterStory(Chapter objChapter, Paragraph objParagraph, List<Models.Character> colCharacter, List<Paragraph> colParagraphs)
         public async Task<JSONMasterStory> CreateMasterStory(Chapter objChapter, Paragraph objParagraph, List<Models.Character> colCharacter, List<Paragraph> colParagraphs)
         {
             JSONMasterStory objMasterStory = new JSONMasterStory();
@@ -51,9 +52,8 @@ namespace AIStoryBuilders.Services
 
             return objMasterStory;
         }
-
-        // Story
-
+        #endregion
+        
         #region public async Task<List<Paragraph>> GetRelatedParagraphs(Chapter objChapter, Paragraph objParagraph)
         public async Task<List<Paragraph>> GetRelatedParagraphs(Chapter objChapter, Paragraph objParagraph)
         {
