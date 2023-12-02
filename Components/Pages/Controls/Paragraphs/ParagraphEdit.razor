@@ -38,7 +38,7 @@ else
 
             @if (Undoable)
             {
-                <RadzenButton Click="onClickUndo" Icon="undo" ButtonStyle="ButtonStyle.Danger" Size="ButtonSize.Medium" />
+                <RadzenButton Click="onClickUndo" Icon="undo" ButtonStyle="ButtonStyle.Dark" Size="ButtonSize.Medium" />
             }
             @if (Deleteable)
             {
@@ -191,7 +191,6 @@ else
 
     void OnSpeechCaptured(string speechValue, bool updateTextArea, string name)
     {
-        // Append to objParagraph.ParagraphContent
         objParagraph.ParagraphContent += speechValue;
     }
 
@@ -496,15 +495,10 @@ else
             string AIPrompt = "";
 
             // Display inline dialog to capture text
-            var AIPromptResult = await dialogService.OpenAsync("Describe Paragraph or Provide Instructions (optional)", ds =>
-            @<RadzenStack Gap="1.5rem">
-                <RadzenTextArea @bind-Value="@AIPrompt" class="w-100" Style="height:100px" MaxLength="500" />
-                <RadzenStack Orientation="Orientation.Horizontal" Gap="0.5rem" AlignItems="AlignItems.Center" JustifyContent="JustifyContent.SpaceBetween">
-                    <RadzenStack Orientation="Orientation.Horizontal">
-                    <RadzenButton Text="Save" ButtonStyle="ButtonStyle.Success" Click="() => ds.Close(AIPrompt)" Style="width: 80px;" />
-                    </RadzenStack>
-                </RadzenStack>
-            </RadzenStack>);
+              var AIPromptResult = await dialogService.OpenAsync("Describe Paragraph or Provide Instructions (optional)", ds =>
+              @<ParagraphPrompt AIPrompt="@AIPrompt" DialogReference="ds">
+              </ParagraphPrompt>
+              , new DialogOptions() { Height = "260px", Width = "600px" });
 
             if (AIPromptResult != null)
             {

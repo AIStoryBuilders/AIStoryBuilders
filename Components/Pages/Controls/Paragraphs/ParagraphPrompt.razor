@@ -1,0 +1,24 @@
+﻿@using AIStoryBuilders.Models;
+<RadzenStack Gap="1.5rem">
+    <RadzenTextArea @bind-Value="@AIPrompt" class="w-100" Style="height:100px" MaxLength="500" />
+    <RadzenStack Orientation="Orientation.Horizontal" Gap="0.5rem" AlignItems="AlignItems.Center" JustifyContent="JustifyContent.SpaceBetween">
+        <RadzenStack Orientation="Orientation.Horizontal">
+            <RadzenSpeechToTextButton Change="@(args => OnPromptSpeechCaptured(args, false, "TextToSpeechPrompt"))" />
+            <RadzenButton Text="Save" ButtonStyle="ButtonStyle.Success" Click="() => CloseDialog()" Style="width: 80px;" />
+        </RadzenStack>
+    </RadzenStack>
+</RadzenStack>
+@code {
+    [Parameter] public string AIPrompt { get; set; }
+    [Parameter] public DialogService DialogReference { get; set; }
+
+    private void CloseDialog()
+    {
+        DialogReference.Close(AIPrompt);
+    }
+
+    void OnPromptSpeechCaptured(string speechValue, bool updateTextArea, string name)
+    {
+        AIPrompt += speechValue;
+    }
+}
