@@ -100,51 +100,74 @@ namespace AIStoryBuilders.AI
         #region private string CreateWriteParagraph(JSONMasterStory paramJSONMasterStory, AIPrompt paramAIPrompt)
         private string CreateWriteParagraph(JSONMasterStory paramJSONMasterStory, AIPrompt paramAIPrompt)
         {
-            string strPrompt = "You are a function that will produce JSON that contains the contents of a paragraph for a novel. \n";
-
-            // Add existing paragraph contents if provided
-            if (paramJSONMasterStory.CurrentParagraph.contents != "")
-            {
-                strPrompt = strPrompt +
-                    "#### Rewrite the existing paragraph that follows: \n" +
-                    paramJSONMasterStory.CurrentParagraph.contents + "\n";
-            }
-
-            // Add prompt instruction if provided
-            if (paramAIPrompt.AIPromptText.Trim() != "")
-            {
-                strPrompt = strPrompt +
-                    "#### Use the following instructions in writing the paragraph: \n" +
-                    paramAIPrompt + "\n";
-            }
+            string strPrompt = "You are a function that will produce JSON that contains the contents of a single paragraph for a novel. \n";
 
             // Add StoryTitle if provided
             if (paramJSONMasterStory.StoryTitle != "")
             {
                 strPrompt = strPrompt +
-                    $"#### The story title is {paramJSONMasterStory.StoryTitle}. \n";
-            }
-
-            // Add StoryTitle if provided
-            if (paramJSONMasterStory.StoryTitle != "")
-            {
-                strPrompt = strPrompt +
-                    $"#### The story title is {paramJSONMasterStory.StoryTitle}. \n";
+                    $"#### The story title is {paramJSONMasterStory.StoryTitle.Trim()}. \n";
             }
 
             // Add StorySynopsis if provided
             if (paramJSONMasterStory.StorySynopsis != "")
             {
                 strPrompt = strPrompt +
-                    $"#### The story synopsis is {paramJSONMasterStory.StorySynopsis}. \n";
+                    $"#### The story synopsis is {paramJSONMasterStory.StorySynopsis.Trim()}. \n";
+            }
+
+            // Add CurrentChapter if provided
+            if (paramJSONMasterStory.CurrentChapter != null)
+            {
+                string ChapterSequence = paramJSONMasterStory.CurrentChapter.chapter_name.Split(' ')[1];
+
+                strPrompt = strPrompt +
+                    $"#### This is chapter number {ChapterSequence} in the story. \n";
+
+                strPrompt = strPrompt +
+                    $"#### This is the synopsis of chapter {ChapterSequence}: {paramJSONMasterStory.CurrentChapter.chapter_synopsis}. \n";
+
+                if (paramJSONMasterStory.PreviousParagraphs != null)
+                {
+                    var JSONStringOfPreviousParagraphs = JsonSerializer.Serialize(paramJSONMasterStory.PreviousParagraphs);
+
+                    strPrompt = strPrompt +
+                        $"#### This is the JSON representation of the previous paragraphs in chapter {ChapterSequence}: {JSONStringOfPreviousParagraphs}. \n";
+                }
+            }
+
+            // Add existing paragraph contents if provided
+            if (paramJSONMasterStory.CurrentParagraph.contents != "")
+            {
+                strPrompt = strPrompt +
+                    "#### This is the current contents of the next paragraph in the chapter: \n" +
+                    paramJSONMasterStory.CurrentParagraph.contents + "\n";
+
+                // Add prompt instruction if provided
+                if (paramAIPrompt.AIPromptText.Trim() != "")
+                {
+                    strPrompt = strPrompt +
+                        "#### Use the following instructions in re-writing the paragraph: \n" +
+                        paramAIPrompt.AIPromptText.Trim() + "\n";
+                }
+            }
+            else
+            {
+                // Add prompt instruction if provided
+                if (paramAIPrompt.AIPromptText.Trim() != "")
+                {
+                    strPrompt = strPrompt +
+                        "#### Use the following instructions in writing the next paragraph in the chapter: \n" +
+                        paramAIPrompt.AIPromptText.Trim() + "\n";
+                }
             }
 
             strPrompt = strPrompt +
-                "Only use information provided. Do not use any information not provided.\n" +
-                $"Produce a paragraph that is {paramAIPrompt.NumberOfWords} words maximum. \n";
+                "#### Only use information provided. Do not use any information not provided.\n" +
+                $"#### Produce a single paragraph that is {paramAIPrompt.NumberOfWords} words maximum. \n";
 
             // Instruction on how to provide the results
-            strPrompt = strPrompt + "Provide the results in the following JSON format: \n" +
+            strPrompt = strPrompt + "#### Provide the results in the following JSON format: \n" +
                 "{\n" +
                 "\"paragraph_content\": \"[paragraph_content]\" \n" +
                 "}";
