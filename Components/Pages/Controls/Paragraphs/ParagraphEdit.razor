@@ -36,6 +36,10 @@ else
                 </ChildContent>
             </RadzenSplitButton>
 
+            @if (Undoable)
+            {
+                <RadzenButton Click="onClickUndo" Icon="undo" ButtonStyle="ButtonStyle.Danger" Size="ButtonSize.Medium" />
+            }
             @if (Deleteable)
             {
                 <RadzenButton Click="onClickDelete" Icon="delete" ButtonStyle="ButtonStyle.Danger" Size="ButtonSize.Medium" />
@@ -66,6 +70,9 @@ else
     bool Deleteable = false;
     bool Closeable = true;
     bool InProgress = false;
+
+    bool Undoable = false;
+    string UndoCache = "";
 
     protected override void OnInitialized()
     {
@@ -426,6 +433,31 @@ else
         }
     }
 
+    private void onClickUndo()
+    {
+        try
+        {
+            InProgress = true;
+            StateHasChanged();
+
+            objParagraph.ParagraphContent = UndoCache;
+            Undoable = false;
+
+            InProgress = false;
+            StateHasChanged();
+        }
+        catch (Exception ex)
+        {
+            NotificationService.Notify(new NotificationMessage
+                {
+                    Severity = NotificationSeverity.Error,
+                    Summary = "Error",
+                    Detail = ex.Message,
+                    Duration = 4000
+                });
+        }
+    }
+
     private async Task onClickDelete()
     {
         try
@@ -464,7 +496,7 @@ else
             string AIPrompt = "";
 
             // Display inline dialog to capture text
-            var AIPromptResult = await dialogService.OpenAsync("Describe Paragraph (optional)", ds =>
+            var AIPromptResult = await dialogService.OpenAsync("Describe Paragraph or Provide Instructions (optional)", ds =>
             @<RadzenStack Gap="1.5rem">
                 <RadzenTextArea @bind-Value="@AIPrompt" class="w-100" Style="height:100px" MaxLength="500" />
                 <RadzenStack Orientation="Orientation.Horizontal" Gap="0.5rem" AlignItems="AlignItems.Center" JustifyContent="JustifyContent.SpaceBetween">
@@ -496,6 +528,10 @@ else
                 // **** Call ChatGPT
                 // ********************************
                 var NewParagraph = await OrchestratorMethods.WriteParagraph(objMasterStory, AIPrompt.Trim());
+
+                // Save the current content of the Paragraph to the UndoCache
+                UndoCache = objParagraph.ParagraphContent;
+                Undoable = true;
 
                 // Update objParagraph.ParagraphContent
                 objParagraph.ParagraphContent = NewParagraph;
