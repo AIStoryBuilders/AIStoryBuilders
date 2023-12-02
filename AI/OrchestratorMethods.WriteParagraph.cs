@@ -143,6 +143,33 @@ namespace AIStoryBuilders.AI
                     "#### This is the current contents of the next paragraph in the chapter: \n" +
                     paramJSONMasterStory.CurrentParagraph.contents + "\n";
 
+                // Add CurrentLocation if provided
+                if (paramJSONMasterStory.CurrentLocation != null)
+                {
+                    var JSONStringOfCurrentLocation = JsonSerializer.Serialize(paramJSONMasterStory.CurrentLocation);
+
+                    strPrompt = strPrompt +
+                        $"#### This is the JSON representation of the location description of the paragraph: {JSONStringOfCurrentLocation}. \n";
+                }
+
+                // Add CharacterList if provided
+                if (paramJSONMasterStory.CharacterList != null)
+                {
+                    var JSONStringOfCharacterList = JsonSerializer.Serialize(paramJSONMasterStory.CharacterList);
+
+                    strPrompt = strPrompt +
+                        $"#### This is the JSON representation of the characters in the paragraph and their descriptions: {JSONStringOfCharacterList}. \n";
+                }
+
+                // Add RelatedParagraphs if provided
+                if (paramJSONMasterStory.RelatedParagraphs != null)
+                {
+                    var JSONStringOfRelatedParagraphs = JsonSerializer.Serialize(paramJSONMasterStory.RelatedParagraphs);
+
+                    strPrompt = strPrompt +
+                        $"#### This is the JSON representation of related paragraphs that occur in previous chapters: {JSONStringOfRelatedParagraphs}. \n";
+                }
+
                 // Add prompt instruction if provided
                 if (paramAIPrompt.AIPromptText.Trim() != "")
                 {
@@ -151,8 +178,35 @@ namespace AIStoryBuilders.AI
                         paramAIPrompt.AIPromptText.Trim() + "\n";
                 }
             }
-            else
+            else // No current Paragraph
             {
+                // Add CurrentLocation if provided
+                if (paramJSONMasterStory.CurrentLocation != null)
+                {
+                    var JSONStringOfCurrentLocation = JsonSerializer.Serialize(paramJSONMasterStory.CurrentLocation);
+
+                    strPrompt = strPrompt +
+                        $"#### This is the JSON representation of the location description of the paragraph: {JSONStringOfCurrentLocation}. \n";
+                }
+
+                // Add CharacterList if provided
+                if (paramJSONMasterStory.CharacterList != null)
+                {
+                    var JSONStringOfCharacterList = JsonSerializer.Serialize(paramJSONMasterStory.CharacterList);
+
+                    strPrompt = strPrompt +
+                        $"#### This is the JSON representation of the characters in the paragraph and their descriptions: {JSONStringOfCharacterList}. \n";
+                }
+
+                // Add RelatedParagraphs if provided
+                if (paramJSONMasterStory.RelatedParagraphs != null)
+                {
+                    var JSONStringOfRelatedParagraphs = JsonSerializer.Serialize(paramJSONMasterStory.RelatedParagraphs);
+
+                    strPrompt = strPrompt +
+                        $"#### This is the JSON representation of related paragraphs that occur in previous chapters: {JSONStringOfRelatedParagraphs}. \n";
+                }
+
                 // Add prompt instruction if provided
                 if (paramAIPrompt.AIPromptText.Trim() != "")
                 {
