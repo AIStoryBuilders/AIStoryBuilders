@@ -476,6 +476,9 @@ else
 
             if (AIPromptResult != null)
             {
+                 InProgress = true;
+                 StateHasChanged();
+
                 // Get All Paragraphs In Chapter
                 var colAllParagraphsInChapter = AIStoryBuildersService.GetParagraphs(objChapter);
 
@@ -496,10 +499,16 @@ else
 
                 // Update objParagraph.ParagraphContent
                 objParagraph.ParagraphContent = NewParagraph;
+
+                InProgress = false;
+                StateHasChanged();
             }
         }
         catch (Exception ex)
         {
+            InProgress = false;
+            StateHasChanged();
+
             NotificationService.Notify(new NotificationMessage
                 {
                     Severity = NotificationSeverity.Error,
