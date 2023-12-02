@@ -15,8 +15,8 @@ namespace AIStoryBuilders.AI
 {
     public partial class OrchestratorMethods
     {
-        #region public async Task<string> WriteParagraph(JSONMasterStory objJSONMasterStory, string paramAIPrompt)
-        public async Task<string> WriteParagraph(JSONMasterStory objJSONMasterStory, string paramAIPrompt)
+        #region public async Task<string> WriteParagraph(JSONMasterStory objJSONMasterStory, AIPrompt paramAIPrompt)
+        public async Task<string> WriteParagraph(JSONMasterStory objJSONMasterStory, AIPrompt paramAIPrompt)
         {
             string Organization = SettingsService.Organization;
             string ApiKey = SettingsService.ApiKey;
@@ -97,8 +97,8 @@ namespace AIStoryBuilders.AI
 
         // Methods
 
-        #region private string CreateWriteParagraph(JSONMasterStory paramJSONMasterStory, string paramAIPrompt)
-        private string CreateWriteParagraph(JSONMasterStory paramJSONMasterStory, string paramAIPrompt)
+        #region private string CreateWriteParagraph(JSONMasterStory paramJSONMasterStory, AIPrompt paramAIPrompt)
+        private string CreateWriteParagraph(JSONMasterStory paramJSONMasterStory, AIPrompt paramAIPrompt)
         {
             string strPrompt = "You are a function that will produce JSON that contains the contents of a paragraph for a novel. \n";
 
@@ -111,10 +111,10 @@ namespace AIStoryBuilders.AI
             }
 
             // Add prompt instruction if provided
-            if (paramAIPrompt != "")
+            if (paramAIPrompt.AIPromptText.Trim() != "")
             {
                 strPrompt = strPrompt +
-                    "#### Use the following instructions: \n" +
+                    "#### Use the following instructions in writing the paragraph: \n" +
                     paramAIPrompt + "\n";
             }
 
@@ -141,7 +141,7 @@ namespace AIStoryBuilders.AI
 
             strPrompt = strPrompt +
                 "Only use information provided. Do not use any information not provided.\n" +
-                "Produce a paragraph that is 500 words maximum. \n";
+                $"Produce a paragraph that is {paramAIPrompt.NumberOfWords} words maximum. \n";
 
             // Instruction on how to provide the results
             strPrompt = strPrompt + "Provide the results in the following JSON format: \n" +

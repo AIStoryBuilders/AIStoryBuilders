@@ -1,24 +1,37 @@
 ﻿@using AIStoryBuilders.Models;
 <RadzenStack Gap="1.5rem">
-    <RadzenTextArea @bind-Value="@AIPrompt" class="w-100" Style="height:100px" MaxLength="500" />
+    <RadzenFormField Text="Describe paragraph or provide prompt instructions (optional):" Variant=Variant.Outlined>
+        <RadzenTextArea @bind-Value="@AIPromptText" class="w-100" Style="height:75px" MaxLength="500" />
+    </RadzenFormField>
+    <RadzenFormField Text="Number of words to generate:" Variant=Variant.Outlined>
+        <RadzenDropDown Data=@colNumberOfWords @bind-Value="@SelectedNumberOfWords" />
+    </RadzenFormField>
     <RadzenStack Orientation="Orientation.Horizontal" Gap="0.5rem" AlignItems="AlignItems.Center" JustifyContent="JustifyContent.SpaceBetween">
         <RadzenStack Orientation="Orientation.Horizontal">
-            <RadzenSpeechToTextButton Change="@(args => OnPromptSpeechCaptured(args, false, "TextToSpeechPrompt"))" />
+            <RadzenSpeechToTextButton Change="@(args => OnPromptSpeechCaptured(args, false, "TextToSpeechPrompt"))" />            
             <RadzenButton Text="Save" ButtonStyle="ButtonStyle.Success" Click="() => CloseDialog()" Style="width: 80px;" />
         </RadzenStack>
     </RadzenStack>
 </RadzenStack>
 @code {
-    [Parameter] public string AIPrompt { get; set; }
+    [Parameter] public string AIPromptText { get; set; }
     [Parameter] public DialogService DialogReference { get; set; }
+
+    List<string> colNumberOfWords = new List<string> { "10", "20", "50", "100", "200", "300", "500", "800", "1000" };
+    string SelectedNumberOfWords = "500";
 
     private void CloseDialog()
     {
-        DialogReference.Close(AIPrompt);
+        AIPrompt objAIPrompt = new AIPrompt();
+
+        objAIPrompt.AIPromptText = AIPromptText;
+        objAIPrompt.NumberOfWords = SelectedNumberOfWords;
+
+        DialogReference.Close(objAIPrompt);
     }
 
     void OnPromptSpeechCaptured(string speechValue, bool updateTextArea, string name)
     {
-        AIPrompt += speechValue;
+        AIPromptText += speechValue;
     }
 }
