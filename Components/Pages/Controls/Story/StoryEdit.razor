@@ -13,7 +13,8 @@
                 <RadzenFormField Text="Story Title:" Variant="@variant">
                     <RadzenTextBox MaxLength="20" @bind-Value="@objStory.Title" />
                 </RadzenFormField>
-                <RadzenFormField Text="Synopsis:" Variant="@variant">
+                <RadzenSpeechToTextButton Change="@(args => OnSpeechCaptured(args, false, "TextToSpeech"))" />
+                <RadzenFormField Text="Synopsis:" Variant="@variant">                    
                     <RadzenTextArea MaxLength="1000" Rows="10" @bind-Value="@objStory.Synopsis" />
                 </RadzenFormField>
                 <p>Chapters: <RadzenDropDown Data=@colChapters @bind-Value="@objStory.ChapterCount" Style="width:75px" /></p>
@@ -211,5 +212,10 @@ else // Existing Story
             // Notify parent component
             await StoryDeleted.InvokeAsync(objStory);
         }
+    }
+
+    void OnSpeechCaptured(string speechValue, bool updateTextArea, string name)
+    {
+        objStory.Synopsis += speechValue;
     }
 }

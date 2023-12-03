@@ -1,5 +1,6 @@
 ﻿@using AIStoryBuilders.Models;
-<RadzenStack Gap="1.5rem">
+<RadzenStack Gap="0.5rem">
+    <RadzenSpeechToTextButton Change="@(args => OnPromptSpeechCaptured(args, false, "TextToSpeech"))" />
     <RadzenFormField Text="Describe paragraph or provide prompt instructions (optional):" Variant=Variant.Outlined>
         <RadzenTextArea @bind-Value="@AIPromptText" class="w-100" Style="height:75px" MaxLength="500" />
     </RadzenFormField>
@@ -7,8 +8,7 @@
         <RadzenDropDown Data=@colNumberOfWords @bind-Value="@SelectedNumberOfWords" />
     </RadzenFormField>
     <RadzenStack Orientation="Orientation.Horizontal" Gap="0.5rem" AlignItems="AlignItems.Center" JustifyContent="JustifyContent.SpaceBetween">
-        <RadzenStack Orientation="Orientation.Horizontal">
-            <RadzenSpeechToTextButton Change="@(args => OnPromptSpeechCaptured(args, false, "TextToSpeechPrompt"))" />            
+        <RadzenStack Orientation="Orientation.Horizontal">         
             <RadzenButton Text="Save" ButtonStyle="ButtonStyle.Success" Click="() => CloseDialog()" Style="width: 80px;" />
         </RadzenStack>
     </RadzenStack>
