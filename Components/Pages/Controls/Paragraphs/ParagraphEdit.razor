@@ -17,7 +17,7 @@ else
     @if (!InEditMode)
     {
         <div id="ParagraphDiv" @onclick="onClickParagraph">
-            <span>@objParagraph.ParagraphContent</span>
+            <span style="white-space: pre-wrap">@objParagraph.ParagraphContent</span>
         </div>
     }
     else

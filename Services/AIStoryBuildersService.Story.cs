@@ -1495,10 +1495,16 @@ namespace AIStoryBuilders.Services
                     // Remove all empty lines
                     ChapterContent = ChapterContent.Where(line => line.Trim() != "").ToArray();
 
-                    var ParagraphLocation = ChapterContent.Select(x => x.Split('|')).Select(x => x[0]).FirstOrDefault();
-                    var ParagraphTimeline = ChapterContent.Select(x => x.Split('|')).Select(x => x[1]).FirstOrDefault();
-                    var ParagraphCharactersRaw = ChapterContent.Select(x => x.Split('|')).Select(x => x[2]).FirstOrDefault();
-                    var ParagraphContent = ChapterContent.Select(x => x.Split('|')).Select(x => x[3]).FirstOrDefault();
+                    // Concatonate all lines into one string
+                    string RawParagraphContent = string.Join(" ", ChapterContent);
+
+                    // Spilit the string into parts using the pipe character
+                    string[] RawParagraphContentParts = RawParagraphContent.Split('|');
+
+                    var ParagraphLocation = RawParagraphContentParts[0];
+                    var ParagraphTimeline = RawParagraphContentParts[1];
+                    var ParagraphCharactersRaw = RawParagraphContentParts[2];
+                    var ParagraphContent = RawParagraphContentParts[3];
 
                     // Convert ParagraphCharactersRaw to a List
                     List<string> ParagraphCharacters = ParseStringToList(ParagraphCharactersRaw);
