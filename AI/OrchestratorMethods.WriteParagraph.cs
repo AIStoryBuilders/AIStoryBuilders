@@ -177,6 +177,12 @@ namespace AIStoryBuilders.AI
                         "#### Use the following instructions in re-writing the paragraph: \n" +
                         paramAIPrompt.AIPromptText.Trim() + "\n";
                 }
+                else
+                {
+                    strPrompt = strPrompt +
+                        "#### Use the following instructions in writing the next paragraph in the chapter: \n" +
+                        "Continue from the last paragraph. \n";
+                }
             }
             else // No current Paragraph
             {
@@ -213,6 +219,12 @@ namespace AIStoryBuilders.AI
                     strPrompt = strPrompt +
                         "#### Use the following instructions in writing the next paragraph in the chapter: \n" +
                         paramAIPrompt.AIPromptText.Trim() + "\n";
+                }
+                else
+                {
+                    strPrompt = strPrompt +
+                        "#### Use the following instructions in writing the next paragraph in the chapter: \n" +
+                        "Write the first paragraph in the chapter. \n";
                 }
             }
 

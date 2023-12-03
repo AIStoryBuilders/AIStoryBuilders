@@ -516,7 +516,7 @@ else
 
                 // ********************************
                 // Create a objMasterStory object
-                var objMasterStory = await AIStoryBuildersService.CreateMasterStory(objChapter, objParagraph, colExistingCharactersInParagraph, colParagraphsBeforeCurrent);
+                var objMasterStory = await AIStoryBuildersService.CreateMasterStory(objChapter, objParagraph, colExistingCharactersInParagraph, colParagraphsBeforeCurrent, AIPromptResult);
 
                 // ********************************
                 // **** Call ChatGPT

@@ -11,8 +11,8 @@ namespace AIStoryBuilders.Services
 {
     public partial class AIStoryBuildersService
     {
-        #region public async Task<JSONMasterStory> CreateMasterStory(Chapter objChapter, Paragraph objParagraph, List<Models.Character> colCharacter, List<Paragraph> colParagraphs)
-        public async Task<JSONMasterStory> CreateMasterStory(Chapter objChapter, Paragraph objParagraph, List<Models.Character> colCharacter, List<Paragraph> colParagraphs)
+        #region public async Task<JSONMasterStory> CreateMasterStory(Chapter objChapter, Paragraph objParagraph, List<Models.Character> colCharacter, List<Paragraph> colParagraphs, AIPrompt AIPromptResult)
+        public async Task<JSONMasterStory> CreateMasterStory(Chapter objChapter, Paragraph objParagraph, List<Models.Character> colCharacter, List<Paragraph> colParagraphs, AIPrompt AIPromptResult)
         {
             JSONMasterStory objMasterStory = new JSONMasterStory();
 
@@ -37,7 +37,7 @@ namespace AIStoryBuilders.Services
                 // RelatedParagraphs
                 objMasterStory.RelatedParagraphs = new List<JSONParagraphs>();
 
-                var RelatedParagraphs = await GetRelatedParagraphs(objChapter, objParagraph);
+                var RelatedParagraphs = await GetRelatedParagraphs(objChapter, objParagraph, AIPromptResult);
 
                 foreach (var paragraph in RelatedParagraphs)
                 {
@@ -53,14 +53,27 @@ namespace AIStoryBuilders.Services
             return objMasterStory;
         }
         #endregion
-        
-        #region public async Task<List<Paragraph>> GetRelatedParagraphs(Chapter objChapter, Paragraph objParagraph)
-        public async Task<List<Paragraph>> GetRelatedParagraphs(Chapter objChapter, Paragraph objParagraph)
+
+        #region public async Task<List<Paragraph>> GetRelatedParagraphs(Chapter objChapter, Paragraph objParagraph, AIPrompt AIPromptResult)
+        public async Task<List<Paragraph>> GetRelatedParagraphs(Chapter objChapter, Paragraph objParagraph, AIPrompt AIPromptResult)
         {
             List<Paragraph> colParagraph = new List<Paragraph>();
 
             // Get the vector embedding for the paragraph content
-            var ParagraphContentEmbeddingVectors = await OrchestratorMethods.GetVectorEmbeddingAsFloats(objParagraph.ParagraphContent);
+            float[] ParagraphContentEmbeddingVectors = null;
+
+            if (objParagraph.ParagraphContent.Trim() != "")
+            {
+                ParagraphContentEmbeddingVectors = await OrchestratorMethods.GetVectorEmbeddingAsFloats(objParagraph.ParagraphContent);
+            }
+
+            // Get the vector embedding for the AIPromptResult content
+            float[] AIPromptResultEmbeddingVectors = null;
+
+            if (AIPromptResult.AIPromptText.Trim() != "")
+            { 
+                AIPromptResultEmbeddingVectors = await OrchestratorMethods.GetVectorEmbeddingAsFloats(AIPromptResult.AIPromptText);
+            }
 
             // ************************************************************************************
             // Read all Paragraph files in memory for Chapters that come before the current Chapter
@@ -95,22 +108,48 @@ namespace AIStoryBuilders.Services
             // Reset the similarities list
             List<(string, float)> similarities = new List<(string, float)>();
 
-            // Calculate the similarity between the prompt's
-            // embedding and each existing embedding
-            foreach (var embedding in AIStoryBuildersMemory)
+            // ************************************************************************************
+            // Calculate the *paragraph content* similarity 
+            if (ParagraphContentEmbeddingVectors != null)
             {
-                if (embedding.Value != null)
+                foreach (var embedding in AIStoryBuildersMemory)
                 {
-                    if (embedding.Value != "")
+                    if (embedding.Value != null)
                     {
-                        var ConvertEmbeddingToFloats = JsonConvert.DeserializeObject<List<float>>(embedding.Value);
+                        if (embedding.Value != "")
+                        {
+                            var ConvertEmbeddingToFloats = JsonConvert.DeserializeObject<List<float>>(embedding.Value);
 
-                        var similarity =
-                        OrchestratorMethods.CosineSimilarity(
-                            ParagraphContentEmbeddingVectors,
-                        ConvertEmbeddingToFloats.ToArray());
+                            var similarity =
+                            OrchestratorMethods.CosineSimilarity(
+                                ParagraphContentEmbeddingVectors,
+                            ConvertEmbeddingToFloats.ToArray());
 
-                        similarities.Add((embedding.Key, similarity));
+                            similarities.Add((embedding.Key, similarity));
+                        }
+                    }
+                }
+            }
+
+            // ************************************************************************************
+            // Calculate the *AIPromptResult* similarity 
+            if (AIPromptResultEmbeddingVectors != null)
+            {
+                foreach (var embedding in AIStoryBuildersMemory)
+                {
+                    if (embedding.Value != null)
+                    {
+                        if (embedding.Value != "")
+                        {
+                            var ConvertEmbeddingToFloats = JsonConvert.DeserializeObject<List<float>>(embedding.Value);
+
+                            var similarity =
+                            OrchestratorMethods.CosineSimilarity(
+                                AIPromptResultEmbeddingVectors,
+                            ConvertEmbeddingToFloats.ToArray());
+
+                            similarities.Add((embedding.Key, similarity));
+                        }
                     }
                 }
             }
@@ -118,9 +157,9 @@ namespace AIStoryBuilders.Services
             // Sort the results by similarity in descending order
             similarities.Sort((a, b) => b.Item2.CompareTo(a.Item2));
 
-            var Top10similarities = similarities.Take(10).ToList();
+            var Top10similarities = similarities.Distinct().Take(10).ToList();
 
-            if(Top10similarities.Count > 0)
+            if (Top10similarities.Count > 0)
             {
                 int i = 0;
                 foreach (var similarity in Top10similarities)
@@ -133,8 +172,15 @@ namespace AIStoryBuilders.Services
                     AISimilaritiesParagraph.Characters = new List<Models.Character>();
                     AISimilaritiesParagraph.ParagraphContent = similarity.Item1;
 
-                    colParagraph.Add(AISimilaritiesParagraph);
-                    i++;
+                    // If the Paragraph is not already in the list, add it
+                    // Get a list of all the ParagraphContent items in the list
+                    var colParagraphContent = colParagraph.Select(x => x.ParagraphContent).ToList();
+
+                    if (!colParagraphContent.Contains(similarity.Item1))
+                    {
+                        colParagraph.Add(AISimilaritiesParagraph);
+                        i++;
+                    }
                 }
             }
 
