@@ -542,9 +542,6 @@ else
                 // Update objParagraph.ParagraphContent
                 objParagraph.ParagraphContent = NewParagraph;
 
-                // **** Indent the paragraph
-                objParagraph = AIStoryBuildersService.AddParagraphIndenting(objParagraph);
-
                 InProgress = false;
                 StateHasChanged();
             }
