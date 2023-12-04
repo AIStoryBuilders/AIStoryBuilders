@@ -17,7 +17,7 @@ else
     @if (!InEditMode)
     {
         <div id="ParagraphDiv" @onclick="onClickParagraph">
-            <span style="white-space: pre-wrap">@objParagraph.ParagraphContent</span>
+            <span style="white-space: pre-wrap">@((MarkupString)objParagraph.ParagraphContent)</span>
         </div>
     }
     else
@@ -106,15 +106,21 @@ else
 
     private void onClickParagraph()
     {
-        InEditMode = true;
-
         // Compute Deleteable
         int CountOfParagraphs = AIStoryBuildersService.CountParagraphs(objChapter);
         Deleteable = (objParagraph.Sequence == CountOfParagraphs);
+
+        // **** Un-indent the paragraph
+        objParagraph = AIStoryBuildersService.RemoveParagraphIndenting(objParagraph);
+
+        InEditMode = true;
     }
 
     private void onClickClose()
     {
+        // **** Indent the paragraph
+        objParagraph = AIStoryBuildersService.AddParagraphIndenting(objParagraph);
+
         InEditMode = false;
     }
 
@@ -212,6 +218,9 @@ else
                     });
                 return;
             }
+
+            // **** Un-indent the paragraph
+            objParagraph = AIStoryBuildersService.RemoveParagraphIndenting(objParagraph);
 
             // Save
             InEditMode = false;
@@ -442,6 +451,9 @@ else
             objParagraph.ParagraphContent = UndoCache;
             Undoable = false;
 
+            // **** Indent the paragraph
+            objParagraph = AIStoryBuildersService.AddParagraphIndenting(objParagraph);
+
             InProgress = false;
             StateHasChanged();
         }
@@ -529,6 +541,9 @@ else
 
                 // Update objParagraph.ParagraphContent
                 objParagraph.ParagraphContent = NewParagraph;
+
+                // **** Indent the paragraph
+                objParagraph = AIStoryBuildersService.AddParagraphIndenting(objParagraph);
 
                 InProgress = false;
                 StateHasChanged();

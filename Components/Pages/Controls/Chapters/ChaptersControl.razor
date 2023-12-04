@@ -131,6 +131,9 @@
         // Load colParagraphs
         colParagraphs = AIStoryBuildersService.GetParagraphs(paramChapter);
 
+        // **** Indent the paragraphs
+        colParagraphs = AIStoryBuildersService.AddParagraphIndenting(colParagraphs);
+
         // *******************
         // Add a blank paragraph to the end of the Paragraphs collection
         var objParagraph = new Paragraph();

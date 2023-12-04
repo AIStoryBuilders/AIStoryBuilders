@@ -1421,7 +1421,7 @@ namespace AIStoryBuilders.Services
 
         public async Task AddChapterAsync(Chapter objChapter, string ChapterName)
         {
-            if(objChapter.Synopsis == null)
+            if (objChapter.Synopsis == null)
             {
                 objChapter.Synopsis = " ";
             }
@@ -1496,7 +1496,7 @@ namespace AIStoryBuilders.Services
                     ChapterContent = ChapterContent.Where(line => line.Trim() != "").ToArray();
 
                     // Concatonate all lines into one string
-                    string RawParagraphContent = string.Join(" ", ChapterContent);
+                    string RawParagraphContent = string.Join("\n", ChapterContent);
 
                     // Spilit the string into parts using the pipe character
                     string[] RawParagraphContentParts = RawParagraphContent.Split('|');
@@ -1522,7 +1522,7 @@ namespace AIStoryBuilders.Services
                     Paragraph.Location = new Models.Location() { LocationName = ParagraphLocation };
                     Paragraph.Timeline = new Models.Timeline() { TimelineName = ParagraphTimeline };
                     Paragraph.Characters = Characters;
-                    Paragraph.ParagraphContent = ParagraphContent;                    
+                    Paragraph.ParagraphContent = ParagraphContent;
 
                     // Add Paragraph to collection
                     colParagraphs.Add(Paragraph);
@@ -1664,6 +1664,9 @@ namespace AIStoryBuilders.Services
                 string VectorDescriptionAndEmbedding = await OrchestratorMethods.GetVectorEmbedding(Paragraph.ParagraphContent, true);
                 string ParagraphContent = $"{Paragraph.Location.LocationName ?? ""}|{Paragraph.Timeline.TimelineName ?? ""}|[{string.Join(",", Paragraph.Characters.Select(x => x.CharacterName))}]|{VectorDescriptionAndEmbedding}";
 
+                // Preserve any line breaks
+                ParagraphContent = ParagraphContent.Replace("\n", "\r\n");
+
                 // Write the ParagraphContent to the file
                 File.WriteAllText(ParagraphPath, ParagraphContent);
             }
@@ -1692,6 +1695,66 @@ namespace AIStoryBuilders.Services
                 // Log error
                 LogService.WriteToLog(ex.Message);
             }
+        }
+
+        public List<Paragraph> AddParagraphIndenting(List<Paragraph> paramParagraphs)
+        {
+            List<Paragraph> colParagraphs = new List<Paragraph>();
+
+            foreach (var Paragraph in paramParagraphs)
+            {
+                Paragraph.ParagraphContent = "&nbsp;&nbsp;&nbsp;&nbsp;" + Paragraph.ParagraphContent;
+                Paragraph.ParagraphContent = Paragraph.ParagraphContent.Replace("\n", "<br />&nbsp;&nbsp;&nbsp;&nbsp;");
+                colParagraphs.Add(Paragraph);
+            }
+
+            return colParagraphs;
+        }
+
+        public Paragraph AddParagraphIndenting(Paragraph paramParagraph)
+        {
+            Paragraph objParagraph = new Paragraph();
+
+            objParagraph.ParagraphContent = "&nbsp;&nbsp;&nbsp;&nbsp;" + paramParagraph.ParagraphContent;
+            objParagraph.ParagraphContent = objParagraph.ParagraphContent.Replace("\n", "<br />&nbsp;&nbsp;&nbsp;&nbsp;");
+            objParagraph.Chapter = paramParagraph.Chapter;
+            objParagraph.Characters = paramParagraph.Characters;
+            objParagraph.Location = paramParagraph.Location;
+            objParagraph.Sequence = paramParagraph.Sequence;
+            objParagraph.Timeline = paramParagraph.Timeline;
+            objParagraph.Id = paramParagraph.Id;
+
+            return objParagraph;
+        }
+
+        public List<Paragraph> RemoveParagraphIndenting(List<Paragraph> paramParagraphs)
+        {
+            List<Paragraph> colParagraphs = new List<Paragraph>();
+
+            foreach (var Paragraph in paramParagraphs)
+            {
+                Paragraph.ParagraphContent = Paragraph.ParagraphContent.Replace("&nbsp;", "");
+                Paragraph.ParagraphContent = Paragraph.ParagraphContent.Replace("<br />", "\n");
+                colParagraphs.Add(Paragraph);
+            }
+
+            return colParagraphs;
+        }
+
+        public Paragraph RemoveParagraphIndenting(Paragraph paramParagraph)
+        {
+            Paragraph objParagraph = new Paragraph();
+
+            objParagraph.ParagraphContent = paramParagraph.ParagraphContent.Replace("&nbsp;", "");
+            objParagraph.ParagraphContent = objParagraph.ParagraphContent.Replace("<br />", "\n");
+            objParagraph.Chapter = paramParagraph.Chapter;
+            objParagraph.Characters = paramParagraph.Characters;
+            objParagraph.Location = paramParagraph.Location;
+            objParagraph.Sequence = paramParagraph.Sequence;
+            objParagraph.Timeline = paramParagraph.Timeline;
+            objParagraph.Id = paramParagraph.Id;
+
+            return objParagraph;
         }
         #endregion
     }
