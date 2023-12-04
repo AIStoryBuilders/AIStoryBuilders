@@ -84,6 +84,8 @@ namespace AIStoryBuilders.AI
             {
                 // Convert the JSON to a list of SimpleCharacters
 
+                List<string> colAllowedTypes = new List<string> { "Appearance", "Goals", "History", "Aliases", "Facts" };
+
                 var JSONResult = ChatResponseResult.FirstChoice.Message.Content.ToString();
 
                 dynamic data = JObject.Parse(JSONResult);
@@ -111,6 +113,12 @@ namespace AIStoryBuilders.AI
                         {
                             foreach (var description in character.descriptions)
                             {
+                                // Only add the description if it is in the list of allowed types
+                                if (colAllowedTypes.Contains(description.description_type.ToString()) == false)
+                                {
+                                    continue;
+                                }
+
                                 string description_type = description.description_type.ToString();
                                 string description_text = description.description.ToString();
 
