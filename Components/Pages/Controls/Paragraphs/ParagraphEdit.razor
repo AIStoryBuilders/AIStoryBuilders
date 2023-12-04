@@ -126,6 +126,9 @@ else
 
     private async Task onClickCharacter()
     {
+        InEditMode = false;
+        StateHasChanged();
+
         // Turn colCharacters into a list of strings
         var AllCharacterList = colCharacters.Select(c => c.CharacterName).ToList();
 
@@ -147,10 +150,20 @@ else
                 objParagraph.Characters.Add(new Character() { CharacterName = character });
             }
         }
+                
+        // **** Un-indent the paragraph
+        var UpdatedParagraph = AIStoryBuildersService.RemoveParagraphIndenting(objParagraph);
+        objParagraph.ParagraphContent = UpdatedParagraph.ParagraphContent;
+
+        InEditMode = true;
+        StateHasChanged();
     }
 
     private async Task onClickLocation()
     {
+        InEditMode = false;
+        StateHasChanged();
+
         // Turn colLocations into a list of strings
         var AllLocationList = colLocations.OrderBy(x => x.LocationName).ToList();
         AllLocationList.Add(new Location() { Id = -1, LocationName = ""});
@@ -171,10 +184,20 @@ else
             // and is missing the Descriptions
             objParagraph.Location = colLocations.Where(x => x.LocationName == EditStoryResult.LocationName).FirstOrDefault();
         }
+
+        // **** Un-indent the paragraph
+        var UpdatedParagraph = AIStoryBuildersService.RemoveParagraphIndenting(objParagraph);
+        objParagraph.ParagraphContent = UpdatedParagraph.ParagraphContent;
+
+        InEditMode = true;
+        StateHasChanged();
     }
 
     private async Task onClickTimeline()
     {
+        InEditMode = false;
+        StateHasChanged();
+
         // Turn colTimelines into a list of strings
         var AllTimelineList = colTimelines.Select(c => c.TimelineName).OrderBy(x => x).ToList();
         AllTimelineList.Add("");
@@ -193,6 +216,13 @@ else
         {
             objParagraph.Timeline.TimelineName = EditStoryResult;
         }
+
+        // **** Un-indent the paragraph
+        var UpdatedParagraph = AIStoryBuildersService.RemoveParagraphIndenting(objParagraph);
+        objParagraph.ParagraphContent = UpdatedParagraph.ParagraphContent;
+
+        InEditMode = true;
+        StateHasChanged();
     }
 
     void OnSpeechCaptured(string speechValue, bool updateTextArea, string name)
@@ -451,8 +481,8 @@ else
             objParagraph.ParagraphContent = UndoCache;
             Undoable = false;
 
-            // **** Indent the paragraph
-            objParagraph = AIStoryBuildersService.AddParagraphIndenting(objParagraph);
+            // **** Un-indent the paragraph
+            objParagraph = AIStoryBuildersService.RemoveParagraphIndenting(objParagraph);
 
             InProgress = false;
             StateHasChanged();
@@ -504,7 +534,13 @@ else
     {
         try
         {
+            InEditMode = false;
+            StateHasChanged();
+
             string AIPrompt = "";
+
+            // **** Un-indent the paragraph
+            objParagraph = AIStoryBuildersService.RemoveParagraphIndenting(objParagraph);
 
             // Display inline dialog to capture text
             AIPrompt AIPromptResult = await dialogService.OpenAsync("AI Prompt Instructions", ds =>
@@ -514,8 +550,8 @@ else
 
             if (AIPromptResult != null)
             {
-                 InProgress = true;
-                 StateHasChanged();
+                InProgress = true;
+                StateHasChanged();
 
                 // Get All Paragraphs In Chapter
                 var colAllParagraphsInChapter = AIStoryBuildersService.GetParagraphs(objChapter);
@@ -543,6 +579,15 @@ else
                 objParagraph.ParagraphContent = NewParagraph;
 
                 InProgress = false;
+                StateHasChanged();
+            }
+            else
+            {
+                // **** Un-indent the paragraph
+                var UpdatedParagraph = AIStoryBuildersService.RemoveParagraphIndenting(objParagraph);
+                objParagraph.ParagraphContent = UpdatedParagraph.ParagraphContent;
+
+                InEditMode = true;
                 StateHasChanged();
             }
         }
