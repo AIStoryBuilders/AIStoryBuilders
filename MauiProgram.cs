@@ -10,6 +10,7 @@ using System.Reflection;
 using static System.Runtime.InteropServices.JavaScript.JSType;
 using System.Runtime.Intrinsics.X86;
 using AIStoryBuilders.AI;
+using CommunityToolkit.Maui;
 
 namespace AIStoryBuilders
 {
@@ -20,19 +21,21 @@ namespace AIStoryBuilders
             var builder = MauiApp.CreateBuilder();
             builder
                 .UseMauiApp<App>()
+                .UseMauiCommunityToolkit()
                 .ConfigureFonts(fonts =>
                 {
                     fonts.AddFont("OpenSans-Regular.ttf", "OpenSansRegular");
+                    fonts.AddFont("OpenSans-Semibold.ttf", "OpenSansSemibold");
                 });
 
             builder.Services.AddMauiBlazorWebView();
 
 #if DEBUG
-		builder.Services.AddBlazorWebViewDeveloperTools();
-		builder.Logging.AddDebug();
+            builder.Services.AddBlazorWebViewDeveloperTools();
+            builder.Logging.AddDebug();
 #endif            
             // Add services to the container.
-            AppMetadata appMetadata = new AppMetadata() { Version = "00.01.00"};
+            AppMetadata appMetadata = new AppMetadata() { Version = "00.01.00" };
             builder.Services.AddSingleton(appMetadata);
 
             builder.Services.AddSingleton<LogService>();

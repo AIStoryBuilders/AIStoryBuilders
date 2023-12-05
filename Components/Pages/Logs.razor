@@ -1,8 +1,13 @@
-﻿@inject NotificationService NotificationService
+﻿@using System.Text
+@using CommunityToolkit.Maui.Storage
+@inject NotificationService NotificationService
 @inject DialogService DialogService
 <h3>Logs</h3>
 <div class="row">
     <div class="col">
+        <RadzenButton Text="Export Log" ButtonStyle="ButtonStyle.Primary"
+                      Click="ExportLog"
+                      Style="margin-bottom: 10px; width: 150px" />&nbsp;&nbsp;
         <RadzenButton Text="Clear Log" ButtonStyle="ButtonStyle.Danger"
                       Click="ClearLog"
                       Style="margin-bottom: 10px; width: 150px" />&nbsp;&nbsp;
@@ -69,6 +74,70 @@
                     Detail = "Log Cleared",
                     Duration = 4000
                 });
+        }
+        catch (Exception ex)
+        {
+            NotificationService.Notify(new NotificationMessage
+                {
+                    Severity = NotificationSeverity.Error,
+                    Summary = "Error",
+                    Detail = ex.Message,
+                    Duration = 4000
+                });
+        }
+    }
+
+    private async Task ExportLog()
+    {
+        try
+        {
+            // Read the lines from the .csv file
+            using (var file = new System.IO.StreamReader(AIStoryBuildersLogPath))
+            {
+                AIStoryBuildersLog = file.ReadToEnd().Split('\n');
+                if (AIStoryBuildersLog[AIStoryBuildersLog.Length - 1].Trim() == "")
+                {
+                    AIStoryBuildersLog = AIStoryBuildersLog.Take(AIStoryBuildersLog.Length - 1).ToArray();
+                }
+
+                string FinalLog = "<style> table { border-collapse: separate; border-spacing: 5px; } th, td { padding: 5px; } </style> <table><tr><th>Log Data</th></tr>";
+
+                foreach(string line in AIStoryBuildersLog)
+                {
+                    FinalLog += "<tr><td>" + line + "</td></tr>";
+                }
+
+                FinalLog += "</table>";
+
+                string FileName = $"AIStoryBuildersLog_{DateTime.Now.ToString("yyyy-MM-dd_HH-mm-ss")}.html";
+
+                // Convert AIStoryBuildersLog to a MemoryStream but keep the line breaks
+                using var stream = new MemoryStream(Encoding.Default.GetBytes(FinalLog));
+
+                var fileSaverResult = await FileSaver.Default.SaveAsync(FileName, stream);
+
+                if (fileSaverResult.IsSuccessful)
+                {
+                    NotificationService.Notify(new NotificationMessage
+                        {
+                            Severity = NotificationSeverity.Success,
+                            Summary = "Saved",
+                            Detail = $"The file was saved successfully to location: {fileSaverResult.FilePath}",
+                            Duration = 4000
+                        });
+                }
+                else
+                {
+                    NotificationService.Notify(new NotificationMessage
+                        {
+                            Severity = NotificationSeverity.Error,
+                            Summary = "Error",
+                            Detail = $"The file was not saved successfully with error: {fileSaverResult.Exception.Message}",
+                            Duration = 4000
+                        });
+                }
+            }
+
         }
         catch (Exception ex)
         {
