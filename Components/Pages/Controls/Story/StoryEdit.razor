@@ -53,6 +53,9 @@ else // Existing Story
             <RadzenButton Text="Save" ButtonStyle="ButtonStyle.Success"
                           Click="StorySave"
                           Style="margin-bottom: 10px; width: 150px" />&nbsp;&nbsp;
+            <RadzenButton Text="Export" ButtonStyle="ButtonStyle.Secondary"
+                          Click="ExportToWord" Icon="save_alt"
+                          Style="margin-bottom: 10px; width: 150px" />&nbsp;&nbsp;
             <RadzenButton Text="Delete" ButtonStyle="ButtonStyle.Danger"
                           Click="StoryDelete" />
         </div>
@@ -212,6 +215,11 @@ else // Existing Story
             // Notify parent component
             await StoryDeleted.InvokeAsync(objStory);
         }
+    }
+
+    protected async Task ExportToWord()
+    {
+        
     }
 
     void OnSpeechCaptured(string speechValue, bool updateTextArea, string name)
