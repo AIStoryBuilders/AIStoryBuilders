@@ -224,7 +224,7 @@ else // Existing Story
     {
         string ExportFileName = $"{objStory.Title}_{DateTime.Now.ToString("yyyy-MM-dd_HH-mm-ss")}.docx";
 
-        var DocumentContents = await AIStoryBuildersService.ExportWordDocument(objStory);
+        var DocumentContents = AIStoryBuildersService.ExportWordDocument(objStory);
 
         // Read DocumentContents into a MemoryStream
         var stream = new MemoryStream(DocumentContents);
@@ -242,7 +242,7 @@ else // Existing Story
 
     protected async Task ExportProject()
     {
-        await AIStoryBuildersService.ExportWordDocument(objStory);
+        var DocumentContents = AIStoryBuildersService.ExportWordDocument(objStory);
 
         string TempPath =
                     $"{Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments)}/AIStoryBuilders/_Temp";
