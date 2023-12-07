@@ -2,6 +2,8 @@
 @using AIStoryBuilders.Model;
 @using AIStoryBuilders.Models;
 @using AIStoryBuilders.Services;
+@using System.Text
+@using CommunityToolkit.Maui.Storage
 @inherits OwningComponentBase
 @inject NotificationService NotificationService
 @inject DialogService DialogService
@@ -14,7 +16,7 @@
                     <RadzenTextBox MaxLength="20" @bind-Value="@objStory.Title" />
                 </RadzenFormField>
                 <RadzenSpeechToTextButton Change="@(args => OnSpeechCaptured(args, false, "TextToSpeech"))" />
-                <RadzenFormField Text="Synopsis:" Variant="@variant">                    
+                <RadzenFormField Text="Synopsis:" Variant="@variant">
                     <RadzenTextArea MaxLength="1000" Rows="10" @bind-Value="@objStory.Synopsis" />
                 </RadzenFormField>
                 <p>Chapters: <RadzenDropDown Data=@colChapters @bind-Value="@objStory.ChapterCount" Style="width:75px" /></p>
@@ -51,11 +53,12 @@ else // Existing Story
     <div class="row">
         <div class="col">
             <RadzenButton Text="Save" ButtonStyle="ButtonStyle.Success"
-                          Click="StorySave"
-                          Style="margin-bottom: 10px; width: 150px" />&nbsp;&nbsp;
-            <RadzenButton Text="Export" ButtonStyle="ButtonStyle.Secondary"
-                          Click="ExportToWord" Icon="save_alt"
-                          Style="margin-bottom: 10px; width: 150px" />&nbsp;&nbsp;
+                          Click="StorySave" Icon="save"
+                          Style="width: 150px" />&nbsp;&nbsp;
+            <RadzenButton Text="Save Word" ButtonStyle="ButtonStyle.Primary"
+                          Click="ExportToWord" Icon="print" />&nbsp;&nbsp;
+            <RadzenButton Text="Project" ButtonStyle="ButtonStyle.Primary"
+                          Click="ExportProject" Icon="save_alt" />&nbsp;&nbsp;
             <RadzenButton Text="Delete" ButtonStyle="ButtonStyle.Danger"
                           Click="StoryDelete" />
         </div>
@@ -219,7 +222,55 @@ else // Existing Story
 
     protected async Task ExportToWord()
     {
-        
+        string ExportFileName = $"{objStory.Title}_{DateTime.Now.ToString("yyyy-MM-dd_HH-mm-ss")}.docx";
+
+        var DocumentContents = await AIStoryBuildersService.ExportWordDocument(objStory);
+
+        // Read DocumentContents into a MemoryStream
+        var stream = new MemoryStream(DocumentContents);
+
+        var fileSaverResult = await FileSaver.Default.SaveAsync(ExportFileName, stream);
+
+        NotificationService.Notify(new NotificationMessage
+            {
+                Severity = NotificationSeverity.Success,
+                Summary = "Saved",
+                Detail = $"The file was saved successfully to location: {fileSaverResult.FilePath}",
+                Duration = 4000
+            });
+    }
+
+    protected async Task ExportProject()
+    {
+        await AIStoryBuildersService.ExportWordDocument(objStory);
+
+        string TempPath =
+                    $"{Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments)}/AIStoryBuilders/_Temp";
+
+        string WordFileName = $"{objStory.Title}.docx";
+        string WordFilePath = $"{TempPath}/{WordFileName}";
+
+        string ExportFileName = $"{objStory.Title}_{DateTime.Now.ToString("yyyy-MM-dd_HH-mm-ss")}.docx";
+
+        using (var file = new FileStream(WordFilePath, FileMode.Open, FileAccess.Read))
+        {
+            using var stream = new MemoryStream();
+            await file.CopyToAsync(stream);
+            stream.Position = 0;
+
+            var fileSaverResult = await FileSaver.Default.SaveAsync(ExportFileName, stream);
+
+            NotificationService.Notify(new NotificationMessage
+                {
+                    Severity = NotificationSeverity.Success,
+                    Summary = "Saved",
+                    Detail = $"The file was saved successfully to location: {fileSaverResult.FilePath}",
+                    Duration = 4000
+                });
+
+            // Delete the temp file
+            File.Delete(WordFilePath);
+        }
     }
 
     void OnSpeechCaptured(string speechValue, bool updateTextArea, string name)
