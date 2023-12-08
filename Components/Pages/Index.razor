@@ -186,12 +186,21 @@
     {
         try
         {
+            var result = await FilePicker.PickAsync(new PickOptions
+                {
+                    FileTypes = new FilePickerFileType(new Dictionary<DevicePlatform, IEnumerable<string>>
+                {                    
+                    { DevicePlatform.iOS, new[] { "public.content" } },
+                    { DevicePlatform.Android, new[] { "application/*" } },
+                    { DevicePlatform.WinUI, new[] { ".stybld" } }, })
+                });
 
-            StateHasChanged();
-
-            HomeVisible = true;
-            InProgress = false;
-
+            if (result != null)
+            {
+                var stream = await result.OpenReadAsync();
+                using var reader = new StreamReader(stream);
+                var text = await reader.ReadToEndAsync();               
+            }
         }
         catch (Exception ex)
         {

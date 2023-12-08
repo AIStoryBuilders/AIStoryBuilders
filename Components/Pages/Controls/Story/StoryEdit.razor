@@ -55,9 +55,9 @@ else // Existing Story
             <RadzenButton Text="Save" ButtonStyle="ButtonStyle.Success"
                           Click="StorySave" Icon="save"
                           Style="width: 150px" />&nbsp;&nbsp;
-            <RadzenButton Text="Save Word" ButtonStyle="ButtonStyle.Primary"
+            <RadzenButton Text="Save Word Doc" ButtonStyle="ButtonStyle.Primary"
                           Click="ExportToWord" Icon="print" />&nbsp;&nbsp;
-            <RadzenButton Text="Project" ButtonStyle="ButtonStyle.Primary"
+            <RadzenButton Text="Export Project" ButtonStyle="ButtonStyle.Primary"
                           Click="ExportProject" Icon="save_alt" />&nbsp;&nbsp;
             <RadzenButton Text="Delete" ButtonStyle="ButtonStyle.Danger"
                           Click="StoryDelete" />
@@ -243,6 +243,14 @@ else // Existing Story
     protected async Task ExportProject()
     {
         string ExportFileName = $"{objStory.Title}_{DateTime.Now.ToString("yyyy-MM-dd_HH-mm-ss")}.stybld";
+
+        NotificationService.Notify(new NotificationMessage
+            {
+                Severity = NotificationSeverity.Info,
+                Summary = "Exporting",
+                Detail = $"Story...",
+                Duration = 2000
+            });
 
         var DocumentContents = AIStoryBuildersService.ExportProject(objStory);
 
