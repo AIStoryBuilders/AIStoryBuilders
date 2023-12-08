@@ -18,7 +18,7 @@
 <RadzenMenu>
     <RadzenMenuItem Click="OnHomeClicked" Text="Home" Icon="home"></RadzenMenuItem>
     <RadzenMenuItem Click="OnLogsClicked" Text="Logs" Icon="assignment"></RadzenMenuItem>
-@*     <RadzenMenuItem Click="OnUtilityClicked" Text="Utility" Icon="aspect_ratio"></RadzenMenuItem> *@
+    @*     <RadzenMenuItem Click="OnUtilityClicked" Text="Utility" Icon="aspect_ratio"></RadzenMenuItem> *@
     <RadzenMenuItem Click="OnSettingsClicked" Text="Settings" Icon="line_style"></RadzenMenuItem>
 </RadzenMenu>
 <br />
@@ -30,7 +30,9 @@
 }
 @if (HomeVisible)
 {
-    <RadzenButton Click=@(() => NewStory()) Text="New Story" ButtonStyle="ButtonStyle.Success" />
+    <RadzenButton Click=@(() => NewStory()) Text="New Story" Icon="add" ButtonStyle="ButtonStyle.Success" />
+    <span>&nbsp; &nbsp;</span>
+    <RadzenButton Click=@(() => ImportStory()) Text="Import Story" Icon="publish" ButtonStyle="ButtonStyle.Light" />
     <br />
     <br />
     <div style="height:500px">
@@ -45,11 +47,11 @@
                         &nbsp;&nbsp;&nbsp;&nbsp;
                         <RadzenText TextStyle="TextStyle.DisplayH5"
                                     class="rz-color-secondary">@(story.Title)</RadzenText>&nbsp;&nbsp;
-                        </RadzenRow>
-                    </RadzenCard>
-                </Template>
-            </RadzenDataList>
-        </div>
+                    </RadzenRow>
+                </RadzenCard>
+            </Template>
+        </RadzenDataList>
+    </div>
 }
 @if (SettingsVisible)
 {
@@ -162,6 +164,34 @@
                 HomeVisible = true;
                 InProgress = false;
             }
+        }
+        catch (Exception ex)
+        {
+            HomeVisible = true;
+            InProgress = false;
+
+            NotificationService.Notify(new NotificationMessage
+                {
+                    Severity = NotificationSeverity.Error,
+                    Summary = "Error",
+                    Detail = ex.Message,
+                    Duration = 4000
+                });
+
+            LogService.WriteToLog(ex.Message);
+        }
+    }
+
+    private async Task ImportStory()
+    {
+        try
+        {
+
+            StateHasChanged();
+
+            HomeVisible = true;
+            InProgress = false;
+
         }
         catch (Exception ex)
         {

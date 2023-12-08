@@ -235,42 +235,29 @@ else // Existing Story
             {
                 Severity = NotificationSeverity.Success,
                 Summary = "Saved",
-                Detail = $"The file was saved successfully to location: {fileSaverResult.FilePath}",
+                Detail = $"The file was saved successfully.",
                 Duration = 4000
             });
     }
 
     protected async Task ExportProject()
     {
-        var DocumentContents = AIStoryBuildersService.ExportWordDocument(objStory);
+        string ExportFileName = $"{objStory.Title}_{DateTime.Now.ToString("yyyy-MM-dd_HH-mm-ss")}.stybld";
 
-        string TempPath =
-                    $"{Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments)}/AIStoryBuilders/_Temp";
+        var DocumentContents = AIStoryBuildersService.ExportProject(objStory);
 
-        string WordFileName = $"{objStory.Title}.docx";
-        string WordFilePath = $"{TempPath}/{WordFileName}";
+        // Read DocumentContents into a MemoryStream
+        var stream = new MemoryStream(DocumentContents);
 
-        string ExportFileName = $"{objStory.Title}_{DateTime.Now.ToString("yyyy-MM-dd_HH-mm-ss")}.docx";
+        var fileSaverResult = await FileSaver.Default.SaveAsync(ExportFileName, stream);
 
-        using (var file = new FileStream(WordFilePath, FileMode.Open, FileAccess.Read))
-        {
-            using var stream = new MemoryStream();
-            await file.CopyToAsync(stream);
-            stream.Position = 0;
-
-            var fileSaverResult = await FileSaver.Default.SaveAsync(ExportFileName, stream);
-
-            NotificationService.Notify(new NotificationMessage
-                {
-                    Severity = NotificationSeverity.Success,
-                    Summary = "Saved",
-                    Detail = $"The file was saved successfully to location: {fileSaverResult.FilePath}",
-                    Duration = 4000
-                });
-
-            // Delete the temp file
-            File.Delete(WordFilePath);
-        }
+        NotificationService.Notify(new NotificationMessage
+            {
+                Severity = NotificationSeverity.Success,
+                Summary = "Saved",
+                Detail = $"The file was saved successfully.",
+                Duration = 4000
+            });
     }
 
     void OnSpeechCaptured(string speechValue, bool updateTextArea, string name)
