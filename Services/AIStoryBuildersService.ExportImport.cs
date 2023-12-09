@@ -125,7 +125,7 @@ namespace AIStoryBuilders.Services
                     {
                         Directory.CreateDirectory(TempZipPath);
                     }
-                } 
+                }
                 #endregion
 
                 // Create the manifest file
@@ -135,8 +135,11 @@ namespace AIStoryBuilders.Services
                 JSONManifest objJSONManifest = new JSONManifest
                 {
                     Version = _appMetadata.Version,
-                    StoryTitle = objStory.Title,
-                    CreatedDate = DateTime.Now.ToString()
+                    Title = objStory.Title,
+                    Style = objStory.Style,
+                    Theme = objStory.Theme,
+                    Synopsis = objStory.Synopsis,
+                    ExportedDate = DateTime.Now.ToString()
                 };
 
                 string JSONManifest = JsonConvert.SerializeObject(objJSONManifest);
@@ -176,6 +179,134 @@ namespace AIStoryBuilders.Services
         }
         #endregion
 
+        #region public string ImportProject(byte[] stybldFile)
+        public string ImportProject(byte[] stybldFile)
+        {
+            string strResponse = string.Empty;
+
+            try
+            {
+                #region Create Temp Directories
+
+                // Create _Temp
+                string TempPath =
+                    $"{Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments)}/AIStoryBuilders/_Temp";
+
+                if (!Directory.Exists(TempPath))
+                {
+                    Directory.CreateDirectory(TempPath);
+                }
+                else
+                {
+                    // Delete the temp directory
+                    Directory.Delete(TempPath, true);
+
+                    // Create the directory if it doesn't exist
+                    if (!Directory.Exists(TempPath))
+                    {
+                        Directory.CreateDirectory(TempPath);
+                    }
+                }
+
+                // Create _TempZip
+                string TempZipPath =
+                    $"{Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments)}/AIStoryBuilders/_TempZip";
+
+                if (!Directory.Exists(TempZipPath))
+                {
+                    Directory.CreateDirectory(TempZipPath);
+                }
+                else
+                {
+                    // Delete the temp directory
+                    Directory.Delete(TempZipPath, true);
+
+                    // Create the directory if it doesn't exist
+                    if (!Directory.Exists(TempZipPath))
+                    {
+                        Directory.CreateDirectory(TempZipPath);
+                    }
+                }
+                #endregion
+
+                // Save the file to the _TempZip directory
+                string ImportFilePath = $"{TempZipPath}/Import.stybld";
+                File.WriteAllBytes(ImportFilePath, stybldFile);
+
+                // Extract the files to the _Temp directory
+                ZipFile.ExtractToDirectory(ImportFilePath, TempPath);
+
+                // Read the manifest file
+                string ManifestFilePath = Path.Combine(TempPath, "Manifest.config");
+
+                // Read the file
+                string JSONManifest = File.ReadAllText(ManifestFilePath);
+
+                // Convert to JSONManifest
+                JSONManifest objJSONManifest = JsonConvert.DeserializeObject<JSONManifest>(JSONManifest);
+
+                // Check the version
+                if (ConvertToInteger(objJSONManifest.Version) > ConvertToInteger(_appMetadata.Version))
+                {
+                    strResponse = $"The version of the file you are trying to import is not compatible with this version of AI Story Builders. Please update AI Story Builders to the latest version and try again.";
+                    return strResponse;
+                }
+
+                // Create the story folder
+                string StoryPath = $"{BasePath}/{objJSONManifest.Title}";
+
+                // Check if the story already exists
+                if (Directory.Exists(StoryPath))
+                {
+                    strResponse = $"The story {objJSONManifest.Title} already exists. Backup and delete it before trying to import a new version.";
+                    return strResponse;
+                }
+
+                // Create the directory if it doesn't exist (it shouldn't exist)
+                if (!Directory.Exists(StoryPath))
+                {
+                    Directory.CreateDirectory(StoryPath);
+                }
+
+                // Copy the files from the _Temp directory to the story folder
+                CopyDirectory(TempPath, StoryPath);
+
+                // Delete the temp directories
+                Directory.Delete(TempPath, true);
+                Directory.Delete(TempZipPath, true);
+
+                // Add Story to file
+                var AIStoryBuildersStoriesPath = $"{BasePath}/AIStoryBuildersStories.csv";
+                string[] AIStoryBuildersStoriesContent = ReadCSVFile(AIStoryBuildersStoriesPath);
+
+                // Remove all empty lines
+                AIStoryBuildersStoriesContent = AIStoryBuildersStoriesContent.Where(line => line.Trim() != "").ToArray();
+
+                // Trim all lines
+                AIStoryBuildersStoriesContent = AIStoryBuildersStoriesContent.Select(line => line.Trim()).ToArray();
+
+                // Add Story to file
+                string newStory = $"{AIStoryBuildersStoriesContent.Count() + 1}|{objJSONManifest.Title}|{objJSONManifest.Style}|{objJSONManifest.Theme}|{objJSONManifest.Synopsis}";
+                AIStoryBuildersStoriesContent = AIStoryBuildersStoriesContent.Append(newStory).ToArray();
+                File.WriteAllLines(AIStoryBuildersStoriesPath, AIStoryBuildersStoriesContent);
+
+                // Log
+                LogService.WriteToLog($"Story imported {objJSONManifest.Title}");
+
+                strResponse = $"The project '{objJSONManifest.Title}' was successfully imported.";
+            }
+            catch (Exception ex)
+            {
+                // Log error
+                LogService.WriteToLog("ImportProject: " + ex.Message + " " + ex.StackTrace ?? "" + " " + ex.InnerException.StackTrace ?? "");
+
+                return ex.Message;
+            }
+
+            return strResponse;
+        }
+        #endregion
+
         // Utility
 
         #region public void CopyDirectory(string sourceDir, string targetDir)
@@ -206,7 +337,31 @@ namespace AIStoryBuilders.Services
             // Copy the file from the source to the target
             // The 'true' parameter allows the method to overwrite the file if it already exists
             File.Copy(sourceFilePath, targetFilePath, true);
-        } 
+        }
+        #endregion
+
+        #region private int ConvertToInteger(string strParamVersion)
+        private int ConvertToInteger(string strParamVersion)
+        {
+            int intVersionNumber = 0;
+            string strVersion = strParamVersion;
+
+            // Split into parts seperated by periods
+            char[] splitchar = { '.' };
+            var strSegments = strVersion.Split(splitchar);
+
+            // Process the segments
+            int i = 0;
+            List<int> colMultiplyers = new List<int> { 10000, 100, 1 };
+            foreach (var strSegment in strSegments)
+            {
+                int intSegmentNumber = Convert.ToInt32(strSegment);
+                intVersionNumber = intVersionNumber + (intSegmentNumber * colMultiplyers[i]);
+                i++;
+            }
+
+            return intVersionNumber;
+        }
         #endregion
     }
 }

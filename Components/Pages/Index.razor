@@ -198,11 +198,37 @@
 
             if (result != null)
             {
-                var stream = await result.OpenReadAsync();
-                using var reader = new StreamReader(stream);
-                byte[] bytes = Encoding.UTF8.GetBytes(reader.ReadToEnd());
+                byte[] stybldFileBytes = null;
 
-                //File.WriteAllBytes("path/to/file", bytes);              
+                // Open a stream for the selected file
+                using (var stream = await result.OpenReadAsync())
+                {
+                    // Create a memory stream to copy the file stream
+                    using (var memoryStream = new MemoryStream())
+                    {
+                        // Copy the file stream to the memory stream
+                        await stream.CopyToAsync(memoryStream);
+
+                        // Return the byte array
+                        stybldFileBytes = memoryStream.ToArray();
+                    }
+                }
+
+                string ImportResult = AIStoryBuildersService.ImportProject(stybldFileBytes);
+
+                if (ImportResult != "")
+                {
+                    NotificationService.Notify(new NotificationMessage
+                    {
+                        Severity = NotificationSeverity.Info,
+                        Summary = "Import Result",
+                        Detail = ImportResult,
+                        Duration = 4000
+                    });
+                }
+
+                colStorys = AIStoryBuildersService.GetStorys();
+                StateHasChanged();
             }
         }
         catch (Exception ex)

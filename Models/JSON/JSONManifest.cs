@@ -3,7 +3,10 @@
     public class JSONManifest
     {
         public string Version { get; set; }
-        public string StoryTitle { get; set; }
-        public string CreatedDate { get; set; }
+        public string Title { get; set; }
+        public string Style { get; set; }
+        public string Theme { get; set; }
+        public string Synopsis { get; set; }
+        public string ExportedDate { get; set; }
     }
 }
