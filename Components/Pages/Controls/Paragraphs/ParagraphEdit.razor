@@ -137,8 +137,8 @@ else
 
         var EditStoryResult = await dialogService.OpenAsync(
          "Select Characters", ds =>
-    @<CharacterSelector colCharacters="@AllCharacterList" SelectedCharacters="@SelectedCharacterList" DialogReference="ds">
-    </CharacterSelector>
+         @<CharacterSelector colCharacters="@AllCharacterList" SelectedCharacters="@SelectedCharacterList" DialogReference="ds">
+         </CharacterSelector>
          , new DialogOptions() { Height = "350px", Width = "500px" });
 
         // Set objParagraph.Characters
@@ -173,8 +173,8 @@ else
 
         Location EditStoryResult = await dialogService.OpenAsync(
         "Select Location", ds =>
-    @<LocationSelector colLocations="@AllLocationList" SelectedLocation="@SelectedLocation" DialogReference="ds">
-    </LocationSelector>
+        @<LocationSelector colLocations="@AllLocationList" SelectedLocation="@SelectedLocation" DialogReference="ds">
+        </LocationSelector>
         , new DialogOptions() { Height = "200px", Width = "500px" });
 
         // Set objParagraph.Location.LocationName to SelectedLocation
@@ -207,8 +207,8 @@ else
 
         var EditStoryResult = await dialogService.OpenAsync(
         "Select Timeline", ds =>
-    @<TimelineSelector colTimelines="@AllTimelineList" SelectedTimeline="@SelectedTimeline" DialogReference="ds">
-    </TimelineSelector>
+        @<TimelineSelector colTimelines="@AllTimelineList" SelectedTimeline="@SelectedTimeline" DialogReference="ds">
+        </TimelineSelector>
         , new DialogOptions() { Height = "200px", Width = "500px" });
 
         // Set objParagraph.Timeline.TimelineName to SelectedTimeline
@@ -343,8 +343,8 @@ else
                     {
                         // Open CharacterAttributes dialog -- passing colAllCharactersAndAttributes
                         var EditStoryResult = await dialogService.OpenAsync("Select Character Attributes", ds =>
-    @<CharacterAttributes colCharacters=@colAllCharactersAndAttributes DialogReference="ds">
-    </CharacterAttributes>, new DialogOptions() { Height = "360px", Width = "500px" });
+                        @<CharacterAttributes colCharacters=@colAllCharactersAndAttributes DialogReference="ds">
+                        </CharacterAttributes>, new DialogOptions() { Height = "360px", Width = "500px" });
 
                         if (EditStoryResult != null)
                         {
