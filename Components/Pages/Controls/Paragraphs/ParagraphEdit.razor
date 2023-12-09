@@ -459,6 +459,17 @@ else
                 }
             }
 
+
+            if (objParagraph.Timeline == null)
+            {
+                objParagraph.Timeline = new Timeline();
+            }
+
+            if (objParagraph.Location == null)
+            {
+                objParagraph.Location = new Location();
+            }
+
             await AIStoryBuildersService.UpdateParagraph(objChapter, objParagraph);
 
             // Reload the Paragraphs
