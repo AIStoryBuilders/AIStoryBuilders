@@ -136,10 +136,10 @@ else
         var SelectedCharacterList = objParagraph.Characters.Select(c => c.CharacterName).OrderBy(x => x).ToList();
 
         var EditStoryResult = await dialogService.OpenAsync(
-     "Select Characters", ds =>
+         "Select Characters", ds =>
     @<CharacterSelector colCharacters="@AllCharacterList" SelectedCharacters="@SelectedCharacterList" DialogReference="ds">
     </CharacterSelector>
-     , new DialogOptions() { Height = "350px", Width = "500px" });
+         , new DialogOptions() { Height = "350px", Width = "500px" });
 
         // Set objParagraph.Characters
         if (EditStoryResult != null)
@@ -150,7 +150,7 @@ else
                 objParagraph.Characters.Add(new Character() { CharacterName = character });
             }
         }
-                
+
         // **** Un-indent the paragraph
         var UpdatedParagraph = AIStoryBuildersService.RemoveParagraphIndenting(objParagraph);
         objParagraph.ParagraphContent = UpdatedParagraph.ParagraphContent;
@@ -166,16 +166,16 @@ else
 
         // Turn colLocations into a list of strings
         var AllLocationList = colLocations.OrderBy(x => x.LocationName).ToList();
-        AllLocationList.Add(new Location() { Id = -1, LocationName = ""});
+        AllLocationList.Add(new Location() { Id = -1, LocationName = "" });
 
         // Get SelectedLocation
         var SelectedLocation = objParagraph.Location;
 
         Location EditStoryResult = await dialogService.OpenAsync(
-    "Select Location", ds =>
+        "Select Location", ds =>
     @<LocationSelector colLocations="@AllLocationList" SelectedLocation="@SelectedLocation" DialogReference="ds">
     </LocationSelector>
-    , new DialogOptions() { Height = "200px", Width = "500px" });
+        , new DialogOptions() { Height = "200px", Width = "500px" });
 
         // Set objParagraph.Location.LocationName to SelectedLocation
         if (EditStoryResult != null)
@@ -206,10 +206,10 @@ else
         var SelectedTimeline = objParagraph.Timeline.TimelineName;
 
         var EditStoryResult = await dialogService.OpenAsync(
-    "Select Timeline", ds =>
+        "Select Timeline", ds =>
     @<TimelineSelector colTimelines="@AllTimelineList" SelectedTimeline="@SelectedTimeline" DialogReference="ds">
     </TimelineSelector>
-    , new DialogOptions() { Height = "200px", Width = "500px" });
+        , new DialogOptions() { Height = "200px", Width = "500px" });
 
         // Set objParagraph.Timeline.TimelineName to SelectedTimeline
         if (EditStoryResult != null)
@@ -238,14 +238,14 @@ else
             if (objParagraph.ParagraphContent.Trim().Length < 1)
             {
                 NotificationService.Notify(
-                    new NotificationMessage
-                    {
-                        Severity = NotificationSeverity.Error,
-                        Summary = "Error",
-                        Detail = "Paragraph content is required",
-                        Duration = 4000
+                new NotificationMessage
+                        {
+                            Severity = NotificationSeverity.Error,
+                            Summary = "Error",
+                            Detail = "Paragraph content is required",
+                            Duration = 4000
 
-                    });
+                        });
                 return;
             }
 
@@ -288,12 +288,12 @@ else
                         if (colNewCharactersInParagraph.Count > 0)
                         {
                             NotificationService.Notify(new NotificationMessage
-                                {
-                                    Severity = NotificationSeverity.Success,
-                                    Summary = "Info",
-                                    Detail = "Detecting attributes on new characters…",
-                                    Duration = 2000
-                                });
+                                    {
+                                        Severity = NotificationSeverity.Success,
+                                        Summary = "Info",
+                                        Detail = "Detecting attributes on new characters…",
+                                        Duration = 2000
+                                    });
 
                             // Pass all new Characters and detect attributes
                             List<SimpleCharacterSelector> colnewCharactersAndAttributes = await OrchestratorMethods.DetectCharacterAttributes(objParagraph, colNewCharactersInParagraph, "New Character");
@@ -317,12 +317,12 @@ else
                         if (colExistingCharactersInParagraph.Count > 0)
                         {
                             NotificationService.Notify(new NotificationMessage
-                                {
-                                    Severity = NotificationSeverity.Success,
-                                    Summary = "Info",
-                                    Detail = "Detecting attributes on existing characters…",
-                                    Duration = 2000
-                                });
+                                    {
+                                        Severity = NotificationSeverity.Success,
+                                        Summary = "Info",
+                                        Detail = "Detecting attributes on existing characters…",
+                                        Duration = 2000
+                                    });
 
                             // Simplify Characters to only CharacterName and CharacterType and value
                             // Pass Paragraph so we only get CharacterBackground in the selected or null Timelines
@@ -343,8 +343,8 @@ else
                     {
                         // Open CharacterAttributes dialog -- passing colAllCharactersAndAttributes
                         var EditStoryResult = await dialogService.OpenAsync("Select Character Attributes", ds =>
-                        @<CharacterAttributes colCharacters=@colAllCharactersAndAttributes DialogReference="ds">
-                        </CharacterAttributes>, new DialogOptions() { Height = "360px", Width = "500px" });
+    @<CharacterAttributes colCharacters=@colAllCharactersAndAttributes DialogReference="ds">
+    </CharacterAttributes>, new DialogOptions() { Height = "360px", Width = "500px" });
 
                         if (EditStoryResult != null)
                         {
@@ -440,12 +440,12 @@ else
                             objParagraph.Characters.Add(objCharacter);
 
                             NotificationService.Notify(new NotificationMessage
-                                {
-                                    Severity = NotificationSeverity.Success,
-                                    Summary = "Info",
-                                    Detail = $"Adding {objCharacter.CharacterName}",
-                                    Duration = 2000
-                                });
+                                    {
+                                        Severity = NotificationSeverity.Success,
+                                        Summary = "Info",
+                                        Detail = $"Adding {objCharacter.CharacterName}",
+                                        Duration = 2000
+                                    });
                         }
                     }
                 }
@@ -462,12 +462,12 @@ else
         catch (Exception ex)
         {
             NotificationService.Notify(new NotificationMessage
-                {
-                    Severity = NotificationSeverity.Error,
-                    Summary = "Error",
-                    Detail = ex.Message,
-                    Duration = 4000
-                });
+                    {
+                        Severity = NotificationSeverity.Error,
+                        Summary = "Error",
+                        Detail = ex.Message,
+                        Duration = 4000
+                    });
         }
     }
 
@@ -490,12 +490,12 @@ else
         catch (Exception ex)
         {
             NotificationService.Notify(new NotificationMessage
-                {
-                    Severity = NotificationSeverity.Error,
-                    Summary = "Error",
-                    Detail = ex.Message,
-                    Duration = 4000
-                });
+                    {
+                        Severity = NotificationSeverity.Error,
+                        Summary = "Error",
+                        Detail = ex.Message,
+                        Duration = 4000
+                    });
         }
     }
 
@@ -505,7 +505,7 @@ else
         {
             // Ask for confirmation:
             var confirmResult = await dialogService.Confirm("Are you sure?", $"Delete Paragraph",
-                  new ConfirmOptions() { OkButtonText = "Yes", CancelButtonText = "No" });
+              new ConfirmOptions() { OkButtonText = "Yes", CancelButtonText = "No" });
 
             if (confirmResult.HasValue && confirmResult.Value)
             {
@@ -521,12 +521,12 @@ else
         catch (Exception ex)
         {
             NotificationService.Notify(new NotificationMessage
-                {
-                    Severity = NotificationSeverity.Error,
-                    Summary = "Error",
-                    Detail = ex.Message,
-                    Duration = 4000
-                });
+                    {
+                        Severity = NotificationSeverity.Error,
+                        Summary = "Error",
+                        Detail = ex.Message,
+                        Duration = 4000
+                    });
         }
     }
 
@@ -542,11 +542,14 @@ else
             // **** Un-indent the paragraph
             objParagraph = AIStoryBuildersService.RemoveParagraphIndenting(objParagraph);
 
+            // Set NumberOfWords
+            string NumberOfWords = SetNumberOfWords(objParagraph.ParagraphContent);
+
             // Display inline dialog to capture text
             AIPrompt AIPromptResult = await dialogService.OpenAsync("AI Prompt Instructions", ds =>
-              @<ParagraphPrompt AIPromptText="@AIPrompt" DialogReference="ds">
-              </ParagraphPrompt>
-              , new DialogOptions() { Height = "340px", Width = "600px" });
+            @<ParagraphPrompt AIPromptText="@AIPrompt" SelectedNumberOfWords="@NumberOfWords" DialogReference="ds">
+            </ParagraphPrompt>
+            , new DialogOptions() { Height = "340px", Width = "600px" });
 
             if (AIPromptResult != null)
             {
@@ -605,5 +608,48 @@ else
                     Duration = 4000
                 });
         }
+    }
+
+    // Utility
+
+    private string SetNumberOfWords(string paragraphContent)
+    {
+        // Get the number of words in the paragraph
+        int countOfWords = paragraphContent.Split(' ').Length;
+
+        // Determine the NumberOfWords based on the countOfWords
+        if (countOfWords < 10)
+        {
+            return "10";
+        }
+        if (countOfWords < 20)
+        {
+            return "20";
+        }
+        if (countOfWords < 50)
+        {
+            return "50";
+        }
+        if (countOfWords < 100)
+        {
+            return "100";
+        }
+        if (countOfWords < 200)
+        {
+            return "200";
+        }
+        if (countOfWords < 300)
+        {
+            return "300";
+        }
+        if (countOfWords < 500)
+        {
+            return "500";
+        }
+        if (countOfWords < 800)
+        {
+            return "800";
+        }
+        return "1000"; // Default case for 800 or more words
     }
 }
