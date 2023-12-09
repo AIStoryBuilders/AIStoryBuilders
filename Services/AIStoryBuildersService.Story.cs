@@ -34,7 +34,7 @@ namespace AIStoryBuilders.Services
             catch (Exception ex)
             {
                 // Log error
-                LogService.WriteToLog(ex.Message);
+                LogService.WriteToLog("GetStorys: " + ex.Message + " " + ex.StackTrace ?? "" + " " + ex.InnerException.StackTrace ?? "");
 
                 // File is empty
                 return new List<Story>();
@@ -354,7 +354,7 @@ namespace AIStoryBuilders.Services
             catch (Exception ex)
             {
                 // Log error
-                LogService.WriteToLog(ex.Message);
+                LogService.WriteToLog("GetTimelines: " + ex.Message + " " + ex.StackTrace ?? "" + " " + ex.InnerException.StackTrace ?? "");
 
                 // File is empty
                 return new List<AIStoryBuilders.Models.Timeline>();
@@ -375,7 +375,7 @@ namespace AIStoryBuilders.Services
             catch (Exception ex)
             {
                 // Log error
-                LogService.WriteToLog(ex.Message);
+                LogService.WriteToLog("AddTimeline: " + ex.Message + " " + ex.StackTrace ?? "" + " " + ex.InnerException.StackTrace ?? "");
             }
         }
 
@@ -419,7 +419,7 @@ namespace AIStoryBuilders.Services
             catch (Exception ex)
             {
                 // Log error
-                LogService.WriteToLog(ex.Message);
+                LogService.WriteToLog("UpdateTimeline: " + ex.Message + " " + ex.StackTrace ?? "" + " " + ex.InnerException.StackTrace ?? "");
             }
         }
 
@@ -600,7 +600,7 @@ namespace AIStoryBuilders.Services
             catch (Exception ex)
             {
                 // Log error
-                LogService.WriteToLog(ex.Message);
+                LogService.WriteToLog("UpdateTimelineAndTimelineNameAsync: " + ex.Message + " " + ex.StackTrace ?? "" + " " + ex.InnerException.StackTrace ?? "");
             }
         }
 
@@ -780,7 +780,7 @@ namespace AIStoryBuilders.Services
             catch (Exception ex)
             {
                 // Log error
-                LogService.WriteToLog(ex.Message);
+                LogService.WriteToLog("DeleteTimelineAndTimelineNameAsync: " + ex.Message + " " + ex.StackTrace ?? "" + " " + ex.InnerException.StackTrace ?? "");
             }
         }
         #endregion
@@ -855,7 +855,7 @@ namespace AIStoryBuilders.Services
             catch (Exception ex)
             {
                 // Log error
-                LogService.WriteToLog(ex.Message);
+                LogService.WriteToLog("GetLocations: " + ex.Message + " " + ex.StackTrace ?? "" + " " + ex.InnerException.StackTrace ?? "");
 
                 // File is empty
                 return new List<AIStoryBuilders.Models.Location>();
@@ -896,7 +896,7 @@ namespace AIStoryBuilders.Services
             catch (Exception ex)
             {
                 // Log error
-                LogService.WriteToLog(ex.Message);
+                LogService.WriteToLog("LocationExists: " + ex.Message + " " + ex.StackTrace ?? "" + " " + ex.InnerException.StackTrace ?? "");
 
                 // File is empty
                 return true;
@@ -939,7 +939,7 @@ namespace AIStoryBuilders.Services
             catch (Exception ex)
             {
                 // Log error
-                LogService.WriteToLog(ex.Message);
+                LogService.WriteToLog("AddLocationAsync: " + ex.Message + " " + ex.StackTrace ?? "" + " " + ex.InnerException.StackTrace ?? "");
             }
         }
 
@@ -979,7 +979,7 @@ namespace AIStoryBuilders.Services
             catch (Exception ex)
             {
                 // Log error
-                LogService.WriteToLog(ex.Message);
+                LogService.WriteToLog("UpdateLocationDescriptions: " + ex.Message + " " + ex.StackTrace ?? "" + " " + ex.InnerException.StackTrace ?? "");
             }
         }
 
@@ -1037,7 +1037,7 @@ namespace AIStoryBuilders.Services
             catch (Exception ex)
             {
                 // Log error
-                LogService.WriteToLog(ex.Message);
+                LogService.WriteToLog("DeleteLocation: " + ex.Message + " " + ex.StackTrace ?? "" + " " + ex.InnerException.StackTrace ?? "");
             }
         }
 
@@ -1097,7 +1097,7 @@ namespace AIStoryBuilders.Services
             catch (Exception ex)
             {
                 // Log error
-                LogService.WriteToLog(ex.Message);
+                LogService.WriteToLog("UpdateLocationName: " + ex.Message + " " + ex.StackTrace ?? "" + " " + ex.InnerException.StackTrace ?? "");
             }
         }
 
@@ -1167,7 +1167,7 @@ namespace AIStoryBuilders.Services
             catch (Exception ex)
             {
                 // Log error
-                LogService.WriteToLog(ex.Message);
+                LogService.WriteToLog("GetCharacters: " + ex.Message + " " + ex.StackTrace ?? "" + " " + ex.InnerException.StackTrace ?? "");
 
                 // File is empty
                 return new List<AIStoryBuilders.Models.Character>();
@@ -1412,7 +1412,7 @@ namespace AIStoryBuilders.Services
             catch (Exception ex)
             {
                 // Log error
-                LogService.WriteToLog(ex.Message);
+                LogService.WriteToLog("GetChapters: " + ex.Message + " " + ex.StackTrace ?? "" + " " + ex.InnerException.StackTrace ?? "");
 
                 // File is empty
                 return new List<AIStoryBuilders.Models.Chapter>();
@@ -1533,7 +1533,7 @@ namespace AIStoryBuilders.Services
             catch (Exception ex)
             {
                 // Log error
-                LogService.WriteToLog(ex.Message);
+                LogService.WriteToLog("GetParagraphs: " + ex.Message + " " + ex.StackTrace ?? "" + " " + ex.InnerException.StackTrace ?? "");
 
                 // File is empty
                 return new List<AIStoryBuilders.Models.Paragraph>();
@@ -1613,7 +1613,7 @@ namespace AIStoryBuilders.Services
             catch (Exception ex)
             {
                 // Log error
-                LogService.WriteToLog(ex.Message);
+                LogService.WriteToLog("GetParagraphVectors: " + ex.Message + " " + ex.StackTrace ?? "" + " " + ex.InnerException.StackTrace ?? "");
 
                 // File is empty
                 return new List<AIParagraph>();
@@ -1641,7 +1641,7 @@ namespace AIStoryBuilders.Services
             catch (Exception ex)
             {
                 // Log error
-                LogService.WriteToLog(ex.Message);
+                LogService.WriteToLog("CountParagraphs: " + ex.Message + " " + ex.StackTrace ?? "" + " " + ex.InnerException.StackTrace ?? "");
 
                 // File is empty
                 return 0;
@@ -1673,7 +1673,7 @@ namespace AIStoryBuilders.Services
             catch (Exception ex)
             {
                 // Log error
-                LogService.WriteToLog(ex.Message);
+                LogService.WriteToLog("UpdateParagraph: " + ex.Message + " " + ex.StackTrace ?? "" + " " + ex.InnerException.StackTrace ?? "");
             }
         }
 
@@ -1689,11 +1689,13 @@ namespace AIStoryBuilders.Services
                 // Delete the Paragraph file
                 string ParagraphPath = $"{AIStoryBuildersParagraphsPath}/Paragraph{Paragraph.Sequence}.txt";
                 File.Delete(ParagraphPath);
+
+                RestructureParagraphs(chapter, Paragraph.Sequence, RestructureType.Delete);
             }
             catch (Exception ex)
             {
                 // Log error
-                LogService.WriteToLog(ex.Message);
+                LogService.WriteToLog("DeleteParagraph: " + ex.Message + " " + ex.StackTrace ?? "" + " " + ex.InnerException.StackTrace ?? "");
             }
         }
 
