@@ -518,7 +518,7 @@ else
             objParagraph = AIStoryBuildersService.RemoveParagraphIndenting(objParagraph);
 
             // Ask for confirmation:
-            var confirmResult = await dialogService.Confirm("Are you sure?", $"Add Paragraph (below this one)",
+            var confirmResult = await dialogService.Confirm("Are you sure?", $"Add Section above this Section",
             new ConfirmOptions() { OkButtonText = "Yes", CancelButtonText = "No" });
 
             if (confirmResult.HasValue && confirmResult.Value)
@@ -564,7 +564,7 @@ else
             objParagraph = AIStoryBuildersService.RemoveParagraphIndenting(objParagraph);
 
             // Ask for confirmation:
-            var confirmResult = await dialogService.Confirm("Are you sure?", $"Delete Paragraph",
+            var confirmResult = await dialogService.Confirm("Are you sure?", $"Delete Section",
               new ConfirmOptions() { OkButtonText = "Yes", CancelButtonText = "No" });
 
             if (confirmResult.HasValue && confirmResult.Value)

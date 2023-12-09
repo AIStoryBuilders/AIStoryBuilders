@@ -18,7 +18,7 @@ namespace AIStoryBuilders.Services
                 int CountOfParagraphs = CountParagraphs(objChapter);
 
                 // Loop through all remaining paragraphs and rename them
-                for (int i = ParagraphNumber; i <= CountOfParagraphs; i++)
+                for (int i = CountOfParagraphs; ParagraphNumber <= i; i--)
                 {
                     string OldParagraphPath = "";
                     string NewParagraphPath = "";
@@ -35,6 +35,7 @@ namespace AIStoryBuilders.Services
                     }
 
                     // Rename file
+
                     System.IO.File.Move(OldParagraphPath, NewParagraphPath);
                 }             
             }
