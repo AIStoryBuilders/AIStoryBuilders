@@ -224,7 +224,7 @@ namespace AIStoryBuilders.AI
                 {
                     strPrompt = strPrompt +
                         "#### Use the following instructions in writing the next paragraph in the chapter: \n" +
-                        "Write the first paragraph in the chapter. \n";
+                        "Write the next paragraph in the chapter. \n";
                 }
             }
 

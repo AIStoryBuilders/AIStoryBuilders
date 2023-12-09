@@ -7,12 +7,27 @@ namespace AIStoryBuilders.Services
 {
     public partial class AIStoryBuildersService
     {
-        #region public void RestructureParagraphs(Chapter objChapter, int ParagraphToRemove, string RestructureType)
-        public void RestructureParagraphs(Chapter objChapter, int ParagraphToRemove, string RestructureType)
+        #region public void RestructureParagraphs(Chapter objChapter, int ParagraphNumber, RestructureType RestructureType)
+        public void RestructureParagraphs(Chapter objChapter, int ParagraphNumber, RestructureType RestructureType)
         {
             try
             {
-                
+                int CountOfParagraphs = CountParagraphs(objChapter);
+
+                if (RestructureType == RestructureType.Add)
+                {
+                    // Add a paragraph
+                    Paragraph objParagraph = new Paragraph();
+                    objParagraph.Sequence = ParagraphNumber + 1;
+                    objParagraph.ParagraphContent = "";
+
+                }
+                else if (RestructureType == RestructureType.Delete)
+                {
+                    // Delete paragraph
+
+                }
+
             }
             catch (Exception ex)
             {
@@ -22,12 +37,19 @@ namespace AIStoryBuilders.Services
         }
         #endregion
 
-        #region public void RestructureChapters(int ChapterNumber, string RestructureType)
-        public void RestructureChapters(int ChapterNumber, string RestructureType)
+        #region public void RestructureChapters(int ChapterNumber, RestructureType RestructureType)
+        public void RestructureChapters(int ChapterNumber, RestructureType RestructureType)
         {
             try
             {
+                if (RestructureType == RestructureType.Add)
+                {
 
+                }
+                else if (RestructureType == RestructureType.Delete)
+                {
+
+                }
             }
             catch (Exception ex)
             {

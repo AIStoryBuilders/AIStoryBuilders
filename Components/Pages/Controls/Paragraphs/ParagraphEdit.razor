@@ -108,7 +108,7 @@ else
     {
         // Compute Deleteable
         int CountOfParagraphs = AIStoryBuildersService.CountParagraphs(objChapter);
-        Deleteable = (objParagraph.Sequence == CountOfParagraphs);
+        Deleteable = (objParagraph.Id > -1);
 
         // **** Un-indent the paragraph
         objParagraph = AIStoryBuildersService.RemoveParagraphIndenting(objParagraph);
@@ -620,7 +620,7 @@ else
         // Determine the NumberOfWords based on the countOfWords
         if (countOfWords < 10)
         {
-            return "10";
+            return "200";
         }
         if (countOfWords < 20)
         {

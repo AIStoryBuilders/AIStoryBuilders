@@ -15,4 +15,10 @@
         Aliases,
         Facts,
     }
+
+    public enum RestructureType
+    {
+        Add,
+        Delete,
+    }
 }
