@@ -1648,6 +1648,36 @@ namespace AIStoryBuilders.Services
             }
         }
 
+        public void AddParagraph(Chapter chapter, Paragraph Paragraph)
+        {
+            try
+            {
+                // First restructure the existing Paragraphs
+                RestructureParagraphs(chapter, Paragraph.Sequence, RestructureType.Add);
+
+                // Create a file for the new Paragraph
+                var ChapterNameParts = chapter.ChapterName.Split(' ');
+                string ChapterName = ChapterNameParts[0] + ChapterNameParts[1];
+
+                var AIStoryBuildersParagraphsPath = $"{BasePath}/{chapter.Story.Title}/Chapters/{ChapterName}";
+
+                // Create the Paragraph file
+                string ParagraphPath = $"{AIStoryBuildersParagraphsPath}/Paragraph{Paragraph.Sequence}.txt";
+
+                // Create the ParagraphContent
+                string VectorDescriptionAndEmbedding = "|";
+                string ParagraphContent = $"{Paragraph.Location.LocationName ?? ""}|{Paragraph.Timeline.TimelineName ?? ""}|[{string.Join(",", Paragraph.Characters.Select(x => x.CharacterName))}]|{VectorDescriptionAndEmbedding}";
+
+                // Write the ParagraphContent to the file
+                File.WriteAllText(ParagraphPath, ParagraphContent);
+            }
+            catch (Exception ex)
+            {
+                // Log error
+                LogService.WriteToLog("UpdateParagraph: " + ex.Message + " " + ex.StackTrace ?? "" + " " + ex.InnerException.StackTrace ?? "");
+            }
+        }
+
         public async Task UpdateParagraph(Chapter chapter, Paragraph Paragraph)
         {
             try

@@ -12,22 +12,31 @@ namespace AIStoryBuilders.Services
         {
             try
             {
+                var ChapterNameParts = objChapter.ChapterName.Split(' ');
+                string ChapterName = ChapterNameParts[0] + ChapterNameParts[1];
+                var AIStoryBuildersParagraphsPath = $"{BasePath}/{objChapter.Story.Title}/Chapters/{ChapterName}";               
                 int CountOfParagraphs = CountParagraphs(objChapter);
 
-                if (RestructureType == RestructureType.Add)
+                // Loop through all remaining paragraphs and rename them
+                for (int i = ParagraphNumber; i <= CountOfParagraphs; i++)
                 {
-                    // Add a paragraph
-                    Paragraph objParagraph = new Paragraph();
-                    objParagraph.Sequence = ParagraphNumber + 1;
-                    objParagraph.ParagraphContent = "";
+                    string OldParagraphPath = "";
+                    string NewParagraphPath = "";
 
-                }
-                else if (RestructureType == RestructureType.Delete)
-                {
-                    // Delete paragraph
+                    if (RestructureType == RestructureType.Add)
+                    {
+                        OldParagraphPath = $"{AIStoryBuildersParagraphsPath}/Paragraph{i}.txt";
+                        NewParagraphPath = $"{AIStoryBuildersParagraphsPath}/Paragraph{i + 1}.txt";
+                    }
+                    else if (RestructureType == RestructureType.Delete)
+                    {
+                        OldParagraphPath = $"{AIStoryBuildersParagraphsPath}/Paragraph{i}.txt";
+                        NewParagraphPath = $"{AIStoryBuildersParagraphsPath}/Paragraph{i - 1}.txt";
+                    }
 
-                }
-
+                    // Rename file
+                    System.IO.File.Move(OldParagraphPath, NewParagraphPath);
+                }             
             }
             catch (Exception ex)
             {

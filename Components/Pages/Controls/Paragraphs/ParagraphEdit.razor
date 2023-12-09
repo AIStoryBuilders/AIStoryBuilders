@@ -30,12 +30,6 @@ else
             <RadzenButton Click="onClickLocation" Text="Location" ButtonStyle="ButtonStyle.Light" Size="ButtonSize.Medium" />
             <RadzenButton Click="onClickTimeline" Text="Timeline" ButtonStyle="ButtonStyle.Light" Size="ButtonSize.Medium" />
 
-            <RadzenSplitButton Icon="save" Click=@(args => onClickSave(args)) Text="Save" ButtonStyle="ButtonStyle.Success" Size="ButtonSize.Medium">
-                <ChildContent>
-                    <RadzenSplitButtonItem Text="Autodetect Attributes" Value="Autodetect" />
-                </ChildContent>
-            </RadzenSplitButton>
-
             @if (Undoable)
             {
                 <RadzenButton Click="onClickUndo" Icon="undo" ButtonStyle="ButtonStyle.Dark" Size="ButtonSize.Medium" />
@@ -44,6 +38,17 @@ else
             {
                 <RadzenButton Click="onClickDelete" Icon="delete" ButtonStyle="ButtonStyle.Danger" Size="ButtonSize.Medium" />
             }
+            @if (Addable)
+            {
+                <RadzenButton Click="onClickAdd" Icon="note_add" ButtonStyle="ButtonStyle.Success" Size="ButtonSize.Medium" />
+            }
+
+            <RadzenSplitButton Icon="save" Click=@(args => onClickSave(args)) Text="Save" ButtonStyle="ButtonStyle.Success" Size="ButtonSize.Medium">
+                <ChildContent>
+                    <RadzenSplitButtonItem Text="Autodetect Attributes" Value="Autodetect" />
+                </ChildContent>
+            </RadzenSplitButton>
+
             @if (Closeable)
             {
                 <RadzenButton Click="onClickClose" Icon="exit_to_app" ButtonStyle="ButtonStyle.Primary" Size="ButtonSize.Medium" />
@@ -68,6 +73,7 @@ else
 
     bool InEditMode = false;
     bool Deleteable = false;
+    bool Addable = false;
     bool Closeable = true;
     bool InProgress = false;
 
@@ -87,6 +93,7 @@ else
             {
                 InEditMode = true;
                 Deleteable = false;
+                Addable = false;
                 Closeable = false;
             }
         }
@@ -109,6 +116,7 @@ else
         // Compute Deleteable
         int CountOfParagraphs = AIStoryBuildersService.CountParagraphs(objChapter);
         Deleteable = (objParagraph.Id > -1);
+        Addable = (objParagraph.Sequence < CountOfParagraphs);
 
         // **** Un-indent the paragraph
         objParagraph = AIStoryBuildersService.RemoveParagraphIndenting(objParagraph);
@@ -499,10 +507,62 @@ else
         }
     }
 
+    private async Task onClickAdd()
+    {
+        try
+        {
+            InEditMode = false;
+            StateHasChanged();
+
+            // **** Un-indent the paragraph
+            objParagraph = AIStoryBuildersService.RemoveParagraphIndenting(objParagraph);
+
+            // Ask for confirmation:
+            var confirmResult = await dialogService.Confirm("Are you sure?", $"Add Paragraph (below this one)",
+            new ConfirmOptions() { OkButtonText = "Yes", CancelButtonText = "No" });
+
+            if (confirmResult.HasValue && confirmResult.Value)
+            {
+                // Add
+                AIStoryBuildersService.AddParagraph(objChapter, objParagraph);
+
+                // Reload the Paragraphs
+                await LoadParagraphs.InvokeAsync();
+
+                StateHasChanged();
+            }
+            else
+            {
+                // **** Un-indent the paragraph
+                var UpdatedParagraph = AIStoryBuildersService.RemoveParagraphIndenting(objParagraph);
+                objParagraph.ParagraphContent = UpdatedParagraph.ParagraphContent;
+
+                InEditMode = true;
+                StateHasChanged();
+            }
+        }
+        catch (Exception ex)
+        {
+            NotificationService.Notify(new NotificationMessage
+                    {
+                        Severity = NotificationSeverity.Error,
+                        Summary = "Error",
+                        Detail = ex.Message,
+                        Duration = 4000
+                    });
+        }
+    }
+
     private async Task onClickDelete()
     {
         try
         {
+            InEditMode = false;
+            StateHasChanged();
+
+            // **** Un-indent the paragraph
+            objParagraph = AIStoryBuildersService.RemoveParagraphIndenting(objParagraph);
+
             // Ask for confirmation:
             var confirmResult = await dialogService.Confirm("Are you sure?", $"Delete Paragraph",
               new ConfirmOptions() { OkButtonText = "Yes", CancelButtonText = "No" });
@@ -515,6 +575,15 @@ else
                 // Reload the Paragraphs
                 await LoadParagraphs.InvokeAsync();
 
+                StateHasChanged();
+            }
+            else
+            {
+                // **** Un-indent the paragraph
+                var UpdatedParagraph = AIStoryBuildersService.RemoveParagraphIndenting(objParagraph);
+                objParagraph.ParagraphContent = UpdatedParagraph.ParagraphContent;
+
+                InEditMode = true;
                 StateHasChanged();
             }
         }
