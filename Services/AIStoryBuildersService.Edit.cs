@@ -12,32 +12,36 @@ namespace AIStoryBuilders.Services
         {
             try
             {
+                string OldParagraphPath = "";
+                string NewParagraphPath = "";
                 var ChapterNameParts = objChapter.ChapterName.Split(' ');
                 string ChapterName = ChapterNameParts[0] + ChapterNameParts[1];
-                var AIStoryBuildersParagraphsPath = $"{BasePath}/{objChapter.Story.Title}/Chapters/{ChapterName}";               
+                var AIStoryBuildersParagraphsPath = $"{BasePath}/{objChapter.Story.Title}/Chapters/{ChapterName}";
                 int CountOfParagraphs = CountParagraphs(objChapter);
 
                 // Loop through all remaining paragraphs and rename them
-                for (int i = CountOfParagraphs; ParagraphNumber <= i; i--)
+                if (RestructureType == RestructureType.Add)
                 {
-                    string OldParagraphPath = "";
-                    string NewParagraphPath = "";
-
-                    if (RestructureType == RestructureType.Add)
+                    for (int i = CountOfParagraphs; ParagraphNumber <= i; i--)
                     {
                         OldParagraphPath = $"{AIStoryBuildersParagraphsPath}/Paragraph{i}.txt";
                         NewParagraphPath = $"{AIStoryBuildersParagraphsPath}/Paragraph{i + 1}.txt";
+
+                        // Rename file
+                        System.IO.File.Move(OldParagraphPath, NewParagraphPath);
                     }
-                    else if (RestructureType == RestructureType.Delete)
+                }
+                else if (RestructureType == RestructureType.Delete)
+                {
+                    for (int i = ParagraphNumber; i <= CountOfParagraphs; i++)
                     {
-                        OldParagraphPath = $"{AIStoryBuildersParagraphsPath}/Paragraph{i}.txt";
-                        NewParagraphPath = $"{AIStoryBuildersParagraphsPath}/Paragraph{i - 1}.txt";
+                        OldParagraphPath = $"{AIStoryBuildersParagraphsPath}/Paragraph{i + 1}.txt";
+                        NewParagraphPath = $"{AIStoryBuildersParagraphsPath}/Paragraph{i}.txt";
+
+                        // Rename file
+                        System.IO.File.Move(OldParagraphPath, NewParagraphPath);
                     }
-
-                    // Rename file
-
-                    System.IO.File.Move(OldParagraphPath, NewParagraphPath);
-                }             
+                }
             }
             catch (Exception ex)
             {
