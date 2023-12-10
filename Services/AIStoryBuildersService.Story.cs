@@ -1419,6 +1419,29 @@ namespace AIStoryBuilders.Services
             }
         }
 
+        public int CountChapters(Story story)
+        {
+            int ChapterCount = 0;
+
+            try
+            {
+                var AIStoryBuildersChaptersPath = $"{BasePath}/{story.Title}/Chapters";
+                string[] AIStoryBuildersChaptersFolders = Directory.GetDirectories(AIStoryBuildersChaptersPath);
+
+                ChapterCount = AIStoryBuildersChaptersFolders.Count();
+
+                return ChapterCount;
+            }
+            catch (Exception ex)
+            {
+                // Log error
+                LogService.WriteToLog("CountChapters: " + ex.Message + " " + ex.StackTrace ?? "" + " " + ex.InnerException.StackTrace ?? "");
+
+                // File is empty
+                return 0;
+            }
+        }
+
         public async Task AddChapterAsync(Chapter objChapter, string ChapterName)
         {
             if (objChapter.Synopsis == null)

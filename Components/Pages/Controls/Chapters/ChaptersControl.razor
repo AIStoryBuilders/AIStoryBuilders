@@ -21,7 +21,7 @@
                               Click=@(() => NewChapter()) />&nbsp;&nbsp;
                 <RadzenButton Text="Save" ButtonStyle="ButtonStyle.Success"
                               Click="ChapterSave" />&nbsp;&nbsp;
-                @if (HighestChapter)
+                @if (!OnlyChapter)
                 {
                     <RadzenButton Text="Delete" ButtonStyle="ButtonStyle.Danger"
                                   Click="ChapterDelete" />
@@ -67,7 +67,7 @@
     List<Location> colAllLocations { get; set; }
     List<Timeline> colAllTimelines { get; set; }
 
-    bool HighestChapter = false;
+    bool OnlyChapter = false;
 
     protected override async Task OnInitializedAsync()
     {
@@ -194,13 +194,13 @@
             dialogService.Refresh();
         }
 
-        if (colChapters.Count == SelectedChapter.Sequence)
+        if (colChapters.Count == 1)
         {
-            HighestChapter = true;
+            OnlyChapter = true;
         }
         else
         {
-            HighestChapter = false;
+            OnlyChapter = false;
         }
     }
 
@@ -283,20 +283,13 @@
                 // Delete
                 AIStoryBuildersService.DeleteChapter(SelectedChapter);
 
+                AIStoryBuildersService.RestructureChapters(SelectedChapter, RestructureType.Delete);
+
                 // Find the previous chapter
                 var PreviousChapter = colChapters.Where(x => x.ChapterName != SelectedChapter.ChapterName).LastOrDefault();
 
-                if (PreviousChapter != null)
-                {
-                    // Load the previous chapter
-                    string ChapterName = PreviousChapter.ChapterName.Replace(" ", "");
-                    await LoadChapters(objStory, ChapterName);
-                }
-                else
-                {
-                    // Load the first chapter
-                    await LoadChapters(objStory, null);
-                }
+                // Reload the chapters
+                await LoadChapters(objStory, null);
 
                 StateHasChanged();
             }

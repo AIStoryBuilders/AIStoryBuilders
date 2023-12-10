@@ -51,18 +51,47 @@ namespace AIStoryBuilders.Services
         }
         #endregion
 
-        #region public void RestructureChapters(int ChapterNumber, RestructureType RestructureType)
-        public void RestructureChapters(int ChapterNumber, RestructureType RestructureType)
+        #region public void RestructureChapters(Chapter objChapter, RestructureType RestructureType)
+        public void RestructureChapters(Chapter objChapter, RestructureType RestructureType)
         {
             try
             {
+                string OldChapterPath = "";
+                string NewChapterPath = "";
+                string OldChapterFolderPath = "";
+                string NewChapterFolderPath = "";
+
+                int CountOfChapters = CountChapters(objChapter.Story);
+
                 if (RestructureType == RestructureType.Add)
                 {
+                    for (int i = CountOfChapters; objChapter.Sequence <= i; i--)
+                    {
+                        // Rename Chapter file
+                        OldChapterPath = $"{BasePath}/{objChapter.Story.Title}/Chapters/Chapter{i}/Chapter{i}.txt";
+                        NewChapterPath = $"{BasePath}/{objChapter.Story.Title}/Chapters/Chapter{i}/Chapter{i + 1}.txt";
+                        System.IO.File.Move(OldChapterPath, NewChapterPath);
 
+                        // Rename Chapter folder
+                        OldChapterFolderPath = $"{BasePath}/{objChapter.Story.Title}/Chapters/Chapter{i}";
+                        NewChapterFolderPath = $"{BasePath}/{objChapter.Story.Title}/Chapters/Chapter{i + 1}";
+                        System.IO.Directory.Move(OldChapterFolderPath, NewChapterFolderPath);
+                    }
                 }
                 else if (RestructureType == RestructureType.Delete)
                 {
+                    for (int i = objChapter.Sequence; i <= CountOfChapters; i++)
+                    {
+                        // Rename Chapter file
+                        OldChapterPath = $"{BasePath}/{objChapter.Story.Title}/Chapters/Chapter{i + 1}/Chapter{i + 1}.txt";
+                        NewChapterPath = $"{BasePath}/{objChapter.Story.Title}/Chapters/Chapter{i + 1}/Chapter{i}.txt";
+                        System.IO.File.Move(OldChapterPath, NewChapterPath);
 
+                        // Rename Chapter folder
+                        OldChapterFolderPath = $"{BasePath}/{objChapter.Story.Title}/Chapters/Chapter{i + 1}";
+                        NewChapterFolderPath = $"{BasePath}/{objChapter.Story.Title}/Chapters/Chapter{i}";
+                        System.IO.Directory.Move(OldChapterFolderPath, NewChapterFolderPath);
+                    }
                 }
             }
             catch (Exception ex)
