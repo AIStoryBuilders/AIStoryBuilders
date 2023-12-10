@@ -22,7 +22,7 @@
                 <RadzenButton Text="Save" ButtonStyle="ButtonStyle.Success"
                               Click="ChapterSave" />&nbsp;&nbsp;
                 <RadzenButton Click="onClickAdd" Icon="note_add" ButtonStyle="ButtonStyle.Success" Size="ButtonSize.Medium" />
-                <span>&nbsp; &nbsp;</span>
+                <span>&nbsp; </span>
                 @if (!OnlyChapter)
                 {
                     <RadzenButton Text="Delete" Icon="delete" ButtonStyle="ButtonStyle.Danger" Click="ChapterDelete" />
@@ -226,7 +226,7 @@
             strChapterName.Insert(7, " "), ds =>
             @<ChaptersEdit objChapter=@newChapter ChapterName=@strChapterName DialogReference="ds">
             </ChaptersEdit>
-            , new DialogOptions() { Height = "300px", Width = "650px" });
+    , new DialogOptions() { Height = "300px", Width = "650px" });
 
             await LoadChapters(objStory, EditStoryResult);
 
@@ -300,9 +300,18 @@
                 await LoadChapters(objStory, null);
 
                 // Set the SelectedChapter
-                SelectedChapter = colChapters.Where(x => x.ChapterName != newChapter.ChapterName).LastOrDefault();
+                var NewChapterName = "Chapter " + NewChapterNumber.ToString();
+                SelectedChapter = colChapters.Where(x => x.ChapterName == NewChapterName).FirstOrDefault();
 
                 StateHasChanged();
+
+                NotificationService.Notify(new NotificationMessage
+                    {
+                        Severity = NotificationSeverity.Success,
+                        Summary = "New Chapter",
+                        Detail = "Created",
+                        Duration = 2000
+                    });
             }
         }
         catch (Exception ex)
