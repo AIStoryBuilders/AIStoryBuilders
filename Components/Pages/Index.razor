@@ -17,10 +17,16 @@
 @implements IDisposable
 <PageTitle>AI Story Builders</PageTitle>
 <RadzenMenu>
-    <RadzenMenuItem Click="OnHomeClicked" Text="Home" Icon="home"></RadzenMenuItem>
-    <RadzenMenuItem Click="OnLogsClicked" Text="Logs" Icon="assignment"></RadzenMenuItem>
-    @*     <RadzenMenuItem Click="OnUtilityClicked" Text="Utility" Icon="aspect_ratio"></RadzenMenuItem> *@
-    <RadzenMenuItem Click="OnSettingsClicked" Text="Settings" Icon="line_style"></RadzenMenuItem>
+    @if (ApiKey.StartsWith("sk-"))
+    {
+        <RadzenMenuItem Click="OnHomeClicked" Text="Home" Icon="home"></RadzenMenuItem>
+        <RadzenMenuItem Click="OnLogsClicked" Text="Logs" Icon="assignment"></RadzenMenuItem>
+        <RadzenMenuItem Click="OnSettingsClicked" Text="Settings" Icon="line_style"></RadzenMenuItem>
+    }
+    else
+    {
+        <RadzenMenuItem Click="OnSettingsClicked" Text="Settings" Icon="line_style"></RadzenMenuItem>
+    }
 </RadzenMenu>
 <br />
 @if (@InProgress)
@@ -56,7 +62,7 @@
 }
 @if (SettingsVisible)
 {
-    <Settings></Settings>
+    <Settings SettingsChanged="HandleSettingsChanged"></Settings>
 }
 @if (LogsVisible)
 {
@@ -98,7 +104,7 @@
             Organization = SettingsService.Organization;
             ApiKey = SettingsService.ApiKey;
 
-            if (ApiKey == "")
+            if ((ApiKey == "") || (!ApiKey.StartsWith("sk-")))
             {
                 // Switch to the Settings page
                 HomeVisible = false;
@@ -345,6 +351,22 @@
                 Detail = TextEventArguments.Message,
                 Duration = (TextEventArguments.DisplayLength * 1000)
             });
+    }
+
+    private void HandleSettingsChanged()
+    {
+        SettingsService.LoadSettings();
+        Organization = SettingsService.Organization;
+        ApiKey = SettingsService.ApiKey;
+
+        // If there is a key show the Home page
+        if (ApiKey.StartsWith("sk-"))
+        {
+            HomeVisible = true;
+            SettingsVisible = false;
+            UtilityVisible = false;
+            LogsVisible = false;
+        }
     }
 
     public void Dispose()

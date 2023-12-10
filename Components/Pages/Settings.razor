@@ -43,7 +43,7 @@ else
     </div>
 }
 @code {
-
+    [Parameter] public EventCallback SettingsChanged { get; set; }
     Variant variant = Variant.Outlined;
 
     string Organization = "";
@@ -95,13 +95,29 @@ else
             // Update Settings
             await SettingsService.SaveSettings(Organization, ApiKey, FastMode);
 
-            NotificationService.Notify(new NotificationMessage
-                {
-                    Severity = NotificationSeverity.Success,
-                    Summary = "Success",
-                    Detail = "Saved",
-                    Duration = 4000
-                });
+            if (ApiKey.StartsWith("sk-"))
+            {
+                NotificationService.Notify(new NotificationMessage
+                    {
+                        Severity = NotificationSeverity.Success,
+                        Summary = "Success",
+                        Detail = "Saved",
+                        Duration = 4000
+                    });
+            }
+            else
+            {
+                NotificationService.Notify(new NotificationMessage
+                    {
+                        Severity = NotificationSeverity.Error,
+                        Summary = "Error",
+                        Detail = "Invalid API Key - must start with: sk-",
+                        Duration = 4000
+                    });
+            }
+
+            // Notify parent that settings have changed
+            await SettingsChanged.InvokeAsync();
         }
         catch (Exception ex)
         {
