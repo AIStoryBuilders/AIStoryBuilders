@@ -1461,6 +1461,26 @@ namespace AIStoryBuilders.Services
             File.WriteAllText(ChapterFilePath, $"{ChapterSynopsisAndEmbedding}");
         }
 
+        public async Task InsertChapterAsync(Chapter objChapter)
+        {
+            if (objChapter.Synopsis == null)
+            {
+                objChapter.Synopsis = " ";
+            }
+
+            string ChapterName = objChapter.ChapterName.Replace(" ", "");
+            var AIStoryBuildersChaptersPath = $"{BasePath}/{objChapter.Story.Title}/Chapters";
+
+            // Create the Chapter folder
+            string ChapterPath = $"{AIStoryBuildersChaptersPath}/{ChapterName}";
+            Directory.CreateDirectory(ChapterPath);
+
+            // Create the Chapter file
+            string ChapterFilePath = $"{ChapterPath}/{ChapterName}.txt";
+            string ChapterSynopsisAndEmbedding = await OrchestratorMethods.GetVectorEmbedding(objChapter.Synopsis, true);
+            File.WriteAllText(ChapterFilePath, $"{ChapterSynopsisAndEmbedding}");
+        }
+
         public async Task UpdateChapterAsync(Chapter objChapter)
         {
             string ChapterName = objChapter.ChapterName.Replace(" ", "");

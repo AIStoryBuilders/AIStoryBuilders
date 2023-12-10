@@ -21,10 +21,11 @@
                               Click=@(() => NewChapter()) />&nbsp;&nbsp;
                 <RadzenButton Text="Save" ButtonStyle="ButtonStyle.Success"
                               Click="ChapterSave" />&nbsp;&nbsp;
+                <RadzenButton Click="onClickAdd" Icon="note_add" ButtonStyle="ButtonStyle.Success" Size="ButtonSize.Medium" />
+                <span>&nbsp; &nbsp;</span>
                 @if (!OnlyChapter)
                 {
-                    <RadzenButton Text="Delete" ButtonStyle="ButtonStyle.Danger"
-                                  Click="ChapterDelete" />
+                    <RadzenButton Text="Delete" Icon="delete" ButtonStyle="ButtonStyle.Danger" Click="ChapterDelete" />
                 }
             </div>
         </div>
@@ -257,6 +258,52 @@
                     Detail = "Saved",
                     Duration = 2000
                 });
+        }
+        catch (Exception ex)
+        {
+            NotificationService.Notify(new NotificationMessage
+                {
+                    Severity = NotificationSeverity.Error,
+                    Summary = "Error",
+                    Detail = ex.Message,
+                    Duration = 4000
+                });
+        }
+    }
+
+    private async Task onClickAdd()
+    {
+        try
+        {
+            // Ask for confirmation:
+            var confirmResult = await dialogService.Confirm("Are you sure?", $"Add new Chapter before this Chapter",
+            new ConfirmOptions() { OkButtonText = "Yes", CancelButtonText = "No" });
+
+            if (confirmResult.HasValue && confirmResult.Value)
+            {
+                int NewChapterNumber = SelectedChapter.Sequence;
+                string strNewChapterName = "Chapter" + NewChapterNumber.ToString();
+
+                // First rename the existing chapters to create space for the new Chapter
+                AIStoryBuildersService.RestructureChapters(SelectedChapter, RestructureType.Add);
+
+                // Create the new chapter
+                var newChapter = new Chapter();
+                newChapter.Id = -1; // So we know it is new
+                newChapter.Story = objStory;                
+                newChapter.ChapterName = strNewChapterName;
+                newChapter.Synopsis = "New Chapter";
+
+                await AIStoryBuildersService.InsertChapterAsync(newChapter);
+
+                // Reload the chapters
+                await LoadChapters(objStory, null);
+
+                // Set the SelectedChapter
+                SelectedChapter = colChapters.Where(x => x.ChapterName != newChapter.ChapterName).LastOrDefault();
+
+                StateHasChanged();
+            }
         }
         catch (Exception ex)
         {
