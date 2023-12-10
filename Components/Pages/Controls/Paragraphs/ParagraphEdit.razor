@@ -116,7 +116,7 @@ else
         // Compute Deleteable
         int CountOfParagraphs = AIStoryBuildersService.CountParagraphs(objChapter);
         Deleteable = (objParagraph.Id > -1);
-        Addable = (objParagraph.Sequence < CountOfParagraphs);
+        Addable = (objParagraph.Id > -1);
 
         // **** Un-indent the paragraph
         objParagraph = AIStoryBuildersService.RemoveParagraphIndenting(objParagraph);
