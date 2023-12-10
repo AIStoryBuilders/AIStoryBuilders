@@ -50,6 +50,9 @@ namespace AIStoryBuilders.Services
             string ChaptersPath = $"{StoryPath}/Chapters";
             string LocationsPath = $"{StoryPath}/Locations";
 
+            //  ********** Call the LLM to Parse the Story to create the files **********
+            OpenAI.Chat.Message ParsedStoryJSON = await OrchestratorMethods.ParseNewStory(story.Title, story.Synopsis);
+
             CreateDirectory(StoryPath);
             CreateDirectory(CharactersPath);
             CreateDirectory(ChaptersPath);
@@ -73,23 +76,10 @@ namespace AIStoryBuilders.Services
             // Log
             LogService.WriteToLog($"Story created {story.Title}");
 
-            //  ********** Call the LLM to Parse the Story to create the files **********
-            OpenAI.Chat.Message ParsedStoryJSON = await OrchestratorMethods.ParseNewStory(story.Title, story.Synopsis);
-
             JSONStory ParsedNewStory = new JSONStory();
 
             // Convert the JSON to a dynamic object
             ParsedNewStory = ParseJSONNewStory(ParsedStoryJSON.Content.ToString());
-
-            // Test to see that something was returned
-            if (ParsedNewStory.characters.Length == 0)
-            {
-                // Clean the JSON
-                ParsedStoryJSON = await OrchestratorMethods.CleanJSON(ParsedStoryJSON.Content.ToString());
-
-                // Convert the JSON to a dynamic object
-                ParsedNewStory = ParseJSONNewStory(ParsedStoryJSON);
-            }
 
             // *****************************************************
 
