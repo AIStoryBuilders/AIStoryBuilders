@@ -78,18 +78,8 @@ else // Existing Story
 
     List<string> colChapters = new List<string>()
                 {
-                    "1",
-                    "2",
-                    "3",
-                    "4",
-                    "5",
-                    "6",
-                    "7",
-                    "8",
-                    "9",
-                    "10",
-                    "11",
-                    "12"
+                   "1","2","3","4","5","6","7","8","9","10","11","12","13","14","15","16","17","18","19","20","21","22","23","24","25","26","27","28","29",
+                   "30","31","32","33","34","35","36","37","38","39","40","41","42","43","44","45","46","47","48","49","50"
                 };
 
     protected override void OnInitialized()
@@ -114,7 +104,6 @@ else // Existing Story
             "Crime",
             "Dystopian",
             "Horror",
-            "Erotica",
         };
 
         if (objStory.Style == null)
@@ -173,7 +162,7 @@ else // Existing Story
             // Trim spaces out of story name
             objStory.Title = OrchestratorMethods.TrimInnerSpaces(objStory.Title);
 
-            if (objStory.Id == 0) // New Story - Do Special Validation
+            if (objStory.Id == -1) // New Story - Do Special Validation
             {
                 // Check for duplicate Story Title
                 if (AIStoryBuildersService.GetStorys().Where(x => x.Title.ToLower() == objStory.Title.ToLower()).Count() > 0)
