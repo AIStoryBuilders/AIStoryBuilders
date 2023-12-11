@@ -13,7 +13,7 @@
   <Properties>
     <DisplayName>$placeholder$</DisplayName>
     <PublisherDisplayName>User Name</PublisherDisplayName>
-    <Logo>$placeholder$.png</Logo>
+    <Logo>Resources\Images\applogo.png</Logo>
   </Properties>
 
   <Dependencies>
@@ -30,11 +30,16 @@
       <uap:VisualElements
         DisplayName="$placeholder$"
         Description="$placeholder$"
-        Square150x150Logo="$placeholder$.png"
-        Square44x44Logo="$placeholder$.png"
-        BackgroundColor="transparent">
-        <uap:DefaultTile Square71x71Logo="$placeholder$.png" Wide310x150Logo="$placeholder$.png" Square310x310Logo="$placeholder$.png" />
-        <uap:SplashScreen Image="$placeholder$.png" />
+        BackgroundColor="transparent" Square150x150Logo="Resources\Images\mediumtile.png" Square44x44Logo="Resources\Images\appicon.png">
+        <uap:DefaultTile Square71x71Logo="Resources\Images\smailltile.png" Wide310x150Logo="Resources\Images\widetile.png" Square310x310Logo="Resources\Images\largetile.png"  ShortName="AIStoryBuilders">
+          <uap:ShowNameOnTiles>
+            <uap:ShowOn Tile="square150x150Logo"/>
+            <uap:ShowOn Tile="wide310x150Logo"/>
+            <uap:ShowOn Tile="square310x310Logo"/>
+          </uap:ShowNameOnTiles>
+        </uap:DefaultTile >
+        <uap:SplashScreen Image="Resources\Images\aistorybuilders.png" />
+        <uap:LockScreen Notification="badgeAndTileText" BadgeLogo="Resources\Images\badgelogo.png"/>
       </uap:VisualElements>
     </Application>
   </Applications>

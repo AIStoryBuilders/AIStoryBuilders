@@ -33,6 +33,7 @@
 
     <PropertyGroup>
       <TargetFrameworks Condition="$([MSBuild]::IsOSPlatform('windows'))">$(TargetFrameworks);net8.0-windows10.0.19041.0</TargetFrameworks>
+      <DefaultLanguage>en</DefaultLanguage>
     </PropertyGroup>
 
     <PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Debug|net8.0-maccatalyst|AnyCPU'">
@@ -75,6 +76,175 @@
 
         <!-- Raw Assets (also remove the "Resources\Raw" prefix) -->
         <MauiAsset Include="Resources\Raw\**" LogicalName="%(RecursiveDir)%(Filename)%(Extension)" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <MauiImage Remove="Resources\Images\aistorybuilders.scale-100.png" />
+      <MauiImage Remove="Resources\Images\aistorybuilders.scale-125.png" />
+      <MauiImage Remove="Resources\Images\aistorybuilders.scale-150.png" />
+      <MauiImage Remove="Resources\Images\aistorybuilders.scale-200.png" />
+      <MauiImage Remove="Resources\Images\aistorybuilders.scale-400.png" />
+      <MauiImage Remove="Resources\Images\appicon.scale-100.png" />
+      <MauiImage Remove="Resources\Images\appicon.scale-125.png" />
+      <MauiImage Remove="Resources\Images\appicon.scale-150.png" />
+      <MauiImage Remove="Resources\Images\appicon.scale-200.png" />
+      <MauiImage Remove="Resources\Images\appicon.scale-400.png" />
+      <MauiImage Remove="Resources\Images\appicon.targetsize-16.png" />
+      <MauiImage Remove="Resources\Images\appicon.targetsize-16_altform-lightunplated.png" />
+      <MauiImage Remove="Resources\Images\appicon.targetsize-16_altform-unplated.png" />
+      <MauiImage Remove="Resources\Images\appicon.targetsize-24.png" />
+      <MauiImage Remove="Resources\Images\appicon.targetsize-24_altform-lightunplated.png" />
+      <MauiImage Remove="Resources\Images\appicon.targetsize-24_altform-unplated.png" />
+      <MauiImage Remove="Resources\Images\appicon.targetsize-256.png" />
+      <MauiImage Remove="Resources\Images\appicon.targetsize-256_altform-lightunplated.png" />
+      <MauiImage Remove="Resources\Images\appicon.targetsize-256_altform-unplated.png" />
+      <MauiImage Remove="Resources\Images\appicon.targetsize-32.png" />
+      <MauiImage Remove="Resources\Images\appicon.targetsize-32_altform-lightunplated.png" />
+      <MauiImage Remove="Resources\Images\appicon.targetsize-32_altform-unplated.png" />
+      <MauiImage Remove="Resources\Images\appicon.targetsize-48.png" />
+      <MauiImage Remove="Resources\Images\appicon.targetsize-48_altform-lightunplated.png" />
+      <MauiImage Remove="Resources\Images\appicon.targetsize-48_altform-unplated.png" />
+      <MauiImage Remove="Resources\Images\applogo.scale-100.png" />
+      <MauiImage Remove="Resources\Images\applogo.scale-125.png" />
+      <MauiImage Remove="Resources\Images\applogo.scale-150.png" />
+      <MauiImage Remove="Resources\Images\applogo.scale-200.png" />
+      <MauiImage Remove="Resources\Images\applogo.scale-400.png" />
+      <MauiImage Remove="Resources\Images\badgelogo.scale-100.png" />
+      <MauiImage Remove="Resources\Images\badgelogo.scale-125.png" />
+      <MauiImage Remove="Resources\Images\badgelogo.scale-150.png" />
+      <MauiImage Remove="Resources\Images\badgelogo.scale-200.png" />
+      <MauiImage Remove="Resources\Images\badgelogo.scale-400.png" />
+      <MauiImage Remove="Resources\Images\largetile.scale-100.png" />
+      <MauiImage Remove="Resources\Images\largetile.scale-125.png" />
+      <MauiImage Remove="Resources\Images\largetile.scale-150.png" />
+      <MauiImage Remove="Resources\Images\largetile.scale-200.png" />
+      <MauiImage Remove="Resources\Images\largetile.scale-400.png" />
+      <MauiImage Remove="Resources\Images\mediumtile.scale-100.png" />
+      <MauiImage Remove="Resources\Images\mediumtile.scale-125.png" />
+      <MauiImage Remove="Resources\Images\mediumtile.scale-150.png" />
+      <MauiImage Remove="Resources\Images\mediumtile.scale-200.png" />
+      <MauiImage Remove="Resources\Images\mediumtile.scale-400.png" />
+      <MauiImage Remove="Resources\Images\smailltile.scale-100.png" />
+      <MauiImage Remove="Resources\Images\smailltile.scale-125.png" />
+      <MauiImage Remove="Resources\Images\smailltile.scale-150.png" />
+      <MauiImage Remove="Resources\Images\smailltile.scale-200.png" />
+      <MauiImage Remove="Resources\Images\smailltile.scale-400.png" />
+      <MauiImage Remove="Resources\Images\widetile.scale-100.png" />
+      <MauiImage Remove="Resources\Images\widetile.scale-125.png" />
+      <MauiImage Remove="Resources\Images\widetile.scale-150.png" />
+      <MauiImage Remove="Resources\Images\widetile.scale-200.png" />
+      <MauiImage Remove="Resources\Images\widetile.scale-400.png" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <None Remove="Resources\Images\aistorybuilders.scale-100.png" />
+      <None Remove="Resources\Images\aistorybuilders.scale-125.png" />
+      <None Remove="Resources\Images\aistorybuilders.scale-150.png" />
+      <None Remove="Resources\Images\aistorybuilders.scale-200.png" />
+      <None Remove="Resources\Images\aistorybuilders.scale-400.png" />
+      <None Remove="Resources\Images\appicon.scale-100.png" />
+      <None Remove="Resources\Images\appicon.scale-125.png" />
+      <None Remove="Resources\Images\appicon.scale-150.png" />
+      <None Remove="Resources\Images\appicon.scale-200.png" />
+      <None Remove="Resources\Images\appicon.scale-400.png" />
+      <None Remove="Resources\Images\appicon.targetsize-16.png" />
+      <None Remove="Resources\Images\appicon.targetsize-16_altform-lightunplated.png" />
+      <None Remove="Resources\Images\appicon.targetsize-16_altform-unplated.png" />
+      <None Remove="Resources\Images\appicon.targetsize-24.png" />
+      <None Remove="Resources\Images\appicon.targetsize-24_altform-lightunplated.png" />
+      <None Remove="Resources\Images\appicon.targetsize-24_altform-unplated.png" />
+      <None Remove="Resources\Images\appicon.targetsize-256.png" />
+      <None Remove="Resources\Images\appicon.targetsize-32.png" />
+      <None Remove="Resources\Images\appicon.targetsize-48.png" />
+      <None Remove="Resources\Images\appicon.targetsize-48_altform-unplated.png" />
+      <None Remove="Resources\Images\applogo.scale-100.png" />
+      <None Remove="Resources\Images\applogo.scale-125.png" />
+      <None Remove="Resources\Images\applogo.scale-150.png" />
+      <None Remove="Resources\Images\applogo.scale-200.png" />
+      <None Remove="Resources\Images\applogo.scale-400.png" />
+      <None Remove="Resources\Images\badgelogo.scale-100.png" />
+      <None Remove="Resources\Images\badgelogo.scale-125.png" />
+      <None Remove="Resources\Images\badgelogo.scale-150.png" />
+      <None Remove="Resources\Images\badgelogo.scale-200.png" />
+      <None Remove="Resources\Images\badgelogo.scale-400.png" />
+      <None Remove="Resources\Images\largetile.scale-100.png" />
+      <None Remove="Resources\Images\largetile.scale-125.png" />
+      <None Remove="Resources\Images\largetile.scale-150.png" />
+      <None Remove="Resources\Images\largetile.scale-200.png" />
+      <None Remove="Resources\Images\largetile.scale-400.png" />
+      <None Remove="Resources\Images\mediumtile.scale-100.png" />
+      <None Remove="Resources\Images\mediumtile.scale-125.png" />
+      <None Remove="Resources\Images\mediumtile.scale-150.png" />
+      <None Remove="Resources\Images\mediumtile.scale-200.png" />
+      <None Remove="Resources\Images\mediumtile.scale-400.png" />
+      <None Remove="Resources\Images\smailltile.scale-100.png" />
+      <None Remove="Resources\Images\smailltile.scale-125.png" />
+      <None Remove="Resources\Images\smailltile.scale-150.png" />
+      <None Remove="Resources\Images\smailltile.scale-200.png" />
+      <None Remove="Resources\Images\smailltile.scale-400.png" />
+      <None Remove="Resources\Images\widetile.scale-100.png" />
+      <None Remove="Resources\Images\widetile.scale-125.png" />
+      <None Remove="Resources\Images\widetile.scale-150.png" />
+      <None Remove="Resources\Images\widetile.scale-200.png" />
+      <None Remove="Resources\Images\widetile.scale-400.png" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <Content Include="Resources\Images\aistorybuilders.scale-100.png" />
+      <Content Include="Resources\Images\aistorybuilders.scale-125.png" />
+      <Content Include="Resources\Images\aistorybuilders.scale-150.png" />
+      <Content Include="Resources\Images\aistorybuilders.scale-200.png" />
+      <Content Include="Resources\Images\aistorybuilders.scale-400.png" />
+      <Content Include="Resources\Images\appicon.scale-100.png" />
+      <Content Include="Resources\Images\appicon.scale-125.png" />
+      <Content Include="Resources\Images\appicon.scale-150.png" />
+      <Content Include="Resources\Images\appicon.scale-200.png" />
+      <Content Include="Resources\Images\appicon.scale-400.png" />
+      <Content Include="Resources\Images\appicon.targetsize-16.png" />
+      <Content Include="Resources\Images\appicon.targetsize-16_altform-lightunplated.png" />
+      <Content Include="Resources\Images\appicon.targetsize-16_altform-unplated.png" />
+      <Content Include="Resources\Images\appicon.targetsize-24.png" />
+      <Content Include="Resources\Images\appicon.targetsize-24_altform-lightunplated.png" />
+      <Content Include="Resources\Images\appicon.targetsize-24_altform-unplated.png" />
+      <Content Include="Resources\Images\appicon.targetsize-256.png" />
+      <Content Include="Resources\Images\appicon.targetsize-256_altform-lightunplated.png" />
+      <Content Include="Resources\Images\appicon.targetsize-256_altform-unplated.png" />
+      <Content Include="Resources\Images\appicon.targetsize-32.png" />
+      <Content Include="Resources\Images\appicon.targetsize-32_altform-lightunplated.png" />
+      <Content Include="Resources\Images\appicon.targetsize-32_altform-unplated.png" />
+      <Content Include="Resources\Images\appicon.targetsize-48.png" />
+      <Content Include="Resources\Images\appicon.targetsize-48_altform-lightunplated.png" />
+      <Content Include="Resources\Images\appicon.targetsize-48_altform-unplated.png" />
+      <Content Include="Resources\Images\applogo.scale-100.png" />
+      <Content Include="Resources\Images\applogo.scale-125.png" />
+      <Content Include="Resources\Images\applogo.scale-150.png" />
+      <Content Include="Resources\Images\applogo.scale-200.png" />
+      <Content Include="Resources\Images\applogo.scale-400.png" />
+      <Content Include="Resources\Images\badgelogo.scale-100.png" />
+      <Content Include="Resources\Images\badgelogo.scale-125.png" />
+      <Content Include="Resources\Images\badgelogo.scale-150.png" />
+      <Content Include="Resources\Images\badgelogo.scale-200.png" />
+      <Content Include="Resources\Images\badgelogo.scale-400.png" />
+      <Content Include="Resources\Images\largetile.scale-100.png" />
+      <Content Include="Resources\Images\largetile.scale-125.png" />
+      <Content Include="Resources\Images\largetile.scale-150.png" />
+      <Content Include="Resources\Images\largetile.scale-200.png" />
+      <Content Include="Resources\Images\largetile.scale-400.png" />
+      <Content Include="Resources\Images\mediumtile.scale-100.png" />
+      <Content Include="Resources\Images\mediumtile.scale-125.png" />
+      <Content Include="Resources\Images\mediumtile.scale-150.png" />
+      <Content Include="Resources\Images\mediumtile.scale-200.png" />
+      <Content Include="Resources\Images\mediumtile.scale-400.png" />
+      <Content Include="Resources\Images\smailltile.scale-100.png" />
+      <Content Include="Resources\Images\smailltile.scale-125.png" />
+      <Content Include="Resources\Images\smailltile.scale-150.png" />
+      <Content Include="Resources\Images\smailltile.scale-200.png" />
+      <Content Include="Resources\Images\smailltile.scale-400.png" />
+      <Content Include="Resources\Images\widetile.scale-100.png" />
+      <Content Include="Resources\Images\widetile.scale-125.png" />
+      <Content Include="Resources\Images\widetile.scale-150.png" />
+      <Content Include="Resources\Images\widetile.scale-200.png" />
+      <Content Include="Resources\Images\widetile.scale-400.png" />
     </ItemGroup>
 
     <ItemGroup>
