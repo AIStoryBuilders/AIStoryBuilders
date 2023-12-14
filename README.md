@@ -2,11 +2,8 @@
 ![AIStoryBuildersLogo-white](https://github.com/ADefWebserver/AIStoryBuilders/assets/1857799/851988f5-a226-4058-8cb7-d0154752d354)
 ### [AIStoryBuilders.com](https://AIStoryBuilders.com)
 #
-![Screenshot](https://github.com/ADefWebserver/AIStoryBuilders/assets/1857799/657905c8-7ff2-4a42-b4f2-26e4ace80810)
-
 
 https://github.com/ADefWebserver/AIStoryBuilders/assets/1857799/7244084e-5c0e-4006-8339-b83f07cc3f63
-
 
 ### Data Structure
 
