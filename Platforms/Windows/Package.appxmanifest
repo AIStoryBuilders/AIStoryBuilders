@@ -6,13 +6,13 @@
   xmlns:rescap="http://schemas.microsoft.com/appx/manifest/foundation/windows10/restrictedcapabilities"
   IgnorableNamespaces="uap rescap">
 
-  <Identity Name="maui-package-name-placeholder" Publisher="CN=User Name" Version="0.0.0.0" />
+  <Identity Name="41860Defwebs.com.25552E5BE9548" Publisher="CN=1B36D735-B652-43DB-8420-7E444D9AB5F0" Version="1.1.0.0" />
 
-  <mp:PhoneIdentity PhoneProductId="740EEC5A-F077-4C92-961D-C1A0378BBB47" PhonePublisherId="00000000-0000-0000-0000-000000000000"/>
+  <mp:PhoneIdentity PhoneProductId="2d1aaec0-7ebe-499f-b3ff-7de0713c7a2e" PhonePublisherId="00000000-0000-0000-0000-000000000000"/>
 
   <Properties>
-    <DisplayName>$placeholder$</DisplayName>
-    <PublisherDisplayName>User Name</PublisherDisplayName>
+    <DisplayName>AIStoryBuilders</DisplayName>
+    <PublisherDisplayName>AI Story Builders</PublisherDisplayName>
     <Logo>Resources\Images\applogo.png</Logo>
   </Properties>
 
@@ -28,7 +28,7 @@
   <Applications>
     <Application Id="App" Executable="$targetnametoken$.exe" EntryPoint="$targetentrypoint$">
       <uap:VisualElements
-        DisplayName="$placeholder$"
+        DisplayName="AIStoryBuilders"
         Description="$placeholder$"
         BackgroundColor="transparent" Square150x150Logo="Resources\Images\mediumtile.png" Square44x44Logo="Resources\Images\appicon.png">
         <uap:DefaultTile Square71x71Logo="Resources\Images\smailltile.png" Wide310x150Logo="Resources\Images\widetile.png" Square310x310Logo="Resources\Images\largetile.png"  ShortName="AIStoryBuilders">
@@ -40,6 +40,11 @@
         </uap:DefaultTile >
         <uap:SplashScreen Image="Resources\Images\aistorybuilders.png" />
         <uap:LockScreen Notification="badgeAndTileText" BadgeLogo="Resources\Images\badgelogo.png"/>
+        <uap:InitialRotationPreference>
+          <uap:Rotation Preference="landscape"/>
+          <uap:Rotation Preference="portrait"/>
+          <uap:Rotation Preference="landscapeFlipped"/>
+          <uap:Rotation Preference="portraitFlipped"/></uap:InitialRotationPreference>
       </uap:VisualElements>
     </Application>
   </Applications>
