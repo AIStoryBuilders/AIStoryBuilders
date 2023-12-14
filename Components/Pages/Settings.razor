@@ -1,5 +1,10 @@
-﻿@using AIStoryBuilders.Model;
+﻿@using AIStoryBuilders.AI
+@using AIStoryBuilders.Model;
+@using AIStoryBuilders.Models;
+@using AIStoryBuilders.Services;
+@using static AIStoryBuilders.AI.OrchestratorMethods
 @using Newtonsoft.Json;
+@inherits OwningComponentBase
 @inject NotificationService NotificationService
 @inject DialogService DialogService
 @inject SettingsService SettingsService
@@ -13,7 +18,7 @@
             </RadzenFormField>
             <RadzenFormField Text="OpenAI ApiKey:" Variant="@variant">
                 <RadzenTextBox @bind-Value="@ApiKey" @oninput="APIKeyDetection" style="width:450px;" />
-            </RadzenFormField>            
+            </RadzenFormField>
             <RadzenFormField Text="AI Model:" Variant="@variant">
                 <RadzenDropDown Data=@colModels @bind-Value="@AIModel" Style="width:300px" />
             </RadzenFormField>
@@ -44,6 +49,7 @@ else
 }
 @code {
     [Parameter] public EventCallback SettingsChanged { get; set; }
+    OrchestratorMethods OrchestratorMethods;
     Variant variant = Variant.Outlined;
 
     string Organization = "";
@@ -60,6 +66,8 @@ else
     protected override void OnInitialized()
     {
         SettingsService.LoadSettings();
+
+        OrchestratorMethods = (OrchestratorMethods)ScopedServices.GetService(typeof(OrchestratorMethods));
 
         Organization = SettingsService.Organization;
         ApiKey = SettingsService.ApiKey;
@@ -97,20 +105,7 @@ else
     {
         try
         {
-            // Update Settings
-            await SettingsService.SaveSettings(Organization, ApiKey, AIModel);
-
-            if (ApiKey.StartsWith("sk-"))
-            {
-                NotificationService.Notify(new NotificationMessage
-                    {
-                        Severity = NotificationSeverity.Success,
-                        Summary = "Success",
-                        Detail = "Saved",
-                        Duration = 4000
-                    });
-            }
-            else
+            if (!ApiKey.StartsWith("sk-"))
             {
                 NotificationService.Notify(new NotificationMessage
                     {
@@ -119,7 +114,23 @@ else
                         Detail = "Invalid API Key - must start with: sk-",
                         Duration = 4000
                     });
+
+                return;
             }
+
+            // Update Settings
+            await SettingsService.SaveSettings(Organization, ApiKey, AIModel);
+
+            // Test API Key
+            var result = await OrchestratorMethods.TestAccess();
+
+            NotificationService.Notify(new NotificationMessage
+                {
+                    Severity = NotificationSeverity.Success,
+                    Summary = "Success",
+                    Detail = "Saved",
+                    Duration = 4000
+                });
 
             // Notify parent that settings have changed
             await SettingsChanged.InvokeAsync();
@@ -131,7 +142,7 @@ else
                     Severity = NotificationSeverity.Error,
                     Summary = "Error",
                     Detail = ex.Message,
-                    Duration = 4000
+                    Duration = 8000
                 });
         }
     }
