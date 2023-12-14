@@ -13,11 +13,11 @@
             </RadzenFormField>
             <RadzenFormField Text="OpenAI ApiKey:" Variant="@variant">
                 <RadzenTextBox @bind-Value="@ApiKey" @oninput="APIKeyDetection" style="width:450px;" />
+            </RadzenFormField>            
+            <RadzenFormField Text="AI Model:" Variant="@variant">
+                <RadzenDropDown Data=@colModels @bind-Value="@AIModel" Style="width:300px" />
             </RadzenFormField>
-            <RadzenLabel Text="Fast Mode uses GPT 3.5 rather than GPT 4. This is faster and cost less, but does not perform as well." style="font-size:smaller" />
-            <RadzenFormField Text="Fast Mode:" style="width:120px" Variant="@variant">
-                <RadzenLabel Text="Off" style="text-align:right" /><RadzenSwitch @bind-Value=@FastMode style="width:25px;margin:8px" /><RadzenLabel Text="On" style="width:20px;" />
-            </RadzenFormField>
+            <RadzenLabel Text="Note: GPT 3.5 is faster and cost less than GPT 4, but does not perform as well." style="font-size:x-small" />
         </RadzenStack>
     </RadzenColumn>
 </RadzenRow>
@@ -48,7 +48,12 @@ else
 
     string Organization = "";
     string ApiKey = "";
-    bool FastMode = false;
+    string AIModel = "gpt-4-1106-preview";
+
+    List<string> colModels = new List<string>()
+                {
+                   "gpt-4-1106-preview","gpt-3.5-turbo-1106"
+                };
 
     bool IsSettingsEntered = false;
 
@@ -58,7 +63,7 @@ else
 
         Organization = SettingsService.Organization;
         ApiKey = SettingsService.ApiKey;
-        FastMode = SettingsService.FastMode;
+        AIModel = SettingsService.AIModel;
 
         if (ApiKey.Length > 1)
         {
@@ -93,7 +98,7 @@ else
         try
         {
             // Update Settings
-            await SettingsService.SaveSettings(Organization, ApiKey, FastMode);
+            await SettingsService.SaveSettings(Organization, ApiKey, AIModel);
 
             if (ApiKey.StartsWith("sk-"))
             {

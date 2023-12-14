@@ -21,14 +21,9 @@ namespace AIStoryBuilders.AI
             string Organization = SettingsService.Organization;
             string ApiKey = SettingsService.ApiKey;
             string SystemMessage = "";
-            string GPTModel = "gpt-4-1106-preview";
+            string GPTModel = SettingsService.AIModel;
 
             ChatMessages = new List<ChatMessage>();
-
-            if(SettingsService.FastMode == true)
-            {
-                GPTModel = "gpt-3.5-turbo-1106";
-            }
 
             LogService.WriteToLog($"ParseNewStory using {GPTModel} - Start");
 
