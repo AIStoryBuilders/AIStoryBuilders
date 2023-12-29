@@ -45,7 +45,45 @@ namespace AIStoryBuilders.Services
                 }
             }
 
-            return content;
+            var CleanContent = CleanAIStoryBuildersStoriesCSVFile(content);
+
+            return CleanContent;
+        }
+        #endregion
+
+        #region public string[] CleanAIStoryBuildersStoriesCSVFile(string strAIStoryBuildersStories)
+        public string[] CleanAIStoryBuildersStoriesCSVFile(string[] strAIStoryBuildersStories)
+        {
+            List<string> content = new List<string>();
+
+            // Loop through the lines in strAIStoryBuildersStories
+            for (int i = 0; i < strAIStoryBuildersStories.Length; i++)
+            {
+                // Get line
+                var AIStoryBuildersStoriesLine = strAIStoryBuildersStories[i];
+
+                // Split line by |
+                var AIStoryBuildersStoriesLineSplit = AIStoryBuildersStoriesLine.Split('|');
+
+                if (AIStoryBuildersStoriesLineSplit[0] != null)
+                {
+                    if (AIStoryBuildersStoriesLineSplit[0].Length > 0)
+                    {
+                        // See if AIStoryBuildersStoriesLineSplit[0] is async digit
+                        if (AIStoryBuildersStoriesLineSplit[0].All(char.IsDigit))
+                        {
+                            // See if AIStoryBuildersStoriesLineSplit has 4 segments
+                            if (AIStoryBuildersStoriesLineSplit.Length > 3)
+                            {
+                                // Add line to content
+                                content.Add(AIStoryBuildersStoriesLine);
+                            }
+                        }
+                    }
+                }
+            }
+
+            return content.ToArray();
         }
         #endregion
 
@@ -154,7 +192,7 @@ namespace AIStoryBuilders.Services
                 int i = 0;
                 foreach (var background in character.CharacterBackground ?? Enumerable.Empty<CharacterBackground>())
                 {
-                    bool shouldAddDescription = ((objParagraph.Timeline.TimelineName == null || objParagraph.Timeline.TimelineName.Length == 0) 
+                    bool shouldAddDescription = ((objParagraph.Timeline.TimelineName == null || objParagraph.Timeline.TimelineName.Length == 0)
                                                 || background.Timeline.TimelineName == objParagraph.Timeline.TimelineName);
 
                     if (shouldAddDescription)
@@ -167,7 +205,7 @@ namespace AIStoryBuilders.Services
                         }
 
                         Descriptions objDescriptions = new Descriptions
-                        {       
+                        {
                             description = background.Description.Replace("\n", " "),
                             description_type = background.Type.Replace("\n", " "),
                             timeline_name = strTimelineName
@@ -193,15 +231,15 @@ namespace AIStoryBuilders.Services
             objParagraphs.sequence = objParagraph.Sequence;
             objParagraphs.character_names = objParagraph.Characters.Select(x => x.CharacterName).ToArray();
 
-            if(objParagraph.Location != null)
+            if (objParagraph.Location != null)
             {
                 objParagraphs.location_name = objParagraph.Location.LocationName;
             }
 
-            if(objParagraph.Timeline != null)
+            if (objParagraph.Timeline != null)
             {
                 objParagraphs.timeline_name = objParagraph.Timeline.TimelineName;
-            }            
+            }
 
             return objParagraphs;
         }
