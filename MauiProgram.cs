@@ -1,6 +1,6 @@
 ﻿//
 // AIStoryBuilders.com
-// Copyright (c) 2023
+// Copyright (c) 2024
 // by Michael Washington
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated 
@@ -55,7 +55,7 @@ namespace AIStoryBuilders
             builder.Logging.AddDebug();
 #endif            
             // Add services to the container.
-            AppMetadata appMetadata = new AppMetadata() { Version = "01.00.00" };
+            AppMetadata appMetadata = new AppMetadata() { Version = "01.10.00" };
             builder.Services.AddSingleton(appMetadata);
 
             builder.Services.AddSingleton<LogService>();
