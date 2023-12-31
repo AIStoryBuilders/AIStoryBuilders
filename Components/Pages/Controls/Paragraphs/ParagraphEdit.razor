@@ -176,6 +176,12 @@ else
         var AllLocationList = colLocations.OrderBy(x => x.LocationName).ToList();
         AllLocationList.Add(new Location() { Id = -1, LocationName = "" });
 
+        // handle if location is null
+        if(objParagraph.Location == null)
+        {
+            objParagraph.Location = new Location();
+        }
+
         // Get SelectedLocation
         var SelectedLocation = objParagraph.Location;
 
@@ -209,6 +215,12 @@ else
         // Turn colTimelines into a list of strings
         var AllTimelineList = colTimelines.Select(c => c.TimelineName).OrderBy(x => x).ToList();
         AllTimelineList.Add("");
+
+        // handle if timeline is null
+        if (objParagraph.Timeline == null)
+        {
+            objParagraph.Timeline = new Timeline();
+        }
 
         // Get SelectedTimeline
         var SelectedTimeline = objParagraph.Timeline.TimelineName;
