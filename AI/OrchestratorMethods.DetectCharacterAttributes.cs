@@ -99,7 +99,7 @@ namespace AIStoryBuilders.AI
                     // We only create a Add character element if we are in "New Character" mode
                     if (objDetectionType == "New Character")
                     {
-                        colCharacterOutput.Add(new SimpleCharacterSelector { CharacterDisplay = $"Add - {CharacterName}", CharacterValue = $"{CharacterName}|{objDetectionType}||" });
+                        colCharacterOutput.Add(new SimpleCharacterSelector { CharacterDisplay = $"Add Character - {CharacterName}", CharacterValue = $"{CharacterName}|{objDetectionType}||" });
                     }
 
                     try

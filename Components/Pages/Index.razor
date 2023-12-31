@@ -161,7 +161,7 @@
                     parms.Add("objStory", objStory);
 
                     var EditStoryResult = await dialogService.OpenAsync<StoryControl>($"{objStory.Title}", parms,
-                    new DialogOptions() { Height = "650px", Width = "850px" });
+                    new DialogOptions() { Height = "650px", Width = "950px" });
                 }
 
                 colStorys = AIStoryBuildersService.GetStorys();
@@ -269,7 +269,7 @@
             parms.Add("objStory", paramStory);
 
             var EditStoryResult = await dialogService.OpenAsync<StoryControl>($"{paramStory.Title}", parms,
-            new DialogOptions() { Height = "720px", Width = "900px" });
+            new DialogOptions() { Height = "720px", Width = "950px" });
 
             colStorys = AIStoryBuildersService.GetStorys();
 
