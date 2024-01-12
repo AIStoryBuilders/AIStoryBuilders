@@ -270,17 +270,17 @@
     </ItemGroup>
 
     <ItemGroup>
-		<PackageReference Include="CommunityToolkit.Maui" Version="7.0.0" />
+		<PackageReference Include="CommunityToolkit.Maui" Version="7.0.1" />
 		<PackageReference Include="DocX" Version="2.5.0" />
 		<PackageReference Include="Microsoft.Maui.Controls" Version="$(MauiVersion)" />
 		<PackageReference Include="Microsoft.Maui.Controls.Compatibility" Version="$(MauiVersion)" />
 		<PackageReference Include="Microsoft.AspNetCore.Components.WebView.Maui" Version="$(MauiVersion)" />
 		<PackageReference Include="Microsoft.Extensions.Logging.Debug" Version="8.0.0" />
-        <PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="8.0.0" />
+        <PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="8.0.1" />
 		<PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
-		<PackageReference Include="Radzen.Blazor" Version="4.21.1" />
+		<PackageReference Include="Radzen.Blazor" Version="4.23.9" />
 		<PackageReference Include="OpenAI-DotNet" Version="7.2.3" />
-		<PackageReference Include="Markdig" Version="0.33.0" />
+		<PackageReference Include="Markdig" Version="0.34.0" />
     </ItemGroup>
 
 </Project>
