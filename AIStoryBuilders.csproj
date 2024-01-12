@@ -157,6 +157,7 @@
     </ItemGroup>
 
     <ItemGroup>
+      <None Remove="appveyor.yml" />
       <None Remove="Resources\Images\aistorybuilders.scale-100.png" />
       <None Remove="Resources\Images\aistorybuilders.scale-125.png" />
       <None Remove="Resources\Images\aistorybuilders.scale-150.png" />
@@ -210,6 +211,7 @@
     </ItemGroup>
 
     <ItemGroup>
+      <Content Include="appveyor.yml" />
       <Content Include="Resources\Images\aistorybuilders.scale-100.png" />
       <Content Include="Resources\Images\aistorybuilders.scale-125.png" />
       <Content Include="Resources\Images\aistorybuilders.scale-150.png" />
