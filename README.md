@@ -11,6 +11,8 @@ https://github.com/ADefWebserver/AIStoryBuilders/assets/1857799/c9960378-b9b0-40
 
 ### Data Structure
 
+![image](https://github.com/ADefWebserver/AIStoryBuilders/assets/1857799/1c07f3ef-7bd7-4ed5-bd60-eac802fd84ac)
+
 - **Story**
   - *Title*
   - *Style*
