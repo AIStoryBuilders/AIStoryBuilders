@@ -1,0 +1,88 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<ClassDiagram MajorVersion="1" MinorVersion="1">
+  <Class Name="AIStoryBuilders.Models.JSON.JSONMasterStory">
+    <Position X="5.75" Y="1" Width="2.25" />
+    <TypeIdentifier>
+      <HashCode>AAAQAQIgAACAAAAAAAAAAAgBAAAAAAAAAAAAAAAAAAI=</HashCode>
+      <FileName>Models\JSON\JSONMasterStory.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="AIStoryBuilders.Models.JSON.JSONStory">
+    <Position X="5" Y="3.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAIAAAAAAAAAACAAABAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>Models\JSON\JSONStory.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="AIStoryBuilders.Models.JSON.Locations">
+    <Position X="1" Y="3.25" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAIAAAAAAAAAAEAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>Models\JSON\JSONStory.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="AIStoryBuilders.Models.JSON.Timelines">
+    <Position X="3" Y="3.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAIAAAAAAAAAAEAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>Models\JSON\JSONStory.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="AIStoryBuilders.Models.JSON.Character">
+    <Position X="1.75" Y="1.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAIAAAAAAAAAAEAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>Models\JSON\JSONStory.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="AIStoryBuilders.Models.JSON.Descriptions">
+    <Position X="3.5" Y="1.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAgAAAAIAAAAAAAAQAAAAAAAAAAAAAAAIA=</HashCode>
+      <FileName>Models\JSON\JSONStory.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="AIStoryBuilders.Models.Story">
+    <Position X="1.75" Y="6.75" Width="1.75" />
+    <TypeIdentifier>
+      <HashCode>AAACAAAgAAAACEAQAAIAAAAIAAAAAAAABgAAAAAACAA=</HashCode>
+      <FileName>Models\Story.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="AIStoryBuilders.Models.Timeline">
+    <Position X="3.75" Y="7" Width="1.75" />
+    <TypeIdentifier>
+      <HashCode>AAACQAAAAAAAAAAACBAAAAAAAAAAAAAAAAAAAEAAAAg=</HashCode>
+      <FileName>Models\Timeline.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="AIStoryBuilders.Models.Location">
+    <Position X="5" Y="6.5" Width="2" />
+    <TypeIdentifier>
+      <HashCode>AAACAAAAAAAAAAAAgBIAAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>Models\Location.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="AIStoryBuilders.Models.Character">
+    <Position X="6" Y="8" Width="2" />
+    <TypeIdentifier>
+      <HashCode>AAACAAAAAAAAAAgAABAAAAAAAAAAAAAAAAEAABAAAAA=</HashCode>
+      <FileName>Models\Character.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="AIStoryBuilders.Models.Chapter">
+    <Position X="8.25" Y="6.5" Width="2" />
+    <TypeIdentifier>
+      <HashCode>ABACAAAAACAAAAAAABAAAAAIAAAAAAAAAAAAAAEAAAA=</HashCode>
+      <FileName>Models\Chapter.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="AIStoryBuilders.Models.Paragraph">
+    <Position X="9.5" Y="7.5" Width="2" />
+    <TypeIdentifier>
+      <HashCode>AAAKAAAgAAAAAAAAAAIAAAAAAAAAAAAAAwAAAAEAAAA=</HashCode>
+      <FileName>Models\Paragraph.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Font Name="Segoe UI" Size="9" />
+</ClassDiagram>
