@@ -4,3 +4,8 @@ before_build:
 - cmd: nuget restore AIStoryBuilders.csproj
 build:
   project: AIStoryBuilders.csproj
+deploy:
+- provider: Webhook
+  url: https://app.signpath.io/API/v1/0a5c6669-c24b-4537-a1d2-1068ca0f8f1c/Integrations/AppVeyor?ProjectSlug=AIStoryBuilders&SigningPolicySlug=test-signing
+  authorization:
+     secure: o9acvNa3TmhM6rMTXCISRHeAAkRpWxsxLX63HXJcl6GdZ5wjEeK3/5hdII1eGrgurGM6dI4ZlzSSLMFi4ZqJLw==
