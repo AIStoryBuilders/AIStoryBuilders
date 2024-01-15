@@ -1,4 +1,3 @@
-[![Build status](https://ci.appveyor.com/api/projects/status/jahx9anrtang77at/branch/main?svg=true)](https://ci.appveyor.com/project/ADefWebserver/aistorybuilders/branch/main)
 # AIStoryBuilders
 ![image](https://github.com/ADefWebserver/AIStoryBuilders/assets/1857799/a28481bd-ca40-4777-9bc7-33421ec7d1fb)
 
