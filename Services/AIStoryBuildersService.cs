@@ -111,6 +111,20 @@ namespace AIStoryBuilders.Services
         }
         #endregion
 
+        #region public string RemoveLineBreaks(string content)
+        public string RemoveLineBreaks(string content)
+        {
+            string output = "";
+
+            // Remove any line breaks
+            output = content.Replace(Environment.NewLine, " ");
+            output = output.Replace("\n", " ");
+            output = output.Replace("\r", " ");
+
+            return output;
+        }
+        #endregion
+
         #region public void CreateFile(string path, string content)
         public void CreateFile(string path, string content)
         {

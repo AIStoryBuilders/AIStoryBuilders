@@ -45,6 +45,24 @@ else // Existing Story
                 <RadzenFormField Text="Synopsis:" Variant="@variant">
                     <RadzenTextArea @bind-Value="@objStory.Synopsis" MaxLength="1000" Rows="5" />
                 </RadzenFormField>
+                <RadzenPanel AllowCollapse="true" Collapsed="true" Style="width: 100%;">
+                    <HeaderTemplate>
+                        <RadzenText TextStyle="TextStyle.Subtitle1">
+                            &nbsp;&nbsp;System Message
+                        </RadzenText>
+                    </HeaderTemplate>
+                    <ChildContent>
+                        <RadzenRow Gap="1rem">
+                            <RadzenColumn Size="12" SizeSM="12">
+                                <RadzenStack>
+                                    <RadzenFormField Variant="@variant">
+                                        <RadzenTextArea Style="width: 100%;" @bind-Value="@objStory.Theme" MaxLength="1000" Rows="5" />
+                                    </RadzenFormField>
+                                </RadzenStack>
+                            </RadzenColumn>
+                        </RadzenRow>
+                    </ChildContent>
+                </RadzenPanel>
             </RadzenStack>
         </RadzenColumn>
     </RadzenRow>

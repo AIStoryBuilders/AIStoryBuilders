@@ -256,6 +256,11 @@ namespace AIStoryBuilders.Services
             // Trim all lines
             AIStoryBuildersStoriesContent = AIStoryBuildersStoriesContent.Select(line => line.Trim()).ToArray();
 
+            // Remove any line breaks
+            story.Style = RemoveLineBreaks(story.Style);
+            story.Theme = RemoveLineBreaks(story.Theme);
+            story.Synopsis = RemoveLineBreaks(story.Synopsis);
+
             // Re-add Story to file
             string updatedStory = $"{AIStoryBuildersStoriesContent.Count() + 1}|{story.Title}|{story.Style}|{story.Theme}|{story.Synopsis}";
             AIStoryBuildersStoriesContent = AIStoryBuildersStoriesContent.Append(updatedStory).ToArray();
