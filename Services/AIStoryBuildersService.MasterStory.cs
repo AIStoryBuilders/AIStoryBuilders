@@ -18,10 +18,10 @@ namespace AIStoryBuilders.Services
 
             try
             {
-                objMasterStory.StoryTitle = objChapter.Story.Title;
-                objMasterStory.StorySynopsis = objChapter.Story.Synopsis;
-                objMasterStory.StoryStyle = objChapter.Story.Style;
-                objMasterStory.SystemMessage = objChapter.Story.Theme;
+                objMasterStory.StoryTitle = objChapter.Story.Title ?? "";
+                objMasterStory.StorySynopsis = objChapter.Story.Synopsis ?? "";
+                objMasterStory.StoryStyle = objChapter.Story.Style ?? "";
+                objMasterStory.SystemMessage = objChapter.Story.Theme ?? "";
 
                 objMasterStory.CurrentLocation = ConvertToJSONLocation(objParagraph.Location, objParagraph);
                 objMasterStory.CharacterList = ConvertToJSONCharacter(colCharacter, objParagraph);
