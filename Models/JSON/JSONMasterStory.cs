@@ -4,6 +4,8 @@
     {
         public string StoryTitle { get; set; }
         public string StorySynopsis { get; set; }
+        public string StoryStyle { get; set; }
+        public string SystemMessage { get; set; }
         public List<Character> CharacterList { get; set; }
         public List<JSONParagraphs> PreviousParagraphs { get; set; }
         public List<JSONParagraphs> RelatedParagraphs { get; set; }

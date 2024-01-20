@@ -97,11 +97,25 @@ namespace AIStoryBuilders.AI
         {
             string strPrompt = "You are a function that will produce JSON that contains the contents of a single paragraph for a novel. \n";
 
+            // System Message if provided
+            if (paramJSONMasterStory.SystemMessage != "")
+            {
+                strPrompt = strPrompt +
+                    $"#### Please follow all these directions when creating the paragraph: {paramJSONMasterStory.SystemMessage.Trim()}. \n";
+            }
+
             // Add StoryTitle if provided
             if (paramJSONMasterStory.StoryTitle != "")
             {
                 strPrompt = strPrompt +
                     $"#### The story title is {paramJSONMasterStory.StoryTitle.Trim()}. \n";
+            }
+
+            // Add StoryStyle if provided
+            if (paramJSONMasterStory.StoryStyle != "")
+            {
+                strPrompt = strPrompt +
+                    $"#### The story style is {paramJSONMasterStory.StoryStyle.Trim()}. \n";
             }
 
             // Add StorySynopsis if provided
