@@ -6,13 +6,13 @@
   xmlns:rescap="http://schemas.microsoft.com/appx/manifest/foundation/windows10/restrictedcapabilities"
   IgnorableNamespaces="uap rescap">
 
-  <Identity Name="41860Defwebs.com.25552E5BE9548" Publisher="CN=Test certificate for 'AIStoryBuilders [OSS]'" Version="1.1.6.0" />
+  <Identity Name="41860Defwebs.com.25552E5BE9548" Publisher="CN=1B36D735-B652-43DB-8420-7E444D9AB5F0" Version="1.1.6.0" />
 
   <mp:PhoneIdentity PhoneProductId="2d1aaec0-7ebe-499f-b3ff-7de0713c7a2e" PhonePublisherId="00000000-0000-0000-0000-000000000000"/>
 
   <Properties>
     <DisplayName>AIStoryBuilders</DisplayName>
-    <PublisherDisplayName>AI Story Builders</PublisherDisplayName>
+    <PublisherDisplayName>AIStoryBuilders.com</PublisherDisplayName>
     <Logo>Resources\Images\applogo.png</Logo>
   </Properties>
 
