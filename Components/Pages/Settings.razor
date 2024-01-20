@@ -17,7 +17,7 @@
                 <RadzenTextBox @bind-Value="@Organization" style="width:300px;" />
             </RadzenFormField>
             <RadzenFormField Text="OpenAI ApiKey:" Variant="@variant">
-                <RadzenTextBox @bind-Value="@ApiKey" @oninput="APIKeyDetection" style="width:450px;" />
+                <RadzenTextBox @bind-Value="@ApiKey" @onkeydown="APIKeyDetection" style="width:450px;" />
             </RadzenFormField>
             <RadzenFormField Text="AI Model:" Variant="@variant">
                 <RadzenDropDown Data=@colModels @bind-Value="@AIModel" Style="width:300px" />
@@ -89,16 +89,9 @@ else
         await JSRuntime.InvokeVoidAsync("open", "https://platform.openai.com/account/api-keys");
     }
 
-    private void APIKeyDetection(ChangeEventArgs args)
+    private void APIKeyDetection(KeyboardEventArgs args)
     {
-        if (args.Value.ToString().Length > 1)
-        {
-            IsSettingsEntered = true;
-        }
-        else
-        {
-            IsSettingsEntered = false;
-        }
+        IsSettingsEntered = true;
     }
 
     private async Task SettingsSave()
