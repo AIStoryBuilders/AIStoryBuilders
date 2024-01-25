@@ -239,6 +239,7 @@ namespace AIStoryBuilders.AI
 
             strPrompt = strPrompt +
                 "#### Only use information provided. Do not use any information not provided.\n" +
+                "#### Write in the writing style of the provided content.\n" +
                 "#### Insert a line break before a dialoge quote by a character the when they speak for the first time.\n" +
                 $"#### Produce a single paragraph that is {paramAIPrompt.NumberOfWords} words maximum. \n";
 
