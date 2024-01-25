@@ -154,7 +154,7 @@ namespace AIStoryBuilders
                             "ApiKey": ""
                           },
                           "ApplicationSettings": {
-                            "AIModel": "gpt-4-1106-preview"
+                            "AIModel": "gpt-4-turbo-preview"
                           }
                         }
                         """
