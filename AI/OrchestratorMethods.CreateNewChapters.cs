@@ -81,7 +81,7 @@ namespace AIStoryBuilders.AI
                     "] \n" +
                     "Using only this information please: \n" +
                     $"#1 Create {paramChapterCount} chapters in a format like this: Chapter1, Chapter2, Chapter3. \n" +
-                    "#2 A short chapter_synopsis description. \n" +
+                    "#2 A short chapter_synopsis description. Format this in story beats in a format like this: #Beat 1 - Something happens. #Beat 2 - The next things happens. #Beat 3 - Another thing happens. \n" +
                     "#3 A short 200 word first paragraph for each chapter. \n" +
                     "#4 A single timeline_name for each paragraph. \n" +
                     "#5 The list of character names that appear in each paragraph. \n" +
