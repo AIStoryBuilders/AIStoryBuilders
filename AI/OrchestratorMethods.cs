@@ -16,8 +16,6 @@ namespace AIStoryBuilders.AI
         public string Summary { get; set; }
         dynamic AIStoryBuildersDatabaseObject { get; set; }
 
-        public List<ChatMessage> ChatMessages = new List<ChatMessage>();
-
         public List<(string, float)> similarities = new List<(string, float)>();
 
         public Dictionary<string, string> AIStoryBuildersMemory = new Dictionary<string, string>();

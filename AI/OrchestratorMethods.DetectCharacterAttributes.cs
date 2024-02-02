@@ -23,8 +23,6 @@ namespace AIStoryBuilders.AI
             string SystemMessage = "";
             string GPTModel = SettingsService.AIModel;
 
-            ChatMessages = new List<ChatMessage>();
-
             LogService.WriteToLog($"Detect Character Attributes using {GPTModel} - Start");
 
             // Create a new OpenAIClient object

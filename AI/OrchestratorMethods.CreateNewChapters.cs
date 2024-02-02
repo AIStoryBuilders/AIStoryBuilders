@@ -20,8 +20,6 @@ namespace AIStoryBuilders.AI
             string SystemMessage = "";
             string GPTModel = SettingsService.AIModel;
 
-            ChatMessages = new List<ChatMessage>();
-
             LogService.WriteToLog($"CreateNewChapters using {GPTModel} - Start");
 
             // Create a new OpenAIClient object
