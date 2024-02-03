@@ -1,9 +1,11 @@
 ﻿@using AIStoryBuilders.AI
 @using AIStoryBuilders.Model;
 @using AIStoryBuilders.Services;
+@using ExcelDataReader
 @using Newtonsoft.Json;
 @using OpenAI;
 @using CommunityToolkit.Maui.Storage
+@using OpenAI.Chat
 @inherits OwningComponentBase
 @inject NotificationService NotificationService
 @inject DialogService DialogService
@@ -16,7 +18,7 @@
         <RadzenTabs TabPosition=TabPosition.Top RenderMode="TabRenderMode.Client">
             <Tabs>
                 <RadzenTabsItem Text="Create JasonL File">
-                    <p>Use this page to create JasonL file.</p>
+                    <p>Use this page to upload an Excel file and create a JsonL file to use for fine tuning.</p>
                     <div class="row">
                         <div class="col">
                             <RadzenButton Text="Download Template" ButtonStyle="ButtonStyle.Primary"
@@ -24,6 +26,7 @@
                                           Style="margin-bottom: 10px; width: 250px" />&nbsp;&nbsp;
                         </div>
                     </div>
+                    <br/>
                     <div class="row">
                         @if (@InProgress)
                         {
@@ -33,9 +36,9 @@
                         }
                         else
                         {
-                        <div class="col">
-                            <RadzenButton Click=@(() => CreateJasonLFile()) Text="Create JasonL File" Icon="publish" ButtonStyle="ButtonStyle.Light" />
-                        </div>
+                            <div class="col">
+                                <RadzenButton Click=@(() => CreateJasonLFile()) Text="Upload Excel file and create JsonL file" Icon="publish" ButtonStyle="ButtonStyle.Success" />
+                            </div>
                         }
                     </div>
                 </RadzenTabsItem>
@@ -84,7 +87,8 @@
 
             if (result != null)
             {
-                byte[] stybldFileBytes = null;
+                byte[] TemplateFileBytes = null;
+                var conversations = new List<Conversation>();
 
                 // Open a stream for the selected file
                 using (var stream = await result.OpenReadAsync())
@@ -96,24 +100,51 @@
                         await stream.CopyToAsync(memoryStream);
 
                         // Return the byte array
-                        stybldFileBytes = memoryStream.ToArray();
+                        TemplateFileBytes = memoryStream.ToArray();
+                    }
+
+                    using (var reader = ExcelReaderFactory.CreateReader(stream))
+                    {
+                        do
+                        {
+                            while (reader.Read())
+                            {
+                                conversations.Add(new Conversation(new List<Message>()
+                                {
+                                    new Message(Role.System, reader.GetString(0)),
+                                    new Message(Role.User, reader.GetString(1)),
+                                    new Message(Role.Assistant, reader.GetString(2))
+                                }));
+                            }
+                        }
+                        while (reader.NextResult());
                     }
                 }
 
-                // string ImportResult = AIStoryBuildersService.ImportProject(stybldFileBytes);
+                var fileContents = conversations.Select(conversation => conversation.ToString());
 
-                // if (ImportResult != "")
-                // {
-                //     NotificationService.Notify(new NotificationMessage
-                //         {
-                //             Severity = NotificationSeverity.Info,
-                //             Summary = "Import Result",
-                //             Detail = ImportResult,
-                //             Duration = 4000
-                //         });
-                // }
+                // Convert fileContents to a stream
+                using var OutputStream = new MemoryStream();
+                using var writer = new StreamWriter(OutputStream);
 
-                //colStorys = AIStoryBuildersService.GetStorys();
+                foreach (var line in fileContents)
+                {
+                    await writer.WriteLineAsync(line);
+                }
+
+                await writer.FlushAsync();
+                OutputStream.Position = 0;
+
+                var fileSaverResult = await FileSaver.Default.SaveAsync("FineTunedJason.jsonL", OutputStream);
+
+                NotificationService.Notify(new NotificationMessage
+                    {
+                        Severity = NotificationSeverity.Success,
+                        Summary = "Saved",
+                        Detail = $"The file was saved successfully.",
+                        Duration = 4000
+                    });
+
                 StateHasChanged();
             }
         }
