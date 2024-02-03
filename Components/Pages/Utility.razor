@@ -3,102 +3,133 @@
 @using AIStoryBuilders.Services;
 @using Newtonsoft.Json;
 @using OpenAI;
+@using CommunityToolkit.Maui.Storage
 @inherits OwningComponentBase
 @inject NotificationService NotificationService
 @inject DialogService DialogService
 @inject SettingsService SettingsService
 @inject OrchestratorMethods OrchestratorMethods
-<h3>Parse JSON</h3>
+
+<h2>Utility</h2>
 <div class="row">
     <div class="col">
-        <RadzenButton Text="Add JSON" ButtonStyle="ButtonStyle.Success"
-                      Click="AddJSON"
-                      Style="margin-bottom: 10px; width: 150px" />&nbsp;&nbsp;
-        <p><RadzenDropDown Data=@colMethods @bind-Value="@SelectedMethod" /></p>
-        <RadzenButton Text="Parse JSON" ButtonStyle="ButtonStyle.Info"
-                      Click="ParseJSON"
-                      Style="margin-bottom: 10px; width: 150px" />&nbsp;&nbsp;
+        <RadzenTabs TabPosition=TabPosition.Top RenderMode="TabRenderMode.Client">
+            <Tabs>
+                <RadzenTabsItem Text="Create JasonL File">
+                    <p>Use this page to create JasonL file.</p>
+                    <div class="row">
+                        <div class="col">
+                            <RadzenButton Text="Download Template" ButtonStyle="ButtonStyle.Primary"
+                                          Click="DownloadTemplate"
+                                          Style="margin-bottom: 10px; width: 250px" />&nbsp;&nbsp;
+                        </div>
+                    </div>
+                    <div class="row">
+                        @if (@InProgress)
+                        {
+                            <div class="rz-m-10">
+                                <RadzenProgressBar Value="100" ShowValue="false" Mode="ProgressBarMode.Indeterminate" />
+                            </div>
+                        }
+                        else
+                        {
+                        <div class="col">
+                            <RadzenButton Click=@(() => CreateJasonLFile()) Text="Create JasonL File" Icon="publish" ButtonStyle="ButtonStyle.Light" />
+                        </div>
+                        }
+                    </div>
+                </RadzenTabsItem>
+            </Tabs>
+        </RadzenTabs>
     </div>
 </div>
-<RadzenTextArea MaxLength="1000" Cols="100" Rows="10" @bind-Value="@jsonParsed" />
 
 @code {
     AIStoryBuildersService AIStoryBuildersService;
-    string jsonString = @"{]";
-    string jsonParsed = "";
-    string SelectedMethod = "ParseJSONNewChapters";
-
-    List<string> colMethods = new List<string>()
-                {
-                    "ParseJSONNewChapters",
-                    "ParseJSONNewStory",
-                };
-
+    LogService LogService;
+    bool InProgress = false;
 
     protected override void OnInitialized()
     {
         AIStoryBuildersService = (AIStoryBuildersService)ScopedServices.GetService(typeof(AIStoryBuildersService));
     }
 
-    private async Task AddJSON()
+    async Task DownloadTemplate()
+    {
+        using var stream = await FileSystem.OpenAppPackageFileAsync("FineTunedTemplate.xls");
+
+        var fileSaverResult = await FileSaver.Default.SaveAsync("FineTunedTemplate.xls", stream);
+
+        NotificationService.Notify(new NotificationMessage
+            {
+                Severity = NotificationSeverity.Success,
+                Summary = "Saved",
+                Detail = $"The file was saved successfully.",
+                Duration = 4000
+            });
+    }
+
+    private async Task CreateJasonLFile()
     {
         try
         {
-            // Display inline Radzen dialog to capture text
-            var result = await DialogService.OpenAsync("Add JSON", ds =>
-    @<RadzenStack Gap="1.5rem">
-        <RadzenTextArea @bind-Value="@jsonString" class="w-100" Style="height:200px" />
-        <RadzenStack Orientation="Orientation.Horizontal" Gap="0.5rem" AlignItems="AlignItems.Center" JustifyContent="JustifyContent.SpaceBetween">
-            <RadzenStack Orientation="Orientation.Horizontal">
-                <RadzenButton Text="Ok" Click="() => ds.Close(true)" Style="width: 80px;" />
-                <RadzenButton Text="Cancel" Click="() => ds.Close(false)" ButtonStyle="ButtonStyle.Light" />
-            </RadzenStack>
-        </RadzenStack>
-    </RadzenStack>
-        );
+            var result = await FilePicker.PickAsync(new PickOptions
+                {
+                    FileTypes = new FilePickerFileType(new Dictionary<DevicePlatform, IEnumerable<string>>
+                {
+                    { DevicePlatform.iOS, new[] { "public.content" } },
+                    { DevicePlatform.Android, new[] { "application/*" } },
+                    { DevicePlatform.WinUI, new[] { ".xls" } }, })
+                });
 
-        }
-        catch (Exception ex)
-        {
-            NotificationService.Notify(new NotificationMessage
+            if (result != null)
+            {
+                byte[] stybldFileBytes = null;
+
+                // Open a stream for the selected file
+                using (var stream = await result.OpenReadAsync())
+                {
+                    // Create a memory stream to copy the file stream
+                    using (var memoryStream = new MemoryStream())
                     {
-                        Severity = NotificationSeverity.Error,
-                        Summary = "Error",
-                        Detail = ex.Message,
-                        Duration = 4000
-                    });
-        }
-    } 
+                        // Copy the file stream to the memory stream
+                        await stream.CopyToAsync(memoryStream);
 
-    private void ParseJSON()
-    {
-        try
-        {
-            if (SelectedMethod == "ParseJSONNewStory")
-            {
-                // Parse the JSON (New Story)
-                var ParseJSONNewStoryResult = AIStoryBuildersService.ParseJSONNewStory(jsonString);
+                        // Return the byte array
+                        stybldFileBytes = memoryStream.ToArray();
+                    }
+                }
 
-                jsonParsed = JsonConvert.SerializeObject(ParseJSONNewStoryResult, Formatting.Indented);
-            }
+                // string ImportResult = AIStoryBuildersService.ImportProject(stybldFileBytes);
 
-            if(SelectedMethod == "ParseJSONNewChapters")
-            {
-                // Parse the JSON (New Chapters)
-                var ParseJSONNewChaptersResult = AIStoryBuildersService.ParseJSONNewChapters(jsonString);
+                // if (ImportResult != "")
+                // {
+                //     NotificationService.Notify(new NotificationMessage
+                //         {
+                //             Severity = NotificationSeverity.Info,
+                //             Summary = "Import Result",
+                //             Detail = ImportResult,
+                //             Duration = 4000
+                //         });
+                // }
 
-                jsonParsed = JsonConvert.SerializeObject(ParseJSONNewChaptersResult, Formatting.Indented);
+                //colStorys = AIStoryBuildersService.GetStorys();
+                StateHasChanged();
             }
         }
         catch (Exception ex)
         {
+            InProgress = false;
+
             NotificationService.Notify(new NotificationMessage
                 {
                     Severity = NotificationSeverity.Error,
                     Summary = "Error",
                     Detail = ex.Message,
-                    Duration = 10000
+                    Duration = 4000
                 });
+
+            LogService.WriteToLog(ex.Message);
         }
     }
 }

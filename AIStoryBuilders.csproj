@@ -208,6 +208,7 @@
       <None Remove="Resources\Images\widetile.scale-150.png" />
       <None Remove="Resources\Images\widetile.scale-200.png" />
       <None Remove="Resources\Images\widetile.scale-400.png" />
+      <None Remove="Resources\Raw\FineTunedTemplate.xls" />
     </ItemGroup>
 
     <ItemGroup>
