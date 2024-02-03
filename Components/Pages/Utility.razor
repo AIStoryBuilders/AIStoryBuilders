@@ -3,9 +3,12 @@
 @using AIStoryBuilders.Services;
 @using ExcelDataReader
 @using Newtonsoft.Json;
-@using OpenAI;
 @using CommunityToolkit.Maui.Storage
+@using OpenAI;
 @using OpenAI.Chat
+@using OpenAI.Files;
+@using OpenAI.FineTuning;
+@using OpenAI.Models;
 @inherits OwningComponentBase
 @inject NotificationService NotificationService
 @inject DialogService DialogService
@@ -17,7 +20,39 @@
     <div class="col">
         <RadzenTabs TabPosition=TabPosition.Top RenderMode="TabRenderMode.Client">
             <Tabs>
-                <RadzenTabsItem Text="Create JasonL File">
+                <RadzenTabsItem Text="Fine Tuning">
+                    <p>Use this page to manage your fine tuned models on <a href="https://platform.openai.com/finetune" target="_blank">platform.openai.com</a></p>
+                    <div class="row">
+                        <div class="col">
+                            <table class="table">
+                                <thead>
+                                    <tr>
+                                        <th></th>
+                                        <th></th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach (var model in colModels)
+                                    {
+                                        <tr>
+                                            <td>
+                                                @model.Id
+                                            </td>
+                                            <td>
+                                                <button class="btn btn-danger"
+                                                        @onclick="(() => DeleteModel(model))">
+                                                    Delete
+                                                </button>
+                                            </td>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                    <br />
+                </RadzenTabsItem>
+                <RadzenTabsItem Text="Create JsonL File">
                     <p>Use this page to upload an Excel file and create a JsonL file to use for fine tuning.</p>
                     <div class="row">
                         <div class="col">
@@ -51,10 +86,72 @@
     AIStoryBuildersService AIStoryBuildersService;
     LogService LogService;
     bool InProgress = false;
+    List<Model> colModels = new List<Model>();
+    string Organization = "";
+    string ApiKey = "";
 
     protected override void OnInitialized()
     {
         AIStoryBuildersService = (AIStoryBuildersService)ScopedServices.GetService(typeof(AIStoryBuildersService));
+        OrchestratorMethods = (OrchestratorMethods)ScopedServices.GetService(typeof(OrchestratorMethods));
+
+        SettingsService.LoadSettings();
+
+        Organization = SettingsService.Organization;
+        ApiKey = SettingsService.ApiKey;
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        await ListModels();
+    }
+
+    private async Task ListModels()
+    {
+        // Create a new OpenAI API client with the provided
+        // API key and organization
+        var api =
+        new OpenAIClient(new OpenAIAuthentication(ApiKey, Organization));
+
+        // Fetch the list of models using the OpenAI API
+        var models =
+        await api.ModelsEndpoint.GetModelsAsync();
+
+        // Initialize a new list to store filtered models
+        colModels = new List<Model>();
+
+        // Iterate through the fetched models
+        foreach (var model in models)
+        {
+            // Filter out models owned by "openai" or "system"
+            if (!model.OwnedBy.Contains("openai")
+            && !model.OwnedBy.Contains("system"))
+            {
+                // Add the filtered model to the colModels list
+                colModels.Add(model);
+            }
+        }
+    }
+
+    private async Task DeleteModel(Model paramaModel)
+    {
+        var api =
+        new OpenAIClient(new OpenAIAuthentication(ApiKey, Organization));
+
+        var result =
+        await api.ModelsEndpoint.DeleteFineTuneModelAsync(paramaModel.Id);
+
+        await ListModels();
+    }
+
+    private async Task DeleteFineTunedModel(FineTuneJobResponse paramaFineTuneJob)
+    {
+        var api =
+        new OpenAIClient(new OpenAIAuthentication(ApiKey, Organization));
+        var result =
+        await api.ModelsEndpoint.DeleteFineTuneModelAsync(
+        paramaFineTuneJob.FineTunedModel);
+        await ListModels();
     }
 
     async Task DownloadTemplate()
@@ -105,6 +202,9 @@
 
                     using (var reader = ExcelReaderFactory.CreateReader(stream))
                     {
+                        // skip the first row
+                        reader.Read();
+
                         do
                         {
                             while (reader.Read())
@@ -135,7 +235,7 @@
                 await writer.FlushAsync();
                 OutputStream.Position = 0;
 
-                var fileSaverResult = await FileSaver.Default.SaveAsync("FineTunedJason.jsonL", OutputStream);
+                var fileSaverResult = await FileSaver.Default.SaveAsync("FineTunedJson.jsonL", OutputStream);
 
                 NotificationService.Notify(new NotificationMessage
                     {
