@@ -61,7 +61,7 @@
                                           Style="margin-bottom: 10px; width: 250px" />&nbsp;&nbsp;
                         </div>
                     </div>
-                    <br/>
+                    <br />
                     <div class="row">
                         @if (@InProgress)
                         {
@@ -135,22 +135,30 @@
 
     private async Task DeleteModel(Model paramaModel)
     {
-        var api =
-        new OpenAIClient(new OpenAIAuthentication(ApiKey, Organization));
+        // Ask for confirmation:
+        var confirmResult = await DialogService.Confirm("Are you sure?", "Delete Model",
+                  new ConfirmOptions() { OkButtonText = "Yes", CancelButtonText = "No" });
 
-        var result =
-        await api.ModelsEndpoint.DeleteFineTuneModelAsync(paramaModel.Id);
+        if (confirmResult.HasValue && confirmResult.Value)
+        {
+            var api =
+            new OpenAIClient(new OpenAIAuthentication(ApiKey, Organization));
 
-        await ListModels();
+            var result =
+            await api.ModelsEndpoint.DeleteFineTuneModelAsync(paramaModel.Id);
+
+            await ListModels();
+        }
     }
 
     private async Task DeleteFineTunedModel(FineTuneJobResponse paramaFineTuneJob)
     {
         var api =
         new OpenAIClient(new OpenAIAuthentication(ApiKey, Organization));
+
         var result =
-        await api.ModelsEndpoint.DeleteFineTuneModelAsync(
-        paramaFineTuneJob.FineTunedModel);
+        await api.ModelsEndpoint.DeleteFineTuneModelAsync(paramaFineTuneJob.FineTunedModel);
+
         await ListModels();
     }
 
