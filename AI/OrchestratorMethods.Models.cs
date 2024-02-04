@@ -146,8 +146,30 @@ namespace AIStoryBuilders.AI
             // with the provided API key and organization
             var api = new OpenAIClient(new OpenAIAuthentication(ApiKey, Organization));
 
-            var result =
-                await api.ModelsEndpoint.DeleteFineTuneModelAsync(paramaModel.ModelId);
+            await api.ModelsEndpoint.DeleteFineTuneModelAsync(paramaModel.ModelId);
+
+            // Remove any alias in the database
+
+            // Get the Model alias names from the database
+            DatabaseService.LoadDatabase();
+            var colDatabase = DatabaseService.colAIStoryBuildersDatabase;
+
+            // Create a new collection to store the updated model names
+            Dictionary<string, string> colUpdatedDatabase = new Dictionary<string, string>();
+
+            // Iterate through the existing database
+            foreach (var item in colDatabase)
+            {
+                // Add all but the deleted one to the updated collection
+                if (item.Key != paramaModel.ModelId)
+                {
+                    // Update the model name
+                    colUpdatedDatabase.Add(item.Key, item.Value);
+                }
+            }
+
+            // Save the updated collection to the database
+            await DatabaseService.SaveDatabase(colUpdatedDatabase);
         }
         #endregion
     }
