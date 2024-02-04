@@ -640,7 +640,7 @@ else
             AIPrompt AIPromptResult = await dialogService.OpenAsync("AI Prompt Instructions", ds =>
             @<ParagraphPrompt AIPromptText="@AIPrompt" SelectedNumberOfWords="@NumberOfWords" DialogReference="ds">
             </ParagraphPrompt>
-            , new DialogOptions() { Height = "340px", Width = "600px" });
+            , new DialogOptions() { Height = "390px", Width = "600px" });
 
             if (AIPromptResult != null)
             {
@@ -663,7 +663,7 @@ else
                 // ********************************
                 // **** Call ChatGPT
                 // ********************************
-                var NewParagraph = await OrchestratorMethods.WriteParagraph(objMasterStory, AIPromptResult);
+                var NewParagraph = await OrchestratorMethods.WriteParagraph(objMasterStory, AIPromptResult, AIPromptResult.ModelId);
 
                 // Save the current content of the Paragraph to the UndoCache
                 UndoCache = objParagraph.ParagraphContent;

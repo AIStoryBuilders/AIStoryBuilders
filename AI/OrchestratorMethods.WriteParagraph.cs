@@ -15,13 +15,12 @@ namespace AIStoryBuilders.AI
 {
     public partial class OrchestratorMethods
     {
-        #region public async Task<string> WriteParagraph(JSONMasterStory objJSONMasterStory, AIPrompt paramAIPrompt)
-        public async Task<string> WriteParagraph(JSONMasterStory objJSONMasterStory, AIPrompt paramAIPrompt)
+        #region public async Task<string> WriteParagraph(JSONMasterStory objJSONMasterStory, AIPrompt paramAIPrompt, string GPTModel)
+        public async Task<string> WriteParagraph(JSONMasterStory objJSONMasterStory, AIPrompt paramAIPrompt, string GPTModel)
         {
             string Organization = SettingsService.Organization;
             string ApiKey = SettingsService.ApiKey;
             string SystemMessage = "";
-            string GPTModel = SettingsService.AIModel;
 
             LogService.WriteToLog($"Detect Characters using {GPTModel} - Start");
 
@@ -56,7 +55,6 @@ namespace AIStoryBuilders.AI
                 frequencyPenalty: 0,
                 presencePenalty: 0,
                 responseFormat: ChatResponseFormat.Json);
-
 
             ChatResponseResult = await api.ChatEndpoint.GetCompletionAsync(FinalChatRequest);
 

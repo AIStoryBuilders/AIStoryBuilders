@@ -15,13 +15,12 @@ namespace AIStoryBuilders.AI
 {
     public partial class OrchestratorMethods
     {
-        #region public async Task<Message> ParseNewStory(string paramStoryTitle, string paramStoryText)
-        public async Task<Message> ParseNewStory(string paramStoryTitle, string paramStoryText)
+        #region public async Task<Message> ParseNewStory(string paramStoryTitle, string paramStoryText, string GPTModel)
+        public async Task<Message> ParseNewStory(string paramStoryTitle, string paramStoryText, string GPTModel)
         {            
             string Organization = SettingsService.Organization;
             string ApiKey = SettingsService.ApiKey;
             string SystemMessage = "";
-            string GPTModel = SettingsService.AIModel;
 
             LogService.WriteToLog($"ParseNewStory using {GPTModel} - Start");
 

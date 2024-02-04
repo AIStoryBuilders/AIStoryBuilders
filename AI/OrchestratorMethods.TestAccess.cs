@@ -12,13 +12,12 @@ namespace AIStoryBuilders.AI
 {
     public partial class OrchestratorMethods
     {
-        #region public async Task<bool> TestAccess()
-        public async Task<bool> TestAccess()
+        #region public async Task<bool> TestAccess(string GPTModel)
+        public async Task<bool> TestAccess(string GPTModel)
         {
             string Organization = SettingsService.Organization;
             string ApiKey = SettingsService.ApiKey;
             string SystemMessage = "";
-            string GPTModel = SettingsService.AIModel;
 
             LogService.WriteToLog($"TestAccess using {GPTModel} - Start");
 

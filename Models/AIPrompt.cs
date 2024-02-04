@@ -10,5 +10,6 @@ namespace AIStoryBuilders.Models
     {
         public string AIPromptText { get; set; }
         public string NumberOfWords { get; set; }
+        public string ModelId { get; set; }
     }
 }

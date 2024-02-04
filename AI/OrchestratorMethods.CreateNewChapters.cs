@@ -12,13 +12,12 @@ namespace AIStoryBuilders.AI
 {
     public partial class OrchestratorMethods
     {
-        #region public async Task<Message> CreateNewChapters(string JSONNewStory, string ChapterCount)
-        public async Task<Message> CreateNewChapters(string JSONNewStory, string ChapterCount)
+        #region public async Task<Message> CreateNewChapters(string JSONNewStory, string ChapterCount, string GPTModel)
+        public async Task<Message> CreateNewChapters(string JSONNewStory, string ChapterCount, string GPTModel)
         {
             string Organization = SettingsService.Organization;
             string ApiKey = SettingsService.ApiKey;
             string SystemMessage = "";
-            string GPTModel = SettingsService.AIModel;
 
             LogService.WriteToLog($"CreateNewChapters using {GPTModel} - Start");
 

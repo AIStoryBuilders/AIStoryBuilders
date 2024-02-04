@@ -19,6 +19,8 @@ public partial class Story
 
     public string ChapterCount { get; set; }
 
+    public string ModelId { get; set; }
+
     public List<Chapter> Chapter { get; set; } = new List<Chapter>();
 
     public List<Character> Character { get; set; } = new List<Character>();

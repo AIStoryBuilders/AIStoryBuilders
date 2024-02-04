@@ -19,7 +19,7 @@
             <RadzenFormField Text="OpenAI ApiKey:" Variant="@variant">
                 <RadzenTextBox @bind-Value="@ApiKey" @onkeydown="APIKeyDetection" style="width:450px;" />
             </RadzenFormField>
-            <RadzenFormField Text="AI Model:" Variant="@variant">
+            <RadzenFormField Text="Default AI Model:" Variant="@variant">
                 <RadzenDropDown Data=@colModels @bind-Value="@AIModel" Style="width:300px" />
             </RadzenFormField>
             <RadzenLabel Text="Note: GPT 3.5 is faster and cost less than GPT 4, but does not perform as well." style="font-size:x-small" />
@@ -115,7 +115,7 @@ else
             await SettingsService.SaveSettings(Organization, ApiKey, AIModel);
 
             // Test API Key
-            var result = await OrchestratorMethods.TestAccess();
+            var result = await OrchestratorMethods.TestAccess(AIModel);
 
             NotificationService.Notify(new NotificationMessage
                 {

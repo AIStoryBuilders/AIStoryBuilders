@@ -7,6 +7,7 @@
 @inherits OwningComponentBase
 @inject NotificationService NotificationService
 @inject DialogService DialogService
+@inject SettingsService SettingsService
 @if (objStory.Id == -1) // New Story
 {
     <RadzenRow Gap="1rem">
@@ -19,7 +20,10 @@
                 <RadzenFormField Text="Synopsis:" Variant="@variant">
                     <RadzenTextArea MaxLength="1000" Rows="10" @bind-Value="@objStory.Synopsis" />
                 </RadzenFormField>
-                <p>Chapters: <RadzenDropDown Data=@colChapters @bind-Value="@objStory.ChapterCount" Style="width:75px" /></p>
+                <p>Chapters: <RadzenDropDown Data=@colChapters @bind-Value="@objStory.ChapterCount" Style="width:75px" />
+                    &nbsp;&nbsp;
+                    AI Model: <RadzenDropDown @bind-Value=@AIModel Data=@colAIStoryBuilderModel TextProperty="ModelName" Style="width:300px" />
+                </p>
             </RadzenStack>
         </RadzenColumn>
     </RadzenRow>
@@ -87,6 +91,9 @@ else // Existing Story
     [Parameter] public EventCallback<Story> StoryUpdated { get; set; }
     [Parameter] public EventCallback<Story> StoryDeleted { get; set; }
 
+    AIStoryBuilderModel AIModel = new AIStoryBuilderModel();
+    List<AIStoryBuilderModel> colAIStoryBuilderModel = new List<AIStoryBuilderModel>();
+
     AIStoryBuildersService AIStoryBuildersService;
     OrchestratorMethods OrchestratorMethods;
     LogService LogService;
@@ -100,6 +107,8 @@ else // Existing Story
                    "30","31","32","33","34","35","36","37","38","39","40","41","42","43","44","45","46","47","48","49","50","51","52","53","54","55","56",
                    "57","58","59","60","61","62","63","64","65","66","67","68","69","70","71","72","73","74","75","76","77","78","79","80","81","82","83","84","85","86","87","88","89","90","91","92","93","94","95","96","97","98","99","100"
                 };
+
+    List<string> colModels = new List<string>();
 
     protected override void OnInitialized()
     {
@@ -129,6 +138,20 @@ else // Existing Story
         {
             objStory.Style = "Drama";
             objStory.ChapterCount = "3";
+        }
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        colAIStoryBuilderModel = await OrchestratorMethods.ListAllModelsAsync();
+
+        // Set the default AI Model
+        SettingsService.LoadSettings();
+        var DefaultModelId = SettingsService.AIModel;
+
+        if (DefaultModelId != null)
+        {
+            AIModel = colAIStoryBuilderModel.Where(x => x.ModelId == DefaultModelId).FirstOrDefault();
         }
     }
 
@@ -197,6 +220,9 @@ else // Existing Story
                     return;
                 }
             }
+
+            // Set the AI Model
+            objStory.ModelId = AIModel.ModelId;
 
             // Notify parent component
             await StoryUpdated.InvokeAsync(objStory);

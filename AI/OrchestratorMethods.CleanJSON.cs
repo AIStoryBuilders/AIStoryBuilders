@@ -12,13 +12,12 @@ namespace AIStoryBuilders.AI
 {
     public partial class OrchestratorMethods
     {
-        #region public async Task<string> CleanJSON(string JSON)
-        public async Task<string> CleanJSON(string JSON)
+        #region public async Task<string> CleanJSON(string JSON, string GPTModel)
+        public async Task<string> CleanJSON(string JSON, string GPTModel)
         {
             string Organization = SettingsService.Organization;
             string ApiKey = SettingsService.ApiKey;
             string SystemMessage = "";
-            string GPTModel = SettingsService.AIModel;
 
             LogService.WriteToLog($"Clean JSON using {GPTModel} - Start");
 

@@ -151,7 +151,7 @@
                     StateHasChanged();
 
                     // Save Story to the database
-                    await AIStoryBuildersService.AddStory(objStory);
+                    await AIStoryBuildersService.AddStory(objStory, objStory.ModelId);
 
                     HomeVisible = true;
                     InProgress = false;
@@ -197,7 +197,7 @@
             var result = await FilePicker.PickAsync(new PickOptions
                 {
                     FileTypes = new FilePickerFileType(new Dictionary<DevicePlatform, IEnumerable<string>>
-                {                    
+                {
                     { DevicePlatform.iOS, new[] { "public.content" } },
                     { DevicePlatform.Android, new[] { "application/*" } },
                     { DevicePlatform.WinUI, new[] { ".stybld" } }, })
@@ -226,12 +226,12 @@
                 if (ImportResult != "")
                 {
                     NotificationService.Notify(new NotificationMessage
-                    {
-                        Severity = NotificationSeverity.Info,
-                        Summary = "Import Result",
-                        Detail = ImportResult,
-                        Duration = 4000
-                    });
+                        {
+                            Severity = NotificationSeverity.Info,
+                            Summary = "Import Result",
+                            Detail = ImportResult,
+                            Duration = 4000
+                        });
                 }
 
                 colStorys = AIStoryBuildersService.GetStorys();

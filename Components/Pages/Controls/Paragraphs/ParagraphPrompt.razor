@@ -1,4 +1,11 @@
-﻿@using AIStoryBuilders.Models;
+﻿@using AIStoryBuilders.AI
+@using AIStoryBuilders.Model;
+@using AIStoryBuilders.Models;
+@using AIStoryBuilders.Services;
+@using System.Text
+@using CommunityToolkit.Maui.Storage
+@inherits OwningComponentBase
+@inject SettingsService SettingsService
 <RadzenStack Gap="0.5rem">
     <RadzenSpeechToTextButton Change="@(args => OnPromptSpeechCaptured(args, false, "TextToSpeech"))" />
     <RadzenFormField Text="Describe paragraph or provide prompt instructions (optional):" Variant=Variant.Outlined>
@@ -7,8 +14,11 @@
     <RadzenFormField Text="Number of words to generate:" Variant=Variant.Outlined>
         <RadzenDropDown Data=@colNumberOfWords @bind-Value="@SelectedNumberOfWords" />
     </RadzenFormField>
+    <RadzenFormField Text="AI Model:" Variant=Variant.Outlined>
+        <RadzenDropDown @bind-Value=@AIModel Data=@colAIStoryBuilderModel TextProperty="ModelName" Style="width:300px" />
+    </RadzenFormField>
     <RadzenStack Orientation="Orientation.Horizontal" Gap="0.5rem" AlignItems="AlignItems.Center" JustifyContent="JustifyContent.SpaceBetween">
-        <RadzenStack Orientation="Orientation.Horizontal">         
+        <RadzenStack Orientation="Orientation.Horizontal">
             <RadzenButton Text="Save" ButtonStyle="ButtonStyle.Success" Click="() => CloseDialog()" Style="width: 80px;" />
         </RadzenStack>
     </RadzenStack>
@@ -18,7 +28,31 @@
     [Parameter] public string SelectedNumberOfWords { get; set; }
     [Parameter] public DialogService DialogReference { get; set; }
 
+    OrchestratorMethods OrchestratorMethods;
+
     List<string> colNumberOfWords = new List<string> { "10", "20", "50", "100", "200", "300", "500", "800", "1000" };
+
+    AIStoryBuilderModel AIModel = new AIStoryBuilderModel();
+    List<AIStoryBuilderModel> colAIStoryBuilderModel = new List<AIStoryBuilderModel>();
+
+    protected override void OnInitialized()
+    {
+        OrchestratorMethods = (OrchestratorMethods)ScopedServices.GetService(typeof(OrchestratorMethods));
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        colAIStoryBuilderModel = await OrchestratorMethods.ListAllModelsAsync();
+
+        // Set the default AI Model
+        SettingsService.LoadSettings();
+        var DefaultModelId = SettingsService.AIModel;
+
+        if (DefaultModelId != null)
+        {
+            AIModel = colAIStoryBuilderModel.Where(x => x.ModelId == DefaultModelId).FirstOrDefault();
+        }
+    }
 
     private void CloseDialog()
     {
@@ -26,6 +60,7 @@
 
         objAIPrompt.AIPromptText = AIPromptText;
         objAIPrompt.NumberOfWords = SelectedNumberOfWords;
+        objAIPrompt.ModelId = AIModel.ModelId;
 
         DialogReference.Close(objAIPrompt);
     }
