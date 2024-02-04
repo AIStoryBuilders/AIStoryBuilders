@@ -1,0 +1,101 @@
+﻿@using AIStoryBuilders.AI
+@using AIStoryBuilders.Model;
+@using AIStoryBuilders.Models;
+@using AIStoryBuilders.Services;
+@inherits OwningComponentBase
+@inject NotificationService NotificationService
+@inject DialogService DialogService
+<RadzenRow Gap="1rem">
+    <RadzenColumn Size="12" SizeSM="12">
+        <RadzenStack>
+            <RadzenFormField Text="Model Name:" Variant=Variant.Outlined>
+                <RadzenTextBox MaxLength="50" @bind-Value="@objAIStoryBuilderModel.ModelName" />
+            </RadzenFormField>
+        </RadzenStack>
+    </RadzenColumn>
+</RadzenRow>
+<br />
+<div class="row">
+    <div class="col">
+        <RadzenButton Text="Save" ButtonStyle="ButtonStyle.Success"
+                      Click="ModelSave"
+                      Style="margin-bottom: 10px; width: 150px" />
+    </div>
+</div>
+@code {
+    [Parameter] public AIStoryBuilderModel objAIStoryBuilderModel { get; set; }
+    [Parameter] public DialogService DialogReference { get; set; }
+
+    AIStoryBuildersService AIStoryBuildersService;
+    OrchestratorMethods OrchestratorMethods;
+
+    protected override void OnInitialized()
+    {
+        try
+        {
+            AIStoryBuildersService = (AIStoryBuildersService)ScopedServices.GetService(typeof(AIStoryBuildersService));
+            OrchestratorMethods = (OrchestratorMethods)ScopedServices.GetService(typeof(OrchestratorMethods));
+        }
+        catch (Exception ex)
+        {
+            NotificationService.Notify(new NotificationMessage
+                {
+                    Severity = NotificationSeverity.Error,
+                    Summary = "Error",
+                    Detail = ex.Message,
+                    Duration = 4000
+                });
+        }
+    }
+
+    private async Task ModelSave()
+    {
+        try
+        {
+            if (objAIStoryBuilderModel.ModelName != null)
+            {
+                if (objAIStoryBuilderModel.ModelName.Length < 1)
+                {
+                    NotificationService.Notify(
+                    new NotificationMessage
+                        {
+                            Severity = NotificationSeverity.Error,
+                            Summary = "Error",
+                            Detail = "Model Name is required",
+                            Duration = 4000
+                        });
+                    return;
+                }
+                else
+                {
+                    // Update database
+                    await OrchestratorMethods.UpdateModelNameAsync(objAIStoryBuilderModel);
+
+                    DialogService.Close(objAIStoryBuilderModel);
+                }
+            }
+            else
+            {
+                NotificationService.Notify(
+                new NotificationMessage
+                {
+                    Severity = NotificationSeverity.Error,
+                    Summary = "Error",
+                    Detail = "Model Name is required",
+                    Duration = 4000
+                });
+                return;
+            }
+        }
+        catch (Exception ex)
+        {
+            NotificationService.Notify(new NotificationMessage
+                {
+                    Severity = NotificationSeverity.Error,
+                    Summary = "Error",
+                    Detail = ex.Message,
+                    Duration = 4000
+                });
+        }
+    }    
+}

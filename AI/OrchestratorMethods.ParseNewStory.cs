@@ -33,9 +33,6 @@ namespace AIStoryBuilders.AI
             ChatResponse ChatResponseResult = new ChatResponse();
             List<Message> chatPrompts = new List<Message>();
 
-            // *****************************************************
-            dynamic Databasefile = AIStoryBuildersDatabaseObject;
-
             // Trim paramStoryText to 10000 words (so we don't run out of tokens)
             paramStoryText = OrchestratorMethods.TrimToMaxWords(paramStoryText, 10000);
 

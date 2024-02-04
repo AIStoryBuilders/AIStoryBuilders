@@ -33,9 +33,6 @@ namespace AIStoryBuilders.AI
             ChatResponse ChatResponseResult = new ChatResponse();
             List<Message> chatPrompts = new List<Message>();
 
-            // *****************************************************
-            dynamic Databasefile = AIStoryBuildersDatabaseObject;
-
             // Update System Message
             SystemMessage = CreateDetectCharacters(objParagraph.ParagraphContent);
 

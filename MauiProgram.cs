@@ -63,6 +63,7 @@ namespace AIStoryBuilders
 
             builder.Services.AddSingleton<LogService>();
             builder.Services.AddSingleton<SettingsService>();
+            builder.Services.AddSingleton<DatabaseService>();
             builder.Services.AddSingleton<OrchestratorMethods>();
             builder.Services.AddSingleton<AIStoryBuildersService>();
 

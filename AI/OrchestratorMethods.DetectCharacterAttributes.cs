@@ -33,9 +33,6 @@ namespace AIStoryBuilders.AI
             ChatResponse ChatResponseResult = new ChatResponse();
             List<Message> chatPrompts = new List<Message>();
 
-            // *****************************************************
-            dynamic Databasefile = AIStoryBuildersDatabaseObject;
-
             // Serialize the Characters to JSON
             var SimpleCharacters = ProcessCharacters(colCharacters);
             string json = CharacterJsonSerializer.Serialize(SimpleCharacters);
