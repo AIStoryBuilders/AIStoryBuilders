@@ -7,7 +7,14 @@
 <RadzenContextMenu />
 <main>
     <div class="top-row px-4">
-        <a href="https://AIStoryBuilders.com/" target="_blank">AIStoryBuilders.com</a>
+        @if (UpdateAvailable)
+        {
+            <a href="https://apps.microsoft.com/detail/9NCJN9W323DB?rtc=1&hl=en-us&gl=US" target="_blank">* Update Available *</a>
+        }
+        else
+        {
+            <a href="https://AIStoryBuilders.com/" target="_blank">AIStoryBuilders.com</a>
+        }
     </div>
 
     <article class="content px-4">
@@ -17,16 +24,67 @@
 <RadzenFooter>
     <div class="row justify-content-start align-items-center px-2 pt-2 p-3 mb-2 bg-light text-dark">
         <div class="col-12 d-flex align-items-left">
-            &copy; @year - Version: @version
+            &copy; @year - Version: @versionLocal
         </div>
     </div>
 </RadzenFooter>
 @code {
-    private string version = "";
+    bool UpdateAvailable = false;
+    private string versionLocal = "";
+    private string versionPublished = "";
     private string year = DateTime.Now.Year.ToString();
 
     protected override void OnInitialized()
     {
-        version = _AppMetadata.Version;
+        versionLocal = _AppMetadata.Version;
     }
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            // Call the API at https://aistorybuilders.com/api/version/GetVersion
+            // to get the version
+
+            var client = new HttpClient();
+            var response = await client.GetAsync("https://aistorybuilders.com/api/version/GetVersion");
+            response.EnsureSuccessStatusCode();
+            var result = await response.Content.ReadAsStringAsync();
+            versionPublished = result;
+
+            // Use the version number from the API if it is greater than the local version
+            if (ConvertToInteger(versionPublished) > ConvertToInteger(versionLocal))
+            {
+                UpdateAvailable = true;
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine(ex.Message);
+        }
+    }
+
+    #region private int ConvertToInteger(string strParamVersion)
+    private int ConvertToInteger(string strParamVersion)
+    {
+        int intVersionNumber = 0;
+        string strVersion = strParamVersion;
+
+        // Split into parts seperated by periods
+        char[] splitchar = { '.' };
+        var strSegments = strVersion.Split(splitchar);
+
+        // Process the segments
+        int i = 0;
+        List<int> colMultiplyers = new List<int> { 10000, 100, 1 };
+        foreach (var strSegment in strSegments)
+        {
+            int intSegmentNumber = Convert.ToInt32(strSegment);
+            intVersionNumber = intVersionNumber + (intSegmentNumber * colMultiplyers[i]);
+            i++;
+        }
+
+        return intVersionNumber;
+    }
+    #endregion
 }
