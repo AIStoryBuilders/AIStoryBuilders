@@ -261,6 +261,11 @@ namespace AIStoryBuilders.Services
             story.Theme = RemoveLineBreaks(story.Theme);
             story.Synopsis = RemoveLineBreaks(story.Synopsis);
 
+            // Remove any pipes (because that is used as a delimiter)
+            story.Style = story.Style.Replace("|", "");
+            story.Theme = story.Theme.Replace("|", "");
+            story.Synopsis = story.Synopsis.Replace("|", "");
+
             // Re-add Story to file
             string updatedStory = $"{AIStoryBuildersStoriesContent.Count() + 1}|{story.Title}|{story.Style}|{story.Theme}|{story.Synopsis}";
             AIStoryBuildersStoriesContent = AIStoryBuildersStoriesContent.Append(updatedStory).ToArray();
