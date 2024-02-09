@@ -46,6 +46,22 @@
                     </div>
                     <br />
                 </RadzenTabsItem>
+                <RadzenTabsItem Text="Create Training Data">
+                    <p>Use this page to create training data from your AIStoryBuilder stories.</p>
+                    <p>Convert the Excel file produced to JsonL on the Create JsonL File tab.</p>
+                    <RadzenRow Gap="1rem">
+                        <RadzenColumn Size="6" SizeSM="6">
+                            <RadzenStack>
+                                <RadzenFormField Text="Story:" Variant=Variant.Outlined>
+                                    <RadzenDropDown Data=@colStorys TextProperty="Title" @bind-Value="@objStory" />
+                                </RadzenFormField>
+                            </RadzenStack>
+                            <RadzenButton Text="Create Training Data" ButtonStyle="ButtonStyle.Success"
+                                          Click=@(() => CreateTrainingData()) Icon="publish" />
+                        </RadzenColumn>
+                    </RadzenRow>
+                    <br />
+                </RadzenTabsItem>
                 <RadzenTabsItem Text="Create JsonL File">
                     <p>Use this page to upload an Excel file and create a JsonL file to use for fine tuning</p>
                     <div class="row">
@@ -67,6 +83,8 @@
     AIStoryBuildersService AIStoryBuildersService;
     LogService LogService;
     List<AIStoryBuilderModel> colAIStoryBuilderModel = new List<AIStoryBuilderModel>();
+    List<Story> colStorys = new List<Story>();
+    Story objStory = new Story();
     string Organization = "";
     string ApiKey = "";
 
@@ -80,6 +98,9 @@
 
         Organization = SettingsService.Organization;
         ApiKey = SettingsService.ApiKey;
+
+        // Get the Storys from the database
+        colStorys = AIStoryBuildersService.GetStorys();
     }
 
     protected override async Task OnInitializedAsync()
@@ -220,6 +241,41 @@
 
                 StateHasChanged();
             }
+        }
+        catch (Exception ex)
+        {
+            NotificationService.Notify(new NotificationMessage
+                {
+                    Severity = NotificationSeverity.Error,
+                    Summary = "Error",
+                    Detail = ex.Message,
+                    Duration = 4000
+                });
+
+            LogService.WriteToLog(ex.Message);
+        }
+    }
+
+    private async Task CreateTrainingData()
+    {
+        try
+        {
+            string ExportFileName = $"{objStory.Title}-TrainingData.xls";
+
+            var DocumentContents = AIStoryBuildersService.ExportTraingData(objStory);
+
+            // Read DocumentContents into a MemoryStream
+            var stream = new MemoryStream(DocumentContents);
+
+            var fileSaverResult = await FileSaver.Default.SaveAsync(ExportFileName, stream);
+
+            NotificationService.Notify(new NotificationMessage
+                {
+                    Severity = NotificationSeverity.Success,
+                    Summary = "Saved",
+                    Detail = "Convert this file to JsonL to upload to OpenAI.",
+                    Duration = 4000
+                });
         }
         catch (Exception ex)
         {

@@ -307,6 +307,105 @@ namespace AIStoryBuilders.Services
         }
         #endregion
 
+        #region public byte[] ExportTraingData(Story objStory)
+        public byte[] ExportTraingData(Story objStory)
+        {
+            try
+            {
+                #region Create Temp Directories
+
+                // Create _Temp
+                string TempPath =
+                    $"{Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments)}/AIStoryBuilders/_Temp";
+
+                if (!Directory.Exists(TempPath))
+                {
+                    Directory.CreateDirectory(TempPath);
+                }
+                else
+                {
+                    // Delete the temp directory
+                    Directory.Delete(TempPath, true);
+
+                    // Create the directory if it doesn't exist
+                    if (!Directory.Exists(TempPath))
+                    {
+                        Directory.CreateDirectory(TempPath);
+                    }
+                }
+
+                // Create _TempZip
+                string TempZipPath =
+                    $"{Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments)}/AIStoryBuilders/_TempZip";
+
+                if (!Directory.Exists(TempZipPath))
+                {
+                    Directory.CreateDirectory(TempZipPath);
+                }
+                else
+                {
+                    // Delete the temp directory
+                    Directory.Delete(TempZipPath, true);
+
+                    // Create the directory if it doesn't exist
+                    if (!Directory.Exists(TempZipPath))
+                    {
+                        Directory.CreateDirectory(TempZipPath);
+                    }
+                }
+                #endregion
+
+                // Create the manifest file
+                string ManifestFilePath = Path.Combine(TempPath, "Manifest.config");
+
+                // Create JSON from objStory
+                JSONManifest objJSONManifest = new JSONManifest
+                {
+                    Version = _appMetadata.Version,
+                    Title = objStory.Title,
+                    Style = objStory.Style,
+                    Theme = objStory.Theme,
+                    Synopsis = objStory.Synopsis,
+                    ExportedDate = DateTime.Now.ToString()
+                };
+
+                string JSONManifest = JsonConvert.SerializeObject(objJSONManifest);
+
+                using (var streamWriter = new StreamWriter(ManifestFilePath))
+                {
+                    streamWriter.WriteLine(JSONManifest);
+                }
+
+                // Get the Story
+                var StoriesPath = $"{BasePath}/{objStory.Title}";
+                string ExportFileName = $"{objStory.Title}.stybld";
+                string ExportFilePath = $"{TempZipPath}/{ExportFileName}";
+
+                // Copy the story folder to the temp directory
+                CopyDirectory(StoriesPath, TempPath);
+
+                // Zip the files
+                ZipFile.CreateFromDirectory(TempPath, ExportFilePath);
+
+                // Read the Zip file into a byte array
+                byte[] ExportFileBytes = File.ReadAllBytes(ExportFilePath);
+
+                // Delete the temp directories
+                Directory.Delete(TempPath, true);
+                Directory.Delete(TempZipPath, true);
+
+                return ExportFileBytes;
+            }
+            catch (Exception ex)
+            {
+                // Log error
+                LogService.WriteToLog("ExportFile: " + ex.Message + " " + ex.StackTrace ?? "" + " " + ex.InnerException.StackTrace ?? "");
+
+                return null;
+            }
+        }
+        #endregion
+
         // Utility
 
         #region public void CopyDirectory(string sourceDir, string targetDir)
