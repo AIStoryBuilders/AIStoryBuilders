@@ -1,6 +1,7 @@
 ﻿using AIStoryBuilders.Models;
 using AIStoryBuilders.Models.JSON;
 using Newtonsoft.Json;
+using OfficeOpenXml;
 using OpenAI.Files;
 using System.IO.Compression;
 using System.Text.Json;
@@ -312,94 +313,74 @@ namespace AIStoryBuilders.Services
         {
             try
             {
-                #region Create Temp Directories
+                string SystemMessage = "You are a fiction novel writing software program that creates prose from the story beats provided.";
 
-                // Create _Temp
                 string TempPath =
                     $"{Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments)}/AIStoryBuilders/_Temp";
 
+                // Create the directory if it doesn't exist
                 if (!Directory.Exists(TempPath))
                 {
                     Directory.CreateDirectory(TempPath);
                 }
-                else
-                {
-                    // Delete the temp directory
-                    Directory.Delete(TempPath, true);
 
-                    // Create the directory if it doesn't exist
-                    if (!Directory.Exists(TempPath))
+                string ExcelFileName = $"{objStory.Title}.xlsx";
+                string ExcelFilePath = $"{TempPath}/{ExcelFileName}";
+
+                ExcelPackage.LicenseContext = LicenseContext.NonCommercial;
+
+                using (var package = new ExcelPackage(ExcelFilePath))
+                {
+                    //Add a new worksheet to the empty workbook
+                    var worksheet = package.Workbook.Worksheets.Add("Training Data");
+
+                    var colChapters = GetChapters(objStory);
+
+                    int i = 2;
+                    foreach (var objChapter in colChapters)
                     {
-                        Directory.CreateDirectory(TempPath);
+                        TextEvent?.Invoke(this, new TextEventArgs($"{objChapter.ChapterName}", 5));
+
+                        //Add the headers
+                        worksheet.Cells[1, 1].Value = "System";
+                        worksheet.Cells[1, 2].Value = "User";
+                        worksheet.Cells[1, 3].Value = "Assistant";
+
+                        var colParagraphs = GetParagraphs(objChapter);
+
+                        foreach (var objParagraph in colParagraphs)
+                        {
+                            // Break up objParagraph.ParagraphContent by \n
+                            string[] sections = objParagraph.ParagraphContent.Split('\n');
+
+                            // Create a new paragraph for each line
+                            foreach (string section in sections)
+                            {
+                                worksheet.Cells[i, 1].Value = SystemMessage;
+                                worksheet.Cells[i, 2].Value = "User";
+                                worksheet.Cells[i, 3].Value = section;
+
+                                i++;
+                            }                           
+                        }
                     }
+
+                    // Save to file
+                    package.Save();
                 }
 
-                // Create _TempZip
-                string TempZipPath =
-                    $"{Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments)}/AIStoryBuilders/_TempZip";
+                // Read the document and convert to base64
+                byte[] ExcelFileBytes = File.ReadAllBytes(ExcelFilePath);
 
-                if (!Directory.Exists(TempZipPath))
-                {
-                    Directory.CreateDirectory(TempZipPath);
-                }
-                else
-                {
-                    // Delete the temp directory
-                    Directory.Delete(TempZipPath, true);
-
-                    // Create the directory if it doesn't exist
-                    if (!Directory.Exists(TempZipPath))
-                    {
-                        Directory.CreateDirectory(TempZipPath);
-                    }
-                }
-                #endregion
-
-                // Create the manifest file
-                string ManifestFilePath = Path.Combine(TempPath, "Manifest.config");
-
-                // Create JSON from objStory
-                JSONManifest objJSONManifest = new JSONManifest
-                {
-                    Version = _appMetadata.Version,
-                    Title = objStory.Title,
-                    Style = objStory.Style,
-                    Theme = objStory.Theme,
-                    Synopsis = objStory.Synopsis,
-                    ExportedDate = DateTime.Now.ToString()
-                };
-
-                string JSONManifest = JsonConvert.SerializeObject(objJSONManifest);
-
-                using (var streamWriter = new StreamWriter(ManifestFilePath))
-                {
-                    streamWriter.WriteLine(JSONManifest);
-                }
-
-                // Get the Story
-                var StoriesPath = $"{BasePath}/{objStory.Title}";
-                string ExportFileName = $"{objStory.Title}.stybld";
-                string ExportFilePath = $"{TempZipPath}/{ExportFileName}";
-
-                // Copy the story folder to the temp directory
-                CopyDirectory(StoriesPath, TempPath);
-
-                // Zip the files
-                ZipFile.CreateFromDirectory(TempPath, ExportFilePath);
-
-                // Read the Zip file into a byte array
-                byte[] ExportFileBytes = File.ReadAllBytes(ExportFilePath);
-
-                // Delete the temp directories
+                // Delete the temp directory
                 Directory.Delete(TempPath, true);
-                Directory.Delete(TempZipPath, true);
 
-                return ExportFileBytes;
+                return ExcelFileBytes;
             }
             catch (Exception ex)
             {
                 // Log error
-                LogService.WriteToLog("ExportFile: " + ex.Message + " " + ex.StackTrace ?? "" + " " + ex.InnerException.StackTrace ?? "");
+                LogService.WriteToLog("ExportTraingData: " + ex.Message + " " + ex.StackTrace ?? "" + " " + ex.InnerException.StackTrace ?? "");
 
                 return null;
             }

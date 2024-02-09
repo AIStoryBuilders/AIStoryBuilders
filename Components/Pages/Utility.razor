@@ -23,6 +23,10 @@
             <Tabs>
                 <RadzenTabsItem Text="Fine Tuning">
                     <p>Use this page to manage your fine tuned models on <a href="https://platform.openai.com/finetune" target="_blank">platform.openai.com</a></p>
+                    @if (colAIStoryBuilderModel.Count == 0)
+                    {
+                        <i>No fine tuned models found</i>
+                    }
                     <br />
                     <div style="height:500px">
                         <RadzenDataList AllowVirtualization=false Style="height:100%;overflow:auto;"
@@ -44,7 +48,6 @@
                             </Template>
                         </RadzenDataList>
                     </div>
-                    <br />
                 </RadzenTabsItem>
                 <RadzenTabsItem Text="Create Training Data">
                     <p>Use this page to create training data from your AIStoryBuilder stories.</p>
@@ -52,12 +55,16 @@
                     <RadzenRow Gap="1rem">
                         <RadzenColumn Size="6" SizeSM="6">
                             <RadzenStack>
-                                <RadzenFormField Text="Story:" Variant=Variant.Outlined>
+                                <RadzenFormField Text="Select a Story:" Variant=Variant.Outlined>
                                     <RadzenDropDown Data=@colStorys TextProperty="Title" @bind-Value="@objStory" />
                                 </RadzenFormField>
                             </RadzenStack>
-                            <RadzenButton Text="Create Training Data" ButtonStyle="ButtonStyle.Success"
-                                          Click=@(() => CreateTrainingData()) Icon="publish" />
+                            <br />
+                            @if (objStory.Title != null)
+                            {
+                                <RadzenButton Text="Create Training Data" ButtonStyle="ButtonStyle.Success"
+                                              Click=@(() => CreateTrainingData()) Icon="publish" />
+                            }
                         </RadzenColumn>
                     </RadzenRow>
                     <br />
