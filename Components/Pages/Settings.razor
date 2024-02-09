@@ -13,40 +13,33 @@
 <RadzenRow AlignItems="AlignItems.Start" Wrap="FlexWrap.Wrap" Gap="1rem" Class="rz-p-sm-12">
     <RadzenColumn Size="8" SizeSM="4">
         <RadzenStack>
-            <RadzenFormField Text="OpenAI Organization:" Variant="@variant">
-                <RadzenTextBox @bind-Value="@Organization" style="width:300px;" />
-            </RadzenFormField>
             <RadzenFormField Text="OpenAI ApiKey:" Variant="@variant">
                 <RadzenTextBox @bind-Value="@ApiKey" @onkeydown="APIKeyDetection" style="width:450px;" />
             </RadzenFormField>
-            <RadzenFormField Text="Default AI Model:" Variant="@variant">
-                <RadzenDropDown Data=@colModels @bind-Value="@AIModel" Style="width:300px" />
-            </RadzenFormField>
-            <RadzenLabel Text="Note: GPT 3.5 is faster and cost less than GPT 4, but does not perform as well." style="font-size:x-small" />
+            @if (!IsSettingsEntered)
+            {
+                <RadzenButton Text="An OpenAI API Key is required (Click here to get one)" ButtonStyle="ButtonStyle.Secondary"
+                              Click="GetAPIKey"
+                              Style="margin-bottom: 10px; width: 500px" />
+            }
+            else
+            {
+                <RadzenFormField Text="Default AI Model:" Variant="@variant">
+                    <RadzenDropDown Data=@colModels @bind-Value="@AIModel" Style="width:300px" />
+                </RadzenFormField>
+                <RadzenLabel Text="Note: GPT 3.5 is faster and cost less than GPT 4, but does not perform as well." style="font-size:x-small" />
+
+                <div class="row">
+                    <div class="col">
+                        <RadzenButton Text="Save" ButtonStyle="ButtonStyle.Success"
+                                      Click="SettingsSave"
+                                      Style="margin-bottom: 10px; width: 150px" />&nbsp;&nbsp;
+                    </div>
+                </div>
+            }
         </RadzenStack>
     </RadzenColumn>
 </RadzenRow>
-<br />
-@if (!IsSettingsEntered)
-{
-    <div class="row">
-        <div class="col">
-            <RadzenButton Text="An OpenAI API Key is required (Click here to get one)" ButtonStyle="ButtonStyle.Secondary"
-                          Click="GetAPIKey"
-                          Style="margin-bottom: 10px; width: 500px" />
-        </div>
-    </div>
-}
-else
-{
-    <div class="row">
-        <div class="col">
-            <RadzenButton Text="Save" ButtonStyle="ButtonStyle.Success"
-                          Click="SettingsSave"
-                          Style="margin-bottom: 10px; width: 150px" />&nbsp;&nbsp;
-        </div>
-    </div>
-}
 @code {
     [Parameter] public EventCallback SettingsChanged { get; set; }
     OrchestratorMethods OrchestratorMethods;
