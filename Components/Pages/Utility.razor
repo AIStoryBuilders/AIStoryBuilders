@@ -82,7 +82,7 @@
                         </div>
                     }
                 </RadzenTabsItem>
-                <RadzenTabsItem Text="Create JsonL File">
+                <RadzenTabsItem Text="JsonL Utility">
                     <p>Use this page to upload an Excel file and create a JsonL file to use for fine tuning</p>
                     <div class="row">
                         <div class="col">
@@ -292,7 +292,56 @@
     {
         try
         {
-            //var fineTuneModel = await OrchestratorMethods.FineTuneModelAsync(colTrainingData, objStory);
+            // Ensure colTrainingData has at least 10 lines of data
+            if (colTrainingData.Count < 10)
+            {
+                NotificationService.Notify(new NotificationMessage
+                    {
+                        Severity = NotificationSeverity.Error,
+                        Summary = "Error",
+                        Detail = "You must have at least 10 lines of data to upload to OpenAI.",
+                        Duration = 4000
+                    });
+
+                return;
+            }
+
+            InProgress = true;
+
+            // Convert to JsonL
+
+            var conversations = new List<Conversation>();
+
+            foreach (var trainingData in colTrainingData)
+            {
+                conversations.Add(new Conversation(new List<Message>()
+                {
+                    new Message(Role.System, trainingData.System),
+                    new Message(Role.User, trainingData.User),
+                    new Message(Role.Assistant, trainingData.Assistant)
+                }));
+            }
+
+            var fileContents = conversations.Select(conversation => conversation.ToString());
+
+            string TempTrainingDataPath = @$"{Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments)}/AIStoryBuilders/FineTuneTrainingData/";
+
+            if (!Directory.Exists(TempTrainingDataPath))
+            {
+                Directory.CreateDirectory(TempTrainingDataPath);
+            }
+
+            string TempTrainingDataFile = @$"{TempTrainingDataPath}/TrainingData.jsonl";
+
+            await File.WriteAllLinesAsync(
+                TempTrainingDataFile,
+                conversations.Select(conversation => conversation.ToString()));
+
+            // Upload to OpenAI
+
+            // Upload the file to OpenAI API
+            var api = new OpenAIClient(new OpenAIAuthentication(ApiKey, Organization));
+            var fileData = await api.FilesEndpoint.UploadFileAsync(TempTrainingDataFile, "fine-tune");
 
             NotificationService.Notify(new NotificationMessage
                 {
@@ -301,9 +350,32 @@
                     Detail = "The training data has been uploaded to OpenAI to be fine tuned.",
                     Duration = 4000
                 });
+
+            await CreateFineTuneJob(fileData);
+
+            try
+            {
+                // Wait 2 seconds to allow the file to be released
+                await Task.Delay(2000);
+
+                // Delete the file
+                File.Delete(TempTrainingDataFile);
+
+                try
+                {
+                    // Delete the directory
+                    Directory.Delete(TempTrainingDataPath);
+                }
+                catch { }
+            }
+            catch { }
+
+            InProgress = false;
         }
         catch (Exception ex)
         {
+            InProgress = false;
+
             NotificationService.Notify(new NotificationMessage
                 {
                     Severity = NotificationSeverity.Error,
@@ -349,5 +421,24 @@
 
             LogService.WriteToLog(ex.Message);
         }
+    }
+
+    // Fine-Tune
+
+    private async Task CreateFineTuneJob(FileResponse paramaFile)
+    {
+        var api = new OpenAIClient(new OpenAIAuthentication(ApiKey, Organization));
+        var request = new CreateFineTuneJobRequest("gpt-3.5-turbo-1106", paramaFile);
+
+        // Create a fine-tuning job using the OpenAI API
+        await api.FineTuningEndpoint.CreateJobAsync(request);
+
+        NotificationService.Notify(new NotificationMessage
+            {
+                Severity = NotificationSeverity.Success,
+                Summary = "Fine Tune Started",
+                Detail = "The Fine Tuning of the training data has started.",
+                Duration = 4000
+            });
     }
 }

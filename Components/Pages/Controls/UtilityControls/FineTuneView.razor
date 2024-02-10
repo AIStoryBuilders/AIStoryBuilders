@@ -76,7 +76,7 @@
         text = System.Text.RegularExpressions.Regex.Replace(text, "<.*?>", string.Empty);
 
         // Remove any &nbsp;
-        text = CleanText("&nbsp;", string.Empty);
+        text = CleanText(text);
 
         if (text.Length > length)
         {
