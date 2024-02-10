@@ -2,20 +2,61 @@
 @inject DialogService dialogService
 @inject NotificationService NotificationService
 
-<div style="height:500px">
-    <RadzenDataList AllowVirtualization=false Style="height:100%;overflow:auto;"
-                    WrapItems=true AllowPaging=false
-                    Data="@colTrainingData" TItem="TrainingData">
-        <Template Context="model">
-            <RadzenCard Style="width: 100%; padding: 0;">
-                <RadzenRow Gap="0">
-                    <RadzenText TextStyle="TextStyle.H6" TagName="TagName.H5" class="rz-color-secondary">@(model.Assistant)</RadzenText>
-                </RadzenRow>
-            </RadzenCard>
-        </Template>
-    </RadzenDataList>
-</div>
+<RadzenRow Gap="1rem">
+    <RadzenColumn Size="5">
+        <RadzenDataList AllowVirtualization=false Style="height:300px;overflow:auto;"
+                        WrapItems=true AllowPaging=false
+                        Data="@colTrainingData" TItem="TrainingData">
+            <Template Context="model">
+                <RadzenCard Style="width: 100%; padding: 0;">
+                    <RadzenRow Gap="0">
+                        <p style="font-size:small">@(TrimText(model.Assistant, 100))</p>
+                    </RadzenRow>
+                </RadzenCard>
+            </Template>
+        </RadzenDataList>
+    </RadzenColumn>
+    <RadzenColumn>
+        <RadzenTabs TabPosition=TabPosition.Top RenderMode="TabRenderMode.Client">
+            <Tabs>
+                <RadzenTabsItem Text="(Training Data)">
+                    <RadzenFormField Style="width:100%" Text="Assistant:" Variant=Variant.Outlined>
+                        <RadzenTextArea Rows="10" @bind-Value="@SelectedTrainingData.Assistant" />
+                    </RadzenFormField>
+                </RadzenTabsItem>
+                <RadzenTabsItem Text="(Instruction)">
+                    <RadzenFormField Style="width:100%" Text="User:" Variant=Variant.Outlined>
+                        <RadzenTextArea Rows="10" @bind-Value="@SelectedTrainingData.User" />
+                    </RadzenFormField>
+                </RadzenTabsItem>                
+            </Tabs>
+        </RadzenTabs>
+    </RadzenColumn>
+</RadzenRow>
 
 @code {
     [Parameter] public List<TrainingData> colTrainingData { get; set; }
+
+    TrainingData SelectedTrainingData { get; set; }
+
+    protected override void OnInitialized()
+    {
+        // Set the selected training data to the first item in the list
+        SelectedTrainingData = colTrainingData.FirstOrDefault();
+    }
+
+    public string TrimText(string text, int length)
+    {
+        // Remove any HTML tags
+        text = System.Text.RegularExpressions.Regex.Replace(text, "<.*?>", string.Empty);
+
+        // Remove any &nbsp;
+        text = text.Replace("&nbsp;", string.Empty);
+
+        if (text.Length > length)
+        {
+            return text.Substring(0, length) + "...";
+        }
+        return text;
+    }
 }

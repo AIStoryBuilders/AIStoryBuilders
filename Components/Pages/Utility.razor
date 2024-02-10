@@ -67,11 +67,14 @@
                                             <RadzenDropDown Data=@colStorys TextProperty="Title" @bind-Value="@objStory" Change="@OnStoryChange" />
                                         </RadzenFormField>
                                     </RadzenStack>
-                                    <br />
-                                    <FineTuneView colTrainingData="@colTrainingData" />
                                     @if (TrainingLoaded)
                                     {
-                                        <RadzenButton Text="Export Excel" ButtonStyle="ButtonStyle.Success"
+                                        <br />
+                                        <FineTuneView colTrainingData="@colTrainingData" />
+                                        <br />
+                                        <RadzenButton Text="Upload to OpenAI" ButtonStyle="ButtonStyle.Success"
+                                                      Click=@(() => UploadtoOpenAI()) Icon="publish" />
+                                        <RadzenButton Text="Export Excel" ButtonStyle="ButtonStyle.Info"
                                                       Click=@(() => ExportTrainingData()) Icon="publish" />
                                     }
                                 </RadzenColumn>
@@ -270,6 +273,34 @@
 
                 StateHasChanged();
             }
+        }
+        catch (Exception ex)
+        {
+            NotificationService.Notify(new NotificationMessage
+                {
+                    Severity = NotificationSeverity.Error,
+                    Summary = "Error",
+                    Detail = ex.Message,
+                    Duration = 4000
+                });
+
+            LogService.WriteToLog(ex.Message);
+        }
+    }
+
+    private async Task UploadtoOpenAI()
+    {
+        try
+        {
+            //var fineTuneModel = await OrchestratorMethods.FineTuneModelAsync(colTrainingData, objStory);
+
+            NotificationService.Notify(new NotificationMessage
+                {
+                    Severity = NotificationSeverity.Success,
+                    Summary = "Fine Tuned Data Uploaded",
+                    Detail = "The training data has been uploaded to OpenAI to be fine tuned.",
+                    Duration = 4000
+                });
         }
         catch (Exception ex)
         {

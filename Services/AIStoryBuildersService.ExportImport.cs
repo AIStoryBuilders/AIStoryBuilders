@@ -27,18 +27,21 @@ namespace AIStoryBuilders.Services
 
                 foreach (var objChapter in colChapters)
                 {
-                    TextEvent?.Invoke(this, new TextEventArgs($"Parsing {objChapter.ChapterName} out of {colChapters.Count}", 5));
+                    TextEvent?.Invoke(this, new TextEventArgs($"{objChapter.ChapterName} out of {colChapters.Count}", 5));
 
                     var colParagraphs = GetParagraphs(objChapter);
 
+                    int i = 1;
                     foreach (var objParagraph in colParagraphs)
                     {
+                        TextEvent?.Invoke(this, new TextEventArgs($"Parsing Paragraph {i} out of {colParagraphs.Count}", 5));
+
                         // Break up objParagraph.ParagraphContent by \n
                         string[] Paragraphs = objParagraph.ParagraphContent.Split('\n');
-
+                        
                         // Create a new paragraph for each line
                         foreach (string Paragraph in Paragraphs)
-                        {
+                        {         
                             // Get the description of the section
                             string ParagraphDescription = await OrchestratorMethods.GetStoryBeats(Paragraph);
 
@@ -49,8 +52,10 @@ namespace AIStoryBuilders.Services
                                 Assistant = Paragraph
                             };
 
-                            colTrainingData.Add(trainingData);
+                            colTrainingData.Add(trainingData);                            
                         }
+                        
+                        i++;
                     }
                 }
 
