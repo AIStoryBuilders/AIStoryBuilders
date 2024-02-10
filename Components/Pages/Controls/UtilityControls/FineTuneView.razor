@@ -9,8 +9,10 @@
                         Data="@colTrainingData" TItem="TrainingData">
             <Template Context="model">
                 <RadzenCard Style="width: 100%; padding: 0;">
-                    <RadzenRow Gap="0">
-                        <p style="font-size:small">@(TrimText(model.Assistant, 100))</p>
+                    <RadzenRow Gap="0">  
+                        <div id="ParagraphDiv" @onclick="() => onClickParagraph(model)">
+                            <p style="font-size:small">@(TrimText(model.Assistant, 100))</p>
+                        </div>
                     </RadzenRow>
                 </RadzenCard>
             </Template>
@@ -43,6 +45,11 @@
     {
         // Set the selected training data to the first item in the list
         SelectedTrainingData = colTrainingData.FirstOrDefault();
+    }
+
+    private void onClickParagraph(TrainingData model)
+    {
+        SelectedTrainingData = model;
     }
 
     public string TrimText(string text, int length)
