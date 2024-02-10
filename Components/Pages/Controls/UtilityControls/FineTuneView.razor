@@ -1,0 +1,21 @@
+﻿@using AIStoryBuilders.Models;
+@inject DialogService dialogService
+@inject NotificationService NotificationService
+
+<div style="height:500px">
+    <RadzenDataList AllowVirtualization=false Style="height:100%;overflow:auto;"
+                    WrapItems=true AllowPaging=false
+                    Data="@colTrainingData" TItem="TrainingData">
+        <Template Context="model">
+            <RadzenCard Style="width: 100%; padding: 0;">
+                <RadzenRow Gap="0">
+                    <RadzenText TextStyle="TextStyle.H6" TagName="TagName.H5" class="rz-color-secondary">@(model.Assistant)</RadzenText>
+                </RadzenRow>
+            </RadzenCard>
+        </Template>
+    </RadzenDataList>
+</div>
+
+@code {
+    [Parameter] public List<TrainingData> colTrainingData { get; set; }
+}

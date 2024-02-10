@@ -1,5 +1,6 @@
 ﻿@using AIStoryBuilders.AI
 @using AIStoryBuilders.Components.Pages.Controls.EditControls
+@using AIStoryBuilders.Components.Pages.Controls.UtilityControls
 @using AIStoryBuilders.Model;
 @using AIStoryBuilders.Services;
 @using ExcelDataReader
@@ -67,7 +68,7 @@
                                         </RadzenFormField>
                                     </RadzenStack>
                                     <br />
-                                    <p>UI Goes here</p>
+                                    <FineTuneView colTrainingData="@colTrainingData" />
                                     @if (TrainingLoaded)
                                     {
                                         <RadzenButton Text="Export Excel" ButtonStyle="ButtonStyle.Success"
