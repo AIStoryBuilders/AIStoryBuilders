@@ -45,11 +45,29 @@
     {
         // Set the selected training data to the first item in the list
         SelectedTrainingData = colTrainingData.FirstOrDefault();
+
+        SelectedTrainingData.Assistant = CleanText(SelectedTrainingData.Assistant);
+        SelectedTrainingData.User = CleanText(SelectedTrainingData.User);
     }
 
     private void onClickParagraph(TrainingData model)
     {
         SelectedTrainingData = model;
+
+        SelectedTrainingData.Assistant = CleanText(SelectedTrainingData.Assistant);
+        SelectedTrainingData.User = CleanText(SelectedTrainingData.User);
+    }
+
+    // Clean up the text to remove any HTML tags and &nbsp;
+    public string CleanText(string text)
+    {
+        // Remove any HTML tags
+        text = System.Text.RegularExpressions.Regex.Replace(text, "<.*?>", string.Empty);
+
+        // Remove any &nbsp;
+        text = text.Replace("&nbsp;", string.Empty);
+
+        return text;
     }
 
     public string TrimText(string text, int length)
@@ -58,7 +76,7 @@
         text = System.Text.RegularExpressions.Regex.Replace(text, "<.*?>", string.Empty);
 
         // Remove any &nbsp;
-        text = text.Replace("&nbsp;", string.Empty);
+        text = CleanText("&nbsp;", string.Empty);
 
         if (text.Length > length)
         {
