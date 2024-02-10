@@ -50,24 +50,33 @@
                     </div>
                 </RadzenTabsItem>
                 <RadzenTabsItem Text="Create Training Data">
-                    <p>Use this page to create training data from your AIStoryBuilder stories.</p>
-                    <p>Convert the Excel file produced to JsonL on the Create JsonL File tab.</p>
-                    <RadzenRow Gap="1rem">
-                        <RadzenColumn Size="6" SizeSM="6">
-                            <RadzenStack>
-                                <RadzenFormField Text="Select a Story:" Variant=Variant.Outlined>
-                                    <RadzenDropDown Data=@colStorys TextProperty="Title" @bind-Value="@objStory" />
-                                </RadzenFormField>
-                            </RadzenStack>
-                            <br />
-                            @if (objStory.Title != null)
-                            {
-                                <RadzenButton Text="Create Training Data" ButtonStyle="ButtonStyle.Success"
-                                              Click=@(() => CreateTrainingData()) Icon="publish" />
-                            }
-                        </RadzenColumn>
-                    </RadzenRow>
-                    <br />
+                    @if (@InProgress)
+                    {
+                        <div class="rz-m-10">
+                            <RadzenProgressBar Value="100" ShowValue="false" Mode="ProgressBarMode.Indeterminate" />
+                        </div>
+                    }
+                    else
+                    {
+                        <div style="height:500px">
+                            <RadzenRow Gap="1rem">
+                                <RadzenColumn Size="6" SizeSM="6">
+                                    <RadzenStack>
+                                        <RadzenFormField Text="Select a Story:" Variant=Variant.Outlined>
+                                            <RadzenDropDown Data=@colStorys TextProperty="Title" @bind-Value="@objStory" Change="@OnStoryChange" />
+                                        </RadzenFormField>
+                                    </RadzenStack>
+                                    <br />
+                                    <p>UI Goes here</p>
+                                    @if (TrainingLoaded)
+                                    {
+                                        <RadzenButton Text="Export Excel" ButtonStyle="ButtonStyle.Success"
+                                                      Click=@(() => ExportTrainingData()) Icon="publish" />
+                                    }
+                                </RadzenColumn>
+                            </RadzenRow>
+                        </div>
+                    }
                 </RadzenTabsItem>
                 <RadzenTabsItem Text="Create JsonL File">
                     <p>Use this page to upload an Excel file and create a JsonL file to use for fine tuning</p>
@@ -91,9 +100,12 @@
     LogService LogService;
     List<AIStoryBuilderModel> colAIStoryBuilderModel = new List<AIStoryBuilderModel>();
     List<Story> colStorys = new List<Story>();
+    List<TrainingData> colTrainingData = new List<TrainingData>();
     Story objStory = new Story();
     string Organization = "";
     string ApiKey = "";
+    bool TrainingLoaded = false;
+    bool InProgress = false;
 
     protected override void OnInitialized()
     {
@@ -153,6 +165,15 @@
 
             colAIStoryBuilderModel = await OrchestratorMethods.ListFineTunedModelsAsync();
         }
+    }
+
+    async Task OnStoryChange()
+    {
+        InProgress = true;
+        TrainingLoaded = false;
+        colTrainingData = await AIStoryBuildersService.CreateTrainingDataAsync(objStory);
+        TrainingLoaded = true;
+        InProgress = false;
     }
 
     async Task DownloadTemplate()
@@ -263,13 +284,13 @@
         }
     }
 
-    private async Task CreateTrainingData()
+    private async Task ExportTrainingData()
     {
         try
         {
             string ExportFileName = $"{objStory.Title}-TrainingData.xls";
 
-            var DocumentContents = AIStoryBuildersService.ExportTraingData(objStory);
+            var DocumentContents = AIStoryBuildersService.ExportTrainingData(colTrainingData);
 
             // Read DocumentContents into a MemoryStream
             var stream = new MemoryStream(DocumentContents);

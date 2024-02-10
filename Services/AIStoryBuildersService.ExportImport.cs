@@ -12,6 +12,64 @@ namespace AIStoryBuilders.Services
 {
     public partial class AIStoryBuildersService
     {
+        // Traing Data
+
+        #region public async Task<List<TrainingData>> CreateTrainingDataAsync(Story objStory)
+        public async Task<List<TrainingData>> CreateTrainingDataAsync(Story objStory)
+        {
+            try
+            {
+                List<TrainingData> colTrainingData = new List<TrainingData>();
+
+                string SystemMessage = "You are a fiction novel writing software program that creates prose from the story beats provided.";
+
+                var colChapters = GetChapters(objStory);
+
+                foreach (var objChapter in colChapters)
+                {
+                    TextEvent?.Invoke(this, new TextEventArgs($"Parsing {objChapter.ChapterName} out of {colChapters.Count}", 5));
+
+                    var colParagraphs = GetParagraphs(objChapter);
+
+                    foreach (var objParagraph in colParagraphs)
+                    {
+                        // Break up objParagraph.ParagraphContent by \n
+                        string[] Paragraphs = objParagraph.ParagraphContent.Split('\n');
+
+                        // Create a new paragraph for each line
+                        foreach (string Paragraph in Paragraphs)
+                        {
+                            // Get the description of the section
+                            string ParagraphDescription = await OrchestratorMethods.GetStoryBeats(Paragraph);
+
+                            TrainingData trainingData = new TrainingData
+                            {
+                                System = SystemMessage,
+                                User = ParagraphDescription,
+                                Assistant = Paragraph
+                            };
+
+                            colTrainingData.Add(trainingData);
+                        }
+                    }
+                }
+
+                TextEvent?.Invoke(this, new TextEventArgs($"Training data complete!", 2));
+
+                return colTrainingData;
+            }
+            catch (Exception ex)
+            {
+                // Log error
+                LogService.WriteToLog("CreateTrainingData: " + ex.Message + " " + ex.StackTrace ?? "" + " " + ex.InnerException.StackTrace ?? "");
+
+                return new List<TrainingData>();
+            }
+        }
+        #endregion
+
+        // Export/Import
+
         #region public byte[] ExportWordDocument(Story objStory)
         public byte[] ExportWordDocument(Story objStory)
         {
@@ -308,13 +366,11 @@ namespace AIStoryBuilders.Services
         }
         #endregion
 
-        #region public byte[] ExportTraingData(Story objStory)
-        public byte[] ExportTraingData(Story objStory)
+        #region public byte[] ExportTrainingData(List<TrainingData> colTrainingData)
+        public byte[] ExportTrainingData(List<TrainingData> colTrainingData)
         {
             try
             {
-                string SystemMessage = "You are a fiction novel writing software program that creates prose from the story beats provided.";
-
                 string TempPath =
                     $"{Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments)}/AIStoryBuilders/_Temp";
 
@@ -324,45 +380,29 @@ namespace AIStoryBuilders.Services
                     Directory.CreateDirectory(TempPath);
                 }
 
-                string ExcelFileName = $"{objStory.Title}.xlsx";
+                string ExcelFileName = $"TrainingData.xlsx";
                 string ExcelFilePath = $"{TempPath}/{ExcelFileName}";
 
                 ExcelPackage.LicenseContext = LicenseContext.NonCommercial;
 
+                int i = 2;
                 using (var package = new ExcelPackage(ExcelFilePath))
                 {
                     //Add a new worksheet to the empty workbook
                     var worksheet = package.Workbook.Worksheets.Add("Training Data");
 
-                    var colChapters = GetChapters(objStory);
+                    //Add the headers
+                    worksheet.Cells[1, 1].Value = "System";
+                    worksheet.Cells[1, 2].Value = "User";
+                    worksheet.Cells[1, 3].Value = "Assistant";
 
-                    int i = 2;
-                    foreach (var objChapter in colChapters)
+                    foreach (var line in colTrainingData)
                     {
-                        TextEvent?.Invoke(this, new TextEventArgs($"{objChapter.ChapterName}", 5));
+                        worksheet.Cells[i, 1].Value = line.System;
+                        worksheet.Cells[i, 2].Value = line.User;
+                        worksheet.Cells[i, 3].Value = line.Assistant;
 
-                        //Add the headers
-                        worksheet.Cells[1, 1].Value = "System";
-                        worksheet.Cells[1, 2].Value = "User";
-                        worksheet.Cells[1, 3].Value = "Assistant";
-
-                        var colParagraphs = GetParagraphs(objChapter);
-
-                        foreach (var objParagraph in colParagraphs)
-                        {
-                            // Break up objParagraph.ParagraphContent by \n
-                            string[] sections = objParagraph.ParagraphContent.Split('\n');
-
-                            // Create a new paragraph for each line
-                            foreach (string section in sections)
-                            {
-                                worksheet.Cells[i, 1].Value = SystemMessage;
-                                worksheet.Cells[i, 2].Value = "User";
-                                worksheet.Cells[i, 3].Value = section;
-
-                                i++;
-                            }                           
-                        }
+                        i++;
                     }
 
                     // Save to file
