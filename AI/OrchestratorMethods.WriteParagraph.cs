@@ -10,6 +10,8 @@ using System.Threading.Tasks;
 using AIStoryBuilders.Models;
 using System.Text.Json;
 using Newtonsoft.Json.Linq;
+using Newtonsoft.Json;
+using OpenAI.Moderations;
 
 namespace AIStoryBuilders.AI
 {
@@ -55,6 +57,20 @@ namespace AIStoryBuilders.AI
                 frequencyPenalty: 0,
                 presencePenalty: 0,
                 responseFormat: ChatResponseFormat.Json);
+
+            // Check Moderation
+            var ModerationResult = await api.ModerationsEndpoint.GetModerationAsync(SystemMessage);
+
+            if (ModerationResult)
+            {
+                ModerationsResponse moderationsResponse = await api.ModerationsEndpoint.CreateModerationAsync(new ModerationsRequest(SystemMessage));
+
+                // Serailize the ModerationsResponse
+                string ModerationsResponseString = JsonConvert.SerializeObject(moderationsResponse.Results.FirstOrDefault().Categories);
+
+                LogService.WriteToLog($"OpenAI Moderation flagged the content: [{SystemMessage}] as violating its policies: {ModerationsResponseString}");
+                ReadTextEvent?.Invoke(this, new ReadTextEventArgs($"WARNING! OpenAI Moderation flagged the content as violating its policies. See the logs for more details.", 30));
+            }
 
             ChatResponseResult = await api.ChatEndpoint.GetCompletionAsync(FinalChatRequest);
 
@@ -131,7 +147,7 @@ namespace AIStoryBuilders.AI
 
                 if (paramJSONMasterStory.PreviousParagraphs != null)
                 {
-                    var JSONStringOfPreviousParagraphs = JsonSerializer.Serialize(paramJSONMasterStory.PreviousParagraphs);
+                    var JSONStringOfPreviousParagraphs = System.Text.Json.JsonSerializer.Serialize(paramJSONMasterStory.PreviousParagraphs);
 
                     strPrompt = strPrompt +
                         $"#### This is the JSON representation of the previous paragraphs in chapter {ChapterSequence}: {JSONStringOfPreviousParagraphs}. \n";
@@ -148,7 +164,7 @@ namespace AIStoryBuilders.AI
                 // Add CurrentLocation if provided
                 if (paramJSONMasterStory.CurrentLocation != null)
                 {
-                    var JSONStringOfCurrentLocation = JsonSerializer.Serialize(paramJSONMasterStory.CurrentLocation);
+                    var JSONStringOfCurrentLocation = System.Text.Json.JsonSerializer.Serialize(paramJSONMasterStory.CurrentLocation);
 
                     strPrompt = strPrompt +
                         $"#### This is the JSON representation of the location description of the paragraph: {JSONStringOfCurrentLocation}. \n";
@@ -157,7 +173,7 @@ namespace AIStoryBuilders.AI
                 // Add CharacterList if provided
                 if (paramJSONMasterStory.CharacterList != null)
                 {
-                    var JSONStringOfCharacterList = JsonSerializer.Serialize(paramJSONMasterStory.CharacterList);
+                    var JSONStringOfCharacterList = System.Text.Json.JsonSerializer.Serialize(paramJSONMasterStory.CharacterList);
 
                     strPrompt = strPrompt +
                         $"#### This is the JSON representation of the characters in the paragraph and their descriptions: {JSONStringOfCharacterList}. \n";
@@ -166,7 +182,7 @@ namespace AIStoryBuilders.AI
                 // Add RelatedParagraphs if provided
                 if (paramJSONMasterStory.RelatedParagraphs != null)
                 {
-                    var JSONStringOfRelatedParagraphs = JsonSerializer.Serialize(paramJSONMasterStory.RelatedParagraphs);
+                    var JSONStringOfRelatedParagraphs = System.Text.Json.JsonSerializer.Serialize(paramJSONMasterStory.RelatedParagraphs);
 
                     strPrompt = strPrompt +
                         $"#### This is the JSON representation of related paragraphs that occur in previous chapters: {JSONStringOfRelatedParagraphs}. \n";
@@ -191,7 +207,7 @@ namespace AIStoryBuilders.AI
                 // Add CurrentLocation if provided
                 if (paramJSONMasterStory.CurrentLocation != null)
                 {
-                    var JSONStringOfCurrentLocation = JsonSerializer.Serialize(paramJSONMasterStory.CurrentLocation);
+                    var JSONStringOfCurrentLocation = System.Text.Json.JsonSerializer.Serialize(paramJSONMasterStory.CurrentLocation);
 
                     strPrompt = strPrompt +
                         $"#### This is the JSON representation of the location description of the paragraph: {JSONStringOfCurrentLocation}. \n";
@@ -200,7 +216,7 @@ namespace AIStoryBuilders.AI
                 // Add CharacterList if provided
                 if (paramJSONMasterStory.CharacterList != null)
                 {
-                    var JSONStringOfCharacterList = JsonSerializer.Serialize(paramJSONMasterStory.CharacterList);
+                    var JSONStringOfCharacterList = System.Text.Json.JsonSerializer.Serialize(paramJSONMasterStory.CharacterList);
 
                     strPrompt = strPrompt +
                         $"#### This is the JSON representation of the characters in the paragraph and their descriptions: {JSONStringOfCharacterList}. \n";
@@ -209,7 +225,7 @@ namespace AIStoryBuilders.AI
                 // Add RelatedParagraphs if provided
                 if (paramJSONMasterStory.RelatedParagraphs != null)
                 {
-                    var JSONStringOfRelatedParagraphs = JsonSerializer.Serialize(paramJSONMasterStory.RelatedParagraphs);
+                    var JSONStringOfRelatedParagraphs = System.Text.Json.JsonSerializer.Serialize(paramJSONMasterStory.RelatedParagraphs);
 
                     strPrompt = strPrompt +
                         $"#### This is the JSON representation of related paragraphs that occur in previous chapters: {JSONStringOfRelatedParagraphs}. \n";

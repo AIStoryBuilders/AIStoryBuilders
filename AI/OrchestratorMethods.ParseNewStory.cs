@@ -10,6 +10,8 @@ using Newtonsoft.Json;
 using Microsoft.Maui.Storage;
 using System.Collections.Generic;
 using AIStoryBuilders.Model;
+using OpenAI.Moderations;
+using System.Threading;
 
 namespace AIStoryBuilders.AI
 {
@@ -48,6 +50,20 @@ namespace AIStoryBuilders.AI
                 SystemMessage
                 )
             );
+
+            // Check Moderation
+            var ModerationResult = await api.ModerationsEndpoint.GetModerationAsync(SystemMessage);
+
+            if (ModerationResult)
+            {
+                ModerationsResponse moderationsResponse = await api.ModerationsEndpoint.CreateModerationAsync(new ModerationsRequest(SystemMessage));
+
+                // Serailize the ModerationsResponse
+                string ModerationsResponseString = JsonConvert.SerializeObject(moderationsResponse.Results.FirstOrDefault().Categories);
+
+                LogService.WriteToLog($"OpenAI Moderation flagged the content: [{SystemMessage}] as violating its policies: {ModerationsResponseString}");
+                ReadTextEvent?.Invoke(this, new ReadTextEventArgs($"WARNING! OpenAI Moderation flagged the content as violating its policies. See the logs for more details.", 30));
+            }
 
             ReadTextEvent?.Invoke(this, new ReadTextEventArgs($"Calling ChatGPT to Parse new Story...", 30));
 
