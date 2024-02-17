@@ -428,7 +428,7 @@
     private async Task CreateFineTuneJob(FileResponse paramaFile)
     {
         var api = new OpenAIClient(new OpenAIAuthentication(ApiKey, Organization));
-        var request = new CreateFineTuneJobRequest("gpt-3.5-turbo-1106", paramaFile);
+        var request = new CreateFineTuneJobRequest("gpt-3.5-turbo", paramaFile);
 
         // Create a fine-tuning job using the OpenAI API
         await api.FineTuningEndpoint.CreateJobAsync(request);

@@ -51,6 +51,11 @@
         if (DefaultModelId != null)
         {
             AIModel = colAIStoryBuilderModel.Where(x => x.ModelId == DefaultModelId).FirstOrDefault();
+
+            if (AIModel == null)
+            {
+                AIModel = colAIStoryBuilderModel[0];
+            }
         }
     }
 

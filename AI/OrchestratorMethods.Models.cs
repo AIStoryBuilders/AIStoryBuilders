@@ -79,7 +79,7 @@ namespace AIStoryBuilders.AI
             colAIStoryBuilderModel.Add(objAIStoryBuilderModelGPT4);
 
             AIStoryBuilderModel objAIStoryBuilderModelGPT3 = new AIStoryBuilderModel();
-            objAIStoryBuilderModelGPT3.ModelId = "gpt-3.5-turbo-1106";
+            objAIStoryBuilderModelGPT3.ModelId = "gpt-3.5-turbo";
             objAIStoryBuilderModelGPT3.ModelName = "GPT-3.5";
 
             colAIStoryBuilderModel.Add(objAIStoryBuilderModelGPT3);
