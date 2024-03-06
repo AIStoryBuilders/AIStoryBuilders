@@ -1140,10 +1140,52 @@ namespace AIStoryBuilders.Services
 
                         objCharacterBackground.Id = ii;
                         objCharacterBackground.Sequence = ii;
-                        objCharacterBackground.Type = CharacterBackgroundParts[0];
-                        objCharacterBackground.Timeline = new Models.Timeline() { TimelineName = CharacterBackgroundParts[1] };
-                        objCharacterBackground.Description = CharacterBackgroundParts[2];
-                        objCharacterBackground.VectorContent = CharacterBackgroundParts[3];
+
+                        try
+                        {
+                            objCharacterBackground.Type = CharacterBackgroundParts[0];
+                        }
+                        catch
+                        {
+                            objCharacterBackground.Type = "";
+                        }
+
+                        try
+                        {
+                            objCharacterBackground.Timeline = new Models.Timeline() { TimelineName = CharacterBackgroundParts[1] };
+                        }
+                        catch
+                        {
+                            objCharacterBackground.Timeline = new Models.Timeline() { TimelineName = "" };
+                        }
+
+                        try
+                        {
+                            objCharacterBackground.Timeline.TimelineName = CharacterBackgroundParts[1];
+                        }
+                        catch
+                        {
+                            objCharacterBackground.Timeline.TimelineName = "";
+                        }
+
+                        try
+                        {
+                            objCharacterBackground.Description = CharacterBackgroundParts[2];
+                        }
+                        catch
+                        {
+                            objCharacterBackground.Description = "";
+                        }
+                        
+                        try
+                        {
+                            objCharacterBackground.VectorContent = CharacterBackgroundParts[3];
+                        }
+                        catch
+                        {
+                            objCharacterBackground.VectorContent = "";
+                        }
+
                         objCharacterBackground.Character = new Character() { CharacterName = CharacterName };
 
                         colCharacterBackground.Add(objCharacterBackground);
