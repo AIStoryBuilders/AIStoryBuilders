@@ -1,9 +1,10 @@
 # AIStoryBuilders
 ![image](https://github.com/ADefWebserver/AIStoryBuilders/assets/1857799/a28481bd-ca40-4777-9bc7-33421ec7d1fb)
 
-# [AIStoryBuilders.com](https://AIStoryBuilders.com) 
-
 Write your next novel faster and easier.
+
+### Use the Online version here: [https://online.aistorybuilders.com/](https://online.aistorybuilders.com/)
+
 
 * [Website](https://aistorybuilders.com/)
  
