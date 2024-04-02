@@ -48,6 +48,8 @@
     string Organization = "";
     string ApiKey = "";
     string AIModel = "gpt-4-turbo-preview";
+    string AIType = "";
+    string DeploymentName = "";
 
     List<string> colModels = new List<string>()
                 {
@@ -65,6 +67,8 @@
         Organization = SettingsService.Organization;
         ApiKey = SettingsService.ApiKey;
         AIModel = SettingsService.AIModel;
+        AIType = SettingsService.AIType;
+        DeploymentName = SettingsService.DeploymentName;
 
         if (ApiKey.Length > 1)
         {
@@ -105,7 +109,7 @@
             }
 
             // Update Settings
-            await SettingsService.SaveSettings(Organization, ApiKey, AIModel);
+            await SettingsService.SaveSettings(Organization, ApiKey, AIModel, AIType, DeploymentName);
 
             // Test API Key
             var result = await OrchestratorMethods.TestAccess(AIModel);
