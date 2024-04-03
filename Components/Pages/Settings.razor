@@ -13,29 +13,49 @@
 <RadzenRow AlignItems="AlignItems.Start" Wrap="FlexWrap.Wrap" Gap="1rem" Class="rz-p-sm-12">
     <RadzenColumn Size="8" SizeSM="4">
         <RadzenStack>
-            <RadzenFormField Text="OpenAI ApiKey:" Variant="@variant">
+            <RadzenFormField Text="OpenAI Service Type:" Variant="@variant">
+                <RadzenDropDown Data=@colAITypes @bind-Value="@AIType" Style="width:300px" />
+            </RadzenFormField>
+            <RadzenFormField Text="ApiKey:" Variant="@variant">
                 <RadzenTextBox @bind-Value="@ApiKey" @onkeydown="APIKeyDetection" style="width:450px;" />
             </RadzenFormField>
-            @if (!IsSettingsEntered)
-            {
-                <RadzenButton Text="An OpenAI API Key is required (Click here to get one)" ButtonStyle="ButtonStyle.Secondary"
-                              Click="GetAPIKey"
-                              Style="margin-bottom: 10px; width: 500px" />
-            }
-            else
+            @if (AIType == "OpenAI")
             {
                 <RadzenFormField Text="Default AI Model:" Variant="@variant">
                     <RadzenDropDown Data=@colModels @bind-Value="@AIModel" Style="width:300px" />
                 </RadzenFormField>
                 <RadzenLabel Text="Note: GPT 3.5 is faster and cost less than GPT 4, but does not perform as well." style="font-size:x-small" />
-
-                <div class="row">
-                    <div class="col">
-                        <RadzenButton Text="Save" ButtonStyle="ButtonStyle.Success"
-                                      Click="SettingsSave"
-                                      Style="margin-bottom: 10px; width: 150px" />&nbsp;&nbsp;
-                    </div>
-                </div>
+            }
+            else if (AIType == "Azure OpenAI")
+            {
+                <RadzenFormField Text="Azure OpenAI Model Deployment Name:" Variant="@variant">
+                    <RadzenTextBox @bind-Value="@AIModel" style="width:450px;" />
+                </RadzenFormField>
+                <RadzenFormField Text="Azure OpenAI Endpoint:" Variant="@variant">
+                    <RadzenTextBox @bind-Value="@Endpoint" style="width:450px;" />
+                </RadzenFormField>
+                <RadzenFormField Text="Azure OpenAI Api Version:" Variant="@variant">
+                    <RadzenTextBox @bind-Value="@ApiVersion" style="width:450px;" />
+                </RadzenFormField>
+            }
+            @if (!IsSettingsEntered)
+            {
+                @if (AIType == "OpenAI")
+                {
+                    <RadzenButton Text="An OpenAI API Key is required (Click here to get one)" ButtonStyle="ButtonStyle.Secondary"
+                                  Click="GetAPIKey"
+                                  Style="margin-bottom: 10px; width: 500px" />
+                }
+                else if (AIType == "Azure OpenAI")
+                {
+                    <RadzenButton Text="An Azure OpenAI API Key is required (Click here to get one)" ButtonStyle="ButtonStyle.Secondary"
+                                  Click="GetAzureAPIKey"
+                                  Style="margin-bottom: 10px; width: 500px" />
+                }
+            }
+            else
+            {
+                <RadzenButton Text="Save" ButtonStyle="ButtonStyle.Primary" Click="SettingsSave" Style="margin-bottom: 10px; width: 500px" />
             }
         </RadzenStack>
     </RadzenColumn>
@@ -49,7 +69,13 @@
     string ApiKey = "";
     string AIModel = "gpt-4-turbo-preview";
     string AIType = "";
-    string DeploymentName = "";
+    string Endpoint = "";
+    string ApiVersion = "";
+
+    List<string> colAITypes = new List<string>()
+                {
+                   "OpenAI","Azure OpenAI"
+                };
 
     List<string> colModels = new List<string>()
                 {
@@ -68,7 +94,8 @@
         ApiKey = SettingsService.ApiKey;
         AIModel = SettingsService.AIModel;
         AIType = SettingsService.AIType;
-        DeploymentName = SettingsService.DeploymentName;
+        Endpoint = SettingsService.Endpoint;
+        ApiVersion = SettingsService.ApiVersion;
 
         if (ApiKey.Length > 1)
         {
@@ -84,6 +111,12 @@
     {
         // Open a new window to the OpenAI API Key page
         await JSRuntime.InvokeVoidAsync("open", "https://platform.openai.com/account/api-keys");
+    }
+
+    private async Task GetAzureAPIKey()
+    {
+        // Open a new window to the Azure OpenAI API Key page
+        await JSRuntime.InvokeVoidAsync("open", "https://learn.microsoft.com/en-us/azure/ai-services/openai/how-to/create-resource?pivots=web-portal");
     }
 
     private void APIKeyDetection(KeyboardEventArgs args)
@@ -109,7 +142,7 @@
             }
 
             // Update Settings
-            await SettingsService.SaveSettings(Organization, ApiKey, AIModel, AIType, DeploymentName);
+            await SettingsService.SaveSettings(Organization, ApiKey, AIModel, AIType, Endpoint, ApiVersion);
 
             // Test API Key
             var result = await OrchestratorMethods.TestAccess(AIModel);

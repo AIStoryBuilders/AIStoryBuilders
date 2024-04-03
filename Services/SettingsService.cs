@@ -10,7 +10,8 @@ namespace AIStoryBuilders.Model
         public string ApiKey { get; set; }
         public string AIModel { get; set; }
         public string AIType { get; set; }
-        public string DeploymentName { get; set; }
+        public string Endpoint { get; set; }
+        public string ApiVersion { get; set; }
 
         // Constructor
         public SettingsService() 
@@ -44,10 +45,11 @@ namespace AIStoryBuilders.Model
             ApiKey = AIStoryBuildersSettingsObject.OpenAIServiceOptions.ApiKey;
             AIModel = AIStoryBuildersSettingsObject.ApplicationSettings.AIModel;
             AIType = AIStoryBuildersSettingsObject.ApplicationSettings.AIType;
-            DeploymentName = AIStoryBuildersSettingsObject.ApplicationSettings.DeploymentName;
+            Endpoint = AIStoryBuildersSettingsObject.ApplicationSettings.Endpoint;
+            ApiVersion = AIStoryBuildersSettingsObject.ApplicationSettings.ApiVersion;
         }
 
-        public async Task SaveSettings(string paramOrganization, string paramApiKey, string paramAIModel, string paramAIType, string paramDeploymentName)
+        public async Task SaveSettings(string paramOrganization, string paramApiKey, string paramAIModel, string paramAIType, string paramEndpoint, string paramApiVersion)
         {
             // Get OpenAI API key from appsettings.json
             // AIStoryBuilders Directory
@@ -69,7 +71,8 @@ namespace AIStoryBuilders.Model
             AIStoryBuildersSettingsObject.OpenAIServiceOptions.ApiKey = paramApiKey;
             AIStoryBuildersSettingsObject.ApplicationSettings.AIModel = paramAIModel;
             AIStoryBuildersSettingsObject.ApplicationSettings.AIType = paramAIType;
-            AIStoryBuildersSettingsObject.ApplicationSettings.DeploymentName = paramDeploymentName;
+            AIStoryBuildersSettingsObject.ApplicationSettings.Endpoint = paramEndpoint;
+            AIStoryBuildersSettingsObject.ApplicationSettings.ApiVersion = paramApiVersion;
 
             // Convert the dynamic object back to JSON
             AIStoryBuildersSettings = JsonConvert.SerializeObject(AIStoryBuildersSettingsObject, Formatting.Indented);
@@ -85,7 +88,8 @@ namespace AIStoryBuilders.Model
             ApiKey = paramApiKey;
             AIModel = paramAIModel;
             AIType = paramAIType;
-            DeploymentName = paramDeploymentName;
+            Endpoint = paramEndpoint;
+            ApiVersion = paramApiVersion;
         }
     }
 }
