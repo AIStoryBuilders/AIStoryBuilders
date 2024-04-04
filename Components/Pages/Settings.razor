@@ -31,6 +31,9 @@
                 <RadzenFormField Text="Azure OpenAI Model Deployment Name:" Variant="@variant">
                     <RadzenTextBox @bind-Value="@AIModel" style="width:450px;" />
                 </RadzenFormField>
+                <RadzenFormField Text="Azure OpenAI Embedding Model Deployment Name:" Variant="@variant">
+                    <RadzenTextBox @bind-Value="@AIEmbeddingModel" style="width:450px;" />
+                </RadzenFormField>
                 <RadzenFormField Text="Azure OpenAI Endpoint:" Variant="@variant">
                     <RadzenTextBox @bind-Value="@Endpoint" style="width:450px;" />
                 </RadzenFormField>
@@ -68,8 +71,9 @@
     string Organization = "";
     string ApiKey = "";
     string AIModel = "gpt-4-turbo-preview";
-    string AIType = "";
+    string AIType = "OpenAI";
     string Endpoint = "";
+    string AIEmbeddingModel = "";
     string ApiVersion = "";
 
     List<string> colAITypes = new List<string>()
@@ -96,6 +100,7 @@
         AIType = SettingsService.AIType;
         Endpoint = SettingsService.Endpoint;
         ApiVersion = SettingsService.ApiVersion;
+        AIEmbeddingModel = SettingsService.AIEmbeddingModel;
 
         if (ApiKey.Length > 1)
         {
@@ -128,7 +133,7 @@
     {
         try
         {
-            if (!ApiKey.StartsWith("sk-"))
+            if ((AIType == "OpenAI") && (!ApiKey.StartsWith("sk-")))
             {
                 NotificationService.Notify(new NotificationMessage
                     {
@@ -142,7 +147,7 @@
             }
 
             // Update Settings
-            await SettingsService.SaveSettings(Organization, ApiKey, AIModel, AIType, Endpoint, ApiVersion);
+            await SettingsService.SaveSettings(Organization, ApiKey, AIModel, AIType, Endpoint, ApiVersion, AIEmbeddingModel);
 
             // Test API Key
             var result = await OrchestratorMethods.TestAccess(AIModel);

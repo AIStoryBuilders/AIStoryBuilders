@@ -11,6 +11,7 @@ namespace AIStoryBuilders.Model
         public string AIModel { get; set; }
         public string AIType { get; set; }
         public string Endpoint { get; set; }
+        public string AIEmbeddingModel { get; set; }
         public string ApiVersion { get; set; }
 
         // Constructor
@@ -47,9 +48,10 @@ namespace AIStoryBuilders.Model
             AIType = AIStoryBuildersSettingsObject.ApplicationSettings.AIType;
             Endpoint = AIStoryBuildersSettingsObject.ApplicationSettings.Endpoint;
             ApiVersion = AIStoryBuildersSettingsObject.ApplicationSettings.ApiVersion;
+            AIEmbeddingModel = AIStoryBuildersSettingsObject.ApplicationSettings.AIEmbeddingModel;
         }
 
-        public async Task SaveSettings(string paramOrganization, string paramApiKey, string paramAIModel, string paramAIType, string paramEndpoint, string paramApiVersion)
+        public async Task SaveSettings(string paramOrganization, string paramApiKey, string paramAIModel, string paramAIType, string paramEndpoint, string paramApiVersion, string paramAIEmbeddingModel)
         {
             // Get OpenAI API key from appsettings.json
             // AIStoryBuilders Directory
@@ -73,6 +75,7 @@ namespace AIStoryBuilders.Model
             AIStoryBuildersSettingsObject.ApplicationSettings.AIType = paramAIType;
             AIStoryBuildersSettingsObject.ApplicationSettings.Endpoint = paramEndpoint;
             AIStoryBuildersSettingsObject.ApplicationSettings.ApiVersion = paramApiVersion;
+            AIStoryBuildersSettingsObject.ApplicationSettings.AIEmbeddingModel = paramAIEmbeddingModel;
 
             // Convert the dynamic object back to JSON
             AIStoryBuildersSettings = JsonConvert.SerializeObject(AIStoryBuildersSettingsObject, Formatting.Indented);
@@ -90,6 +93,7 @@ namespace AIStoryBuilders.Model
             AIType = paramAIType;
             Endpoint = paramEndpoint;
             ApiVersion = paramApiVersion;
+            AIEmbeddingModel = paramAIEmbeddingModel;
         }
     }
 }
