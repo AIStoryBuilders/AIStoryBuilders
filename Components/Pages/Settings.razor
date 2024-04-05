@@ -14,7 +14,7 @@
     <RadzenColumn Size="8" SizeSM="4">
         <RadzenStack>
             <RadzenFormField Text="OpenAI Service Type:" Variant="@variant">
-                <RadzenDropDown Data=@colAITypes @bind-Value="@AIType" Style="width:300px" />
+                <RadzenDropDown Data=@colAITypes @bind-Value="@AIType" Style="width:300px" Change="@(args => ChangeAIType(args))" />
             </RadzenFormField>
             <RadzenFormField Text="ApiKey:" Variant="@variant">
                 <RadzenTextBox @bind-Value="@ApiKey" @onkeydown="APIKeyDetection" style="width:450px;" />
@@ -68,9 +68,11 @@
     OrchestratorMethods OrchestratorMethods;
     Variant variant = Variant.Outlined;
 
+    string DefaultAIModel = "gpt-4-turbo-preview";
+
     string Organization = "";
     string ApiKey = "";
-    string AIModel = "gpt-4-turbo-preview";
+    string AIModel = "";
     string AIType = "OpenAI";
     string Endpoint = "";
     string AIEmbeddingModel = "";
@@ -172,6 +174,15 @@
                     Detail = ex.Message,
                     Duration = 8000
                 });
+        }
+    }
+
+    private void ChangeAIType(dynamic paramAIType)
+    {
+        // Set the default model based on the AI Type
+        if(paramAIType == "OpenAI")
+        {
+            AIModel = DefaultAIModel;
         }
     }
 }

@@ -88,6 +88,29 @@ namespace AIStoryBuilders.AI
         #endregion
 
         // Utility Methods
+        public OpenAIClient CreateOpenAIClient()
+        {
+            string Organization = SettingsService.Organization;
+            string ApiKey = SettingsService.ApiKey;
+            string Endpoint = SettingsService.Endpoint;
+            string ApiVersion = SettingsService.ApiVersion;
+            string AIEmbeddingModel = SettingsService.AIEmbeddingModel;
+            string AIModel = SettingsService.AIModel;
+
+            OpenAIClient api;
+            if (SettingsService.AIType == "OpenAI")
+            {
+                api = new OpenAIClient(new OpenAIAuthentication(ApiKey, Organization));
+            }
+            else
+            {
+                var auth = new OpenAIAuthentication(ApiKey);
+                var settings = new OpenAIClientSettings(resourceName: Endpoint, deploymentId: AIModel, apiVersion: ApiVersion);
+                api = new OpenAIClient(auth, settings);
+            }
+
+            return api;
+        }
 
         #region public float CosineSimilarity(float[] vector1, float[] vector2)
         public float CosineSimilarity(float[] vector1, float[] vector2)

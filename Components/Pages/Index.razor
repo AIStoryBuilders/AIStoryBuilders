@@ -17,7 +17,7 @@
 @implements IDisposable
 <PageTitle>AI Story Builders</PageTitle>
 <RadzenMenu>
-    @if (ApiKey.StartsWith("sk-"))
+    @if (ApiKey.Length > 10)
     {
         <RadzenMenuItem Click="OnHomeClicked" Text="Home" Icon="home"></RadzenMenuItem>
         <RadzenMenuItem Click="OnLogsClicked" Text="Logs" Icon="assignment"></RadzenMenuItem>
@@ -105,7 +105,7 @@
             Organization = SettingsService.Organization;
             ApiKey = SettingsService.ApiKey;
 
-            if ((ApiKey == "") || (!ApiKey.StartsWith("sk-")))
+            if ((ApiKey == "") || (ApiKey.Length < 10))
             {
                 // Switch to the Settings page
                 HomeVisible = false;
@@ -364,7 +364,7 @@
         ApiKey = SettingsService.ApiKey;
 
         // If there is a key show the Home page
-        if (ApiKey.StartsWith("sk-"))
+        if (ApiKey.Length> 10)
         {
             HomeVisible = true;
             SettingsVisible = false;

@@ -15,15 +15,11 @@ namespace AIStoryBuilders.AI
         #region public async Task<bool> TestAccess(string GPTModel)
         public async Task<bool> TestAccess(string GPTModel)
         {
-            string Organization = SettingsService.Organization;
-            string ApiKey = SettingsService.ApiKey;
             string SystemMessage = "";
 
             LogService.WriteToLog($"TestAccess using {GPTModel} - Start");
 
-            // Create a new OpenAIClient object
-            // with the provided API key and organization
-            var api = new OpenAIClient(new OpenAIAuthentication(ApiKey, Organization));
+            OpenAIClient api = CreateOpenAIClient();
 
             // Create a colection of chatPrompts
             ChatResponse ChatResponseResult = new ChatResponse();
