@@ -1,6 +1,7 @@
 using AIStoryBuilders.Model;
 using AIStoryBuilders.Models;
 using AIStoryBuilders.Services;
+using Microsoft.EntityFrameworkCore.Metadata;
 using Newtonsoft.Json;
 using OpenAI;
 using OpenAI.Chat;
@@ -39,9 +40,17 @@ namespace AIStoryBuilders.AI
         {
             // **** Call OpenAI and get embeddings for the memory text
             // Create an instance of the OpenAI client
-            var api = new OpenAIClient(new OpenAIAuthentication(SettingsService.ApiKey, SettingsService.Organization));
+            OpenAIClient api = CreateOpenAIClient();
+
             // Get the model details
-            var model = await api.ModelsEndpoint.GetModelDetailsAsync("text-embedding-ada-002");
+            OpenAI.Models.Model model = new OpenAI.Models.Model("text-embedding-ada-002");
+
+            if (SettingsService.AIType != "OpenAI")
+            {
+                // Azure OpenAI - use the embedding model from the settings
+                model = await api.ModelsEndpoint.GetModelDetailsAsync(SettingsService.AIEmbeddingModel);
+            }
+
             // Get embeddings for the text
             var embeddings = await api.EmbeddingsEndpoint.CreateEmbeddingAsync(EmbeddingContent, model);
             // Get embeddings as an array of floats
@@ -75,9 +84,17 @@ namespace AIStoryBuilders.AI
         {
             // **** Call OpenAI and get embeddings for the memory text
             // Create an instance of the OpenAI client
-            var api = new OpenAIClient(new OpenAIAuthentication(SettingsService.ApiKey, SettingsService.Organization));
+            OpenAIClient api = CreateOpenAIClient();
+
             // Get the model details
-            var model = await api.ModelsEndpoint.GetModelDetailsAsync("text-embedding-ada-002");
+            OpenAI.Models.Model model = new OpenAI.Models.Model("text-embedding-ada-002");
+
+            if (SettingsService.AIType != "OpenAI")
+            {
+                // Azure OpenAI - use the embedding model from the settings
+                model = await api.ModelsEndpoint.GetModelDetailsAsync(SettingsService.AIEmbeddingModel);
+            }
+
             // Get embeddings for the text
             var embeddings = await api.EmbeddingsEndpoint.CreateEmbeddingAsync(EmbeddingContent, model);
             // Get embeddings as an array of floats
@@ -100,13 +117,13 @@ namespace AIStoryBuilders.AI
             OpenAIClient api;
             if (SettingsService.AIType == "OpenAI")
             {
-                api = new OpenAIClient(new OpenAIAuthentication(ApiKey, Organization));
+                api = new OpenAIClient(new OpenAIAuthentication(ApiKey, Organization), null, new HttpClient() { Timeout = TimeSpan.FromSeconds(520) });
             }
             else
             {
                 var auth = new OpenAIAuthentication(ApiKey);
                 var settings = new OpenAIClientSettings(resourceName: Endpoint, deploymentId: AIModel, apiVersion: ApiVersion);
-                api = new OpenAIClient(auth, settings);
+                api = new OpenAIClient(auth, settings, new HttpClient() { Timeout = TimeSpan.FromSeconds(520) });
             }
 
             return api;

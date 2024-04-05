@@ -27,8 +27,7 @@ namespace AIStoryBuilders.AI
             LogService.WriteToLog($"Detect Characters using {GPTModel} - Start");
 
             // Create a new OpenAIClient object
-            // with the provided API key and organization
-            var api = new OpenAIClient(new OpenAIAuthentication(ApiKey, Organization), null, new HttpClient() { Timeout = TimeSpan.FromSeconds(520) });
+            OpenAIClient api = CreateOpenAIClient();
 
             // Create a colection of chatPrompts
             ChatResponse ChatResponseResult = new ChatResponse();
