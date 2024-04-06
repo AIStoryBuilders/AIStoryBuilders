@@ -58,7 +58,7 @@ namespace AIStoryBuilders
             builder.Logging.AddDebug();
 #endif            
             // Add services to the container.
-            AppMetadata appMetadata = new AppMetadata() { Version = "01.01.40" };
+            AppMetadata appMetadata = new AppMetadata() { Version = "01.02.00" };
             builder.Services.AddSingleton(appMetadata);
 
             builder.Services.AddSingleton<LogService>();

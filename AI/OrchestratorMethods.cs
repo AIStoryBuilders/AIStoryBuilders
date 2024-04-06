@@ -40,7 +40,7 @@ namespace AIStoryBuilders.AI
         {
             // **** Call OpenAI and get embeddings for the memory text
             // Create an instance of the OpenAI client
-            OpenAIClient api = CreateOpenAIClient();
+            OpenAIClient api = CreateEmbeddingOpenAIClient();
 
             // Get the model details
             OpenAI.Models.Model model = new OpenAI.Models.Model("text-embedding-ada-002");
@@ -48,7 +48,7 @@ namespace AIStoryBuilders.AI
             if (SettingsService.AIType != "OpenAI")
             {
                 // Azure OpenAI - use the embedding model from the settings
-                model = await api.ModelsEndpoint.GetModelDetailsAsync(SettingsService.AIEmbeddingModel);
+                model = new OpenAI.Models.Model(SettingsService.AIEmbeddingModel);
             }
 
             // Get embeddings for the text
@@ -84,7 +84,7 @@ namespace AIStoryBuilders.AI
         {
             // **** Call OpenAI and get embeddings for the memory text
             // Create an instance of the OpenAI client
-            OpenAIClient api = CreateOpenAIClient();
+            OpenAIClient api = CreateEmbeddingOpenAIClient();
 
             // Get the model details
             OpenAI.Models.Model model = new OpenAI.Models.Model("text-embedding-ada-002");
@@ -92,7 +92,7 @@ namespace AIStoryBuilders.AI
             if (SettingsService.AIType != "OpenAI")
             {
                 // Azure OpenAI - use the embedding model from the settings
-                model = await api.ModelsEndpoint.GetModelDetailsAsync(SettingsService.AIEmbeddingModel);
+                model = new OpenAI.Models.Model(SettingsService.AIEmbeddingModel);
             }
 
             // Get embeddings for the text
@@ -105,6 +105,8 @@ namespace AIStoryBuilders.AI
         #endregion
 
         // Utility Methods
+
+        #region public OpenAIClient CreateOpenAIClient()
         public OpenAIClient CreateOpenAIClient()
         {
             string Organization = SettingsService.Organization;
@@ -127,7 +129,34 @@ namespace AIStoryBuilders.AI
             }
 
             return api;
-        }
+        } 
+        #endregion
+
+        #region public OpenAIClient CreateEmbeddingOpenAIClient()
+        public OpenAIClient CreateEmbeddingOpenAIClient()
+        {
+            string Organization = SettingsService.Organization;
+            string ApiKey = SettingsService.ApiKey;
+            string Endpoint = SettingsService.Endpoint;
+            string ApiVersion = SettingsService.ApiVersion;
+            string AIEmbeddingModel = SettingsService.AIEmbeddingModel;
+            string AIModel = SettingsService.AIModel;
+
+            OpenAIClient api;
+            if (SettingsService.AIType == "OpenAI")
+            {
+                api = new OpenAIClient(new OpenAIAuthentication(ApiKey, Organization), null, new HttpClient() { Timeout = TimeSpan.FromSeconds(520) });
+            }
+            else
+            {
+                var auth = new OpenAIAuthentication(ApiKey);
+                var settings = new OpenAIClientSettings(resourceName: Endpoint, deploymentId: AIEmbeddingModel, apiVersion: ApiVersion);
+                api = new OpenAIClient(auth, settings, new HttpClient() { Timeout = TimeSpan.FromSeconds(520) });
+            }
+
+            return api;
+        } 
+        #endregion
 
         #region public float CosineSimilarity(float[] vector1, float[] vector2)
         public float CosineSimilarity(float[] vector1, float[] vector2)

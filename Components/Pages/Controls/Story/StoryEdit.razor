@@ -5,6 +5,7 @@
 @using System.Text
 @using CommunityToolkit.Maui.Storage
 @inherits OwningComponentBase
+@inject SettingsService SettingsService
 @inject NotificationService NotificationService
 @inject DialogService DialogService
 @inject SettingsService SettingsService
@@ -141,7 +142,21 @@ else // Existing Story
 
     protected override async Task OnInitializedAsync()
     {
-        colAIStoryBuilderModel = await OrchestratorMethods.ListAllModelsAsync();
+        if (SettingsService.AIType == "OpenAI")
+        {
+            colAIStoryBuilderModel = await OrchestratorMethods.ListAllModelsAsync();
+        }
+        else
+        {
+            AIStoryBuilderModel objAIStoryBuilderModel = new AIStoryBuilderModel();
+            objAIStoryBuilderModel.ModelId = SettingsService.AIModel;
+            objAIStoryBuilderModel.ModelName = SettingsService.AIModel;
+
+            colAIStoryBuilderModel = new List<AIStoryBuilderModel>()
+                {
+                    objAIStoryBuilderModel
+                };
+        }
 
         // Set the default AI Model
         SettingsService.LoadSettings();
