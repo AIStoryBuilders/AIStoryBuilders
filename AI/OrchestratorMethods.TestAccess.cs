@@ -56,6 +56,21 @@ namespace AIStoryBuilders.AI
 
             LogService.WriteToLog($"TotalTokens: {ChatResponseResult.Usage.TotalTokens} - ChatResponseResult - {ChatResponseResult.FirstChoice.Message.Content}");
 
+            if (SettingsService.AIType != "OpenAI")
+            {
+                try
+                {
+                    // Azure OpenAI - Test the embedding model
+                    string VectorEmbedding = await GetVectorEmbedding("This is a test for embedding", false);
+                }
+                catch (Exception ex)
+                {
+                    LogService.WriteToLog($"Azure OpenAI - Test the embedding model - Error: {ex.Message}");
+                                        
+                    throw new Exception("Error: You must set a proper Azure OpenAI embedding model");
+                }
+            }          
+
             return true;
         }
         #endregion
