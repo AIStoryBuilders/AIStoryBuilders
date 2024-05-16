@@ -58,7 +58,7 @@ namespace AIStoryBuilders
             builder.Logging.AddDebug();
 #endif            
             // Add services to the container.
-            AppMetadata appMetadata = new AppMetadata() { Version = "01.02.00" };
+            AppMetadata appMetadata = new AppMetadata() { Version = "01.02.50" };
             builder.Services.AddSingleton(appMetadata);
 
             builder.Services.AddSingleton<LogService>();
@@ -158,7 +158,7 @@ namespace AIStoryBuilders
                             "ApiKey": ""
                           },
                           "ApplicationSettings": {
-                            "AIModel": "gpt-4-turbo-preview"
+                            "AIModel": "gpt-4o"
                           }
                         }
                         """

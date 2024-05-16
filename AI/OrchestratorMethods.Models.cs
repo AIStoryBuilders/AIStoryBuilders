@@ -72,8 +72,8 @@ namespace AIStoryBuilders.AI
 
             // Add GPT3 and GPT4 to the list of models
             AIStoryBuilderModel objAIStoryBuilderModelGPT4 = new AIStoryBuilderModel();
-            objAIStoryBuilderModelGPT4.ModelId = "gpt-4-turbo-preview";
-            objAIStoryBuilderModelGPT4.ModelName = "GPT-4";
+            objAIStoryBuilderModelGPT4.ModelId = "gpt-4o";
+            objAIStoryBuilderModelGPT4.ModelName = "gpt-4o";
 
             colAIStoryBuilderModel.Add(objAIStoryBuilderModelGPT4);
 
