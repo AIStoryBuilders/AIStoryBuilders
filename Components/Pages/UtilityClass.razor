@@ -341,14 +341,14 @@
 
             var fileContents = conversations.Select(conversation => conversation.ToString());
 
-            string TempTrainingDataPath = @$"{Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments)}/AIStoryBuilders/FineTuneTrainingData/";
+            string TempTrainingDataPath = $"{Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments)}/AIStoryBuilders/FineTuneTrainingData/";
 
             if (!Directory.Exists(TempTrainingDataPath))
             {
                 Directory.CreateDirectory(TempTrainingDataPath);
             }
 
-            string TempTrainingDataFile = @$"{TempTrainingDataPath}/TrainingData.jsonl";
+            string TempTrainingDataFile = $"{TempTrainingDataPath}/TrainingData.jsonl";
 
             await File.WriteAllLinesAsync(
                 TempTrainingDataFile,
