@@ -58,23 +58,6 @@ namespace AIStoryBuilders.AI
                 presencePenalty: 0,
                 responseFormat: ChatResponseFormat.Text);
 
-            if (SettingsService.AIType == "OpenAI")
-            {
-                // Check Moderation
-                var ModerationResult = await api.ModerationsEndpoint.GetModerationAsync(SystemMessage);
-
-                if (ModerationResult)
-                {
-                    ModerationsResponse moderationsResponse = await api.ModerationsEndpoint.CreateModerationAsync(new ModerationsRequest(SystemMessage));
-
-                    // Serailize the ModerationsResponse
-                    string ModerationsResponseString = JsonConvert.SerializeObject(moderationsResponse.Results.FirstOrDefault().Categories);
-
-                    LogService.WriteToLog($"OpenAI Moderation flagged the content: [{SystemMessage}] as violating its policies: {ModerationsResponseString}");
-                    ReadTextEvent?.Invoke(this, new ReadTextEventArgs($"WARNING! OpenAI Moderation flagged the content as violating its policies. See the logs for more details.", 30));
-                }
-            }
-
             ChatResponseResult = await api.ChatEndpoint.GetCompletionAsync(FinalChatRequest);
 
             // *****************************************************

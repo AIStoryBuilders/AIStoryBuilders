@@ -283,6 +283,9 @@
 		<PackageReference Include="DocX" Version="3.0.1" />
 		<PackageReference Include="EPPlus" Version="7.3.2" />
 		<PackageReference Include="ExcelDataReader" Version="3.7.0" />
+		<PackageReference Include="Microsoft.Extensions.AI" Version="9.1.0-preview.1.25064.3" />
+		<PackageReference Include="Microsoft.Extensions.AI.Abstractions" Version="9.1.0-preview.1.25064.3" />
+		<PackageReference Include="Microsoft.Extensions.AI.OpenAI" Version="9.1.0-preview.1.25064.3" />
 		<PackageReference Include="Microsoft.Maui.Controls" Version="8.0.90" />
 		<PackageReference Include="Microsoft.Maui.Controls.Compatibility" Version="8.0.90" />
 		<PackageReference Include="Microsoft.AspNetCore.Components.WebView.Maui" Version="8.0.90" />
@@ -290,7 +293,6 @@
         <PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="8.0.8" />
 		<PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
 		<PackageReference Include="Radzen.Blazor" Version="4.24.5" />
-		<PackageReference Include="OpenAI-DotNet" Version="7.6.4" />
 		<PackageReference Include="Markdig" Version="0.37.0" />
     </ItemGroup>
 
