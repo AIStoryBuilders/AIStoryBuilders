@@ -1,13 +1,16 @@
 using AIStoryBuilders.Model;
 using AIStoryBuilders.Models;
 using AIStoryBuilders.Services;
+using Azure.AI.OpenAI;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.Extensions.AI;
 using Newtonsoft.Json;
 using OpenAI;
 using OpenAI.Chat;
 using OpenAI.Files;
 using OpenAI.FineTuning;
 using OpenAI.Models;
+using System.ClientModel;
 using System.Collections.Generic;
 using System.Text.RegularExpressions;
 
@@ -106,8 +109,8 @@ namespace AIStoryBuilders.AI
 
         // Utility Methods
 
-        #region public OpenAIClient CreateOpenAIClient()
-        public OpenAIClient CreateOpenAIClient()
+        #region public IChatClient CreateOpenAIClient()
+        public IChatClient CreateOpenAIClient()
         {
             string Organization = SettingsService.Organization;
             string ApiKey = SettingsService.ApiKey;
@@ -116,24 +119,32 @@ namespace AIStoryBuilders.AI
             string AIEmbeddingModel = SettingsService.AIEmbeddingModel;
             string AIModel = SettingsService.AIModel;
 
-            OpenAIClient api;
+            ApiKeyCredential apiKeyCredential = new ApiKeyCredential(ApiKey);
+
             if (SettingsService.AIType == "OpenAI")
             {
-                api = new OpenAIClient(new OpenAIAuthentication(ApiKey, Organization), null, new HttpClient() { Timeout = TimeSpan.FromSeconds(520) });
-            }
-            else
-            {
-                var auth = new OpenAIAuthentication(ApiKey);
-                var settings = new OpenAIClientSettings(resourceName: Endpoint, deploymentId: AIModel, apiVersion: ApiVersion);
-                api = new OpenAIClient(auth, settings, new HttpClient() { Timeout = TimeSpan.FromSeconds(520) });
-            }
+                OpenAIClientOptions options = new OpenAIClientOptions();
+                options.NetworkTimeout = TimeSpan.FromSeconds(520);
 
-            return api;
-        } 
+                return new OpenAIClient(
+                    apiKeyCredential, options)
+                    .AsChatClient(AIModel);
+            }
+            else // Azure OpenAI"
+            {
+                AzureOpenAIClientOptions options = new AzureOpenAIClientOptions();
+                options.NetworkTimeout = TimeSpan.FromSeconds(520);
+
+                return new AzureOpenAIClient(
+                    new Uri(Endpoint),
+                    apiKeyCredential, options)
+                    .AsChatClient(AIModel);
+            }
+        }
         #endregion
 
-        #region public OpenAIClient CreateEmbeddingOpenAIClient()
-        public OpenAIClient CreateEmbeddingOpenAIClient()
+        #region public IChatClient CreateEmbeddingOpenAIClient()
+        public IChatClient CreateEmbeddingOpenAIClient()
         {
             string Organization = SettingsService.Organization;
             string ApiKey = SettingsService.ApiKey;
@@ -142,21 +153,30 @@ namespace AIStoryBuilders.AI
             string AIEmbeddingModel = SettingsService.AIEmbeddingModel;
             string AIModel = SettingsService.AIModel;
 
-            OpenAIClient api;
+            ApiKeyCredential apiKeyCredential = new ApiKeyCredential(ApiKey);
+
             if (SettingsService.AIType == "OpenAI")
             {
-                api = new OpenAIClient(new OpenAIAuthentication(ApiKey, Organization), null, new HttpClient() { Timeout = TimeSpan.FromSeconds(520) });
-            }
-            else
-            {
-                var auth = new OpenAIAuthentication(ApiKey);
-                var settings = new OpenAIClientSettings(resourceName: Endpoint, deploymentId: AIEmbeddingModel, apiVersion: ApiVersion);
-                api = new OpenAIClient(auth, settings, new HttpClient() { Timeout = TimeSpan.FromSeconds(520) });
-            }
+                OpenAIClientOptions options = new OpenAIClientOptions();
+                options.NetworkTimeout = TimeSpan.FromSeconds(520);
 
-            return api;
-        } 
+                return new OpenAIClient(
+                    apiKeyCredential, options)
+                    .AsChatClient(AIModel);
+            }
+            else // Azure OpenAI
+            {
+                AzureOpenAIClientOptions options = new AzureOpenAIClientOptions();
+                options.NetworkTimeout = TimeSpan.FromSeconds(520);
+
+                return new AzureOpenAIClient(
+                    new Uri(Endpoint),
+                    apiKeyCredential, options)
+                    .AsChatClient(AIEmbeddingModel);
+            }
+        }
         #endregion
+
 
         #region public float CosineSimilarity(float[] vector1, float[] vector2)
         public float CosineSimilarity(float[] vector1, float[] vector2)

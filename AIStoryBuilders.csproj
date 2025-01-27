@@ -279,6 +279,7 @@
     </ItemGroup>
 
     <ItemGroup>
+		<PackageReference Include="Azure.AI.OpenAI" Version="2.1.0" />
 		<PackageReference Include="CommunityToolkit.Maui" Version="9.0.3" />
 		<PackageReference Include="DocX" Version="3.0.1" />
 		<PackageReference Include="EPPlus" Version="7.3.2" />
