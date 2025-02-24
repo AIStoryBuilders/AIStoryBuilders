@@ -12,6 +12,7 @@ using System.Collections.Generic;
 using AIStoryBuilders.Model;
 using OpenAI.Moderations;
 using System.Threading;
+using Microsoft.Extensions.AI;
 
 namespace AIStoryBuilders.AI
 {
@@ -27,7 +28,7 @@ namespace AIStoryBuilders.AI
             LogService.WriteToLog($"ParseNewStory using {GPTModel} - Start");
 
             // Create a new OpenAIClient object
-            OpenAIClient api = CreateOpenAIClient();
+            IChatClient api = CreateOpenAIClient();
 
             // Create a colection of chatPrompts
             ChatResponse ChatResponseResult = new ChatResponse();

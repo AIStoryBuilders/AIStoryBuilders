@@ -12,6 +12,7 @@ using System.Text.Json;
 using Newtonsoft.Json.Linq;
 using Newtonsoft.Json;
 using OpenAI.Moderations;
+using Microsoft.Extensions.AI;
 
 namespace AIStoryBuilders.AI
 {
@@ -27,7 +28,7 @@ namespace AIStoryBuilders.AI
             LogService.WriteToLog($"Detect Characters using {GPTModel} - Start");
 
             // Create a new OpenAIClient object
-            OpenAIClient api = CreateOpenAIClient();
+            IChatClient api = CreateOpenAIClient();
 
             // Create a colection of chatPrompts
             ChatResponse ChatResponseResult = new ChatResponse();

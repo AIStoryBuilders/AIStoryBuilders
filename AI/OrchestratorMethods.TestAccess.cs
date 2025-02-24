@@ -7,6 +7,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using Microsoft.Extensions.AI;
 
 namespace AIStoryBuilders.AI
 {
@@ -19,42 +20,20 @@ namespace AIStoryBuilders.AI
 
             LogService.WriteToLog($"TestAccess using {GPTModel} - Start");
 
-            OpenAIClient api = CreateOpenAIClient();
-
-            // Create a colection of chatPrompts
-            ChatResponse ChatResponseResult = new ChatResponse();
-            List<Message> chatPrompts = new List<Message>();
+            IChatClient api = CreateOpenAIClient();
 
             // Update System Message
             SystemMessage = "Please return the following as json: \"This is successful\" in this format {\r\n  'message': message\r\n}";
 
             LogService.WriteToLog($"Prompt: {SystemMessage}");
 
-            chatPrompts = new List<Message>();
-
-            chatPrompts.Insert(0,
-            new Message(
-                Role.System,
-                SystemMessage
-                )
-            );
-
             ReadTextEvent?.Invoke(this, new ReadTextEventArgs($"Calling ChatGPT to test access...", 5));
 
-            // Get a response from ChatGPT 
-            var FinalChatRequest = new ChatRequest(
-                chatPrompts,
-                model: GPTModel,
-                temperature: 0.0,
-                topP: 1,
-                frequencyPenalty: 0,
-                presencePenalty: 0);
-
-            ChatResponseResult = await api.ChatEndpoint.GetCompletionAsync(FinalChatRequest);
+            var ChatResponseResult = await api.CompleteAsync(SystemMessage);
 
             // *****************************************************
 
-            LogService.WriteToLog($"TotalTokens: {ChatResponseResult.Usage.TotalTokens} - ChatResponseResult - {ChatResponseResult.FirstChoice.Message.Content}");
+            LogService.WriteToLog($"TotalTokens: {ChatResponseResult.Usage.TotalTokenCount} - ChatResponseResult - {ChatResponseResult.Choices.FirstOrDefault().Text}");
 
             if (SettingsService.AIType != "OpenAI")
             {

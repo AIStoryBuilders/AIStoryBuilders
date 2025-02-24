@@ -1,6 +1,7 @@
 ﻿using AIStoryBuilders.Model;
 using AIStoryBuilders.Models;
 using AIStoryBuilders.Models.JSON;
+using Microsoft.Extensions.AI;
 using OpenAI;
 using OpenAI.Chat;
 using OpenAI.Files;
@@ -23,7 +24,7 @@ namespace AIStoryBuilders.AI
             string ApiKey = SettingsService.ApiKey;
 
             // Create a new OpenAIClient object
-            OpenAIClient api = CreateOpenAIClient();
+            IChatClient api = CreateOpenAIClient();
 
             // Fetch the list of models using the OpenAI API
             var models =
@@ -142,7 +143,7 @@ namespace AIStoryBuilders.AI
             string ApiKey = SettingsService.ApiKey;
 
             // Create a new OpenAIClient object
-            OpenAIClient api = CreateOpenAIClient();
+            IChatClient api = CreateOpenAIClient();
 
             await api.ModelsEndpoint.DeleteFineTuneModelAsync(paramaModel.ModelId);
 

@@ -113,15 +113,20 @@ namespace AIStoryBuilders.AI
 
         // Utility Methods
 
-        #region public IChatClient CreateOpenAIClient()
         public IChatClient CreateOpenAIClient()
+        {
+            return CreateOpenAIClient(SettingsService.AIModel);
+        }
+
+        #region public IChatClient CreateOpenAIClient()
+        public IChatClient CreateOpenAIClient(string paramAIModel)
         {
             string Organization = SettingsService.Organization;
             string ApiKey = SettingsService.ApiKey;
             string Endpoint = SettingsService.Endpoint;
             string ApiVersion = SettingsService.ApiVersion;
             string AIEmbeddingModel = SettingsService.AIEmbeddingModel;
-            string AIModel = SettingsService.AIModel;
+            string AIModel = paramAIModel;
 
             ApiKeyCredential apiKeyCredential = new ApiKeyCredential(ApiKey);
 
