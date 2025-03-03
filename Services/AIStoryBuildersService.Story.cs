@@ -52,7 +52,7 @@ namespace AIStoryBuilders.Services
             string LocationsPath = $"{StoryPath}/Locations";
 
             //  ********** Call the LLM to Parse the Story to create the files **********
-            OpenAI.Chat.Message ParsedStoryJSON = await OrchestratorMethods.ParseNewStory(story.Title, story.Synopsis, GPTModelId);
+            String ParsedStoryJSON = await OrchestratorMethods.ParseNewStory(story.Title, story.Synopsis, GPTModelId);
 
             CreateDirectory(StoryPath);
             CreateDirectory(CharactersPath);
@@ -80,7 +80,7 @@ namespace AIStoryBuilders.Services
             JSONStory ParsedNewStory = new JSONStory();
 
             // Convert the JSON to a dynamic object
-            ParsedNewStory = ParseJSONNewStory(ParsedStoryJSON.Content.ToString());
+            ParsedNewStory = ParseJSONNewStory(ParsedStoryJSON);
 
             // *****************************************************
 
@@ -177,7 +177,7 @@ namespace AIStoryBuilders.Services
             if (ParsedNewChapters.chapter.Length == 0)
             {
                 // Clean the JSON
-                ParsedChaptersJSON = await OrchestratorMethods.CleanJSON(GetOnlyJSON(ParsedChaptersJSON.Choices.FirstOrDefault().Text.ToString()), GPTModelId);
+                var ParsedChaptersJSONString = await OrchestratorMethods.CleanJSON(GetOnlyJSON(ParsedChaptersJSON.Choices.FirstOrDefault().Text.ToString()), GPTModelId);
 
                 // Convert the JSON to a dynamic object
                 ParsedNewChapters = ParseJSONNewChapters(GetOnlyJSON(ParsedChaptersJSON.Choices.FirstOrDefault().Text));

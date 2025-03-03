@@ -19,7 +19,7 @@ namespace AIStoryBuilders.AI
     public partial class OrchestratorMethods
     {
         #region public async Task<Message> ParseNewStory(string paramStoryTitle, string paramStoryText, string GPTModel)
-        public async Task<Message> ParseNewStory(string paramStoryTitle, string paramStoryText, string GPTModel)
+        public async Task<string> ParseNewStory(string paramStoryTitle, string paramStoryText, string GPTModel)
         {            
             string Organization = SettingsService.Organization;
             string ApiKey = SettingsService.ApiKey;
@@ -30,10 +30,6 @@ namespace AIStoryBuilders.AI
             // Create a new OpenAIClient object
             IChatClient api = CreateOpenAIClient();
 
-            // Create a colection of chatPrompts
-            ChatResponse ChatResponseResult = new ChatResponse();
-            List<Message> chatPrompts = new List<Message>();
-
             // Trim paramStoryText to 10000 words (so we don't run out of tokens)
             paramStoryText = OrchestratorMethods.TrimToMaxWords(paramStoryText, 10000);
 
@@ -42,34 +38,13 @@ namespace AIStoryBuilders.AI
 
             LogService.WriteToLog($"Prompt: {SystemMessage}");
 
-            chatPrompts = new List<Message>();
-
-            chatPrompts.Insert(0,
-            new Message(
-                Role.System,
-                SystemMessage
-                )
-            );
-
-            ReadTextEvent?.Invoke(this, new ReadTextEventArgs($"Calling ChatGPT to Parse new Story...", 30));
-
-            // Get a response from ChatGPT 
-            var FinalChatRequest = new ChatRequest(                
-                chatPrompts,
-                model: GPTModel,
-                temperature: 0.0,
-                topP: 1,
-                frequencyPenalty: 0,
-                presencePenalty: 0,
-                responseFormat: ChatResponseFormat.Json);
-
-            ChatResponseResult = await api.ChatEndpoint.GetCompletionAsync(FinalChatRequest);
+            var ChatResponseResult = await api.CompleteAsync(SystemMessage);
 
             // *****************************************************
 
-            LogService.WriteToLog($"TotalTokens: {ChatResponseResult.Usage.TotalTokens} - ChatResponseResult - {ChatResponseResult.FirstChoice.Message.Content}");
+            LogService.WriteToLog($"TotalTokens: {ChatResponseResult.Usage.TotalTokenCount} - ChatResponseResult - {ChatResponseResult.Choices.FirstOrDefault().Text}");
 
-            return ChatResponseResult.FirstChoice.Message;
+            return ChatResponseResult.Choices.FirstOrDefault().Text;
         }
         #endregion
 
