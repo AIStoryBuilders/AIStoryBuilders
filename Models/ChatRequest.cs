@@ -1,8 +1,8 @@
-﻿using OpenAI;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Text.Json.Nodes;
 using System.Text.Json.Serialization;
 using System.Threading.Tasks;
 
@@ -103,7 +103,7 @@ namespace AIStoryBuilders.Models
                 throw new ArgumentNullException("messages", "Missing required messages parameter");
             }
 
-            Model = (string.IsNullOrWhiteSpace(model) ? ((string)OpenAI.Models.Model.GPT3_5_Turbo) : model);
+            Model = (string.IsNullOrWhiteSpace(model) ? ("GPT4o") : model);
             FrequencyPenalty = frequencyPenalty;
             LogitBias = logitBias;
             MaxTokens = maxTokens;
