@@ -1,5 +1,4 @@
-﻿using Android.Speech.Tts;
-using OpenAI;
+﻿using OpenAI;
 using System;
 using System.Collections.Generic;
 using System.Linq;

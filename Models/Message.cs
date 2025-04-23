@@ -52,10 +52,6 @@ namespace AIStoryBuilders.Models
         [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
         public string Name { get; private set; }
 
-        internal Message(Delta other)
-        {
-            CopyFrom(other);
-        }
         public Message()
         {
         }
@@ -66,13 +62,6 @@ namespace AIStoryBuilders.Models
         {
             Name = name;
             Function = function;
-        }
-
-        public Message(Role role, IEnumerable<Content> content, string name = null)
-        {
-            Role = role;
-            Content = content.ToList();
-            Name = name;
         }
 
         public Message(Role role, string content, string name = null)
@@ -88,12 +77,6 @@ namespace AIStoryBuilders.Models
             ToolCallId = tool.Id;
         }
 
-        public Message(Tool tool, IEnumerable<Content> content)
-            : this(Role.Tool, content, tool.Function.Name)
-        {
-            ToolCallId = tool.Id;
-        }
-
         public override string ToString()
         {
             return Content?.ToString() ?? string.Empty;
@@ -102,66 +85,7 @@ namespace AIStoryBuilders.Models
         public static implicit operator string(Message message)
         {
             return message?.ToString();
-        }
-
-        internal void CopyFrom(Delta other)
-        {
-            if (Role == (Role)0 && other != null && other.Role > (Role)0)
-            {
-                Role = other.Role;
-            }
-
-            if (other != null && other.Content != null)
-            {
-                Content += other.Content;
-            }
-
-            if (!string.IsNullOrWhiteSpace(other?.Name))
-            {
-                Name = other.Name;
-            }
-
-            if (other != null && other.ToolCalls != null)
-            {
-                if (toolCalls == null)
-                {
-                    toolCalls = new List<Tool>();
-                }
-
-                foreach (Tool toolCall in other.ToolCalls)
-                {
-                    if (toolCall == null)
-                    {
-                        continue;
-                    }
-
-                    if (toolCall.Index.HasValue)
-                    {
-                        if (toolCall.Index + 1 > toolCalls.Count)
-                        {
-                            toolCalls.Insert(toolCall.Index.Value, new Tool(toolCall));
-                        }
-
-                        toolCalls[toolCall.Index.Value].CopyFrom(toolCall);
-                    }
-                    else
-                    {
-                        toolCalls.Add(new Tool(toolCall));
-                    }
-                }
-            }
-
-            if (other?.Function != null)
-            {
-                if (Function == null)
-                {
-                    Function = new Function(other.Function);
-                }
-                else
-                {
-                    Function.CopyFrom(other.Function);
-                }
-            }
-        }
+        }    
+      
     }
 }

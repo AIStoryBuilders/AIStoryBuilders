@@ -32,22 +32,12 @@ namespace AIStoryBuilders.AI
             IChatClient api = CreateOpenAIClient();
 
             // Create a colection of chatPrompts
-            ChatResponse ChatResponseResult = new ChatResponse();
             List<Message> chatPrompts = new List<Message>();
 
             // Update System Message
             SystemMessage = CreateDetectCharacters(objParagraph.ParagraphContent);
 
             LogService.WriteToLog($"Prompt: {SystemMessage}");
-
-            chatPrompts = new List<Message>();
-
-            chatPrompts.Insert(0,
-            new Message(
-                Role.System,
-                SystemMessage
-                )
-            );
 
             // Get a response from ChatGPT 
             var FinalChatRequest = new ChatRequest(
@@ -59,19 +49,18 @@ namespace AIStoryBuilders.AI
                 presencePenalty: 0,
                 responseFormat: Models.ChatResponseFormat.Json);
 
-            ChatResponseResult = await api.ChatEndpoint.GetCompletionAsync(FinalChatRequest);
+            var ChatResponseResult = await api.CompleteAsync(SystemMessage);
 
             // *****************************************************
 
-            LogService.WriteToLog($"TotalTokens: {ChatResponseResult.Usage.TotalTokens} - ChatResponseResult - {ChatResponseResult.FirstChoice.Message.Content}");
+            LogService.WriteToLog($"TotalTokens: {ChatResponseResult.Usage.TotalTokenCount} - ChatResponseResult - {ChatResponseResult.Choices.FirstOrDefault().Text}");
 
             List<Models.Character> colCharacterOutput = new List<Models.Character>();
 
             try
             {
                 // Convert the JSON to a list of SimpleCharacters
-
-                var JSONResult = ChatResponseResult.FirstChoice.Message.Content.ToString();
+                var JSONResult = ChatResponseResult.Choices.FirstOrDefault().Text;
 
                 dynamic data = JObject.Parse(JSONResult);
 
