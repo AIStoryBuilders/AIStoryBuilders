@@ -33,6 +33,9 @@ namespace AIStoryBuilders.Models
         [JsonPropertyName("max_tokens")]
         public int? MaxTokens { get; }
 
+        [JsonPropertyName("tools")]
+        public IReadOnlyList<Tool> Tools { get; }
+
         [JsonPropertyName("n")]
         public int? Number { get; }
 
