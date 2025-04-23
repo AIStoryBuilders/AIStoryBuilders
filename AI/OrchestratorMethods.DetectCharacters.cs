@@ -31,23 +31,10 @@ namespace AIStoryBuilders.AI
             // Create a new OpenAIClient object
             IChatClient api = CreateOpenAIClient();
 
-            // Create a colection of chatPrompts
-            List<Message> chatPrompts = new List<Message>();
-
             // Update System Message
             SystemMessage = CreateDetectCharacters(objParagraph.ParagraphContent);
 
             LogService.WriteToLog($"Prompt: {SystemMessage}");
-
-            // Get a response from ChatGPT 
-            var FinalChatRequest = new ChatRequest(
-                chatPrompts,
-                model: GPTModel,
-                temperature: 0.0,
-                topP: 1,
-                frequencyPenalty: 0,
-                presencePenalty: 0,
-                responseFormat: Models.ChatResponseFormat.Json);
 
             var ChatResponseResult = await api.CompleteAsync(SystemMessage);
 

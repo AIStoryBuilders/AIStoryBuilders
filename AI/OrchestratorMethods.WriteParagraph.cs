@@ -30,39 +30,16 @@ namespace AIStoryBuilders.AI
             // Create a new OpenAIClient object
             IChatClient api = CreateOpenAIClient();
 
-            // Create a colection of chatPrompts
-            ChatResponse ChatResponseResult = new ChatResponse();
-            List<Message> chatPrompts = new List<Message>();
-
             // Update System Message
             SystemMessage = CreateWriteParagraph(objJSONMasterStory, paramAIPrompt);
 
             LogService.WriteToLog($"Prompt: {SystemMessage}");
 
-            chatPrompts = new List<Message>();
-
-            chatPrompts.Insert(0,
-            new Message(
-                Role.System,
-                SystemMessage
-                )
-            );
-
-            // Get a response from ChatGPT 
-            var FinalChatRequest = new ChatRequest(
-                chatPrompts,
-                model: GPTModel,
-                temperature: 0.0,
-                topP: 1,
-                frequencyPenalty: 0,
-                presencePenalty: 0,
-                responseFormat: Models.ChatResponseFormat.Json);
-
-            ChatResponseResult = await api.ChatEndpoint.GetCompletionAsync(FinalChatRequest);
+            var ChatResponseResult = await api.CompleteAsync(SystemMessage);
 
             // *****************************************************
 
-            LogService.WriteToLog($"TotalTokens: {ChatResponseResult.Usage.TotalTokens} - ChatResponseResult - {ChatResponseResult.FirstChoice.Message.Content}");
+            LogService.WriteToLog($"TotalTokens: {ChatResponseResult.Usage.TotalTokenCount} - ChatResponseResult - {ChatResponseResult.Choices.FirstOrDefault().Text}");
 
             string strParagraphOutput = "";
 
@@ -70,7 +47,7 @@ namespace AIStoryBuilders.AI
             {
                 // Convert the JSON to a list of SimpleCharacters
 
-                var JSONResult = ChatResponseResult.FirstChoice.Message.Content.ToString();
+                var JSONResult = ChatResponseResult.Choices.FirstOrDefault().Text;
 
                 dynamic data = JObject.Parse(JSONResult);
 
