@@ -10,6 +10,7 @@ using OpenAI.Models;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net.Http.Headers;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -136,13 +137,24 @@ namespace AIStoryBuilders.AI
         #region public async Task DeleteFineTuneModelAsync(AIStoryBuilderModel paramaModel)
         public async Task DeleteFineTuneModelAsync(AIStoryBuilderModel paramaModel)
         {
-            string Organization = SettingsService.Organization;
-            string ApiKey = SettingsService.ApiKey;
+            // pull config
+            var apiKey = SettingsService.ApiKey;
+            var organization = SettingsService.Organization;
 
-            // Create a new OpenAIClient object
-            IChatClient api = CreateOpenAIClient();
+            // Delete the model via REST
+            using var http = new HttpClient
+            {
+                BaseAddress = new Uri("https://api.openai.com/")
+            };
 
-            await api.ModelsEndpoint.DeleteFineTuneModelAsync(paramaModel.ModelId);
+            http.DefaultRequestHeaders.Authorization =
+                new AuthenticationHeaderValue("Bearer", apiKey);
+
+            if (!string.IsNullOrWhiteSpace(organization))
+                http.DefaultRequestHeaders.Add("OpenAI-Organization", organization);
+
+            var deleteResponse = await http.DeleteAsync($"v1/models/{paramaModel.ModelId}");
+            deleteResponse.EnsureSuccessStatusCode();
 
             // Remove any alias in the database
 
