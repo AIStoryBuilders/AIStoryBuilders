@@ -132,6 +132,7 @@ namespace AIStoryBuilders.AI
             if (SettingsService.AIType == "OpenAI")
             {
                 OpenAIClientOptions options = new OpenAIClientOptions();
+                options.OrganizationId = Organization;
                 options.NetworkTimeout = TimeSpan.FromSeconds(520);
 
                 return new OpenAIClient(
@@ -166,6 +167,7 @@ namespace AIStoryBuilders.AI
             if (SettingsService.AIType == "OpenAI")
             {
                 OpenAIClientOptions options = new OpenAIClientOptions();
+                options.OrganizationId = Organization;
                 options.NetworkTimeout = TimeSpan.FromSeconds(520);
 
                 return new OpenAIClient(
@@ -298,6 +300,22 @@ namespace AIStoryBuilders.AI
             sanitized = sanitized.Replace("|", "");
 
             return sanitized;
+        }
+        #endregion
+
+        #region public string ExtractJson(string json)
+        /// <summary>
+        /// Extracts the JSON object from a Markdown code block (```json … ```).
+        /// If no fenced block is found, returns the input unchanged.
+        /// </summary>
+        public static string ExtractJson(string json)
+        {
+            // Pattern captures the JSON object between ```json and ```
+            const string pattern = @"```json\s*(\{[\s\S]*?\})\s*```";
+            var match = Regex.Match(json, pattern, RegexOptions.Singleline);
+            return match.Success
+                ? match.Groups[1].Value   // the raw JSON
+                : json;                  // fallback to original if no match
         }
         #endregion
 

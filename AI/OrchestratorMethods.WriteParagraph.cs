@@ -49,6 +49,8 @@ namespace AIStoryBuilders.AI
 
                 var JSONResult = ChatResponseResult.Choices.FirstOrDefault().Text;
 
+                JSONResult = ExtractJson(JSONResult);
+
                 dynamic data = JObject.Parse(JSONResult);
 
                 strParagraphOutput = data.paragraph_content.ToString();

@@ -5,6 +5,7 @@ using static AIStoryBuilders.AI.OrchestratorMethods;
 using AIStoryBuilders.Models.JSON;
 using Newtonsoft.Json;
 using System.Linq;
+using System.Text.RegularExpressions;
 
 namespace AIStoryBuilders.Services
 {
@@ -101,13 +102,12 @@ namespace AIStoryBuilders.Services
         #region public string GetOnlyJSON(string json)
         public string GetOnlyJSON(string json)
         {
-            string OnlyJSON = "";
-            // Search for the first occurrence of the { character
-            int FirstCurlyBrace = json.IndexOf('{');
-            // Set ParsedStory to the string after the first occurrence of the { character
-            OnlyJSON = json.Substring(FirstCurlyBrace);
-
-            return OnlyJSON;
+            // Pattern captures the JSON object between ```json and ```
+            const string pattern = @"```json\s*(\{[\s\S]*?\})\s*```";
+            var match = Regex.Match(json, pattern, RegexOptions.Singleline);
+            return match.Success
+                ? match.Groups[1].Value   // the raw JSON
+                : json;                  // fallback to original if no match
         }
         #endregion
 

@@ -47,7 +47,7 @@ namespace AIStoryBuilders.AI
             try
             {
                 // Convert the JSON to a list of SimpleCharacters
-                var JSONResult = ChatResponseResult.Choices.FirstOrDefault().Text;
+                var JSONResult = ExtractJson(ChatResponseResult.Choices.FirstOrDefault().Text);
 
                 dynamic data = JObject.Parse(JSONResult);
 

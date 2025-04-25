@@ -54,7 +54,7 @@ namespace AIStoryBuilders.AI
 
                 List<string> colAllowedTypes = new List<string> { "Appearance", "Goals", "History", "Aliases", "Facts" };
 
-                var JSONResult = ChatResponseResult.Choices.FirstOrDefault().Text;
+                var JSONResult = ExtractJson(ChatResponseResult.Choices.FirstOrDefault().Text);
 
                 dynamic data = JObject.Parse(JSONResult);
 

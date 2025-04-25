@@ -42,7 +42,9 @@ namespace AIStoryBuilders.AI
 
             LogService.WriteToLog($"TotalTokens: {ChatResponseResult.Usage.TotalTokenCount} - ChatResponseResult - {ChatResponseResult.Choices.FirstOrDefault().Text}");
 
-            return ChatResponseResult.Choices.FirstOrDefault().Text; 
+            var JSONResult = ExtractJson(ChatResponseResult.Choices.FirstOrDefault().Text);
+
+            return JSONResult;
         }
         #endregion
 
