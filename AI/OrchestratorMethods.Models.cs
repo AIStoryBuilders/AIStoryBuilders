@@ -23,12 +23,9 @@ namespace AIStoryBuilders.AI
             string Organization = SettingsService.Organization;
             string ApiKey = SettingsService.ApiKey;
 
-            // Create a new OpenAIClient object
-            IChatClient api = CreateOpenAIClient();
-
             // Fetch the list of models using the OpenAI API
-            var models =
-            await api.ModelsEndpoint.GetModelsAsync();
+            var fetcher = new OpenAiModelFetcher(ApiKey);
+            var models = await fetcher.GetModelsAsync();
 
             List<AIStoryBuilderModel> colAIStoryBuilderModel = new List<AIStoryBuilderModel>();
 
@@ -37,7 +34,7 @@ namespace AIStoryBuilders.AI
             var colDatabase = DatabaseService.colAIStoryBuildersDatabase;
 
             // Iterate through the fetched models
-            foreach (var model in models)
+            foreach (var model in models.Data)
             {
                 // Filter out models owned by "openai" or "system"
                 if (!model.OwnedBy.Contains("openai")
