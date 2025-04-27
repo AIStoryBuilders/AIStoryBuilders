@@ -12,6 +12,7 @@ using System.Text.Json;
 using Newtonsoft.Json.Linq;
 using Newtonsoft.Json;
 using OpenAI.Moderations;
+using Microsoft.Extensions.AI;
 
 namespace AIStoryBuilders.AI
 {
@@ -28,60 +29,22 @@ namespace AIStoryBuilders.AI
             LogService.WriteToLog($"GetStoryBeats using {GPTModel} - Start");
 
             // Create a new OpenAIClient object
-            OpenAIClient api = CreateOpenAIClient();
-
-            // Create a colection of chatPrompts
-            ChatResponse ChatResponseResult = new ChatResponse();
-            List<Message> chatPrompts = new List<Message>();
+            IChatClient api = CreateOpenAIClient();
 
             // Update System Message
             SystemMessage = CreateStoryBeats(paramParagraph);
 
             LogService.WriteToLog($"Prompt: {SystemMessage}");
 
-            chatPrompts = new List<Message>();
-
-            chatPrompts.Insert(0,
-            new Message(
-                Role.System,
-                SystemMessage
-                )
-            );
-
-            // Get a response from ChatGPT 
-            var FinalChatRequest = new ChatRequest(
-                chatPrompts,
-                model: GPTModel,
-                temperature: 0.0,
-                topP: 1,
-                frequencyPenalty: 0,
-                presencePenalty: 0,
-                responseFormat: ChatResponseFormat.Text);
-
-            if (SettingsService.AIType == "OpenAI")
-            {
-                // Check Moderation
-                var ModerationResult = await api.ModerationsEndpoint.GetModerationAsync(SystemMessage);
-
-                if (ModerationResult)
-                {
-                    ModerationsResponse moderationsResponse = await api.ModerationsEndpoint.CreateModerationAsync(new ModerationsRequest(SystemMessage));
-
-                    // Serailize the ModerationsResponse
-                    string ModerationsResponseString = JsonConvert.SerializeObject(moderationsResponse.Results.FirstOrDefault().Categories);
-
-                    LogService.WriteToLog($"OpenAI Moderation flagged the content: [{SystemMessage}] as violating its policies: {ModerationsResponseString}");
-                    ReadTextEvent?.Invoke(this, new ReadTextEventArgs($"WARNING! OpenAI Moderation flagged the content as violating its policies. See the logs for more details.", 30));
-                }
-            }
-
-            ChatResponseResult = await api.ChatEndpoint.GetCompletionAsync(FinalChatRequest);
+            var ChatResponseResult = await api.CompleteAsync(SystemMessage);
 
             // *****************************************************
 
-            LogService.WriteToLog($"TotalTokens: {ChatResponseResult.Usage.TotalTokens} - ChatResponseResult - {ChatResponseResult.FirstChoice.Message.Content}");
+            LogService.WriteToLog($"TotalTokens: {ChatResponseResult.Usage.TotalTokenCount} - ChatResponseResult - {ChatResponseResult.Choices.FirstOrDefault().Text}");
 
-            return ChatResponseResult;
+            var JSONResult = ExtractJson(ChatResponseResult.Choices.FirstOrDefault().Text);
+
+            return JSONResult;
         }
         #endregion
 

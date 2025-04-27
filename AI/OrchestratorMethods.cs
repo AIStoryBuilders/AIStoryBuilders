@@ -1,14 +1,19 @@
 using AIStoryBuilders.Model;
 using AIStoryBuilders.Models;
 using AIStoryBuilders.Services;
+using Azure;
+using Azure.AI.OpenAI;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.Extensions.AI;
 using Newtonsoft.Json;
 using OpenAI;
 using OpenAI.Chat;
 using OpenAI.Files;
 using OpenAI.FineTuning;
 using OpenAI.Models;
+using System.ClientModel;
 using System.Collections.Generic;
+using System.Reflection.Emit;
 using System.Text.RegularExpressions;
 
 namespace AIStoryBuilders.AI
@@ -38,35 +43,31 @@ namespace AIStoryBuilders.AI
         #region public async Task<string> GetVectorEmbedding(string EmbeddingContent, bool Combine)
         public async Task<string> GetVectorEmbedding(string EmbeddingContent, bool Combine)
         {
-            // **** Call OpenAI and get embeddings for the memory text
-            // Create an instance of the OpenAI client
-            OpenAIClient api = CreateEmbeddingOpenAIClient();
+            IEmbeddingGenerator<string, Embedding<float>> generator;
 
-            // Get the model details
-            OpenAI.Models.Model model = new OpenAI.Models.Model("text-embedding-ada-002");
+            // Determine the service type
+            OpenAIServiceType serviceType = SettingsService.AIType == "OpenAI" ? OpenAIServiceType.OpenAI : OpenAIServiceType.AzureOpenAI;
 
-            if (SettingsService.AIType != "OpenAI")
+            if (serviceType == OpenAIServiceType.OpenAI)
             {
-                // Azure OpenAI - use the embedding model from the settings
-                model = new OpenAI.Models.Model(SettingsService.AIEmbeddingModel);
+                // Using OpenAI
+                var openAIClient = new OpenAIClient(SettingsService.ApiKey);
+                generator = openAIClient.AsEmbeddingGenerator("text-embedding-ada-002");
+            }
+            else // OpenAIServiceType.AzureOpenAI
+            {
+                // Using Azure OpenAI
+                var azureClient = new AzureOpenAIClient(new Uri(SettingsService.Endpoint), new AzureKeyCredential(SettingsService.ApiKey));
+                generator = azureClient.AsEmbeddingGenerator(SettingsService.AIEmbeddingModel);
             }
 
-            // Get embeddings for the text
-            var embeddings = await api.EmbeddingsEndpoint.CreateEmbeddingAsync(EmbeddingContent, model);
+            var embeddings = await generator.GenerateAsync(new[] { EmbeddingContent });
+
             // Get embeddings as an array of floats
-            var EmbeddingVectors = embeddings.Data[0].Embedding.Select(d => (float)d).ToArray();
-            // Loop through the embeddings
-            List<VectorData> AllVectors = new List<VectorData>();
-            for (int i = 0; i < EmbeddingVectors.Length; i++)
-            {
-                var embeddingVector = new VectorData
-                {
-                    VectorValue = EmbeddingVectors[i]
-                };
-                AllVectors.Add(embeddingVector);
-            }
+            var embeddingVectors = embeddings[0].Vector.ToArray();
+
             // Convert the floats to a single string
-            var VectorsToSave = "[" + string.Join(",", AllVectors.Select(x => x.VectorValue)) + "]";
+            var VectorsToSave = "[" + string.Join(",", embeddingVectors) + "]";
 
             if (Combine)
             {
@@ -82,58 +83,77 @@ namespace AIStoryBuilders.AI
         #region public async Task<string> GetVectorEmbeddingAsFloats(string EmbeddingContent)
         public async Task<float[]> GetVectorEmbeddingAsFloats(string EmbeddingContent)
         {
-            // **** Call OpenAI and get embeddings for the memory text
-            // Create an instance of the OpenAI client
-            OpenAIClient api = CreateEmbeddingOpenAIClient();
+            IEmbeddingGenerator<string, Embedding<float>> generator;
 
-            // Get the model details
-            OpenAI.Models.Model model = new OpenAI.Models.Model("text-embedding-ada-002");
+            // Determine the service type
+            OpenAIServiceType serviceType = SettingsService.AIType == "OpenAI" ? OpenAIServiceType.OpenAI : OpenAIServiceType.AzureOpenAI;
 
-            if (SettingsService.AIType != "OpenAI")
+            if (serviceType == OpenAIServiceType.OpenAI)
             {
-                // Azure OpenAI - use the embedding model from the settings
-                model = new OpenAI.Models.Model(SettingsService.AIEmbeddingModel);
+                // Using OpenAI
+                var openAIClient = new OpenAIClient(SettingsService.ApiKey);
+                generator = openAIClient.AsEmbeddingGenerator("text-embedding-ada-002");
+            }
+            else // OpenAIServiceType.AzureOpenAI
+            {
+                // Using Azure OpenAI
+                var azureClient = new AzureOpenAIClient(new Uri(SettingsService.Endpoint), new AzureKeyCredential(SettingsService.ApiKey));
+                generator = azureClient.AsEmbeddingGenerator(SettingsService.AIEmbeddingModel);
             }
 
-            // Get embeddings for the text
-            var embeddings = await api.EmbeddingsEndpoint.CreateEmbeddingAsync(EmbeddingContent, model);
-            // Get embeddings as an array of floats
-            var EmbeddingVectors = embeddings.Data[0].Embedding.Select(d => (float)d).ToArray();
+            var embeddings = await generator.GenerateAsync(new[] { EmbeddingContent });
 
-            return EmbeddingVectors;
+            // Get embeddings as an array of floats
+            var embeddingVectors = embeddings[0].Vector.ToArray();          
+
+            return embeddingVectors;
         }
         #endregion
 
         // Utility Methods
 
-        #region public OpenAIClient CreateOpenAIClient()
-        public OpenAIClient CreateOpenAIClient()
+        public IChatClient CreateOpenAIClient()
+        {
+            return CreateOpenAIClient(SettingsService.AIModel);
+        }
+
+        #region public IChatClient CreateOpenAIClient()
+        public IChatClient CreateOpenAIClient(string paramAIModel)
         {
             string Organization = SettingsService.Organization;
             string ApiKey = SettingsService.ApiKey;
             string Endpoint = SettingsService.Endpoint;
             string ApiVersion = SettingsService.ApiVersion;
             string AIEmbeddingModel = SettingsService.AIEmbeddingModel;
-            string AIModel = SettingsService.AIModel;
+            string AIModel = paramAIModel;
 
-            OpenAIClient api;
+            ApiKeyCredential apiKeyCredential = new ApiKeyCredential(ApiKey);
+
             if (SettingsService.AIType == "OpenAI")
             {
-                api = new OpenAIClient(new OpenAIAuthentication(ApiKey, Organization), null, new HttpClient() { Timeout = TimeSpan.FromSeconds(520) });
-            }
-            else
-            {
-                var auth = new OpenAIAuthentication(ApiKey);
-                var settings = new OpenAIClientSettings(resourceName: Endpoint, deploymentId: AIModel, apiVersion: ApiVersion);
-                api = new OpenAIClient(auth, settings, new HttpClient() { Timeout = TimeSpan.FromSeconds(520) });
-            }
+                OpenAIClientOptions options = new OpenAIClientOptions();
+                options.OrganizationId = Organization;
+                options.NetworkTimeout = TimeSpan.FromSeconds(520);
 
-            return api;
-        } 
+                return new OpenAIClient(
+                    apiKeyCredential, options)
+                    .AsChatClient(AIModel);
+            }
+            else // Azure OpenAI"
+            {
+                AzureOpenAIClientOptions options = new AzureOpenAIClientOptions();
+                options.NetworkTimeout = TimeSpan.FromSeconds(520);
+
+                return new AzureOpenAIClient(
+                    new Uri(Endpoint),
+                    apiKeyCredential, options)
+                    .AsChatClient(AIModel);
+            }
+        }
         #endregion
 
-        #region public OpenAIClient CreateEmbeddingOpenAIClient()
-        public OpenAIClient CreateEmbeddingOpenAIClient()
+        #region public IChatClient CreateEmbeddingOpenAIClient()
+        public IChatClient CreateEmbeddingOpenAIClient()
         {
             string Organization = SettingsService.Organization;
             string ApiKey = SettingsService.ApiKey;
@@ -142,20 +162,29 @@ namespace AIStoryBuilders.AI
             string AIEmbeddingModel = SettingsService.AIEmbeddingModel;
             string AIModel = SettingsService.AIModel;
 
-            OpenAIClient api;
+            ApiKeyCredential apiKeyCredential = new ApiKeyCredential(ApiKey);
+
             if (SettingsService.AIType == "OpenAI")
             {
-                api = new OpenAIClient(new OpenAIAuthentication(ApiKey, Organization), null, new HttpClient() { Timeout = TimeSpan.FromSeconds(520) });
-            }
-            else
-            {
-                var auth = new OpenAIAuthentication(ApiKey);
-                var settings = new OpenAIClientSettings(resourceName: Endpoint, deploymentId: AIEmbeddingModel, apiVersion: ApiVersion);
-                api = new OpenAIClient(auth, settings, new HttpClient() { Timeout = TimeSpan.FromSeconds(520) });
-            }
+                OpenAIClientOptions options = new OpenAIClientOptions();
+                options.OrganizationId = Organization;
+                options.NetworkTimeout = TimeSpan.FromSeconds(520);
 
-            return api;
-        } 
+                return new OpenAIClient(
+                    apiKeyCredential, options)
+                    .AsChatClient(AIModel);
+            }
+            else // Azure OpenAI
+            {
+                AzureOpenAIClientOptions options = new AzureOpenAIClientOptions();
+                options.NetworkTimeout = TimeSpan.FromSeconds(520);
+
+                return new AzureOpenAIClient(
+                    new Uri(Endpoint),
+                    apiKeyCredential, options)
+                    .AsChatClient(AIEmbeddingModel);
+            }
+        }
         #endregion
 
         #region public float CosineSimilarity(float[] vector1, float[] vector2)
@@ -274,6 +303,22 @@ namespace AIStoryBuilders.AI
         }
         #endregion
 
+        #region public string ExtractJson(string json)
+        /// <summary>
+        /// Extracts the JSON object from a Markdown code block (```json … ```).
+        /// If no fenced block is found, returns the input unchanged.
+        /// </summary>
+        public static string ExtractJson(string json)
+        {
+            // Pattern captures the JSON object between ```json and ```
+            const string pattern = @"```json\s*(\{[\s\S]*?\})\s*```";
+            var match = Regex.Match(json, pattern, RegexOptions.Singleline);
+            return match.Success
+                ? match.Groups[1].Value   // the raw JSON
+                : json;                  // fallback to original if no match
+        }
+        #endregion
+
         #region public static List<string> ParseStringToList(string input)
         public static List<string> ParseStringToList(string input)
         {
@@ -296,6 +341,14 @@ namespace AIStoryBuilders.AI
                 Message = message;
                 DisplayLength = display_length;
             }
+        }
+        #endregion
+
+        #region public enum OpenAIServiceType
+        public enum OpenAIServiceType
+        {
+            OpenAI,
+            AzureOpenAI
         }
         #endregion
     }

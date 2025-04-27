@@ -1,6 +1,7 @@
 ﻿using AIStoryBuilders.Model;
 using AIStoryBuilders.Models;
 using AIStoryBuilders.Models.JSON;
+using Microsoft.Extensions.AI;
 using OpenAI;
 using OpenAI.Chat;
 using OpenAI.Files;
@@ -9,6 +10,7 @@ using OpenAI.Models;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net.Http.Headers;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -22,12 +24,9 @@ namespace AIStoryBuilders.AI
             string Organization = SettingsService.Organization;
             string ApiKey = SettingsService.ApiKey;
 
-            // Create a new OpenAIClient object
-            OpenAIClient api = CreateOpenAIClient();
-
             // Fetch the list of models using the OpenAI API
-            var models =
-            await api.ModelsEndpoint.GetModelsAsync();
+            var fetcher = new OpenAiModelFetcher(ApiKey);
+            var models = await fetcher.GetModelsAsync();
 
             List<AIStoryBuilderModel> colAIStoryBuilderModel = new List<AIStoryBuilderModel>();
 
@@ -36,11 +35,12 @@ namespace AIStoryBuilders.AI
             var colDatabase = DatabaseService.colAIStoryBuildersDatabase;
 
             // Iterate through the fetched models
-            foreach (var model in models)
+            foreach (var model in models.Data)
             {
                 // Filter out models owned by "openai" or "system"
                 if (!model.OwnedBy.Contains("openai")
-                && !model.OwnedBy.Contains("system"))
+                && !model.OwnedBy.Contains("system")
+                && !model.Id.Contains("-step-"))
                 {
                     AIStoryBuilderModel objAIStoryBuilderModel = new AIStoryBuilderModel();
 
@@ -76,6 +76,12 @@ namespace AIStoryBuilders.AI
             objAIStoryBuilderModelGPT4.ModelName = "gpt-4o";
 
             colAIStoryBuilderModel.Add(objAIStoryBuilderModelGPT4);
+
+            AIStoryBuilderModel objAIStoryBuilderModelGPT41 = new AIStoryBuilderModel();
+            objAIStoryBuilderModelGPT41.ModelId = "GPT-4.1";
+            objAIStoryBuilderModelGPT41.ModelName = "GPT-4.1";
+
+            colAIStoryBuilderModel.Add(objAIStoryBuilderModelGPT41);
 
             AIStoryBuilderModel objAIStoryBuilderModelGPT3 = new AIStoryBuilderModel();
             objAIStoryBuilderModelGPT3.ModelId = "gpt-3.5-turbo";
@@ -138,13 +144,24 @@ namespace AIStoryBuilders.AI
         #region public async Task DeleteFineTuneModelAsync(AIStoryBuilderModel paramaModel)
         public async Task DeleteFineTuneModelAsync(AIStoryBuilderModel paramaModel)
         {
-            string Organization = SettingsService.Organization;
-            string ApiKey = SettingsService.ApiKey;
+            // pull config
+            var apiKey = SettingsService.ApiKey;
+            var organization = SettingsService.Organization;
 
-            // Create a new OpenAIClient object
-            OpenAIClient api = CreateOpenAIClient();
+            // Delete the model via REST
+            using var http = new HttpClient
+            {
+                BaseAddress = new Uri("https://api.openai.com/")
+            };
 
-            await api.ModelsEndpoint.DeleteFineTuneModelAsync(paramaModel.ModelId);
+            http.DefaultRequestHeaders.Authorization =
+                new AuthenticationHeaderValue("Bearer", apiKey);
+
+            if (!string.IsNullOrWhiteSpace(organization))
+                http.DefaultRequestHeaders.Add("OpenAI-Organization", organization);
+
+            var deleteResponse = await http.DeleteAsync($"v1/models/{paramaModel.ModelId}");
+            deleteResponse.EnsureSuccessStatusCode();
 
             // Remove any alias in the database
 

@@ -11,6 +11,7 @@
 @using OpenAI.Files;
 @using OpenAI.FineTuning;
 @using OpenAI.Models;
+@using System.ClientModel
 @inherits OwningComponentBase
 @inject NotificationService NotificationService
 @inject DialogService DialogService
@@ -33,19 +34,19 @@
                         <br />
                         <div style="height:500px">
                             <RadzenDataList AllowVirtualization=false Style="height:100%;overflow:auto;"
-                                            WrapItems=true AllowPaging=false
-                                            Data="@colAIStoryBuilderModel" TItem="AIStoryBuilderModel">
+                            WrapItems=true AllowPaging=false
+                            Data="@colAIStoryBuilderModel" TItem="AIStoryBuilderModel">
                                 <Template Context="model">
                                     <RadzenCard Style="width: 100%; padding: 1;">
                                         <RadzenRow Gap="0">
                                             <RadzenButton Text="Edit" Click=@(() => EditModel(model))
-                                                          ButtonStyle="ButtonStyle.Primary" Style="width: 150px;height: 20px" />
+                                            ButtonStyle="ButtonStyle.Primary" Style="width: 150px;height: 20px" />
                                             &nbsp;&nbsp;&nbsp;&nbsp;
                                             <RadzenButton Text="Delete" Click=@(() => DeleteModel(model))
-                                                          ButtonStyle="ButtonStyle.Danger" Style="width: 150px;height: 20px" />
+                                            ButtonStyle="ButtonStyle.Danger" Style="width: 150px;height: 20px" />
                                             &nbsp;&nbsp;&nbsp;&nbsp;
                                             <RadzenText TextStyle="TextStyle.DisplayH5"
-                                                        class="rz-color-secondary">@(model.ModelName)</RadzenText>&nbsp;&nbsp;
+                                            class="rz-color-secondary">@(model.ModelName)</RadzenText>&nbsp;&nbsp;
                                         </RadzenRow>
                                     </RadzenCard>
                                 </Template>
@@ -82,9 +83,9 @@
                                             <FineTuneView colTrainingData="@colTrainingData" />
                                             <br />
                                             <RadzenButton Text="Upload to OpenAI" ButtonStyle="ButtonStyle.Success"
-                                                          Click=@(() => UploadtoOpenAI()) Icon="publish" />
+                                            Click=@(() => UploadtoOpenAI()) Icon="publish" />
                                             <RadzenButton Text="Export Excel" ButtonStyle="ButtonStyle.Info"
-                                                          Click=@(() => ExportTrainingData()) Icon="get_app" />
+                                            Click=@(() => ExportTrainingData()) Icon="get_app" />
                                         }
                                     </RadzenColumn>
                                 </RadzenRow>
@@ -101,10 +102,10 @@
                     <div class="row">
                         <div class="col">
                             <RadzenButton Text="Download Template" ButtonStyle="ButtonStyle.Primary"
-                                          Click="DownloadTemplate"
-                                          Style="margin-bottom: 10px; width: 250px" />&nbsp;&nbsp;
+                            Click="DownloadTemplate"
+                            Style="margin-bottom: 10px; width: 250px" />&nbsp;&nbsp;
                             <RadzenButton Text="Upload Excel file and create JsonL file" ButtonStyle="ButtonStyle.Success"
-                                          Click=@(() => CreateJasonLFile()) Icon="publish" />
+                            Click=@(() => CreateJasonLFile()) Icon="publish" />
                         </div>
                     </div>
                 </RadzenTabsItem>
@@ -354,21 +355,28 @@
                 TempTrainingDataFile,
                 conversations.Select(conversation => conversation.ToString()));
 
-            // Upload to OpenAI
-
             // Upload the file to OpenAI API
-            var api = new OpenAIClient(new OpenAIAuthentication(ApiKey, Organization));
-            var fileData = await api.FilesEndpoint.UploadFileAsync(TempTrainingDataFile, "fine-tune");
+            #pragma warning disable OPENAI001
+            var api = new OpenAIClient(ApiKey);
+
+            // Get the FilesClient
+            var filesClient = api.GetOpenAIFileClient();
+
+            // Upload for the 'fine-tune' purpose
+            var uploadResponse = await filesClient.UploadFileAsync(
+                TempTrainingDataFile,
+                FileUploadPurpose.FineTune
+            );
 
             NotificationService.Notify(new NotificationMessage
                 {
                     Severity = NotificationSeverity.Success,
                     Summary = "Fine Tuned Data Uploaded",
-                    Detail = "The training data has been uploaded to OpenAI to be fine tuned.",
+                    Detail = $"The training data has been uploaded to OpenAI to be fine tuned (File ID: {uploadResponse.Value?.Id}).",
                     Duration = 4000
                 });
 
-            await CreateFineTuneJob(fileData);
+            await CreateFineTuneJob(uploadResponse);
 
             try
             {
@@ -442,13 +450,36 @@
 
     // Fine-Tune
 
-    private async Task CreateFineTuneJob(FileResponse paramaFile)
-    {
-        var api = new OpenAIClient(new OpenAIAuthentication(ApiKey, Organization));
-        var request = new CreateFineTuneJobRequest("gpt-3.5-turbo", paramaFile);
+    // Add a local record to represent the fine tuning job request.
+    private record CreateFineTuningJobRequest(
+    [property: System.Text.Json.Serialization.JsonPropertyName("training_file")]
+    string TrainingFileId,
 
-        // Create a fine-tuning job using the OpenAI API
-        await api.FineTuningEndpoint.CreateJobAsync(request);
+    [property: System.Text.Json.Serialization.JsonPropertyName("model")]
+    string Model
+    );
+
+    private async Task CreateFineTuneJob(System.ClientModel.ClientResult<OpenAIFile> paramaFile)
+    {
+        // Create the fine-tuning job request
+        var ftRequest = new CreateFineTuningJobRequest(paramaFile.Value.Id, "gpt-3.5-turbo");
+
+        // Serialize the request to JSON bytes using Encoding.UTF8
+        byte[] jsonBytes = System.Text.Encoding.UTF8.GetBytes(System.Text.Json.JsonSerializer.Serialize(ftRequest));
+
+        // Wrap the JSON payload as HttpContent using ByteArrayContent and set content type.
+        BinaryContent content = BinaryContent.Create(BinaryData.FromBytes(jsonBytes));
+
+        #pragma warning disable OPENAI001
+        var api = new OpenAIClient(ApiKey);
+        var ftClient = api.GetFineTuningClient();
+
+        // Start the job but return immediately with an operation handle
+        FineTuningJobOperation operation = await ftClient.CreateFineTuningJobAsync(
+            content,                    // our HttpContent JSON body
+            waitUntilCompleted: false,  // fire-and-forget; you’ll poll manually
+            options: null               // default pipeline options
+        );
 
         NotificationService.Notify(new NotificationMessage
             {
