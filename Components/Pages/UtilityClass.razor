@@ -3,6 +3,7 @@
 @using AIStoryBuilders.Components.Pages.Controls.UtilityControls
 @using AIStoryBuilders.Model;
 @using AIStoryBuilders.Services;
+@using Android.Service.Autofill
 @using ExcelDataReader
 @using Newtonsoft.Json;
 @using CommunityToolkit.Maui.Storage
@@ -33,19 +34,19 @@
                         <br />
                         <div style="height:500px">
                             <RadzenDataList AllowVirtualization=false Style="height:100%;overflow:auto;"
-                                            WrapItems=true AllowPaging=false
-                                            Data="@colAIStoryBuilderModel" TItem="AIStoryBuilderModel">
+                            WrapItems=true AllowPaging=false
+                            Data="@colAIStoryBuilderModel" TItem="AIStoryBuilderModel">
                                 <Template Context="model">
                                     <RadzenCard Style="width: 100%; padding: 1;">
                                         <RadzenRow Gap="0">
                                             <RadzenButton Text="Edit" Click=@(() => EditModel(model))
-                                                          ButtonStyle="ButtonStyle.Primary" Style="width: 150px;height: 20px" />
+                                            ButtonStyle="ButtonStyle.Primary" Style="width: 150px;height: 20px" />
                                             &nbsp;&nbsp;&nbsp;&nbsp;
                                             <RadzenButton Text="Delete" Click=@(() => DeleteModel(model))
-                                                          ButtonStyle="ButtonStyle.Danger" Style="width: 150px;height: 20px" />
+                                            ButtonStyle="ButtonStyle.Danger" Style="width: 150px;height: 20px" />
                                             &nbsp;&nbsp;&nbsp;&nbsp;
                                             <RadzenText TextStyle="TextStyle.DisplayH5"
-                                                        class="rz-color-secondary">@(model.ModelName)</RadzenText>&nbsp;&nbsp;
+                                            class="rz-color-secondary">@(model.ModelName)</RadzenText>&nbsp;&nbsp;
                                         </RadzenRow>
                                     </RadzenCard>
                                 </Template>
@@ -81,8 +82,10 @@
                                             <br />
                                             <FineTuneView colTrainingData="@colTrainingData" />
                                             <br />
+                                            <RadzenButton Text="Upload to OpenAI" ButtonStyle="ButtonStyle.Success"
+                                            Click=@(() => UploadtoOpenAI()) Icon="publish" />
                                             <RadzenButton Text="Export Excel" ButtonStyle="ButtonStyle.Info"
-                                                          Click=@(() => ExportTrainingData()) Icon="get_app" />
+                                            Click=@(() => ExportTrainingData()) Icon="get_app" />
                                         }
                                     </RadzenColumn>
                                 </RadzenRow>
@@ -93,7 +96,19 @@
                     {
                         <p>FineTuning in Azure OpenAI is not supported.</p>
                     }
-                </RadzenTabsItem>               
+                </RadzenTabsItem>
+                <RadzenTabsItem Text="JsonL Utility">
+                    <p>Use this page to upload an Excel file and create a JsonL file to use for fine tuning</p>
+                    <div class="row">
+                        <div class="col">
+                            <RadzenButton Text="Download Template" ButtonStyle="ButtonStyle.Primary"
+                            Click="DownloadTemplate"
+                            Style="margin-bottom: 10px; width: 250px" />&nbsp;&nbsp;
+                            <RadzenButton Text="Upload Excel file and create JsonL file" ButtonStyle="ButtonStyle.Success"
+                            Click=@(() => CreateJasonLFile()) Icon="publish" />
+                        </div>
+                    </div>
+                </RadzenTabsItem>
             </Tabs>
         </RadzenTabs>
     </div>
@@ -198,6 +213,199 @@
             });
     }
 
+    private async Task CreateJasonLFile()
+    {
+        try
+        {
+            var result = await FilePicker.PickAsync(new PickOptions
+                {
+                    FileTypes = new FilePickerFileType(new Dictionary<DevicePlatform, IEnumerable<string>>
+                {
+                    { DevicePlatform.iOS, new[] { "public.content" } },
+                    { DevicePlatform.Android, new[] { "application/*" } },
+                    { DevicePlatform.WinUI, new[] { ".xls" } }, })
+                });
+
+            if (result != null)
+            {
+                byte[] TemplateFileBytes = null;
+                var conversations = new List<Conversation>();
+
+                // Open a stream for the selected file
+                using (var stream = await result.OpenReadAsync())
+                {
+                    // Create a memory stream to copy the file stream
+                    using (var memoryStream = new MemoryStream())
+                    {
+                        // Copy the file stream to the memory stream
+                        await stream.CopyToAsync(memoryStream);
+
+                        // Return the byte array
+                        TemplateFileBytes = memoryStream.ToArray();
+                    }
+
+                    using (var reader = ExcelReaderFactory.CreateReader(stream))
+                    {
+                        // skip the first row
+                        reader.Read();
+
+                        do
+                        {
+                            while (reader.Read())
+                            {
+                                conversations.Add(new Conversation(new List<Message>()
+                                {
+                                    new Message(Role.System, reader.GetString(0)),
+                                    new Message(Role.User, reader.GetString(1)),
+                                    new Message(Role.Assistant, reader.GetString(2))
+                                }));
+                            }
+                        }
+                        while (reader.NextResult());
+                    }
+                }
+
+                var fileContents = conversations.Select(conversation => conversation.ToString());
+
+                // Convert fileContents to a stream
+                using var OutputStream = new MemoryStream();
+                using var writer = new StreamWriter(OutputStream);
+
+                foreach (var line in fileContents)
+                {
+                    await writer.WriteLineAsync(line);
+                }
+
+                await writer.FlushAsync();
+                OutputStream.Position = 0;
+
+                var fileSaverResult = await FileSaver.Default.SaveAsync("FineTunedJson.jsonL", OutputStream);
+
+                NotificationService.Notify(new NotificationMessage
+                    {
+                        Severity = NotificationSeverity.Success,
+                        Summary = "Saved",
+                        Detail = $"The file was saved successfully.",
+                        Duration = 4000
+                    });
+
+                StateHasChanged();
+            }
+        }
+        catch (Exception ex)
+        {
+            NotificationService.Notify(new NotificationMessage
+                {
+                    Severity = NotificationSeverity.Error,
+                    Summary = "Error",
+                    Detail = ex.Message,
+                    Duration = 4000
+                });
+
+            LogService.WriteToLog(ex.Message);
+        }
+    }
+
+    private async Task UploadtoOpenAI()
+    {
+        try
+        {
+            // Ensure colTrainingData has at least 10 lines of data
+            if (colTrainingData.Count < 10)
+            {
+                NotificationService.Notify(new NotificationMessage
+                    {
+                        Severity = NotificationSeverity.Error,
+                        Summary = "Error",
+                        Detail = "You must have at least 10 lines of data to upload to OpenAI.",
+                        Duration = 4000
+                    });
+
+                return;
+            }
+
+            InProgress = true;
+
+            // Convert to JsonL
+
+            var conversations = new List<Conversation>();
+
+            foreach (var trainingData in colTrainingData)
+            {
+                conversations.Add(new Conversation(new List<Message>()
+                {
+                    new Message(Role.System, trainingData.System),
+                    new Message(Role.User, trainingData.User),
+                    new Message(Role.Assistant, trainingData.Assistant)
+                }));
+            }
+
+            var fileContents = conversations.Select(conversation => conversation.ToString());
+
+            string TempTrainingDataPath = $"{Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments)}/AIStoryBuilders/FineTuneTrainingData/";
+
+            if (!Directory.Exists(TempTrainingDataPath))
+            {
+                Directory.CreateDirectory(TempTrainingDataPath);
+            }
+
+            string TempTrainingDataFile = $"{TempTrainingDataPath}/TrainingData.jsonl";
+
+            await File.WriteAllLinesAsync(
+                TempTrainingDataFile,
+                conversations.Select(conversation => conversation.ToString()));
+
+            // Upload to OpenAI
+
+            // Upload the file to OpenAI API
+            var api = new OpenAIClient(new OpenAIAuthentication(ApiKey, Organization));
+            var fileData = await api.FilesEndpoint.UploadFileAsync(TempTrainingDataFile, "fine-tune");
+
+            NotificationService.Notify(new NotificationMessage
+                {
+                    Severity = NotificationSeverity.Success,
+                    Summary = "Fine Tuned Data Uploaded",
+                    Detail = "The training data has been uploaded to OpenAI to be fine tuned.",
+                    Duration = 4000
+                });
+
+            await CreateFineTuneJob(fileData);
+
+            try
+            {
+                // Wait 2 seconds to allow the file to be released
+                await Task.Delay(2000);
+
+                // Delete the file
+                File.Delete(TempTrainingDataFile);
+
+                try
+                {
+                    // Delete the directory
+                    Directory.Delete(TempTrainingDataPath);
+                }
+                catch { }
+            }
+            catch { }
+
+            InProgress = false;
+        }
+        catch (Exception ex)
+        {
+            InProgress = false;
+
+            NotificationService.Notify(new NotificationMessage
+                {
+                    Severity = NotificationSeverity.Error,
+                    Summary = "Error",
+                    Detail = ex.Message,
+                    Duration = 4000
+                });
+
+            LogService.WriteToLog(ex.Message);
+        }
+    }
+
     private async Task ExportTrainingData()
     {
         try
@@ -231,5 +439,24 @@
 
             LogService.WriteToLog(ex.Message);
         }
+    }
+
+    // Fine-Tune
+
+    private async Task CreateFineTuneJob(FillResponse paramaFile)
+    {
+        var api = new OpenAIClient(new OpenAIAuthentication(ApiKey, Organization));
+        var request = new CreateFineTuneJobRequest("gpt-3.5-turbo", paramaFile);
+
+        // Create a fine-tuning job using the OpenAI API
+        await api.FineTuningEndpoint.CreateJobAsync(request);
+
+        NotificationService.Notify(new NotificationMessage
+            {
+                Severity = NotificationSeverity.Success,
+                Summary = "Fine Tune Started",
+                Detail = "The Fine Tuning of the training data has started.",
+                Duration = 4000
+            });
     }
 }
