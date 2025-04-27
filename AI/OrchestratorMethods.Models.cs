@@ -39,7 +39,8 @@ namespace AIStoryBuilders.AI
             {
                 // Filter out models owned by "openai" or "system"
                 if (!model.OwnedBy.Contains("openai")
-                && !model.OwnedBy.Contains("system"))
+                && !model.OwnedBy.Contains("system")
+                && !model.Id.Contains("-step-"))
                 {
                     AIStoryBuilderModel objAIStoryBuilderModel = new AIStoryBuilderModel();
 
