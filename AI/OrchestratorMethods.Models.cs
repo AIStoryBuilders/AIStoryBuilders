@@ -70,7 +70,18 @@ namespace AIStoryBuilders.AI
         {
             List<AIStoryBuilderModel> colAIStoryBuilderModel = new List<AIStoryBuilderModel>();
 
-            // Add GPT3 and GPT4 to the list of models
+            AIStoryBuilderModel objAIStoryBuilderModelGPT5Mini = new AIStoryBuilderModel();
+            objAIStoryBuilderModelGPT5Mini.ModelId = "gpt-5-mini";
+            objAIStoryBuilderModelGPT5Mini.ModelName = "gpt-5-mini";
+
+            colAIStoryBuilderModel.Add(objAIStoryBuilderModelGPT5Mini);
+
+            AIStoryBuilderModel objAIStoryBuilderModelGPT5 = new AIStoryBuilderModel();
+            objAIStoryBuilderModelGPT5.ModelId = "gpt-5";
+            objAIStoryBuilderModelGPT5.ModelName = "gpt-5";
+
+            colAIStoryBuilderModel.Add(objAIStoryBuilderModelGPT5);
+
             AIStoryBuilderModel objAIStoryBuilderModelGPT4 = new AIStoryBuilderModel();
             objAIStoryBuilderModelGPT4.ModelId = "gpt-4o";
             objAIStoryBuilderModelGPT4.ModelName = "gpt-4o";
