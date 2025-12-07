@@ -24,7 +24,7 @@
     <SupportedOSPlatformVersion Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'windows'">10.0.17763.0</SupportedOSPlatformVersion>
     <TargetPlatformMinVersion Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'windows'">10.0.17763.0</TargetPlatformMinVersion>
     <SupportedOSPlatformVersion Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'tizen'">6.5</SupportedOSPlatformVersion>
-    <TargetFrameworks>net10.0-windows10.0.22621</TargetFrameworks>
+    <TargetFrameworks>net10.0-windows10.0.22621.0</TargetFrameworks>
   </PropertyGroup>
   <PropertyGroup>
     <DefaultLanguage>en</DefaultLanguage>
@@ -38,38 +38,35 @@
     <HoursBetweenUpdateChecks>0</HoursBetweenUpdateChecks>
     <CreateMSIXPackage>True</CreateMSIXPackage>
   </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Debug|net8.0-maccatalyst|AnyCPU'">
+  <PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Debug|net10.0-maccatalyst|AnyCPU'">
     <ApplicationId>com.aistorybuilders.maui</ApplicationId>
     <ApplicationDisplayVersion>1.1.0</ApplicationDisplayVersion>
     <ApplicationVersion>2</ApplicationVersion>
   </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Debug|net8.0-android|AnyCPU'">
+  <PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Debug|net10.0-android|AnyCPU'">
     <ApplicationId>com.aistorybuilders.maui</ApplicationId>
     <ApplicationDisplayVersion>1.1.0</ApplicationDisplayVersion>
     <ApplicationVersion>2</ApplicationVersion>
   </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Debug|net8.0-windows10.0.19041.0|AnyCPU'">
+  <PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Debug|net10.0-windows10.0.22621.0|AnyCPU'">
     <ApplicationId>com.aistorybuilders.maui</ApplicationId>
     <ApplicationDisplayVersion>1.1.0</ApplicationDisplayVersion>
     <ApplicationVersion>2</ApplicationVersion>
   </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Release|net8.0-maccatalyst|AnyCPU'">
+  <PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Release|net10.0-maccatalyst|AnyCPU'">
     <ApplicationId>com.aistorybuilders.maui</ApplicationId>
     <ApplicationDisplayVersion>1.1.0</ApplicationDisplayVersion>
     <ApplicationVersion>2</ApplicationVersion>
   </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Release|net8.0-android|AnyCPU'">
+  <PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Release|net10.0-android|AnyCPU'">
     <ApplicationId>com.aistorybuilders.maui</ApplicationId>
     <ApplicationDisplayVersion>1.1.0</ApplicationDisplayVersion>
     <ApplicationVersion>2</ApplicationVersion>
   </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Release|net8.0-windows10.0.19041.0|AnyCPU'">
+  <PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Release|net10.0-windows10.0.22621.0|AnyCPU'">
     <ApplicationId>com.aistorybuilders.maui</ApplicationId>
     <ApplicationDisplayVersion>1.1.0</ApplicationDisplayVersion>
     <ApplicationVersion>2</ApplicationVersion>
-  </PropertyGroup>
-  <PropertyGroup>
-    <TargetFrameworks Condition="$([MSBuild]::IsOSPlatform('windows'))">$(TargetFrameworks);net8.0-windows10.0.22621.0</TargetFrameworks>
   </PropertyGroup>
   <ItemGroup>
     <!-- App Icon -->
@@ -255,18 +252,18 @@
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="Azure.AI.OpenAI" Version="2.1.0" />
-    <PackageReference Include="CommunityToolkit.Maui" Version="9.0.3" />
+    <PackageReference Include="CommunityToolkit.Maui" Version="13.0.0" />
     <PackageReference Include="DocX" Version="3.0.1" />
     <PackageReference Include="EPPlus" Version="7.3.2" />
     <PackageReference Include="ExcelDataReader" Version="3.7.0" />
     <PackageReference Include="Microsoft.Extensions.AI" Version="9.1.0-preview.1.25064.3" />
     <PackageReference Include="Microsoft.Extensions.AI.Abstractions" Version="9.1.0-preview.1.25064.3" />
     <PackageReference Include="Microsoft.Extensions.AI.OpenAI" Version="9.1.0-preview.1.25064.3" />
-    <PackageReference Include="Microsoft.Maui.Controls" Version="8.0.90" />
-    <PackageReference Include="Microsoft.Maui.Controls.Compatibility" Version="8.0.90" />
-    <PackageReference Include="Microsoft.AspNetCore.Components.WebView.Maui" Version="8.0.90" />
-    <PackageReference Include="Microsoft.Extensions.Logging.Debug" Version="8.0.0" />
-    <PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="8.0.8" />
+    <PackageReference Include="Microsoft.Maui.Controls" Version="10.0.11" />
+    <PackageReference Include="Microsoft.Maui.Controls.Compatibility" Version="10.0.11" />
+    <PackageReference Include="Microsoft.AspNetCore.Components.WebView.Maui" Version="10.0.11" />
+    <PackageReference Include="Microsoft.Extensions.Logging.Debug" Version="10.0.0" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="10.0.0" />
     <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
     <PackageReference Include="Radzen.Blazor" Version="4.24.5" />
     <PackageReference Include="Markdig" Version="0.37.0" />
