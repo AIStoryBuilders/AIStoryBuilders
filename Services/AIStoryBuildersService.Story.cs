@@ -4,6 +4,7 @@ using AIStoryBuilders.Models.JSON;
 using Microsoft.Extensions.AI;
 using static AIStoryBuilders.AI.OrchestratorMethods;
 using Character = AIStoryBuilders.Models.Character;
+using Microsoft.Maui.Devices.Sensors;
 
 namespace AIStoryBuilders.Services
 {

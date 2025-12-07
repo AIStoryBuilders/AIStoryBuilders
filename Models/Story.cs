@@ -2,6 +2,7 @@
 #nullable disable
 using System;
 using System.Collections.Generic;
+using Microsoft.Maui.Devices.Sensors;
 
 namespace AIStoryBuilders.Models;
 
