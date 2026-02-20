@@ -1,4 +1,5 @@
-﻿namespace AIStoryBuilders
+#nullable enable
+namespace AIStoryBuilders
 {
     public partial class App : Application
     {
