@@ -8,6 +8,7 @@ using OpenAI.Files;
 using OpenAI.FineTuning;
 using OpenAI.Models;
 using System;
+using System.ClientModel;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net.Http.Headers;
@@ -24,9 +25,10 @@ namespace AIStoryBuilders.AI
             string Organization = SettingsService.Organization;
             string ApiKey = SettingsService.ApiKey;
 
-            // Fetch the list of models using the OpenAI API
-            var fetcher = new OpenAiModelFetcher(ApiKey);
-            var models = await fetcher.GetModelsAsync();
+            // Fetch the list of models using the OpenAI SDK
+            var client = new OpenAIClient(new ApiKeyCredential(ApiKey));
+            var modelClient = client.GetOpenAIModelClient();
+            var response = await modelClient.GetModelsAsync();
 
             List<AIStoryBuilderModel> colAIStoryBuilderModel = new List<AIStoryBuilderModel>();
 
@@ -35,7 +37,7 @@ namespace AIStoryBuilders.AI
             var colDatabase = DatabaseService.colAIStoryBuildersDatabase;
 
             // Iterate through the fetched models
-            foreach (var model in models.Data)
+            foreach (var model in response.Value)
             {
                 // Filter out models owned by "openai" or "system"
                 if (!model.OwnedBy.Contains("openai")

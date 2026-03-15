@@ -8,6 +8,7 @@
 @inject NotificationService NotificationService
 @inject DialogService DialogService
 @inject SettingsService SettingsService
+@inject AIModelService AIModelService
 @inject IJSRuntime JSRuntime
 <h3>Settings</h3>
 <RadzenRow AlignItems="AlignItems.Start" Wrap="FlexWrap.Wrap" Gap="1rem" Class="rz-p-sm-12">
@@ -19,40 +20,41 @@
             <RadzenFormField Text="API Key:" Variant="@variant">
                 <RadzenTextBox @bind-Value="@ApiKey" @onkeydown="APIKeyDetection" style="width:450px;" />
             </RadzenFormField>
-            @if (AIType == "OpenAI")
+            @if (AIType == "Azure OpenAI")
             {
-                <RadzenFormField Text="Default AI Model:" Variant="@variant">
-                    <RadzenDropDown Data=@colModels @bind-Value="@AIModel" Style="width:300px" />
-                </RadzenFormField>
-                <RadzenLabel Text="Embeddings are handled locally (no cloud embedding calls needed)." style="font-size:x-small" />
-            }
-            else if (AIType == "Azure OpenAI")
-            {
-                <RadzenFormField Text="Azure OpenAI Model Deployment Name:" Variant="@variant">
-                    <RadzenTextBox @bind-Value="@AIModel" style="width:450px;" />
-                </RadzenFormField>
                 <RadzenFormField Text="Azure OpenAI Endpoint:" Variant="@variant">
                     <RadzenTextBox @bind-Value="@Endpoint" style="width:450px;" />
                 </RadzenFormField>
                 <RadzenFormField Text="Azure OpenAI Api Version:" Variant="@variant">
                     <RadzenTextBox @bind-Value="@ApiVersion" style="width:450px;" />
                 </RadzenFormField>
-                <RadzenLabel Text="Embeddings are handled locally (no cloud embedding calls needed)." style="font-size:x-small" />
             }
-            else if (AIType == "Anthropic")
+            <RadzenFormField Text="@ModelFieldLabel" Variant="@variant">
+                <RadzenStack Orientation="Orientation.Horizontal" Gap="4"
+                             AlignItems="AlignItems.Center">
+                    <RadzenDropDown Data="@availableModels"
+                                    @bind-Value="@AIModel"
+                                    Style="width:350px;"
+                                    AllowFiltering="true"
+                                    FilterCaseSensitivity="FilterCaseSensitivity.CaseInsensitive"
+                                    AllowClear="true"
+                                    Placeholder="Select or type a model..." />
+                    <RadzenButton Icon="refresh"
+                                  ButtonStyle="ButtonStyle.Light"
+                                  Size="ButtonSize.Small"
+                                  Click="@RefreshModels"
+                                  IsBusy="@isLoadingModels"
+                                  title="Refresh models from API" />
+                </RadzenStack>
+            </RadzenFormField>
+            @if (isLoadingModels)
             {
-                <RadzenFormField Text="Default AI Model:" Variant="@variant">
-                    <RadzenDropDown Data=@colAnthropicModels @bind-Value="@AIModel" Style="width:300px" />
-                </RadzenFormField>
-                <RadzenLabel Text="Uses Claude models. Embeddings are handled locally." style="font-size:x-small" />
+                <RadzenText TextStyle="TextStyle.Caption" Style="color: #6b7280;">
+                    <RadzenIcon Icon="hourglass_empty" Style="font-size: 14px;" />
+                    Loading available models...
+                </RadzenText>
             }
-            else if (AIType == "Google AI")
-            {
-                <RadzenFormField Text="Default AI Model:" Variant="@variant">
-                    <RadzenDropDown Data=@colGoogleModels @bind-Value="@AIModel" Style="width:300px" />
-                </RadzenFormField>
-                <RadzenLabel Text="Uses Gemini models. Embeddings are handled locally." style="font-size:x-small" />
-            }
+            <RadzenLabel Text="Embeddings are handled locally (no cloud embedding calls needed)." style="font-size:x-small" />
             @if (!IsSettingsEntered)
             {
                 @if (AIType == "OpenAI")
@@ -92,8 +94,6 @@
     OrchestratorMethods OrchestratorMethods;
     Variant variant = Variant.Outlined;
 
-    string DefaultAIModel = "gpt-5-mini";
-
     string Organization = "";
     string ApiKey = "";
     string AIModel = "";
@@ -106,24 +106,21 @@
                    "OpenAI", "Azure OpenAI", "Anthropic", "Google AI"
                 };
 
-    List<string> colModels = new List<string>()
-                {
-                   "gpt-4o", "gpt-4.1", "gpt-5-mini", "gpt-5"
-                };
+    // Dynamic model list (replaces hard-coded colModels, colAnthropicModels, colGoogleModels)
+    List<string> availableModels = new();
+    bool isLoadingModels = false;
 
-    List<string> colAnthropicModels = new List<string>()
-                {
-                   "claude-3-5-sonnet-20241022", "claude-3-5-haiku-20241022", "claude-4-sonnet"
-                };
-
-    List<string> colGoogleModels = new List<string>()
-                {
-                   "gemini-2.0-flash", "gemini-2.5-pro"
-                };
+    string ModelFieldLabel => AIType switch
+    {
+        "Azure OpenAI" => "Azure OpenAI Model Deployment Name:",
+        "Anthropic" => "Anthropic Model:",
+        "Google AI" => "Google AI Model:",
+        _ => "Default AI Model:"
+    };
 
     bool IsSettingsEntered = false;
 
-    protected override void OnInitialized()
+    protected override async Task OnInitializedAsync()
     {
         SettingsService.LoadSettings();
 
@@ -144,6 +141,9 @@
         {
             IsSettingsEntered = false;
         }
+
+        // Load models (from cache or API)
+        await LoadModelsAsync();
     }
 
     private async Task GetAPIKey()
@@ -217,16 +217,16 @@
         }
     }
 
-    private void ChangeAIType(dynamic paramAIType)
+    private async Task ChangeAIType(object value)
     {
-        string aiType = paramAIType.ToString();
+        string aiType = value.ToString();
         switch (aiType)
         {
             case "OpenAI":
                 AIModel = "gpt-5-mini";
                 break;
             case "Anthropic":
-                AIModel = "claude-3-5-sonnet-20241022";
+                AIModel = "claude-3-5-sonnet-latest";
                 break;
             case "Google AI":
                 AIModel = "gemini-2.0-flash";
@@ -234,6 +234,91 @@
             default:
                 AIModel = "";
                 break;
+        }
+
+        await LoadModelsAsync();
+        StateHasChanged();
+    }
+
+    private async Task LoadModelsAsync()
+    {
+        isLoadingModels = true;
+        StateHasChanged();
+
+        try
+        {
+            availableModels = await AIModelService.GetModelsAsync(
+                AIType, ApiKey, Endpoint, ApiVersion);
+
+            // Ensure the current model is in the list
+            if (!string.IsNullOrWhiteSpace(AIModel) &&
+                !availableModels.Contains(AIModel))
+            {
+                availableModels.Insert(0, AIModel);
+            }
+        }
+        catch
+        {
+            availableModels = AI.AIModelService.GetDefaultModels(AIType);
+        }
+        finally
+        {
+            isLoadingModels = false;
+            StateHasChanged();
+        }
+    }
+
+    private async Task RefreshModels()
+    {
+        if (string.IsNullOrWhiteSpace(ApiKey))
+        {
+            NotificationService.Notify(new NotificationMessage
+                {
+                    Severity = NotificationSeverity.Warning,
+                    Summary = "API Key Required",
+                    Detail = "Enter an API key first to fetch available models.",
+                    Duration = 3000
+                });
+            return;
+        }
+
+        isLoadingModels = true;
+        StateHasChanged();
+
+        try
+        {
+            availableModels = await AIModelService.RefreshModelsAsync(
+                AIType, ApiKey, Endpoint, ApiVersion);
+
+            if (!string.IsNullOrWhiteSpace(AIModel) &&
+                !availableModels.Contains(AIModel))
+            {
+                availableModels.Insert(0, AIModel);
+            }
+
+            NotificationService.Notify(new NotificationMessage
+                {
+                    Severity = NotificationSeverity.Success,
+                    Summary = "Models Refreshed",
+                    Detail = $"Found {availableModels.Count} available models.",
+                    Duration = 3000
+                });
+        }
+        catch (Exception ex)
+        {
+            NotificationService.Notify(new NotificationMessage
+                {
+                    Severity = NotificationSeverity.Error,
+                    Summary = "Refresh Failed",
+                    Detail = $"Could not fetch models: {ex.Message}",
+                    Duration = 4000
+                });
+            availableModels = AI.AIModelService.GetDefaultModels(AIType);
+        }
+        finally
+        {
+            isLoadingModels = false;
+            StateHasChanged();
         }
     }
 }

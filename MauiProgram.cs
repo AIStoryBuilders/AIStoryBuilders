@@ -67,6 +67,7 @@ namespace AIStoryBuilders
             builder.Services.AddSingleton<LocalEmbeddingGenerator>();
             builder.Services.AddSingleton<OrchestratorMethods>();
             builder.Services.AddSingleton<AIStoryBuildersService>();
+            builder.Services.AddSingleton<AIModelService>();
 
             // Radzen
             builder.Services.AddScoped<DialogService>();
@@ -83,6 +84,13 @@ namespace AIStoryBuilders
             if (!Directory.Exists(folderPath))
             {
                 Directory.CreateDirectory(folderPath);
+            }
+
+            // ModelCache Directory
+            var modelCachePath = Path.Combine(folderPath, "ModelCache");
+            if (!Directory.Exists(modelCachePath))
+            {
+                Directory.CreateDirectory(modelCachePath);
             }
 
             // AIStoryBuildersLog.csv
