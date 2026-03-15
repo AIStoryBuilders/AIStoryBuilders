@@ -244,17 +244,9 @@ namespace AIStoryBuilders.Services
 
             objParagraphs.contents = objParagraph.ParagraphContent.Replace("\n", " ");
             objParagraphs.sequence = objParagraph.Sequence;
-            objParagraphs.character_names = objParagraph.Characters.Select(x => x.CharacterName).ToArray();
-
-            if (objParagraph.Location != null)
-            {
-                objParagraphs.location_name = objParagraph.Location.LocationName;
-            }
-
-            if (objParagraph.Timeline != null)
-            {
-                objParagraphs.timeline_name = objParagraph.Timeline.TimelineName;
-            }
+            objParagraphs.character_names = objParagraph.Characters?.Select(x => x.CharacterName).ToArray() ?? Array.Empty<string>();
+            objParagraphs.location_name = objParagraph.Location?.LocationName?.Replace("\n", " ") ?? "";
+            objParagraphs.timeline_name = objParagraph.Timeline?.TimelineName ?? "";
 
             return objParagraphs;
         }

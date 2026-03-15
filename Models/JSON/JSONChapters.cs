@@ -18,5 +18,6 @@
         public string location_name { get; set; }
         public string timeline_name { get; set; }
         public string[] character_names { get; set; }
+        public float relevance_score { get; set; }
     }
 }

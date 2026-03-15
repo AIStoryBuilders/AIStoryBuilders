@@ -21,11 +21,9 @@ public class MasterStoryBuilder
 
     /// <summary>
     /// Trim the Master Story's context sections to fit within the token budget.
-    /// Priority order (trim first → last):
-    ///   1. RelatedParagraphs
-    ///   2. PreviousParagraphs (keep most recent; trim oldest first)
-    ///   3. CharacterList (never trimmed)
-    ///   4. System/Title/Style/Synopsis/Chapter (never trimmed)
+    /// Uses relevance-ranked trimming: paragraphs from both Previous and Related
+    /// are combined, sorted by relevance_score, and lowest-scoring items are
+    /// dropped first until the total fits within the token budget.
     /// </summary>
     public JSONMasterStory TrimToFit(JSONMasterStory story, string systemPrompt, string userTemplate)
     {
@@ -33,11 +31,48 @@ public class MasterStoryBuilder
         int remainingBudget = _maxPromptTokens - baseTokens;
         if (remainingBudget < 0) remainingBudget = 0;
 
-        story.RelatedParagraphs = TrimParagraphList(
-            story.RelatedParagraphs, ref remainingBudget);
+        // Combine all trimmable paragraphs with source tracking
+        var trimmable = new List<(JSONParagraphs Paragraph, string Source, int OriginalIndex)>();
 
-        story.PreviousParagraphs = TrimParagraphList(
-            story.PreviousParagraphs, ref remainingBudget, keepNewest: true);
+        if (story.PreviousParagraphs != null)
+        {
+            for (int i = 0; i < story.PreviousParagraphs.Count; i++)
+                trimmable.Add((story.PreviousParagraphs[i], "Previous", i));
+        }
+        if (story.RelatedParagraphs != null)
+        {
+            for (int i = 0; i < story.RelatedParagraphs.Count; i++)
+                trimmable.Add((story.RelatedParagraphs[i], "Related", i));
+        }
+
+        // Sort by relevance_score descending — highest relevance kept first
+        trimmable.Sort((a, b) => b.Paragraph.relevance_score.CompareTo(a.Paragraph.relevance_score));
+
+        var kept = new List<(JSONParagraphs Paragraph, string Source, int OriginalIndex)>();
+
+        foreach (var item in trimmable)
+        {
+            var tokenCost = TokenEstimator.EstimateTokens(
+                JsonConvert.SerializeObject(item.Paragraph));
+            if (tokenCost <= remainingBudget)
+            {
+                kept.Add(item);
+                remainingBudget -= tokenCost;
+            }
+        }
+
+        // Rebuild Previous and Related lists preserving original order
+        story.PreviousParagraphs = kept
+            .Where(k => k.Source == "Previous")
+            .OrderBy(k => k.OriginalIndex)
+            .Select(k => k.Paragraph)
+            .ToList();
+
+        story.RelatedParagraphs = kept
+            .Where(k => k.Source == "Related")
+            .OrderBy(k => k.OriginalIndex)
+            .Select(k => k.Paragraph)
+            .ToList();
 
         return story;
     }
@@ -50,40 +85,12 @@ public class MasterStoryBuilder
             story.StoryStyle ?? "",
             story.StorySynopsis ?? "",
             story.SystemMessage ?? "",
+            string.Join("\n", story.WorldFacts ?? new List<string>()),
             JsonConvert.SerializeObject(story.CurrentChapter),
             JsonConvert.SerializeObject(story.CurrentLocation),
             JsonConvert.SerializeObject(story.CharacterList),
             JsonConvert.SerializeObject(story.CurrentParagraph));
 
         return TokenEstimator.EstimateTokens(fixedContent);
-    }
-
-    private static List<JSONParagraphs> TrimParagraphList(
-        List<JSONParagraphs> paragraphs,
-        ref int remainingBudget,
-        bool keepNewest = false)
-    {
-        if (paragraphs == null || paragraphs.Count == 0)
-            return new List<JSONParagraphs>();
-
-        var result = new List<JSONParagraphs>();
-        var ordered = keepNewest
-            ? paragraphs.AsEnumerable().Reverse()
-            : paragraphs.AsEnumerable();
-
-        foreach (var p in ordered)
-        {
-            var tokenCost = TokenEstimator.EstimateTokens(
-                JsonConvert.SerializeObject(p));
-            if (tokenCost <= remainingBudget)
-            {
-                result.Add(p);
-                remainingBudget -= tokenCost;
-            }
-            else break;
-        }
-
-        if (keepNewest) result.Reverse();
-        return result;
     }
 }

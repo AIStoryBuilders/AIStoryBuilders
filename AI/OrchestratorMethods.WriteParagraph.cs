@@ -48,11 +48,14 @@ namespace AIStoryBuilders.AI
                     ["StoryStyle"] = objJSONMasterStory.StoryStyle ?? "",
                     ["StorySynopsis"] = objJSONMasterStory.StorySynopsis ?? "",
                     ["SystemMessage"] = objJSONMasterStory.SystemMessage ?? "",
+                    ["WorldFacts"] = System.Text.Json.JsonSerializer.Serialize(objJSONMasterStory.WorldFacts ?? new List<string>()),
                     ["CurrentChapter"] = System.Text.Json.JsonSerializer.Serialize(objJSONMasterStory.CurrentChapter),
-                    ["PreviousParagraphs"] = System.Text.Json.JsonSerializer.Serialize(objJSONMasterStory.PreviousParagraphs),
+                    ["PreviousParagraphs"] = System.Text.Json.JsonSerializer.Serialize(
+                        objJSONMasterStory.PreviousParagraphs?.Select(p => new { p.sequence, p.contents, p.location_name, p.timeline_name, p.character_names }) ?? Enumerable.Empty<object>()),
                     ["CurrentLocation"] = System.Text.Json.JsonSerializer.Serialize(objJSONMasterStory.CurrentLocation),
                     ["CharacterList"] = System.Text.Json.JsonSerializer.Serialize(objJSONMasterStory.CharacterList),
-                    ["RelatedParagraphs"] = System.Text.Json.JsonSerializer.Serialize(objJSONMasterStory.RelatedParagraphs),
+                    ["RelatedParagraphs"] = System.Text.Json.JsonSerializer.Serialize(
+                        objJSONMasterStory.RelatedParagraphs?.Select(p => new { p.sequence, p.contents, p.location_name, p.timeline_name, p.character_names }) ?? Enumerable.Empty<object>()),
                     ["CurrentParagraph"] = objJSONMasterStory.CurrentParagraph?.contents ?? "",
                     ["Instructions"] = instructions,
                     ["NumberOfWords"] = paramAIPrompt.NumberOfWords.ToString()

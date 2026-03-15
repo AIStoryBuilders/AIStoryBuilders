@@ -29,4 +29,6 @@ public partial class Story
     public List<Location> Location { get; set; } = new List<Location>();
 
     public List<Timeline> Timeline { get; set; } = new List<Timeline>();
+
+    public string WorldFacts { get; set; } = "";
 }

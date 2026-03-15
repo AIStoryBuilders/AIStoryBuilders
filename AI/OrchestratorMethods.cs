@@ -69,6 +69,14 @@ namespace AIStoryBuilders.AI
         }
         #endregion
 
+        #region public async Task<float[][]> GetBatchEmbeddings(string[] texts)
+        public async Task<float[][]> GetBatchEmbeddings(string[] texts)
+        {
+            var embeddings = await _embeddingGenerator.GenerateAsync(texts);
+            return embeddings.Select(e => e.Vector.ToArray()).ToArray();
+        }
+        #endregion
+
         // Utility Methods
 
         public IChatClient CreateOpenAIClient()

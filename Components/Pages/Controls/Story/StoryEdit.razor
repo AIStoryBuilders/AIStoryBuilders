@@ -68,6 +68,25 @@ else // Existing Story
                         </RadzenRow>
                     </ChildContent>
                 </RadzenPanel>
+                <RadzenPanel AllowCollapse="true" Collapsed="true" Style="width: 100%;">
+                    <HeaderTemplate>
+                        <RadzenText TextStyle="TextStyle.Subtitle1">
+                            &nbsp;&nbsp;World Facts
+                        </RadzenText>
+                    </HeaderTemplate>
+                    <ChildContent>
+                        <RadzenRow Gap="1rem">
+                            <RadzenColumn Size="12" SizeSM="12">
+                                <RadzenStack>
+                                    <RadzenFormField Variant="@variant">
+                                        <RadzenTextArea Style="width: 100%;" @bind-Value="@objStory.WorldFacts" MaxLength="2000" Rows="8"
+                                                        Placeholder="Enter persistent world-building facts, one per line (e.g., Magic is illegal in the Northern Kingdom)" />
+                                    </RadzenFormField>
+                                </RadzenStack>
+                            </RadzenColumn>
+                        </RadzenRow>
+                    </ChildContent>
+                </RadzenPanel>
             </RadzenStack>
         </RadzenColumn>
     </RadzenRow>

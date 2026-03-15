@@ -17,80 +17,77 @@ namespace AIStoryBuilders.Services
         {
             JSONMasterStory objMasterStory = new JSONMasterStory();
 
-            try
+            objMasterStory.StoryTitle = objChapter.Story.Title ?? "";
+            objMasterStory.StorySynopsis = objChapter.Story.Synopsis ?? "";
+            objMasterStory.StoryStyle = objChapter.Story.Style ?? "";
+            objMasterStory.SystemMessage = objChapter.Story.Theme ?? "";
+
+            objMasterStory.CurrentLocation = ConvertToJSONLocation(objParagraph.Location, objParagraph);
+            objMasterStory.CharacterList = ConvertToJSONCharacter(colCharacter, objParagraph);
+            objMasterStory.CurrentParagraph = ConvertToJSONParagraph(objParagraph);
+            objMasterStory.CurrentChapter = ConvertToJSONChapter(objChapter);
+
+            // C1 — LINQ projections with recency scoring (§4.3.5)
+            int totalPrev = colParagraphs.Count;
+            objMasterStory.PreviousParagraphs = colParagraphs.Select((p, idx) =>
             {
-                objMasterStory.StoryTitle = objChapter.Story.Title ?? "";
-                objMasterStory.StorySynopsis = objChapter.Story.Synopsis ?? "";
-                objMasterStory.StoryStyle = objChapter.Story.Style ?? "";
-                objMasterStory.SystemMessage = objChapter.Story.Theme ?? "";
+                var json = ConvertToJSONParagraph(p);
+                json.relevance_score = totalPrev > 0 ? (float)(idx + 1) / totalPrev : 0f;
+                return json;
+            }).ToList();
 
-                objMasterStory.CurrentLocation = ConvertToJSONLocation(objParagraph.Location, objParagraph);
-                objMasterStory.CharacterList = ConvertToJSONCharacter(colCharacter, objParagraph);
-                objMasterStory.CurrentParagraph = ConvertToJSONParagraph(objParagraph);
-                objMasterStory.CurrentChapter = ConvertToJSONChapter(objChapter);
-
-                // PreviousParagraphs
-                objMasterStory.PreviousParagraphs = new List<JSONParagraphs>();
-
-                foreach (var paragraph in colParagraphs)
-                {
-                    objMasterStory.PreviousParagraphs.Add(ConvertToJSONParagraph(paragraph));
-                }
-
-                // RelatedParagraphs
-                objMasterStory.RelatedParagraphs = new List<JSONParagraphs>();
-
-                var RelatedParagraphs = await GetRelatedParagraphs(objChapter, objParagraph, AIPromptResult);
-
-                foreach (var paragraph in RelatedParagraphs)
-                {
-                    objMasterStory.RelatedParagraphs.Add(ConvertToJSONParagraph(paragraph));
-                }
-            }
-            catch (Exception ex)
+            // RelatedParagraphs with similarity scores (§4.3.5)
+            var relatedWithScores = await GetRelatedParagraphs(objChapter, objParagraph, AIPromptResult);
+            objMasterStory.RelatedParagraphs = relatedWithScores.Select(r =>
             {
-                // Log error
-                LogService.WriteToLog(ex.Message);
-            }
+                var json = ConvertToJSONParagraph(r.Paragraph);
+                json.relevance_score = r.Score;
+                return json;
+            }).ToList();
+
+            // §4.3.3 — World Facts
+            objMasterStory.WorldFacts = (objChapter.Story.WorldFacts ?? "")
+                .Split('\n', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
+                .ToList();
 
             return objMasterStory;
         }
         #endregion
 
-        #region public async Task<List<Paragraph>> GetRelatedParagraphs(Chapter objChapter, Paragraph objParagraph, AIPrompt AIPromptResult)
-        public async Task<List<Paragraph>> GetRelatedParagraphs(Chapter objChapter, Paragraph objParagraph, AIPrompt AIPromptResult)
+        #region public async Task<List<(Paragraph Paragraph, float Score)>> GetRelatedParagraphs(...)
+        public async Task<List<(Paragraph Paragraph, float Score)>> GetRelatedParagraphs(Chapter objChapter, Paragraph objParagraph, AIPrompt AIPromptResult)
         {
-            List<Paragraph> colParagraph = new List<Paragraph>();
+            // R7 — Batch embedding calls
+            var textsToEmbed = new List<string>();
+            int paragraphIdx = -1, promptIdx = -1;
 
-            // Get the vector embedding for the paragraph content
-            float[] ParagraphContentEmbeddingVectors = null;
-
-            if (objParagraph.ParagraphContent.Trim() != "")
+            if (!string.IsNullOrWhiteSpace(objParagraph.ParagraphContent))
             {
-                ParagraphContentEmbeddingVectors = await OrchestratorMethods.GetVectorEmbeddingAsFloats(objParagraph.ParagraphContent);
+                paragraphIdx = textsToEmbed.Count;
+                textsToEmbed.Add(objParagraph.ParagraphContent);
             }
-
-            // Get the vector embedding for the AIPromptResult content
-            float[] AIPromptResultEmbeddingVectors = null;
-
-            if (AIPromptResult.AIPromptText.Trim() != "")
-            { 
-                AIPromptResultEmbeddingVectors = await OrchestratorMethods.GetVectorEmbeddingAsFloats(AIPromptResult.AIPromptText);
-            }
-
-            // ************************************************************************************
-            // Read all Paragraph files in memory for Chapters that come before the current Chapter
-            // Perform vector search on PreviousParagraphs and all Paragraph files in memory
-            // Add only the top 10 Paragraphs (include their Timelines)
-
-            Dictionary<string, string> AIStoryBuildersMemory = new Dictionary<string, string>();
-
-            string ParagraphTimelineName = "";
-
-            if (objParagraph.Timeline != null)
+            if (!string.IsNullOrWhiteSpace(AIPromptResult.AIPromptText))
             {
-                ParagraphTimelineName = objParagraph.Timeline.TimelineName;
+                promptIdx = textsToEmbed.Count;
+                textsToEmbed.Add(AIPromptResult.AIPromptText);
             }
+
+            float[] paragraphVectors = null;
+            float[] promptVectors = null;
+
+            if (textsToEmbed.Count > 0)
+            {
+                var embeddingResults = await OrchestratorMethods.GetBatchEmbeddings(textsToEmbed.ToArray());
+                paragraphVectors = paragraphIdx >= 0 ? embeddingResults[paragraphIdx] : null;
+                promptVectors = promptIdx >= 0 ? embeddingResults[promptIdx] : null;
+            }
+
+            // R3 — Build ParagraphVectorEntry list (replaces Dictionary)
+            // §4.3.1 — Cross-timeline search
+            string ParagraphTimelineName = objParagraph.Timeline?.TimelineName ?? "";
+
+            var sameTimelineEntries = new List<ParagraphVectorEntry>();
+            var crossTimelineEntries = new List<ParagraphVectorEntry>();
 
             var AllChapters = GetChapters(objChapter.Story);
 
@@ -98,96 +95,126 @@ namespace AIStoryBuilders.Services
             {
                 if (chapter.Sequence < objChapter.Sequence)
                 {
-                    // Get all the paragraphs for the chapter on the Timeline
-                    var colPargraphs = GetParagraphVectors(chapter, ParagraphTimelineName);
-
-                    foreach (var paragraph in colPargraphs)
+                    // Same-timeline paragraphs
+                    var sameTimeParagraphs = GetParagraphVectors(chapter, ParagraphTimelineName);
+                    foreach (var paragraph in sameTimeParagraphs)
                     {
-                        AIStoryBuildersMemory.Add(paragraph.contents, paragraph.vectors);
-                    }
-                }
-            }
-
-            // Reset the similarities list
-            List<(string, float)> similarities = new List<(string, float)>();
-
-            // ************************************************************************************
-            // Calculate the *paragraph content* similarity 
-            if (ParagraphContentEmbeddingVectors != null)
-            {
-                foreach (var embedding in AIStoryBuildersMemory)
-                {
-                    if (embedding.Value != null)
-                    {
-                        if (embedding.Value != "")
+                        if (!string.IsNullOrEmpty(paragraph.vectors))
                         {
-                            var ConvertEmbeddingToFloats = JsonConvert.DeserializeObject<List<float>>(embedding.Value);
+                            // R2 — Deserialize vectors once at load time
+                            var vectors = JsonConvert.DeserializeObject<float[]>(paragraph.vectors);
+                            sameTimelineEntries.Add(new ParagraphVectorEntry(
+                                Id: $"Ch{chapter.Sequence}_P{paragraph.sequence}",
+                                Content: paragraph.contents,
+                                Vectors: vectors,
+                                TimelineName: paragraph.timeline_name));
+                        }
+                    }
 
-                            var similarity =
-                            OrchestratorMethods.CosineSimilarity(
-                                ParagraphContentEmbeddingVectors,
-                            ConvertEmbeddingToFloats.ToArray());
-
-                            similarities.Add((embedding.Key, similarity));
+                    // Cross-timeline paragraphs (§4.3.1)
+                    var allParagraphs = GetAllParagraphVectors(chapter);
+                    foreach (var paragraph in allParagraphs)
+                    {
+                        if (!string.IsNullOrEmpty(paragraph.vectors) && paragraph.timeline_name != ParagraphTimelineName)
+                        {
+                            var vectors = JsonConvert.DeserializeObject<float[]>(paragraph.vectors);
+                            crossTimelineEntries.Add(new ParagraphVectorEntry(
+                                Id: $"Ch{chapter.Sequence}_P{paragraph.sequence}_X",
+                                Content: paragraph.contents,
+                                Vectors: vectors,
+                                TimelineName: paragraph.timeline_name));
                         }
                     }
                 }
             }
 
-            // ************************************************************************************
-            // Calculate the *AIPromptResult* similarity 
-            if (AIPromptResultEmbeddingVectors != null)
+            // R1 — Calculate similarities using extracted helper
+            var similarities = new List<(string Id, string Content, float Score)>();
+
+            if (paragraphVectors != null)
             {
-                foreach (var embedding in AIStoryBuildersMemory)
+                similarities.AddRange(CalculateSimilarities(paragraphVectors, sameTimelineEntries, 1.0f));
+                similarities.AddRange(CalculateSimilarities(paragraphVectors, crossTimelineEntries, 0.7f));
+            }
+
+            if (promptVectors != null)
+            {
+                similarities.AddRange(CalculateSimilarities(promptVectors, sameTimelineEntries, 1.0f));
+                similarities.AddRange(CalculateSimilarities(promptVectors, crossTimelineEntries, 0.7f));
+            }
+
+            // R4 — Group by Id, keep max score
+            var top10 = similarities
+                .GroupBy(s => s.Id)
+                .Select(g => g.OrderByDescending(x => x.Score).First())
+                .OrderByDescending(x => x.Score)
+                .Take(10)
+                .ToList();
+
+            // R5 — HashSet for result de-duplication; R8 — safe Paragraph objects
+            var seen = new HashSet<string>();
+            var resultList = new List<(Paragraph Paragraph, float Score)>(10);
+            int seq = 0;
+
+            foreach (var entry in top10)
+            {
+                if (seen.Add(entry.Content))
                 {
-                    if (embedding.Value != null)
+                    resultList.Add((new Paragraph
                     {
-                        if (embedding.Value != "")
-                        {
-                            var ConvertEmbeddingToFloats = JsonConvert.DeserializeObject<List<float>>(embedding.Value);
-
-                            var similarity =
-                            OrchestratorMethods.CosineSimilarity(
-                                AIPromptResultEmbeddingVectors,
-                            ConvertEmbeddingToFloats.ToArray());
-
-                            similarities.Add((embedding.Key, similarity));
-                        }
-                    }
+                        Sequence = seq++,
+                        Location = new Models.Location { LocationName = "" },
+                        Timeline = new Timeline { TimelineName = ParagraphTimelineName },
+                        Characters = new List<Models.Character>(),
+                        ParagraphContent = entry.Content
+                    }, entry.Score));
                 }
             }
 
-            // Sort the results by similarity in descending order
-            similarities.Sort((a, b) => b.Item2.CompareTo(a.Item2));
+            return resultList;
+        }
+        #endregion
 
-            var Top10similarities = similarities.Distinct().Take(10).ToList();
-
-            if (Top10similarities.Count > 0)
+        #region private static CalculateSimilarities helper (R1)
+        private static List<(string Id, string Content, float Score)> CalculateSimilarities(
+            float[] queryVector,
+            List<ParagraphVectorEntry> corpus,
+            float weight = 1.0f)
+        {
+            var results = new List<(string, string, float)>(corpus.Count);
+            foreach (var entry in corpus)
             {
-                int i = 0;
-                foreach (var similarity in Top10similarities)
+                if (entry.Vectors != null && entry.Vectors.Length > 0)
                 {
-                    // Create a Paragraph
-                    Paragraph AISimilaritiesParagraph = new Paragraph();
-                    AISimilaritiesParagraph.Sequence = i;
-                    AISimilaritiesParagraph.Location = new Models.Location();
-                    AISimilaritiesParagraph.Timeline = new Timeline() { TimelineName = ParagraphTimelineName };
-                    AISimilaritiesParagraph.Characters = new List<Models.Character>();
-                    AISimilaritiesParagraph.ParagraphContent = similarity.Item1;
-
-                    // If the Paragraph is not already in the list, add it
-                    // Get a list of all the ParagraphContent items in the list
-                    var colParagraphContent = colParagraph.Select(x => x.ParagraphContent).ToList();
-
-                    if (!colParagraphContent.Contains(similarity.Item1))
-                    {
-                        colParagraph.Add(AISimilaritiesParagraph);
-                        i++;
-                    }
+                    float similarity = CosineSimilarityStatic(queryVector, entry.Vectors);
+                    results.Add((entry.Id, entry.Content, similarity * weight));
                 }
             }
+            return results;
+        }
+        #endregion
 
-            return colParagraph;
+        #region private static CosineSimilarityStatic
+        private static float CosineSimilarityStatic(float[] vector1, float[] vector2)
+        {
+            float dotProduct = 0;
+            float magnitude1 = 0;
+            float magnitude2 = 0;
+
+            for (int i = 0; i < vector1.Length; i++)
+            {
+                dotProduct += vector1[i] * vector2[i];
+                magnitude1 += vector1[i] * vector1[i];
+                magnitude2 += vector2[i] * vector2[i];
+            }
+
+            magnitude1 = (float)Math.Sqrt(magnitude1);
+            magnitude2 = (float)Math.Sqrt(magnitude2);
+
+            if (magnitude1 == 0 || magnitude2 == 0)
+                return 0f;
+
+            return dotProduct / (magnitude1 * magnitude2);
         }
         #endregion
     }

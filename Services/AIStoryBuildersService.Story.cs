@@ -30,6 +30,7 @@ namespace AIStoryBuilders.Services
                         Style = story[2],
                         Theme = story[3],
                         Synopsis = story[4],
+                        WorldFacts = story.Length > 5 ? story[5] : "",
                     })
                     .ToList();
             }
@@ -71,7 +72,7 @@ namespace AIStoryBuilders.Services
             AIStoryBuildersStoriesContent = AIStoryBuildersStoriesContent.Select(line => line.Trim()).ToArray();
 
             // Add Story to file
-            string newStory = $"{AIStoryBuildersStoriesContent.Count() + 1}|{story.Title}|{story.Style}|{story.Theme}|{story.Synopsis}";
+            string newStory = $"{AIStoryBuildersStoriesContent.Count() + 1}|{story.Title}|{story.Style}|{story.Theme}|{story.Synopsis}|{story.WorldFacts}";
             AIStoryBuildersStoriesContent = AIStoryBuildersStoriesContent.Append(newStory).ToArray();
             File.WriteAllLines(AIStoryBuildersStoriesPath, AIStoryBuildersStoriesContent);
 
@@ -263,14 +264,16 @@ namespace AIStoryBuilders.Services
             story.Style = RemoveLineBreaks(story.Style);
             story.Theme = RemoveLineBreaks(story.Theme);
             story.Synopsis = RemoveLineBreaks(story.Synopsis);
+            story.WorldFacts = RemoveLineBreaks(story.WorldFacts ?? "");
 
             // Remove any pipes (because that is used as a delimiter)
             story.Style = story.Style.Replace("|", "");
             story.Theme = story.Theme.Replace("|", "");
             story.Synopsis = story.Synopsis.Replace("|", "");
+            story.WorldFacts = story.WorldFacts.Replace("|", "");
 
             // Re-add Story to file
-            string updatedStory = $"{AIStoryBuildersStoriesContent.Count() + 1}|{story.Title}|{story.Style}|{story.Theme}|{story.Synopsis}";
+            string updatedStory = $"{AIStoryBuildersStoriesContent.Count() + 1}|{story.Title}|{story.Style}|{story.Theme}|{story.Synopsis}|{story.WorldFacts}";
             AIStoryBuildersStoriesContent = AIStoryBuildersStoriesContent.Append(updatedStory).ToArray();
             File.WriteAllLines(AIStoryBuildersStoriesPath, AIStoryBuildersStoriesContent);
         }
@@ -1630,6 +1633,16 @@ namespace AIStoryBuilders.Services
 
         public List<AIParagraph> GetParagraphVectors(Chapter chapter, string TimelineName)
         {
+            return GetParagraphVectorsInternal(chapter, TimelineName);
+        }
+
+        public List<AIParagraph> GetAllParagraphVectors(Chapter chapter)
+        {
+            return GetParagraphVectorsInternal(chapter, null);
+        }
+
+        private List<AIParagraph> GetParagraphVectorsInternal(Chapter chapter, string TimelineName)
+        {
             List<AIParagraph> colParagraphs = new List<AIParagraph>();
 
             try
@@ -1667,8 +1680,8 @@ namespace AIStoryBuilders.Services
                     var ParagraphContent = ChapterContent.Select(x => x.Split('|')).Select(x => x[3]).FirstOrDefault();
                     var ParagraphVectors = ChapterContent.Select(x => x.Split('|')).Select(x => x[4]).FirstOrDefault();
 
-                    // Only get Paragraphs for the specified Timeline
-                    if (TimelineName == ParagraphTimeline)
+                    // Filter by timeline if specified, otherwise include all
+                    if (TimelineName == null || TimelineName == ParagraphTimeline)
                     {
                         // Convert ParagraphCharactersRaw to a List
                         List<string> ParagraphCharacters = ParseStringToList(ParagraphCharactersRaw);

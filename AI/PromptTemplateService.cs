@@ -25,6 +25,7 @@ public class PromptTemplateService
             <story_style>{StoryStyle}</story_style>
             <story_synopsis>{StorySynopsis}</story_synopsis>
             <system_directions>{SystemMessage}</system_directions>
+            <world_facts>{WorldFacts}</world_facts>
             <current_chapter>{CurrentChapter}</current_chapter>
             <previous_paragraphs>{PreviousParagraphs}</previous_paragraphs>
             <current_location>{CurrentLocation}</current_location>
