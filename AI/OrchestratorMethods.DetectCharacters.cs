@@ -1,7 +1,5 @@
 ﻿using AIStoryBuilders.Model;
 using AIStoryBuilders.Models.JSON;
-using OpenAI.Chat;
-using OpenAI;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -11,7 +9,6 @@ using AIStoryBuilders.Models;
 using System.Text.Json;
 using Newtonsoft.Json.Linq;
 using Newtonsoft.Json;
-using OpenAI.Moderations;
 using Microsoft.Extensions.AI;
 
 namespace AIStoryBuilders.AI
@@ -21,68 +18,51 @@ namespace AIStoryBuilders.AI
         #region public async Task<List<Models.Character>> DetectCharacters(Paragraph objParagraph)
         public async Task<List<Models.Character>> DetectCharacters(Paragraph objParagraph)
         {
-            string Organization = SettingsService.Organization;
-            string ApiKey = SettingsService.ApiKey;
-            string SystemMessage = "";
             string GPTModel = SettingsService.AIModel;
 
-            LogService.WriteToLog($"Detect Characters using {GPTModel} - Start");
+            LogService.WriteToLog($"DetectCharacters using {GPTModel} - Start");
 
-            // Create a new OpenAIClient object
             IChatClient api = CreateOpenAIClient();
 
-            // Update System Message
-            SystemMessage = CreateDetectCharacters(objParagraph.ParagraphContent);
-
-            LogService.WriteToLog($"Prompt: {SystemMessage}");
-
-            var ChatResponseResult = await api.CompleteAsync(SystemMessage);
-
-            // *****************************************************
-
-            LogService.WriteToLog($"TotalTokens: {ChatResponseResult.Usage.TotalTokenCount} - ChatResponseResult - {ChatResponseResult.Choices.FirstOrDefault().Text}");
-
-            List<Models.Character> colCharacterOutput = new List<Models.Character>();
-
-            try
-            {
-                // Convert the JSON to a list of SimpleCharacters
-                var JSONResult = ExtractJson(ChatResponseResult.Choices.FirstOrDefault().Text);
-
-                dynamic data = JObject.Parse(JSONResult);
-
-                foreach (var character in data.characters)
+            // Build prompt messages
+            var promptService = new PromptTemplateService();
+            var messages = promptService.BuildMessages(
+                PromptTemplateService.Templates.DetectCharacters_System,
+                PromptTemplateService.Templates.DetectCharacters_User,
+                new Dictionary<string, string>
                 {
-                    string CharacterName = character.name.ToString();
-                    colCharacterOutput.Add(new Models.Character { CharacterName = $"{CharacterName}", CharacterBackground = new List<CharacterBackground>() });
-                }
-            }
-            catch (Exception ex)
-            {
-                LogService.WriteToLog($"Error - DetectCharacters: {ex.Message} {ex.StackTrace ?? ""}");
-            }
+                    ["ParagraphContent"] = objParagraph.ParagraphContent
+                });
 
-            return colCharacterOutput;
-        }
-        #endregion
+            LogService.WriteToLog($"Prompt token estimate: {TokenEstimator.EstimateTokens(messages)}");
 
-        // Methods
+            var options = ChatOptionsFactory.CreateJsonOptions(SettingsService.AIType, GPTModel);
 
-        #region private string CreateDetectCharacters(string paramParagraphContent)
-        private string CreateDetectCharacters(string paramParagraphContent)
-        {
-            return "You are a function that will produce only JSON. \n" +
-            "Please analyze a paragraph of text (given as #paramParagraphContent). \n" +
-            "#1 Identify all characters, by name, mentioned in the paragraph. \n" +
-            $"### This is the content of #paramParagraphContent: {paramParagraphContent} \n" +
-            "Provide the results in the following JSON format: \n" +
-            "{\n" +
-            "\"characters\": [\n" +
-            "{ \n" +
-            "\"name\": \"[Name]\" \n" +
-            "} \n" +
-            "] \n" +
-            "}";
+            var result = await LlmCallHelper.CallLlmWithRetry<List<Models.Character>>(
+                api,
+                messages,
+                options,
+                jObj =>
+                {
+                    var colCharacterOutput = new List<Models.Character>();
+                    var characters = jObj["characters"];
+                    if (characters != null)
+                    {
+                        foreach (var character in characters)
+                        {
+                            string CharacterName = character["name"]?.ToString() ?? "";
+                            colCharacterOutput.Add(new Models.Character
+                            {
+                                CharacterName = CharacterName,
+                                CharacterBackground = new List<CharacterBackground>()
+                            });
+                        }
+                    }
+                    return colCharacterOutput;
+                },
+                LogService);
+
+            return result ?? new List<Models.Character>();
         }
         #endregion
     }

@@ -13,10 +13,10 @@
 <RadzenRow AlignItems="AlignItems.Start" Wrap="FlexWrap.Wrap" Gap="1rem" Class="rz-p-sm-12">
     <RadzenColumn Size="8" SizeSM="4">
         <RadzenStack>
-            <RadzenFormField Text="OpenAI Service Type:" Variant="@variant">
+            <RadzenFormField Text="AI Provider:" Variant="@variant">
                 <RadzenDropDown Data=@colAITypes @bind-Value="@AIType" Style="width:300px" Change="@(args => ChangeAIType(args))" />
             </RadzenFormField>
-            <RadzenFormField Text="ApiKey:" Variant="@variant">
+            <RadzenFormField Text="API Key:" Variant="@variant">
                 <RadzenTextBox @bind-Value="@ApiKey" @onkeydown="APIKeyDetection" style="width:450px;" />
             </RadzenFormField>
             @if (AIType == "OpenAI")
@@ -24,15 +24,12 @@
                 <RadzenFormField Text="Default AI Model:" Variant="@variant">
                     <RadzenDropDown Data=@colModels @bind-Value="@AIModel" Style="width:300px" />
                 </RadzenFormField>
-                <RadzenLabel Text="Note: GPT 3.5 is faster and cost less than GPT 4, but does not perform as well." style="font-size:x-small" />
+                <RadzenLabel Text="Embeddings are handled locally (no cloud embedding calls needed)." style="font-size:x-small" />
             }
             else if (AIType == "Azure OpenAI")
             {
                 <RadzenFormField Text="Azure OpenAI Model Deployment Name:" Variant="@variant">
                     <RadzenTextBox @bind-Value="@AIModel" style="width:450px;" />
-                </RadzenFormField>
-                <RadzenFormField Text="Azure OpenAI Embedding Model Deployment Name:" Variant="@variant">
-                    <RadzenTextBox @bind-Value="@AIEmbeddingModel" style="width:450px;" />
                 </RadzenFormField>
                 <RadzenFormField Text="Azure OpenAI Endpoint:" Variant="@variant">
                     <RadzenTextBox @bind-Value="@Endpoint" style="width:450px;" />
@@ -40,6 +37,21 @@
                 <RadzenFormField Text="Azure OpenAI Api Version:" Variant="@variant">
                     <RadzenTextBox @bind-Value="@ApiVersion" style="width:450px;" />
                 </RadzenFormField>
+                <RadzenLabel Text="Embeddings are handled locally (no cloud embedding calls needed)." style="font-size:x-small" />
+            }
+            else if (AIType == "Anthropic")
+            {
+                <RadzenFormField Text="Default AI Model:" Variant="@variant">
+                    <RadzenDropDown Data=@colAnthropicModels @bind-Value="@AIModel" Style="width:300px" />
+                </RadzenFormField>
+                <RadzenLabel Text="Uses Claude models. Embeddings are handled locally." style="font-size:x-small" />
+            }
+            else if (AIType == "Google AI")
+            {
+                <RadzenFormField Text="Default AI Model:" Variant="@variant">
+                    <RadzenDropDown Data=@colGoogleModels @bind-Value="@AIModel" Style="width:300px" />
+                </RadzenFormField>
+                <RadzenLabel Text="Uses Gemini models. Embeddings are handled locally." style="font-size:x-small" />
             }
             @if (!IsSettingsEntered)
             {
@@ -53,6 +65,18 @@
                 {
                     <RadzenButton Text="An Azure OpenAI API Key is required (Click here to get one)" ButtonStyle="ButtonStyle.Secondary"
                                   Click="GetAzureAPIKey"
+                                  Style="margin-bottom: 10px; width: 500px" />
+                }
+                else if (AIType == "Anthropic")
+                {
+                    <RadzenButton Text="An Anthropic API Key is required (Click here to get one)" ButtonStyle="ButtonStyle.Secondary"
+                                  Click="GetAnthropicAPIKey"
+                                  Style="margin-bottom: 10px; width: 500px" />
+                }
+                else if (AIType == "Google AI")
+                {
+                    <RadzenButton Text="A Google AI API Key is required (Click here to get one)" ButtonStyle="ButtonStyle.Secondary"
+                                  Click="GetGoogleAIAPIKey"
                                   Style="margin-bottom: 10px; width: 500px" />
                 }
             }
@@ -75,17 +99,26 @@
     string AIModel = "";
     string AIType = "OpenAI";
     string Endpoint = "";
-    string AIEmbeddingModel = "";
     string ApiVersion = "";
 
     List<string> colAITypes = new List<string>()
                 {
-                   "OpenAI","Azure OpenAI"
+                   "OpenAI", "Azure OpenAI", "Anthropic", "Google AI"
                 };
 
     List<string> colModels = new List<string>()
                 {
-                   "gpt-4o","gpt-4.1","gpt-5-mini","gpt-5"
+                   "gpt-4o", "gpt-4.1", "gpt-5-mini", "gpt-5"
+                };
+
+    List<string> colAnthropicModels = new List<string>()
+                {
+                   "claude-3-5-sonnet-20241022", "claude-3-5-haiku-20241022", "claude-4-sonnet"
+                };
+
+    List<string> colGoogleModels = new List<string>()
+                {
+                   "gemini-2.0-flash", "gemini-2.5-pro"
                 };
 
     bool IsSettingsEntered = false;
@@ -102,7 +135,6 @@
         AIType = SettingsService.AIType;
         Endpoint = SettingsService.Endpoint;
         ApiVersion = SettingsService.ApiVersion;
-        AIEmbeddingModel = SettingsService.AIEmbeddingModel;
 
         if (ApiKey.Length > 1)
         {
@@ -116,14 +148,22 @@
 
     private async Task GetAPIKey()
     {
-        // Open a new window to the OpenAI API Key page
         await JSRuntime.InvokeVoidAsync("open", "https://platform.openai.com/account/api-keys");
     }
 
     private async Task GetAzureAPIKey()
     {
-        // Open a new window to the Azure OpenAI API Key page
         await JSRuntime.InvokeVoidAsync("open", "https://learn.microsoft.com/en-us/azure/ai-services/openai/how-to/create-resource?pivots=web-portal");
+    }
+
+    private async Task GetAnthropicAPIKey()
+    {
+        await JSRuntime.InvokeVoidAsync("open", "https://console.anthropic.com/settings/keys");
+    }
+
+    private async Task GetGoogleAIAPIKey()
+    {
+        await JSRuntime.InvokeVoidAsync("open", "https://aistudio.google.com/app/apikey");
     }
 
     private void APIKeyDetection(KeyboardEventArgs args)
@@ -149,7 +189,7 @@
             }
 
             // Update Settings
-            await SettingsService.SaveSettings(Organization, ApiKey, AIModel, AIType, Endpoint, ApiVersion, AIEmbeddingModel);
+            await SettingsService.SaveSettings(Organization, ApiKey, AIModel, AIType, Endpoint, ApiVersion);
 
             // Test API Key
             var result = await OrchestratorMethods.TestAccess(AIModel);
@@ -179,10 +219,21 @@
 
     private void ChangeAIType(dynamic paramAIType)
     {
-        // Set the default model based on the AI Type
-        if(paramAIType == "OpenAI")
+        string aiType = paramAIType.ToString();
+        switch (aiType)
         {
-            AIModel = DefaultAIModel;
+            case "OpenAI":
+                AIModel = "gpt-5-mini";
+                break;
+            case "Anthropic":
+                AIModel = "claude-3-5-sonnet-20241022";
+                break;
+            case "Google AI":
+                AIModel = "gemini-2.0-flash";
+                break;
+            default:
+                AIModel = "";
+                break;
         }
     }
 }

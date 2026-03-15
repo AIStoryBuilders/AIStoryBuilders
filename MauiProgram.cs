@@ -64,6 +64,7 @@ namespace AIStoryBuilders
             builder.Services.AddSingleton<LogService>();
             builder.Services.AddSingleton<SettingsService>();
             builder.Services.AddSingleton<DatabaseService>();
+            builder.Services.AddSingleton<LocalEmbeddingGenerator>();
             builder.Services.AddSingleton<OrchestratorMethods>();
             builder.Services.AddSingleton<AIStoryBuildersService>();
 
@@ -158,7 +159,10 @@ namespace AIStoryBuilders
                             "ApiKey": ""
                           },
                           "ApplicationSettings": {
-                            "AIModel": "gpt-5-mini"
+                            "AIModel": "gpt-5-mini",
+                            "AIType": "OpenAI",
+                            "Endpoint": "",
+                            "ApiVersion": ""
                           }
                         }
                         """

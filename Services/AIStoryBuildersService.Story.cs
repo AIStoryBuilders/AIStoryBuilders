@@ -167,21 +167,22 @@ namespace AIStoryBuilders.Services
             //// **** Create the First Paragraph and the Chapters
 
             // Call ChatGPT
-            ChatCompletion ParsedChaptersJSON = await OrchestratorMethods.CreateNewChapters(ParsedStoryJSON, story.ChapterCount, GPTModelId);
+            Microsoft.Extensions.AI.ChatResponse ParsedChaptersJSON = await OrchestratorMethods.CreateNewChapters(ParsedStoryJSON, story.ChapterCount, GPTModelId);
 
             JSONChapters ParsedNewChapters = new JSONChapters();
 
             // Convert the JSON to a dynamic object
-            ParsedNewChapters = ParseJSONNewChapters(GetOnlyJSON(ParsedChaptersJSON.Choices.FirstOrDefault().Text));
+            ParsedNewChapters = ParseJSONNewChapters(GetOnlyJSON(ParsedChaptersJSON.Text));
 
             // Test to see that something was returned
             if (ParsedNewChapters.chapter.Length == 0)
             {
-                // Clean the JSON
-                var ParsedChaptersJSONString = await OrchestratorMethods.CleanJSON(GetOnlyJSON(ParsedChaptersJSON.Choices.FirstOrDefault().Text.ToString()), GPTModelId);
+                // Deterministic JSON repair (replaces LLM-based CleanJSON)
+                var repairedJson = AIStoryBuilders.AI.JsonRepairUtility.ExtractAndRepair(
+                    ParsedChaptersJSON.Text);
 
-                // Convert the JSON to a dynamic object
-                ParsedNewChapters = ParseJSONNewChapters(GetOnlyJSON(ParsedChaptersJSON.Choices.FirstOrDefault().Text));
+                // Convert the repaired JSON to a dynamic object
+                ParsedNewChapters = ParseJSONNewChapters(GetOnlyJSON(repairedJson));
             }
 
             //// **** Create the Files

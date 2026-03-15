@@ -113,7 +113,6 @@
         </RadzenTabs>
     </div>
 </div>
-
 @code {
     AIStoryBuildersService AIStoryBuildersService;
     LogService LogService;
@@ -212,7 +211,6 @@
                 Duration = 4000
             });
     }
-
     private async Task CreateJasonLFile()
     {
         try
@@ -305,7 +303,6 @@
             LogService.WriteToLog(ex.Message);
         }
     }
-
     private async Task UploadtoOpenAI()
     {
         try
@@ -412,7 +409,6 @@
             LogService.WriteToLog(ex.Message);
         }
     }
-
     private async Task ExportTrainingData()
     {
         try
@@ -461,24 +457,15 @@
 
     private async Task CreateFineTuneJob(System.ClientModel.ClientResult<OpenAIFile> paramaFile)
     {
-        // Create the fine-tuning job request
-        var ftRequest = new CreateFineTuningJobRequest(paramaFile.Value.Id, "gpt-3.5-turbo");
-
-        // Serialize the request to JSON bytes using Encoding.UTF8
-        byte[] jsonBytes = System.Text.Encoding.UTF8.GetBytes(System.Text.Json.JsonSerializer.Serialize(ftRequest));
-
-        // Wrap the JSON payload as HttpContent using ByteArrayContent and set content type.
-        BinaryContent content = BinaryContent.Create(BinaryData.FromBytes(jsonBytes));
-
         #pragma warning disable OPENAI001
         var api = new OpenAIClient(ApiKey);
         var ftClient = api.GetFineTuningClient();
 
-        // Start the job but return immediately with an operation handle
-        FineTuningJobOperation operation = await ftClient.CreateFineTuningJobAsync(
-            content,                    // our HttpContent JSON body
-            waitUntilCompleted: false,  // fire-and-forget; you’ll poll manually
-            options: null               // default pipeline options
+        // Start the fine-tuning job using the typed API
+        var operation = await ftClient.FineTuneAsync(
+            paramaFile.Value.Id,
+            "gpt-3.5-turbo",
+            waitUntilCompleted: false
         );
 
         NotificationService.Notify(new NotificationMessage

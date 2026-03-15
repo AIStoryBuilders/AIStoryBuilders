@@ -84,6 +84,8 @@ else // Existing Story
                           Click="ExportProject" Icon="save_alt" />&nbsp;&nbsp;
             <RadzenButton Text="Delete" ButtonStyle="ButtonStyle.Danger"
                           Click="StoryDelete" />
+            <RadzenButton Text="Re-Embed All" ButtonStyle="ButtonStyle.Warning"
+                          Click="ReEmbedAll" Icon="refresh" />
         </div>
     </div>
 }
@@ -323,5 +325,49 @@ else // Existing Story
     void OnSpeechCaptured(string speechValue, bool updateTextArea, string name)
     {
         objStory.Synopsis += speechValue;
+    }
+
+    protected async Task ReEmbedAll()
+    {
+        var confirmResult = await DialogService.Confirm(
+            "This will regenerate all vector embeddings for this story using the local ONNX model. Continue?",
+            "Re-Embed All",
+            new ConfirmOptions() { OkButtonText = "Yes", CancelButtonText = "No" });
+
+        if (confirmResult.HasValue && confirmResult.Value)
+        {
+            try
+            {
+                NotificationService.Notify(new NotificationMessage
+                    {
+                        Severity = NotificationSeverity.Info,
+                        Summary = "Re-Embedding",
+                        Detail = "Processing all paragraphs, chapters, characters, and locations...",
+                        Duration = 4000
+                    });
+
+                await AIStoryBuildersService.ReEmbedStory(objStory);
+
+                NotificationService.Notify(new NotificationMessage
+                    {
+                        Severity = NotificationSeverity.Success,
+                        Summary = "Complete",
+                        Detail = "All embeddings have been regenerated.",
+                        Duration = 4000
+                    });
+            }
+            catch (Exception ex)
+            {
+                NotificationService.Notify(new NotificationMessage
+                    {
+                        Severity = NotificationSeverity.Error,
+                        Summary = "Error",
+                        Detail = ex.Message,
+                        Duration = 8000
+                    });
+
+                LogService.WriteToLog(ex.Message);
+            }
+        }
     }
 }

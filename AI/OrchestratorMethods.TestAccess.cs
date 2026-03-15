@@ -1,7 +1,5 @@
 ﻿using AIStoryBuilders.Model;
 using AIStoryBuilders.Models.JSON;
-using OpenAI.Chat;
-using OpenAI;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -27,28 +25,30 @@ namespace AIStoryBuilders.AI
 
             LogService.WriteToLog($"Prompt: {SystemMessage}");
 
-            ReadTextEvent?.Invoke(this, new ReadTextEventArgs($"Calling ChatGPT to test access...", 5));
+            ReadTextEvent?.Invoke(this, new ReadTextEventArgs($"Calling AI provider to test access...", 5));
 
-            var ChatResponseResult = await api.CompleteAsync(SystemMessage);
+            var ChatResponseResult = await api.GetResponseAsync(SystemMessage);
 
             // *****************************************************
 
-            LogService.WriteToLog($"TotalTokens: {ChatResponseResult.Usage.TotalTokenCount} - ChatResponseResult - {ChatResponseResult.Choices.FirstOrDefault().Text}");
+            LogService.WriteToLog($"TotalTokens: {ChatResponseResult.Usage.TotalTokenCount} - ChatResponseResult - {ChatResponseResult.Text}");
 
-            if (SettingsService.AIType != "OpenAI")
+            // Test local embeddings
+            try
             {
-                try
+                ReadTextEvent?.Invoke(this, new ReadTextEventArgs($"Testing local embedding model...", 5));
+                string embeddingTest = await GetVectorEmbedding("This is a test for local embedding", false);
+                if (string.IsNullOrEmpty(embeddingTest))
                 {
-                    // Azure OpenAI - Test the embedding model
-                    string VectorEmbedding = await GetVectorEmbedding("This is a test for embedding", false);
+                    throw new Exception("Local embedding returned empty result");
                 }
-                catch (Exception ex)
-                {
-                    LogService.WriteToLog($"Azure OpenAI - Test the embedding model - Error: {ex.Message}");
-                                        
-                    throw new Exception("Error: You must set a proper Azure OpenAI embedding model");
-                }
-            }          
+                LogService.WriteToLog($"Local embedding test passed ({embeddingTest.Length} chars)");
+            }
+            catch (Exception ex)
+            {
+                LogService.WriteToLog($"Local embedding test - Error: {ex.Message}");
+                throw new Exception($"Error: Local embedding model failed: {ex.Message}");
+            }
 
             return true;
         }

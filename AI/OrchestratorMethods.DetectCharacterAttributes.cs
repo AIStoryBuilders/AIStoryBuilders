@@ -1,7 +1,5 @@
 ﻿using AIStoryBuilders.Model;
 using AIStoryBuilders.Models.JSON;
-using OpenAI.Chat;
-using OpenAI;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -11,7 +9,6 @@ using AIStoryBuilders.Models;
 using System.Text.Json;
 using Newtonsoft.Json.Linq;
 using Newtonsoft.Json;
-using OpenAI.Moderations;
 using Microsoft.Extensions.AI;
 
 namespace AIStoryBuilders.AI
@@ -21,123 +18,86 @@ namespace AIStoryBuilders.AI
         #region public async Task<List<SimpleCharacterSelector>> DetectCharacterAttributes(Paragraph objParagraph, List<Models.Character> colCharacters, string objDetectionType)
         public async Task<List<SimpleCharacterSelector>> DetectCharacterAttributes(Paragraph objParagraph, List<Models.Character> colCharacters, string objDetectionType)
         {
-            string Organization = SettingsService.Organization;
-            string ApiKey = SettingsService.ApiKey;
-            string SystemMessage = "";
             string GPTModel = SettingsService.AIModel;
 
-            LogService.WriteToLog($"Detect Character Attributes using {GPTModel} - Start");
+            LogService.WriteToLog($"DetectCharacterAttributes using {GPTModel} - Start");
 
-            // Create a new OpenAIClient object
             IChatClient api = CreateOpenAIClient();
 
             // Serialize the Characters to JSON
             var SimpleCharacters = ProcessCharacters(colCharacters);
             string json = CharacterJsonSerializer.Serialize(SimpleCharacters);
 
-            // Update System Message
-            SystemMessage = CreateDetectCharacterAttributes(objParagraph.ParagraphContent, json);
-
-            LogService.WriteToLog($"Prompt: {SystemMessage}");
-
-            var ChatResponseResult = await api.CompleteAsync(SystemMessage);
-
-            // *****************************************************
-
-            LogService.WriteToLog($"TotalTokens: {ChatResponseResult.Usage.TotalTokenCount} - ChatResponseResult - {ChatResponseResult.Choices.FirstOrDefault().Text}");
-
-            List<SimpleCharacterSelector> colCharacterOutput = new List<SimpleCharacterSelector>();
-
-            try
-            {
-                // Convert the JSON to a list of SimpleCharacters
-
-                List<string> colAllowedTypes = new List<string> { "Appearance", "Goals", "History", "Aliases", "Facts" };
-
-                var JSONResult = ExtractJson(ChatResponseResult.Choices.FirstOrDefault().Text);
-
-                dynamic data = JObject.Parse(JSONResult);
-
-                foreach (var character in data.characters)
+            // Build prompt messages
+            var promptService = new PromptTemplateService();
+            var messages = promptService.BuildMessages(
+                PromptTemplateService.Templates.DetectCharacterAttributes_System,
+                PromptTemplateService.Templates.DetectCharacterAttributes_User,
+                new Dictionary<string, string>
                 {
-                    string CharacterName = character.name.ToString();
+                    ["ParagraphContent"] = objParagraph.ParagraphContent,
+                    ["CharacterJSON"] = json
+                });
 
-                    // If the CharacterName is not in the list of colCharacters, then don't add it to the list
-                    // The LLM added a new character even though it was not in the list of characters passed to it
-                    if (colCharacters.Where(x => x.CharacterName == CharacterName).Count() == 0)
-                    {
-                        continue;
-                    }
+            LogService.WriteToLog($"Prompt token estimate: {TokenEstimator.EstimateTokens(messages)}");
 
-                    // We only create a Add character element if we are in "New Character" mode
-                    if (objDetectionType == "New Character")
-                    {
-                        colCharacterOutput.Add(new SimpleCharacterSelector { CharacterDisplay = $"Add Character - {CharacterName}", CharacterValue = $"{CharacterName}|{objDetectionType}||" });
-                    }
+            var options = ChatOptionsFactory.CreateJsonOptions(SettingsService.AIType, GPTModel);
 
-                    try
+            List<string> colAllowedTypes = new List<string> { "Appearance", "Goals", "History", "Aliases", "Facts" };
+
+            var result = await LlmCallHelper.CallLlmWithRetry<List<SimpleCharacterSelector>>(
+                api,
+                messages,
+                options,
+                jObj =>
+                {
+                    var colCharacterOutput = new List<SimpleCharacterSelector>();
+                    var characters = jObj["characters"];
+                    if (characters != null)
                     {
-                        if (character.descriptions.Count > 0)
+                        foreach (var character in characters)
                         {
-                            foreach (var description in character.descriptions)
+                            string CharacterName = character["name"]?.ToString() ?? "";
+
+                            // If the CharacterName is not in the list of colCharacters, skip it
+                            if (!colCharacters.Any(x => x.CharacterName == CharacterName))
+                                continue;
+
+                            // Only add character element in "New Character" mode
+                            if (objDetectionType == "New Character")
                             {
-                                // Only add the description if it is in the list of allowed types
-                                if (colAllowedTypes.Contains(description.description_type.ToString()) == false)
+                                colCharacterOutput.Add(new SimpleCharacterSelector
                                 {
-                                    continue;
+                                    CharacterDisplay = $"Add Character - {CharacterName}",
+                                    CharacterValue = $"{CharacterName}|{objDetectionType}||"
+                                });
+                            }
+
+                            var descriptions = character["descriptions"];
+                            if (descriptions != null)
+                            {
+                                foreach (var description in descriptions)
+                                {
+                                    string description_type = description["description_type"]?.ToString() ?? "";
+                                    string description_text = description["description"]?.ToString() ?? "";
+
+                                    if (!colAllowedTypes.Contains(description_type))
+                                        continue;
+
+                                    colCharacterOutput.Add(new SimpleCharacterSelector
+                                    {
+                                        CharacterDisplay = $"{CharacterName} - ({description_type}) {description_text}",
+                                        CharacterValue = $"{CharacterName}|{objDetectionType}|{description_type}|{description_text}"
+                                    });
                                 }
-
-                                string description_type = description.description_type.ToString();
-                                string description_text = description.description.ToString();
-
-                                colCharacterOutput.Add(new SimpleCharacterSelector { CharacterDisplay = $"{CharacterName} - ({description_type}) {description_text}", CharacterValue = $"{CharacterName}|{objDetectionType}|{description_type}|{description_text}" });
                             }
                         }
                     }
-                    catch
-                    {
-                        // Do nothing - sometimes there are no descriptions
-                    }
-                }
-            }
-            catch (Exception ex)
-            {
-                LogService.WriteToLog($"Error - DetectCharacterAttributes: {ex.Message} {ex.StackTrace ?? ""}");
-            }            
+                    return colCharacterOutput;
+                },
+                LogService);
 
-            return colCharacterOutput;
-        }
-        #endregion
-
-        // Methods
-
-        #region private string CreateDetectCharacterAttributes(string paramParagraphContent, string CharacterJSON)
-        private string CreateDetectCharacterAttributes(string paramParagraphContent, string CharacterJSON)
-        {
-            return "You are a function that will produce only JSON. \n" +
-            "#1 Please analyze a paragraph of text (given as #paramParagraphContent) and a JSON string representing a list of characters and their current descriptions (given as #CharacterJSON). \n" +
-            "#2 Output a new JSON containing only new descriptions. \n" +
-            "#3 Do not output CharacterName not present in #CharacterJSON. \n" +
-            "#4 Identify any new descriptions for each character in #CharacterJSON, mentioned in #paramParagraphContent that are not already present for the CharacterName in #CharacterJSON. \n" +
-            "#5 Only output each character once in the JSON. \n" +
-            "#6 Do not output any descriptions for any CharacterName that is already in #CharacterJSON for that CharacterName. \n" +
-            $"### This is the content of #paramParagraphContent: {paramParagraphContent} \n" +
-            $"### This is the content of #CharacterJSON: {CharacterJSON} \n" +
-            "Provide the results in the following JSON format: \n" +
-            "{\n" +
-            "\"characters\": [\n" +
-            "{ \n" +
-            "\"name\": \"[Name]\", \n" +
-            "\"descriptions\": [\n" +
-            "{ \n" +
-            "\"description_type\": \"[DescriptionType]\", \n" +
-            "\"enum\": [\"Appearance\",\"Goals\",\"History\",\"Aliases\",\"Facts\"], \n" +
-            "\"description\": \"[Description]\" \n" +
-            "} \n" +
-            "] \n" +
-            "} \n" +
-            "] \n" +
-            "}";
+            return result ?? new List<SimpleCharacterSelector>();
         }
         #endregion
 
@@ -150,8 +110,8 @@ namespace AIStoryBuilders.AI
             {
                 return System.Text.Json.JsonSerializer.Serialize(characters, new JsonSerializerOptions
                 {
-                    WriteIndented = true, // for pretty printing; set to false for compact JSON
-                    ReferenceHandler = System.Text.Json.Serialization.ReferenceHandler.IgnoreCycles // to handle circular references
+                    WriteIndented = true,
+                    ReferenceHandler = System.Text.Json.Serialization.ReferenceHandler.IgnoreCycles
                 });
             }
         }
