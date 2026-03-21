@@ -836,6 +836,14 @@ namespace AIStoryBuilders.Services
                             objLocationDescription.Id = ii;
                             objLocationDescription.Description = DescriptionRaw[0][0];
 
+                            // If Description looks like an embedding vector, clear it
+                            if (!string.IsNullOrEmpty(objLocationDescription.Description)
+                                && objLocationDescription.Description.TrimStart().StartsWith("[")
+                                && objLocationDescription.Description.Contains(","))
+                            {
+                                objLocationDescription.Description = "";
+                            }
+
                             // Does the TimelineName element exist?
                             if (DescriptionRaw[1].Count() > 0)
                             {
@@ -1192,6 +1200,16 @@ namespace AIStoryBuilders.Services
                             objCharacterBackground.VectorContent = "";
                         }
 
+                        // If Description looks like an embedding vector (e.g. data ended up in the wrong field),
+                        // move it to VectorContent and clear Description
+                        if (!string.IsNullOrEmpty(objCharacterBackground.Description)
+                            && objCharacterBackground.Description.TrimStart().StartsWith("[")
+                            && objCharacterBackground.Description.Contains(","))
+                        {
+                            objCharacterBackground.VectorContent = objCharacterBackground.Description;
+                            objCharacterBackground.Description = "";
+                        }
+
                         objCharacterBackground.Character = new Character() { CharacterName = CharacterName };
 
                         colCharacterBackground.Add(objCharacterBackground);
@@ -1442,6 +1460,14 @@ namespace AIStoryBuilders.Services
                     ChapterContent = ChapterContent.Where(line => line.Trim() != "").ToArray();
 
                     var ChapterDescription = ChapterContent.Select(x => x.Split('|')).Select(x => x[0]).FirstOrDefault();
+
+                    // If Synopsis looks like an embedding vector, clear it
+                    if (!string.IsNullOrEmpty(ChapterDescription)
+                        && ChapterDescription.TrimStart().StartsWith("[")
+                        && ChapterDescription.Contains(","))
+                    {
+                        ChapterDescription = "";
+                    }
 
                     // Create a Chapter
                     AIStoryBuilders.Models.Chapter Chapter = new AIStoryBuilders.Models.Chapter();
