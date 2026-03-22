@@ -1667,6 +1667,53 @@ namespace AIStoryBuilders.Services
             return GetParagraphVectorsInternal(chapter, null);
         }
 
+        // O4 + O3: Single DB call per chapter returning pre-deserialized ParagraphVectorEntry records
+        public List<ParagraphVectorEntry> GetAllParagraphVectorsForChapter(Chapter chapter)
+        {
+            var entries = new List<ParagraphVectorEntry>();
+
+            try
+            {
+                var ChapterNameParts = chapter.ChapterName.Split(' ');
+                string ChapterName = ChapterNameParts[0] + ChapterNameParts[1];
+
+                var AIStoryBuildersParagraphsPath = $"{BasePath}/{chapter.Story.Title}/Chapters/{ChapterName}";
+
+                string[] AIStoryBuildersParagraphsFiles = Directory.GetFiles(AIStoryBuildersParagraphsPath, "Paragraph*.txt", SearchOption.AllDirectories);
+
+                foreach (var AIStoryBuildersParagraphFile in AIStoryBuildersParagraphsFiles)
+                {
+                    string ParagraphName = Path.GetFileNameWithoutExtension(AIStoryBuildersParagraphFile);
+                    ParagraphName = ParagraphName.Insert(9, " ");
+                    string ParagraphSequence = ParagraphName.Split(' ')[1];
+                    int ParagraphSequenceNumber = int.Parse(ParagraphSequence);
+
+                    string[] ChapterContent = File.ReadAllLines(AIStoryBuildersParagraphFile);
+                    ChapterContent = ChapterContent.Where(line => line.Trim() != "").ToArray();
+
+                    var ParagraphTimeline = ChapterContent.Select(x => x.Split('|')).Select(x => x[1]).FirstOrDefault();
+                    var ParagraphContent = ChapterContent.Select(x => x.Split('|')).Select(x => x[3]).FirstOrDefault();
+                    var ParagraphVectorsJson = ChapterContent.Select(x => x.Split('|')).Select(x => x[4]).FirstOrDefault();
+
+                    if (!string.IsNullOrEmpty(ParagraphVectorsJson))
+                    {
+                        var vectors = Newtonsoft.Json.JsonConvert.DeserializeObject<float[]>(ParagraphVectorsJson);
+                        entries.Add(new ParagraphVectorEntry(
+                            Id: $"Ch{chapter.Sequence}_P{ParagraphSequenceNumber}",
+                            Content: ParagraphContent,
+                            Vectors: vectors,
+                            TimelineName: ParagraphTimeline));
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                LogService.WriteToLog("GetAllParagraphVectorsForChapter: " + ex.Message + " " + ex.StackTrace ?? "");
+            }
+
+            return entries;
+        }
+
         private List<AIParagraph> GetParagraphVectorsInternal(Chapter chapter, string TimelineName)
         {
             List<AIParagraph> colParagraphs = new List<AIParagraph>();

@@ -2,8 +2,10 @@
 using AIStoryBuilders.Models.JSON;
 using Newtonsoft.Json;
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
+using System.Security.Cryptography;
 using System.Text;
 using System.Threading.Tasks;
 using Microsoft.Maui.Devices.Sensors;
@@ -12,6 +14,10 @@ namespace AIStoryBuilders.Services
 {
     public partial class AIStoryBuildersService
     {
+        // O1 — Embedding cache keyed by content hash
+        private readonly ConcurrentDictionary<string, float[]> _embeddingCache = new();
+
+        public void ClearEmbeddingCache() => _embeddingCache.Clear();
         #region public async Task<JSONMasterStory> CreateMasterStory(Chapter objChapter, Paragraph objParagraph, List<Models.Character> colCharacter, List<Paragraph> colParagraphs, AIPrompt AIPromptResult)
         public async Task<JSONMasterStory> CreateMasterStory(Chapter objChapter, Paragraph objParagraph, List<Models.Character> colCharacter, List<Paragraph> colParagraphs, AIPrompt AIPromptResult)
         {
@@ -57,7 +63,7 @@ namespace AIStoryBuilders.Services
         #region public async Task<List<(Paragraph Paragraph, float Score)>> GetRelatedParagraphs(...)
         public async Task<List<(Paragraph Paragraph, float Score)>> GetRelatedParagraphs(Chapter objChapter, Paragraph objParagraph, AIPrompt AIPromptResult)
         {
-            // R7 — Batch embedding calls
+            // O1 — Build texts to embed with cache-aware logic
             var textsToEmbed = new List<string>();
             int paragraphIdx = -1, promptIdx = -1;
 
@@ -77,56 +83,64 @@ namespace AIStoryBuilders.Services
 
             if (textsToEmbed.Count > 0)
             {
-                var embeddingResults = await OrchestratorMethods.GetBatchEmbeddings(textsToEmbed.ToArray());
-                paragraphVectors = paragraphIdx >= 0 ? embeddingResults[paragraphIdx] : null;
-                promptVectors = promptIdx >= 0 ? embeddingResults[promptIdx] : null;
-            }
+                // O1 — Check cache, only embed uncached texts
+                var uncachedTexts = new List<(int Index, string Text)>();
+                var cachedResults = new float[textsToEmbed.Count][];
 
-            // R3 — Build ParagraphVectorEntry list (replaces Dictionary)
-            // §4.3.1 — Cross-timeline search
-            string ParagraphTimelineName = objParagraph.Timeline?.TimelineName ?? "";
-
-            var sameTimelineEntries = new List<ParagraphVectorEntry>();
-            var crossTimelineEntries = new List<ParagraphVectorEntry>();
-
-            var AllChapters = GetChapters(objChapter.Story);
-
-            foreach (var chapter in AllChapters)
-            {
-                if (chapter.Sequence < objChapter.Sequence)
+                for (int i = 0; i < textsToEmbed.Count; i++)
                 {
-                    // Same-timeline paragraphs
-                    var sameTimeParagraphs = GetParagraphVectors(chapter, ParagraphTimelineName);
-                    foreach (var paragraph in sameTimeParagraphs)
-                    {
-                        if (!string.IsNullOrEmpty(paragraph.vectors))
-                        {
-                            // R2 — Deserialize vectors once at load time
-                            var vectors = JsonConvert.DeserializeObject<float[]>(paragraph.vectors);
-                            sameTimelineEntries.Add(new ParagraphVectorEntry(
-                                Id: $"Ch{chapter.Sequence}_P{paragraph.sequence}",
-                                Content: paragraph.contents,
-                                Vectors: vectors,
-                                TimelineName: paragraph.timeline_name));
-                        }
-                    }
+                    var key = ComputeContentHash(textsToEmbed[i]);
+                    if (_embeddingCache.TryGetValue(key, out var cached))
+                        cachedResults[i] = cached;
+                    else
+                        uncachedTexts.Add((i, textsToEmbed[i]));
+                }
 
-                    // Cross-timeline paragraphs (§4.3.1)
-                    var allParagraphs = GetAllParagraphVectors(chapter);
-                    foreach (var paragraph in allParagraphs)
+                if (uncachedTexts.Count > 0)
+                {
+                    var freshEmbeddings = await OrchestratorMethods
+                        .GetBatchEmbeddings(uncachedTexts.Select(u => u.Text).ToArray());
+
+                    for (int j = 0; j < uncachedTexts.Count; j++)
                     {
-                        if (!string.IsNullOrEmpty(paragraph.vectors) && paragraph.timeline_name != ParagraphTimelineName)
-                        {
-                            var vectors = JsonConvert.DeserializeObject<float[]>(paragraph.vectors);
-                            crossTimelineEntries.Add(new ParagraphVectorEntry(
-                                Id: $"Ch{chapter.Sequence}_P{paragraph.sequence}_X",
-                                Content: paragraph.contents,
-                                Vectors: vectors,
-                                TimelineName: paragraph.timeline_name));
-                        }
+                        var key = ComputeContentHash(uncachedTexts[j].Text);
+                        _embeddingCache[key] = freshEmbeddings[j];
+                        cachedResults[uncachedTexts[j].Index] = freshEmbeddings[j];
                     }
                 }
+
+                paragraphVectors = paragraphIdx >= 0 ? cachedResults[paragraphIdx] : null;
+                promptVectors = promptIdx >= 0 ? cachedResults[promptIdx] : null;
             }
+
+            // O4 + O3 + O2 — Single DB call per chapter, pre-deserialized vectors, parallel processing
+            string ParagraphTimelineName = objParagraph.Timeline?.TimelineName ?? "";
+
+            var sameTimelineBag = new ConcurrentBag<ParagraphVectorEntry>();
+            var crossTimelineBag = new ConcurrentBag<ParagraphVectorEntry>();
+
+            var AllChapters = GetChapters(objChapter.Story);
+            var earlierChapters = AllChapters.Where(c => c.Sequence < objChapter.Sequence).ToList();
+
+            // O2 — Parallel chapter search
+            await Parallel.ForEachAsync(earlierChapters, async (chapter, ct) =>
+            {
+                // O4 — Single method call per chapter; O3 — vectors already deserialized
+                var allEntries = GetAllParagraphVectorsForChapter(chapter);
+
+                foreach (var entry in allEntries)
+                {
+                    if (entry.TimelineName == ParagraphTimelineName)
+                        sameTimelineBag.Add(entry);
+                    else
+                        crossTimelineBag.Add(entry with { Id = entry.Id + "_X" });
+                }
+
+                await Task.CompletedTask; // satisfy async lambda
+            });
+
+            var sameTimelineEntries = sameTimelineBag.ToList();
+            var crossTimelineEntries = crossTimelineBag.ToList();
 
             // R1 — Calculate similarities using extracted helper
             var similarities = new List<(string Id, string Content, float Score)>();
@@ -172,6 +186,14 @@ namespace AIStoryBuilders.Services
             }
 
             return resultList;
+        }
+        #endregion
+
+        #region O1 — ComputeContentHash helper
+        private static string ComputeContentHash(string content)
+        {
+            var hash = SHA256.HashData(Encoding.UTF8.GetBytes(content));
+            return Convert.ToHexString(hash, 0, 8);
         }
         #endregion
 
