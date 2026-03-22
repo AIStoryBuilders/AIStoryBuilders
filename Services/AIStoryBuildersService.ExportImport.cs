@@ -109,13 +109,18 @@ namespace AIStoryBuilders.Services
 
                         foreach (var objParagraph in colParagraphs)
                         {
-                            // Break up objParagraph.ParagraphContent by \n
-                            string[] sections = objParagraph.ParagraphContent.Split('\n');
+                            // Strip HTML entities used for display indentation
+                            string cleanContent = objParagraph.ParagraphContent
+                                .Replace("&nbsp;", " ")
+                                .Replace("<br />", "\n");
+
+                            // Break up content by \n
+                            string[] sections = cleanContent.Split('\n');
 
                             // Create a new paragraph for each line
                             foreach (string section in sections)
                             {
-                                var p = document.InsertParagraph(section);
+                                var p = document.InsertParagraph(section.Trim());
                                 p.IndentationFirstLine = 28f;
                             }
                         }
