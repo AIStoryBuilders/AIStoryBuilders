@@ -48,7 +48,11 @@ else
                                       ButtonStyle="ButtonStyle.Light" Style="width: 75px;height: 20px" />
                     </RadzenColumn>
                     <RadzenColumn>
-                        <RadzenText TextStyle=TextStyle.Body2>@(characterbackground.Description)</RadzenText>
+                        @if (!string.IsNullOrEmpty(characterbackground.Description)
+                             && !characterbackground.Description.TrimStart().StartsWith("["))
+                        {
+                            <RadzenText TextStyle=TextStyle.Body2>@(characterbackground.Description)</RadzenText>
+                        }
                             @if (characterbackground.Timeline != null)
                         {
                             <RadzenText TextStyle=TextStyle.Subtitle2>@(characterbackground.Timeline.TimelineName)</RadzenText>

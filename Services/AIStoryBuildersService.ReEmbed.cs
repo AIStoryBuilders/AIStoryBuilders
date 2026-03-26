@@ -108,16 +108,29 @@ namespace AIStoryBuilders.Services
                 {
                     description = parts[2];
                     prefix = $"{parts[0]}|{parts[1]}";
+
+                    // If the description looks like an embedding vector, it was already
+                    // corrupted — skip re-embedding this line to avoid further damage
+                    if (!string.IsNullOrEmpty(description)
+                        && description.TrimStart().StartsWith("[")
+                        && description.Contains(","))
+                    {
+                        rebuilt.Add(line);
+                        continue;
+                    }
+
+                    string newVector = await OrchestratorMethods.GetVectorEmbedding(description, false);
+                    rebuilt.Add($"{prefix}|{description}|{newVector}");
                 }
                 else if (parts.Length >= 2)
                 {
                     description = parts[0];
                     prefix = $"{parts[0]}|{parts[1]}";
+
+                    string newVector = await OrchestratorMethods.GetVectorEmbedding(description, false);
+                    rebuilt.Add($"{prefix}|{newVector}");
                 }
                 else continue;
-
-                string newVector = await OrchestratorMethods.GetVectorEmbedding(description, false);
-                rebuilt.Add($"{prefix}|{newVector}");
             }
 
             File.WriteAllLines(filePath, rebuilt);

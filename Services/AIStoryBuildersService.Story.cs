@@ -30,6 +30,7 @@ namespace AIStoryBuilders.Services
                         Style = story[2],
                         Theme = story[3],
                         Synopsis = story[4],
+                        WorldFacts = story.Length > 5 ? story[5] : "",
                     })
                     .ToList();
             }
@@ -71,7 +72,7 @@ namespace AIStoryBuilders.Services
             AIStoryBuildersStoriesContent = AIStoryBuildersStoriesContent.Select(line => line.Trim()).ToArray();
 
             // Add Story to file
-            string newStory = $"{AIStoryBuildersStoriesContent.Count() + 1}|{story.Title}|{story.Style}|{story.Theme}|{story.Synopsis}";
+            string newStory = $"{AIStoryBuildersStoriesContent.Count() + 1}|{story.Title}|{story.Style}|{story.Theme}|{story.Synopsis}|{story.WorldFacts}";
             AIStoryBuildersStoriesContent = AIStoryBuildersStoriesContent.Append(newStory).ToArray();
             File.WriteAllLines(AIStoryBuildersStoriesPath, AIStoryBuildersStoriesContent);
 
@@ -263,14 +264,16 @@ namespace AIStoryBuilders.Services
             story.Style = RemoveLineBreaks(story.Style);
             story.Theme = RemoveLineBreaks(story.Theme);
             story.Synopsis = RemoveLineBreaks(story.Synopsis);
+            story.WorldFacts = RemoveLineBreaks(story.WorldFacts ?? "");
 
             // Remove any pipes (because that is used as a delimiter)
             story.Style = story.Style.Replace("|", "");
             story.Theme = story.Theme.Replace("|", "");
             story.Synopsis = story.Synopsis.Replace("|", "");
+            story.WorldFacts = story.WorldFacts.Replace("|", "");
 
             // Re-add Story to file
-            string updatedStory = $"{AIStoryBuildersStoriesContent.Count() + 1}|{story.Title}|{story.Style}|{story.Theme}|{story.Synopsis}";
+            string updatedStory = $"{AIStoryBuildersStoriesContent.Count() + 1}|{story.Title}|{story.Style}|{story.Theme}|{story.Synopsis}|{story.WorldFacts}";
             AIStoryBuildersStoriesContent = AIStoryBuildersStoriesContent.Append(updatedStory).ToArray();
             File.WriteAllLines(AIStoryBuildersStoriesPath, AIStoryBuildersStoriesContent);
         }
@@ -833,6 +836,14 @@ namespace AIStoryBuilders.Services
                             objLocationDescription.Id = ii;
                             objLocationDescription.Description = DescriptionRaw[0][0];
 
+                            // If Description looks like an embedding vector, clear it
+                            if (!string.IsNullOrEmpty(objLocationDescription.Description)
+                                && objLocationDescription.Description.TrimStart().StartsWith("[")
+                                && objLocationDescription.Description.Contains(","))
+                            {
+                                objLocationDescription.Description = "";
+                            }
+
                             // Does the TimelineName element exist?
                             if (DescriptionRaw[1].Count() > 0)
                             {
@@ -1189,6 +1200,16 @@ namespace AIStoryBuilders.Services
                             objCharacterBackground.VectorContent = "";
                         }
 
+                        // If Description looks like an embedding vector (e.g. data ended up in the wrong field),
+                        // move it to VectorContent and clear Description
+                        if (!string.IsNullOrEmpty(objCharacterBackground.Description)
+                            && objCharacterBackground.Description.TrimStart().StartsWith("[")
+                            && objCharacterBackground.Description.Contains(","))
+                        {
+                            objCharacterBackground.VectorContent = objCharacterBackground.Description;
+                            objCharacterBackground.Description = "";
+                        }
+
                         objCharacterBackground.Character = new Character() { CharacterName = CharacterName };
 
                         colCharacterBackground.Add(objCharacterBackground);
@@ -1440,6 +1461,14 @@ namespace AIStoryBuilders.Services
 
                     var ChapterDescription = ChapterContent.Select(x => x.Split('|')).Select(x => x[0]).FirstOrDefault();
 
+                    // If Synopsis looks like an embedding vector, clear it
+                    if (!string.IsNullOrEmpty(ChapterDescription)
+                        && ChapterDescription.TrimStart().StartsWith("[")
+                        && ChapterDescription.Contains(","))
+                    {
+                        ChapterDescription = "";
+                    }
+
                     // Create a Chapter
                     AIStoryBuilders.Models.Chapter Chapter = new AIStoryBuilders.Models.Chapter();
                     Chapter.ChapterName = ChapterName;
@@ -1630,6 +1659,63 @@ namespace AIStoryBuilders.Services
 
         public List<AIParagraph> GetParagraphVectors(Chapter chapter, string TimelineName)
         {
+            return GetParagraphVectorsInternal(chapter, TimelineName);
+        }
+
+        public List<AIParagraph> GetAllParagraphVectors(Chapter chapter)
+        {
+            return GetParagraphVectorsInternal(chapter, null);
+        }
+
+        // O4 + O3: Single DB call per chapter returning pre-deserialized ParagraphVectorEntry records
+        public List<ParagraphVectorEntry> GetAllParagraphVectorsForChapter(Chapter chapter)
+        {
+            var entries = new List<ParagraphVectorEntry>();
+
+            try
+            {
+                var ChapterNameParts = chapter.ChapterName.Split(' ');
+                string ChapterName = ChapterNameParts[0] + ChapterNameParts[1];
+
+                var AIStoryBuildersParagraphsPath = $"{BasePath}/{chapter.Story.Title}/Chapters/{ChapterName}";
+
+                string[] AIStoryBuildersParagraphsFiles = Directory.GetFiles(AIStoryBuildersParagraphsPath, "Paragraph*.txt", SearchOption.AllDirectories);
+
+                foreach (var AIStoryBuildersParagraphFile in AIStoryBuildersParagraphsFiles)
+                {
+                    string ParagraphName = Path.GetFileNameWithoutExtension(AIStoryBuildersParagraphFile);
+                    ParagraphName = ParagraphName.Insert(9, " ");
+                    string ParagraphSequence = ParagraphName.Split(' ')[1];
+                    int ParagraphSequenceNumber = int.Parse(ParagraphSequence);
+
+                    string[] ChapterContent = File.ReadAllLines(AIStoryBuildersParagraphFile);
+                    ChapterContent = ChapterContent.Where(line => line.Trim() != "").ToArray();
+
+                    var ParagraphTimeline = ChapterContent.Select(x => x.Split('|')).Select(x => x[1]).FirstOrDefault();
+                    var ParagraphContent = ChapterContent.Select(x => x.Split('|')).Select(x => x[3]).FirstOrDefault();
+                    var ParagraphVectorsJson = ChapterContent.Select(x => x.Split('|')).Select(x => x[4]).FirstOrDefault();
+
+                    if (!string.IsNullOrEmpty(ParagraphVectorsJson))
+                    {
+                        var vectors = Newtonsoft.Json.JsonConvert.DeserializeObject<float[]>(ParagraphVectorsJson);
+                        entries.Add(new ParagraphVectorEntry(
+                            Id: $"Ch{chapter.Sequence}_P{ParagraphSequenceNumber}",
+                            Content: ParagraphContent,
+                            Vectors: vectors,
+                            TimelineName: ParagraphTimeline));
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                LogService.WriteToLog("GetAllParagraphVectorsForChapter: " + ex.Message + " " + ex.StackTrace ?? "");
+            }
+
+            return entries;
+        }
+
+        private List<AIParagraph> GetParagraphVectorsInternal(Chapter chapter, string TimelineName)
+        {
             List<AIParagraph> colParagraphs = new List<AIParagraph>();
 
             try
@@ -1667,8 +1753,8 @@ namespace AIStoryBuilders.Services
                     var ParagraphContent = ChapterContent.Select(x => x.Split('|')).Select(x => x[3]).FirstOrDefault();
                     var ParagraphVectors = ChapterContent.Select(x => x.Split('|')).Select(x => x[4]).FirstOrDefault();
 
-                    // Only get Paragraphs for the specified Timeline
-                    if (TimelineName == ParagraphTimeline)
+                    // Filter by timeline if specified, otherwise include all
+                    if (TimelineName == null || TimelineName == ParagraphTimeline)
                     {
                         // Convert ParagraphCharactersRaw to a List
                         List<string> ParagraphCharacters = ParseStringToList(ParagraphCharactersRaw);
