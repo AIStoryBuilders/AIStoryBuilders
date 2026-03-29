@@ -80,7 +80,7 @@ namespace AIStoryBuilders.Services
             try
             {
                 string TempPath =
-                    $"{Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments)}/AIStoryBuilders/_Temp";
+                    Path.Combine(Path.GetTempPath(), "AIStoryBuilders", "_Temp");
 
                 // Create the directory if it doesn't exist
                 if (!Directory.Exists(TempPath))
@@ -134,7 +134,7 @@ namespace AIStoryBuilders.Services
                 byte[] WordFileBytes = File.ReadAllBytes(WordFilePath);
 
                 // Delete the temp directory
-                Directory.Delete(TempPath, true);
+                ForceDeleteDirectory(TempPath);
 
                 return WordFileBytes;
             }
@@ -157,7 +157,7 @@ namespace AIStoryBuilders.Services
 
                 // Create _Temp
                 string TempPath =
-                    $"{Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments)}/AIStoryBuilders/_Temp";
+                    Path.Combine(Path.GetTempPath(), "AIStoryBuilders", "_Temp");
 
                 if (!Directory.Exists(TempPath))
                 {
@@ -166,7 +166,7 @@ namespace AIStoryBuilders.Services
                 else
                 {
                     // Delete the temp directory
-                    Directory.Delete(TempPath, true);
+                    ForceDeleteDirectory(TempPath);
 
                     // Create the directory if it doesn't exist
                     if (!Directory.Exists(TempPath))
@@ -177,7 +177,7 @@ namespace AIStoryBuilders.Services
 
                 // Create _TempZip
                 string TempZipPath =
-                    $"{Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments)}/AIStoryBuilders/_TempZip";
+                    Path.Combine(Path.GetTempPath(), "AIStoryBuilders", "_TempZip");
 
                 if (!Directory.Exists(TempZipPath))
                 {
@@ -186,7 +186,7 @@ namespace AIStoryBuilders.Services
                 else
                 {
                     // Delete the temp directory
-                    Directory.Delete(TempZipPath, true);
+                    ForceDeleteDirectory(TempZipPath);
 
                     // Create the directory if it doesn't exist
                     if (!Directory.Exists(TempZipPath))
@@ -232,8 +232,8 @@ namespace AIStoryBuilders.Services
                 byte[] ExportFileBytes = File.ReadAllBytes(ExportFilePath);
 
                 // Delete the temp directories
-                Directory.Delete(TempPath, true);
-                Directory.Delete(TempZipPath, true);
+                ForceDeleteDirectory(TempPath);
+                ForceDeleteDirectory(TempZipPath);
 
                 return ExportFileBytes;
             }
@@ -258,7 +258,7 @@ namespace AIStoryBuilders.Services
 
                 // Create _Temp
                 string TempPath =
-                    $"{Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments)}/AIStoryBuilders/_Temp";
+                    Path.Combine(Path.GetTempPath(), "AIStoryBuilders", "_Temp");
 
                 if (!Directory.Exists(TempPath))
                 {
@@ -267,7 +267,7 @@ namespace AIStoryBuilders.Services
                 else
                 {
                     // Delete the temp directory
-                    Directory.Delete(TempPath, true);
+                    ForceDeleteDirectory(TempPath);
 
                     // Create the directory if it doesn't exist
                     if (!Directory.Exists(TempPath))
@@ -278,7 +278,7 @@ namespace AIStoryBuilders.Services
 
                 // Create _TempZip
                 string TempZipPath =
-                    $"{Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments)}/AIStoryBuilders/_TempZip";
+                    Path.Combine(Path.GetTempPath(), "AIStoryBuilders", "_TempZip");
 
                 if (!Directory.Exists(TempZipPath))
                 {
@@ -287,7 +287,7 @@ namespace AIStoryBuilders.Services
                 else
                 {
                     // Delete the temp directory
-                    Directory.Delete(TempZipPath, true);
+                    ForceDeleteDirectory(TempZipPath);
 
                     // Create the directory if it doesn't exist
                     if (!Directory.Exists(TempZipPath))
@@ -340,8 +340,8 @@ namespace AIStoryBuilders.Services
                 CopyDirectory(TempPath, StoryPath);
 
                 // Delete the temp directories
-                Directory.Delete(TempPath, true);
-                Directory.Delete(TempZipPath, true);
+                ForceDeleteDirectory(TempPath);
+                ForceDeleteDirectory(TempZipPath);
 
                 // Add Story to file
                 var AIStoryBuildersStoriesPath = $"{BasePath}/AIStoryBuildersStories.csv";
@@ -381,7 +381,7 @@ namespace AIStoryBuilders.Services
             try
             {
                 string TempPath =
-                    $"{Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments)}/AIStoryBuilders/_Temp";
+                    Path.Combine(Path.GetTempPath(), "AIStoryBuilders", "_Temp");
 
                 // Create the directory if it doesn't exist
                 if (!Directory.Exists(TempPath))
@@ -422,7 +422,7 @@ namespace AIStoryBuilders.Services
                 byte[] ExcelFileBytes = File.ReadAllBytes(ExcelFilePath);
 
                 // Delete the temp directory
-                Directory.Delete(TempPath, true);
+                ForceDeleteDirectory(TempPath);
 
                 return ExcelFileBytes;
             }
@@ -460,6 +460,7 @@ namespace AIStoryBuilders.Services
             // Check if the target file already exists, and if so, delete it to allow overwriting
             if (File.Exists(targetFilePath))
             {
+                File.SetAttributes(targetFilePath, FileAttributes.Normal);
                 File.Delete(targetFilePath);
             }
 

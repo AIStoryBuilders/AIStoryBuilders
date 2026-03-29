@@ -293,10 +293,53 @@ namespace AIStoryBuilders.Services
 
             // Delete folder and all its sub folders and files
             string StoryPath = $"{BasePath}/{StoryTitle}";
-            Directory.Delete(StoryPath, true);
+            ForceDeleteDirectory(StoryPath);
 
             // Log
             LogService.WriteToLog($"Story deleted {StoryTitle}");
+        }
+
+        private static void ForceDeleteDirectory(string path)
+        {
+            if (!Directory.Exists(path))
+                return;
+
+            // Clear read-only and other attributes that OneDrive may set,
+            // then delete each file and subdirectory individually.
+            foreach (var file in Directory.EnumerateFiles(path, "*", SearchOption.AllDirectories))
+            {
+                File.SetAttributes(file, FileAttributes.Normal);
+                RetryDelete(() => File.Delete(file));
+            }
+
+            // Remove directories bottom-up
+            foreach (var dir in Directory.EnumerateDirectories(path, "*", SearchOption.AllDirectories)
+                                        .OrderByDescending(d => d.Length))
+            {
+                RetryDelete(() => Directory.Delete(dir, false));
+            }
+
+            RetryDelete(() => Directory.Delete(path, false));
+        }
+
+        private static void RetryDelete(Action deleteAction, int maxRetries = 5)
+        {
+            for (int i = 0; i < maxRetries; i++)
+            {
+                try
+                {
+                    deleteAction();
+                    return;
+                }
+                catch (UnauthorizedAccessException) when (i < maxRetries - 1)
+                {
+                    Thread.Sleep(200 * (i + 1));
+                }
+                catch (IOException) when (i < maxRetries - 1)
+                {
+                    Thread.Sleep(200 * (i + 1));
+                }
+            }
         }
         #endregion
 
@@ -1574,7 +1617,7 @@ namespace AIStoryBuilders.Services
             string ChapterPath = $"{AIStoryBuildersChaptersPath}/{ChapterName}";
 
             // Delete folder
-            Directory.Delete(ChapterPath, true);
+            ForceDeleteDirectory(ChapterPath);
         }
         #endregion
 
