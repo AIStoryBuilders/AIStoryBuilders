@@ -33,7 +33,15 @@
 @if (@InProgress)
 {
     <div class="rz-m-10">
-        <RadzenProgressBar Value="100" ShowValue="false" Mode="ProgressBarMode.Indeterminate" />
+        @if (_parseProgress > 0)
+        {
+            <RadzenProgressBar Value="@_parseProgress" Max="100" ShowValue="true" />
+            <RadzenText TextStyle="TextStyle.Body2" Style="color: #64748b;">@_parseStatus</RadzenText>
+        }
+        else
+        {
+            <RadzenProgressBar Value="100" ShowValue="false" Mode="ProgressBarMode.Indeterminate" />
+        }
     </div>
 }
 @if (HomeVisible)
@@ -41,6 +49,8 @@
     <RadzenButton Click=@(() => NewStory()) Text="New Story" Icon="add" ButtonStyle="ButtonStyle.Success" />
     <span>&nbsp; &nbsp;</span>
     <RadzenButton Click=@(() => ImportStory()) Text="Import Story" Icon="publish" ButtonStyle="ButtonStyle.Light" />
+    <span>&nbsp; &nbsp;</span>
+    <RadzenButton Click=@(() => ImportManuscript()) Text="Import docx/pdf/txt" Icon="description" ButtonStyle="ButtonStyle.Info" />
     <br />
     <br />
     <div style="height:500px">
@@ -77,6 +87,7 @@
     AIStoryBuildersService AIStoryBuildersService;
     OrchestratorMethods OrchestratorMethods;
     LogService LogService;
+    ManuscriptParsingService ManuscriptParsingService;
 
     List<Story> colStorys = new List<Story>();
     Story objStory = new Story();
@@ -85,6 +96,8 @@
     string ApiKey = "";
 
     bool InProgress = false;
+    int _parseProgress = 0;
+    string _parseStatus = "";
     bool HomeVisible = true;
     bool SettingsVisible = false;
     bool LogsVisible = false;
@@ -97,6 +110,7 @@
             AIStoryBuildersService = (AIStoryBuildersService)ScopedServices.GetService(typeof(AIStoryBuildersService));
             OrchestratorMethods = (OrchestratorMethods)ScopedServices.GetService(typeof(OrchestratorMethods));
             LogService = (LogService)ScopedServices.GetService(typeof(LogService));
+            ManuscriptParsingService = (ManuscriptParsingService)ScopedServices.GetService(typeof(ManuscriptParsingService));
 
             AIStoryBuildersService.TextEvent += AIStoryBuildersService_TextEvent;
             OrchestratorMethods.ReadTextEvent += OrchestratorMethods_ReadTextEvent;
@@ -255,6 +269,84 @@
                 });
 
             LogService.WriteToLog(ex.Message);
+        }
+    }
+
+    private async Task ImportManuscript()
+    {
+        try
+        {
+            var result = await FilePicker.PickAsync(new PickOptions
+            {
+                PickerTitle = "Select a manuscript file",
+                FileTypes = new FilePickerFileType(new Dictionary<DevicePlatform, IEnumerable<string>>
+                {
+                    { DevicePlatform.iOS, new[] { "public.content" } },
+                    { DevicePlatform.Android, new[] { "application/*", "text/*" } },
+                    { DevicePlatform.WinUI, new[] { ".docx", ".pdf", ".txt", ".md" } },
+                })
+            });
+
+            if (result is null) return;
+
+            InProgress = true;
+            _parseProgress = 0;
+            _parseStatus = "Starting import...";
+            StateHasChanged();
+
+            var progress = new Progress<int>(p =>
+            {
+                _parseProgress = p;
+                InvokeAsync(StateHasChanged);
+            });
+
+            var statusProgress = new Progress<string>(s =>
+            {
+                _parseStatus = s;
+                InvokeAsync(StateHasChanged);
+            });
+
+            // Run the parsing pipeline
+            var parsedStory = await ManuscriptParsingService.ParseManuscriptAsync(
+                result.FullPath, progress, statusProgress);
+
+            // Persist to AIStoryBuilders file system
+            await AIStoryBuildersService.PersistImportedStoryAsync(parsedStory, OrchestratorMethods);
+
+            // Refresh story list
+            colStorys = AIStoryBuildersService.GetStorys();
+            StateHasChanged();
+
+            InProgress = false;
+            _parseProgress = 0;
+            _parseStatus = "";
+            StateHasChanged();
+
+            // Open the story in the editor
+            var storyToEdit = colStorys.FirstOrDefault(s => s.Title == parsedStory.Title);
+            if (storyToEdit != null)
+            {
+                await EditStory(storyToEdit);
+            }
+        }
+        catch (Exception ex)
+        {
+            NotificationService.Notify(new NotificationMessage
+            {
+                Severity = NotificationSeverity.Error,
+                Summary = "Import Error",
+                Detail = ex.Message,
+                Duration = 4000
+            });
+
+            LogService.WriteToLog("ImportManuscript: " + ex.Message);
+        }
+        finally
+        {
+            InProgress = false;
+            _parseProgress = 0;
+            _parseStatus = "";
+            StateHasChanged();
         }
     }
 
