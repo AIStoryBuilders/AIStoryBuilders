@@ -5,6 +5,8 @@ using static AIStoryBuilders.AI.OrchestratorMethods;
 using AIStoryBuilders.Models.JSON;
 using Newtonsoft.Json;
 using System.Linq;
+using System.Text.Json;
+using System.Text.Json.Serialization;
 using System.Text.RegularExpressions;
 using Microsoft.Maui.Devices.Sensors;
 
@@ -97,6 +99,138 @@ namespace AIStoryBuilders.Services
             {
                 Directory.CreateDirectory(path);
             }
+        }
+        #endregion
+
+        // Knowledge Graph Persistence
+
+        #region private static readonly JsonSerializerOptions GraphJsonOptions
+        private static readonly System.Text.Json.JsonSerializerOptions GraphJsonOptions = new()
+        {
+            WriteIndented = true,
+            PropertyNamingPolicy = System.Text.Json.JsonNamingPolicy.CamelCase,
+            Converters = { new JsonStringEnumConverter(System.Text.Json.JsonNamingPolicy.CamelCase) }
+        };
+        #endregion
+
+        #region public async Task PersistGraphAsync(Story story, StoryGraph graph, string storyPath)
+        public async Task PersistGraphAsync(Story story, StoryGraph graph, string storyPath)
+        {
+            string graphDir = Path.Combine(storyPath, "Graph");
+            CreateDirectory(graphDir);
+
+            // manifest.json
+            var manifest = new
+            {
+                storyTitle = story.Title ?? "",
+                createdDate = DateTime.UtcNow.ToString("o"),
+                version = _appMetadata.Version,
+                nodeCount = graph.Nodes.Count,
+                edgeCount = graph.Edges.Count
+            };
+            string manifestJson = System.Text.Json.JsonSerializer.Serialize(manifest, GraphJsonOptions);
+            await File.WriteAllTextAsync(Path.Combine(graphDir, "manifest.json"), manifestJson);
+
+            // graph.json
+            string graphJson = System.Text.Json.JsonSerializer.Serialize(graph, GraphJsonOptions);
+            await File.WriteAllTextAsync(Path.Combine(graphDir, "graph.json"), graphJson);
+
+            // metadata.json
+            var metadata = new
+            {
+                title = story.Title ?? "",
+                genre = story.Style ?? "",
+                theme = story.Theme ?? "",
+                synopsis = story.Synopsis ?? "",
+                chapterCount = story.Chapter?.Count ?? 0,
+                characterCount = story.Character?.Count ?? 0,
+                locationCount = story.Location?.Count ?? 0,
+                timelineCount = story.Timeline?.Count ?? 0
+            };
+            string metadataJson = System.Text.Json.JsonSerializer.Serialize(metadata, GraphJsonOptions);
+            await File.WriteAllTextAsync(Path.Combine(graphDir, "metadata.json"), metadataJson);
+
+            LogService.WriteToLog($"Graph persisted for '{story.Title}' — {graph.Nodes.Count} nodes, {graph.Edges.Count} edges");
+        }
+        #endregion
+
+        #region public StoryGraph LoadGraphFromDisk(string storyPath)
+        public StoryGraph LoadGraphFromDisk(string storyPath)
+        {
+            string graphJsonPath = Path.Combine(storyPath, "Graph", "graph.json");
+            if (!File.Exists(graphJsonPath)) return null;
+
+            try
+            {
+                string json = File.ReadAllText(graphJsonPath);
+                return System.Text.Json.JsonSerializer.Deserialize<StoryGraph>(json, GraphJsonOptions);
+            }
+            catch (Exception ex)
+            {
+                LogService.WriteToLog($"LoadGraphFromDisk failed: {ex.Message}");
+                return null;
+            }
+        }
+        #endregion
+
+        #region public async Task EnsureGraphExistsAsync(string storyTitle, IGraphBuilder graphBuilder)
+        public async Task EnsureGraphExistsAsync(string storyTitle, IGraphBuilder graphBuilder)
+        {
+            string storyPath = $"{BasePath}/{storyTitle}";
+            string graphJsonPath = Path.Combine(storyPath, "Graph", "graph.json");
+
+            if (File.Exists(graphJsonPath))
+            {
+                // Load existing graph from disk
+                var existingGraph = LoadGraphFromDisk(storyPath);
+                if (existingGraph != null)
+                {
+                    GraphState.Current = existingGraph;
+                    // Load the Story object for GraphState.CurrentStory
+                    var stories = GetStorys();
+                    var storyMeta = stories.FirstOrDefault(s => s.Title == storyTitle);
+                    if (storyMeta != null)
+                    {
+                        GraphState.CurrentStory = LoadFullStory(storyMeta);
+                    }
+                    return;
+                }
+            }
+
+            // Build graph from disk files
+            var allStories = GetStorys();
+            var story = allStories.FirstOrDefault(s => s.Title == storyTitle);
+            if (story == null)
+            {
+                LogService.WriteToLog($"EnsureGraphExistsAsync: Story '{storyTitle}' not found in stories list");
+                return;
+            }
+
+            var fullStory = LoadFullStory(story);
+            var graph = graphBuilder.Build(fullStory);
+            await PersistGraphAsync(fullStory, graph, storyPath);
+
+            GraphState.Current = graph;
+            GraphState.CurrentStory = fullStory;
+
+            LogService.WriteToLog($"EnsureGraphExistsAsync: Graph built and persisted for '{storyTitle}'");
+        }
+        #endregion
+
+        #region public Story LoadFullStory(Story storyMeta)
+        public Story LoadFullStory(Story storyMeta)
+        {
+            storyMeta.Character = GetCharacters(storyMeta);
+            storyMeta.Location = GetLocations(storyMeta);
+            storyMeta.Timeline = GetTimelines(storyMeta);
+            storyMeta.Chapter = GetChapters(storyMeta);
+
+            foreach (var ch in storyMeta.Chapter)
+            {
+                ch.Paragraph = GetParagraphs(ch);
+            }
+
+            return storyMeta;
         }
         #endregion
 

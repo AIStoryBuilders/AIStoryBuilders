@@ -9,6 +9,7 @@
 @inject NotificationService NotificationService
 @inject DialogService DialogService
 @inject SettingsService SettingsService
+@inject IGraphBuilder GraphBuilder
 @if (objStory.Id == -1) // New Story
 {
     <RadzenRow Gap="1rem">
@@ -103,8 +104,8 @@ else // Existing Story
                           Click="ExportProject" Icon="save_alt" />&nbsp;&nbsp;
             <RadzenButton Text="Delete" ButtonStyle="ButtonStyle.Danger"
                           Click="StoryDelete" />
-            <RadzenButton Text="Re-Embed All" ButtonStyle="ButtonStyle.Warning"
-                          Click="ReEmbedAll" Icon="refresh" />
+            <RadzenButton Text="Re-load Story" ButtonStyle="ButtonStyle.Warning"
+                          Click="ReEmbedAll" Icon="sync" />
         </div>
     </div>
 }
@@ -349,8 +350,8 @@ else // Existing Story
     protected async Task ReEmbedAll()
     {
         var confirmResult = await DialogService.Confirm(
-            "This will regenerate all vector embeddings for this story using the local ONNX model. Continue?",
-            "Re-Embed All",
+            "This will regenerate all vector embeddings and rebuild the Knowledge Graph. Continue?",
+            "Re-load Story",
             new ConfirmOptions() { OkButtonText = "Yes", CancelButtonText = "No" });
 
         if (confirmResult.HasValue && confirmResult.Value)
@@ -360,18 +361,29 @@ else // Existing Story
                 NotificationService.Notify(new NotificationMessage
                     {
                         Severity = NotificationSeverity.Info,
-                        Summary = "Re-Embedding",
-                        Detail = "Processing all paragraphs, chapters, characters, and locations...",
+                        Summary = "Re-loading Story",
+                        Detail = "Processing all paragraphs, chapters, characters, locations, and Knowledge Graph...",
                         Duration = 4000
                     });
 
-                await AIStoryBuildersService.ReEmbedStory(objStory);
+                var progress = new Progress<string>(msg =>
+                {
+                    NotificationService.Notify(new NotificationMessage
+                    {
+                        Severity = NotificationSeverity.Info,
+                        Summary = "Progress",
+                        Detail = msg,
+                        Duration = 3000
+                    });
+                });
+
+                await AIStoryBuildersService.ReloadStoryAsync(objStory, GraphBuilder, progress);
 
                 NotificationService.Notify(new NotificationMessage
                     {
                         Severity = NotificationSeverity.Success,
                         Summary = "Complete",
-                        Detail = "All embeddings have been regenerated.",
+                        Detail = "All embeddings regenerated and Knowledge Graph rebuilt.",
                         Duration = 4000
                     });
             }

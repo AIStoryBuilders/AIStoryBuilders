@@ -4,6 +4,109 @@ namespace AIStoryBuilders.Services
 {
     public partial class AIStoryBuildersService
     {
+        public async Task ReloadStoryAsync(Story story, IGraphBuilder graphBuilder, IProgress<string> progress = null)
+        {
+            var storyPath = $"{BasePath}/{story.Title}";
+
+            // Step 1: Save story metadata
+            progress?.Report("Step 1/5: Saving all story files…");
+            TextEvent?.Invoke(this, new TextEventArgs("Saving story metadata…", 2));
+            UpdateStory(story);
+
+            // Step 2: Re-embed paragraphs
+            progress?.Report("Step 2/5: Re-embedding paragraphs…");
+            var paragraphFiles = Directory.Exists($"{storyPath}/Chapters")
+                ? Directory.GetFiles($"{storyPath}/Chapters", "Paragraph*.txt", SearchOption.AllDirectories)
+                : Array.Empty<string>();
+
+            int total = paragraphFiles.Length;
+            int processed = 0;
+            foreach (var file in paragraphFiles)
+            {
+                processed++;
+                TextEvent?.Invoke(this, new TextEventArgs(
+                    $"Re-embedding paragraph {processed}/{total}…", 1));
+
+                var lines = File.ReadAllLines(file)
+                                .Where(l => l.Trim() != "").ToArray();
+                if (lines.Length == 0) continue;
+
+                var parts = lines[0].Split('|');
+                if (parts.Length < 4) continue;
+
+                var content = parts[3];
+                if (string.IsNullOrWhiteSpace(content)) continue;
+
+                string newEmbedding = await OrchestratorMethods.GetVectorEmbedding(content, true);
+                string rebuilt = $"{parts[0]}|{parts[1]}|{parts[2]}|{newEmbedding}";
+                File.WriteAllText(file, rebuilt);
+            }
+
+            // Step 3: Re-embed chapters, characters, locations
+            progress?.Report("Step 3/5: Re-embedding chapters, characters, locations…");
+            var chapterFiles = Directory.Exists($"{storyPath}/Chapters")
+                ? Directory.GetFiles($"{storyPath}/Chapters", "Chapter*.txt", SearchOption.AllDirectories)
+                : Array.Empty<string>();
+            var characterFiles = Directory.Exists($"{storyPath}/Characters")
+                ? Directory.GetFiles($"{storyPath}/Characters", "*.csv", SearchOption.TopDirectoryOnly)
+                : Array.Empty<string>();
+            var locationFiles = Directory.Exists($"{storyPath}/Locations")
+                ? Directory.GetFiles($"{storyPath}/Locations", "*.csv", SearchOption.TopDirectoryOnly)
+                : Array.Empty<string>();
+
+            foreach (var file in chapterFiles)
+            {
+                TextEvent?.Invoke(this, new TextEventArgs(
+                    $"Re-embedding chapter…", 1));
+
+                var text = File.ReadAllText(file).Trim();
+                if (string.IsNullOrWhiteSpace(text)) continue;
+
+                var synopsisEnd = text.IndexOf("|[");
+                string synopsis = synopsisEnd > 0 ? text.Substring(0, synopsisEnd) : text;
+
+                string newEmbedding = await OrchestratorMethods.GetVectorEmbedding(synopsis, true);
+                File.WriteAllText(file, newEmbedding);
+            }
+
+            foreach (var file in characterFiles)
+            {
+                TextEvent?.Invoke(this, new TextEventArgs(
+                    $"Re-embedding character…", 1));
+                await ReEmbedCsvDescriptionFile(file, hasTypeAndTimeline: true);
+            }
+
+            foreach (var file in locationFiles)
+            {
+                TextEvent?.Invoke(this, new TextEventArgs(
+                    $"Re-embedding location…", 1));
+                await ReEmbedCsvDescriptionFile(file, hasTypeAndTimeline: false);
+            }
+
+            // Step 4: Rebuild Knowledge Graph
+            progress?.Report("Step 4/5: Rebuilding Knowledge Graph…");
+            TextEvent?.Invoke(this, new TextEventArgs("Rebuilding Knowledge Graph…", 3));
+            var fullStory = LoadFullStory(new Story { Title = story.Title });
+            var graph = graphBuilder.Build(fullStory);
+            await PersistGraphAsync(fullStory, graph, storyPath);
+            GraphState.Current = graph;
+            GraphState.CurrentStory = fullStory;
+
+            // Step 5: Reload story data
+            progress?.Report("Step 5/5: Reloading story data…");
+            TextEvent?.Invoke(this, new TextEventArgs("Reloading story data…", 2));
+
+            // Refresh the story object parameters
+            story.Character = fullStory.Character;
+            story.Location = fullStory.Location;
+            story.Timeline = fullStory.Timeline;
+            story.Chapter = fullStory.Chapter;
+
+            progress?.Report("Re-load complete!");
+            TextEvent?.Invoke(this, new TextEventArgs(
+                $"Re-load complete — all embeddings regenerated, Knowledge Graph rebuilt.", 5));
+        }
+
         public async Task ReEmbedStory(Story story)
         {
             var storyPath = $"{BasePath}/{story.Title}";

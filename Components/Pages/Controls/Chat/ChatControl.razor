@@ -1,11 +1,30 @@
+@using AIStoryBuilders.AI
+@using AIStoryBuilders.Model
 @using AIStoryBuilders.Models
 @using AIStoryBuilders.Services
 @inject IStoryChatService ChatService
 @inject IGraphBuilder GraphBuilder
+@inject AIStoryBuildersService AIStoryBuildersService
+@inject NotificationService NotificationService
+@inject SettingsService SettingsService
+@inherits OwningComponentBase
 
 <div class="card mt-2">
     <div class="card-header d-flex align-items-center justify-content-between">
-        <span class="fw-bold">Story Chat Assistant</span>
+        <div class="d-flex align-items-center gap-2">
+            <span class="fw-bold">Story Chat Assistant</span>
+            <RadzenButton Text="Rebuild Knowledge Graph" Icon="account_tree"
+                          ButtonStyle="ButtonStyle.Warning" Variant="Variant.Outlined"
+                          Size="ButtonSize.Small" Click="RebuildGraph"
+                          Disabled="@(_isStreaming || _isRebuilding)" />
+            @if (_models.Count > 0)
+            {
+                <RadzenDropDown @bind-Value="_selectedModel" Data="_models"
+                                TextProperty="ModelName" ValueProperty="ModelId"
+                                Style="width: 250px;" Size="ButtonSize.Small"
+                                Change="OnModelChanged" />
+            }
+        </div>
         <div>
             <button class="btn btn-sm btn-outline-secondary"
                     @onclick="ClearChat" title="Clear conversation">🔄</button>
@@ -78,19 +97,146 @@
     private List<ChatDisplayMessage> _messages = new();
     private string _userInput = "";
     private bool _isStreaming;
+    private bool _isRebuilding;
     private string _streamingContent = "";
     private string _sessionId = Guid.NewGuid().ToString();
     private bool _graphBuilt;
 
-    public void BuildGraph()
+    // Model dropdown
+    private List<AIStoryBuilderModel> _models = new();
+    private string _selectedModel = "";
+
+    OrchestratorMethods OrchestratorMethods;
+
+    protected override void OnInitialized()
+    {
+        OrchestratorMethods = (OrchestratorMethods)ScopedServices.GetService(typeof(OrchestratorMethods));
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadModels();
+    }
+
+    private async Task LoadModels()
+    {
+        try
+        {
+            SettingsService.LoadSettings();
+
+            if (SettingsService.AIType == "OpenAI")
+            {
+                _models = await OrchestratorMethods.ListAllModelsAsync();
+            }
+            else
+            {
+                var model = new AIStoryBuilderModel
+                {
+                    ModelId = SettingsService.AIModel,
+                    ModelName = SettingsService.AIModel
+                };
+                _models = new List<AIStoryBuilderModel> { model };
+            }
+
+            _selectedModel = SettingsService.AIModel;
+
+            if (!string.IsNullOrEmpty(_selectedModel) &&
+                !_models.Any(m => m.ModelId == _selectedModel) &&
+                _models.Count > 0)
+            {
+                _selectedModel = _models[0].ModelId;
+            }
+        }
+        catch (Exception ex)
+        {
+            NotificationService.Notify(new NotificationMessage
+            {
+                Severity = NotificationSeverity.Warning,
+                Summary = "Model Loading",
+                Detail = $"Could not load models: {ex.Message}",
+                Duration = 4000
+            });
+        }
+    }
+
+    private void OnModelChanged()
+    {
+        if (!string.IsNullOrEmpty(_selectedModel))
+        {
+            SettingsService.AIModel = _selectedModel;
+            ChatService.RefreshClient();
+        }
+    }
+
+    public async Task BuildGraph()
     {
         if (objStory == null) return;
 
-        // Reload full story data and build graph
-        var graph = GraphBuilder.Build(objStory);
-        GraphState.Current = graph;
-        GraphState.CurrentStory = objStory;
+        // Check if graph is already loaded and matches the current story
+        if (GraphState.Current != null &&
+            GraphState.Current.StoryTitle == objStory.Title)
+        {
+            _graphBuilt = true;
+            return;
+        }
+
+        // Try to load from disk
+        string storyPath = $"{AIStoryBuildersService.BasePath}/{objStory.Title}";
+        var diskGraph = AIStoryBuildersService.LoadGraphFromDisk(storyPath);
+        if (diskGraph != null)
+        {
+            GraphState.Current = diskGraph;
+            GraphState.CurrentStory = objStory;
+            _graphBuilt = true;
+            return;
+        }
+
+        // Build from story data and persist
+        await AIStoryBuildersService.EnsureGraphExistsAsync(objStory.Title, GraphBuilder);
         _graphBuilt = true;
+    }
+
+    private async Task RebuildGraph()
+    {
+        if (objStory == null) return;
+
+        _isRebuilding = true;
+        StateHasChanged();
+
+        try
+        {
+            var fullStory = AIStoryBuildersService.LoadFullStory(
+                new Story { Title = objStory.Title });
+            var graph = GraphBuilder.Build(fullStory);
+            string storyPath = $"{AIStoryBuildersService.BasePath}/{objStory.Title}";
+            await AIStoryBuildersService.PersistGraphAsync(fullStory, graph, storyPath);
+            GraphState.Current = graph;
+            GraphState.CurrentStory = fullStory;
+            _graphBuilt = true;
+
+            NotificationService.Notify(new NotificationMessage
+            {
+                Severity = NotificationSeverity.Success,
+                Summary = "Knowledge Graph Rebuilt",
+                Detail = $"{graph.Nodes.Count} nodes, {graph.Edges.Count} edges",
+                Duration = 4000
+            });
+        }
+        catch (Exception ex)
+        {
+            NotificationService.Notify(new NotificationMessage
+            {
+                Severity = NotificationSeverity.Error,
+                Summary = "Error",
+                Detail = ex.Message,
+                Duration = 8000
+            });
+        }
+        finally
+        {
+            _isRebuilding = false;
+            StateHasChanged();
+        }
     }
 
     private async Task SendMessage()
@@ -98,7 +244,7 @@
         if (string.IsNullOrWhiteSpace(_userInput) || _isStreaming) return;
 
         // Ensure graph is built
-        if (!_graphBuilt) BuildGraph();
+        if (!_graphBuilt) await BuildGraph();
 
         var input = _userInput.Trim();
         _userInput = "";
@@ -118,7 +264,7 @@
         }
         catch (Exception ex)
         {
-            _messages.Add(new ChatDisplayMessage { IsUser = false, Content = $"❌ Error: {ex.Message}" });
+            _messages.Add(new ChatDisplayMessage { IsUser = false, Content = $"Error: {ex.Message}" });
         }
         finally
         {

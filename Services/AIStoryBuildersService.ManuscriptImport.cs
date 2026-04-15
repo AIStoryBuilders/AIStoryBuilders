@@ -8,9 +8,10 @@ public partial class AIStoryBuildersService
 {
     /// <summary>
     /// Persists a parsed manuscript Story to the AIStoryBuilders file system
-    /// in the standard CSV/folder layout, then generates embeddings.
+    /// in the standard CSV/folder layout, then generates embeddings and builds
+    /// the Knowledge Graph.
     /// </summary>
-    public async Task PersistImportedStoryAsync(Story story, OrchestratorMethods orchestrator)
+    public async Task PersistImportedStoryAsync(Story story, OrchestratorMethods orchestrator, IGraphBuilder graphBuilder = null)
     {
         // Validate the story title is not a duplicate
         string StoryPath = $"{BasePath}/{story.Title}";
@@ -159,6 +160,17 @@ public partial class AIStoryBuildersService
             }
 
             ChapterNumber++;
+        }
+
+        // ── Build and persist Knowledge Graph ──
+        if (graphBuilder != null)
+        {
+            TextEvent?.Invoke(this, new TextEventArgs("Building Knowledge Graph…", 3));
+            var fullStory = LoadFullStory(new Story { Title = story.Title });
+            var graph = graphBuilder.Build(fullStory);
+            await PersistGraphAsync(fullStory, graph, StoryPath);
+            GraphState.Current = graph;
+            GraphState.CurrentStory = fullStory;
         }
 
         LogService.WriteToLog($"ManuscriptImport: Story '{story.Title}' persisted successfully");

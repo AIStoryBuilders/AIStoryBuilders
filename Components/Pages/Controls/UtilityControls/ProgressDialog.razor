@@ -1,0 +1,64 @@
+@using Radzen
+@using Radzen.Blazor
+
+<div style="padding: 20px; min-width: 400px;">
+    <RadzenProgressBar Value="100" ShowValue="false" Mode="ProgressBarMode.Indeterminate"
+                       Style="margin-bottom: 16px;" />
+    <RadzenText TextStyle="TextStyle.Body1" Style="color: #334155;">
+        @_currentMessage
+    </RadzenText>
+
+    @if (_isComplete)
+    {
+        <div style="margin-top: 16px; text-align: right;">
+            <RadzenButton Text="Close" Click="@Close" ButtonStyle="ButtonStyle.Primary" />
+        </div>
+    }
+
+    @if (!string.IsNullOrEmpty(_errorMessage))
+    {
+        <RadzenAlert AlertStyle="AlertStyle.Danger" ShowIcon="true" Variant="Variant.Flat"
+                     Style="margin-top: 12px;">
+            @_errorMessage
+        </RadzenAlert>
+    }
+</div>
+
+@code {
+    [Parameter] public string InitialMessage { get; set; } = "Starting…";
+
+    private string _currentMessage = "";
+    private string _errorMessage = "";
+    private bool _isComplete;
+
+    public DialogService DialogService { get; set; }
+
+    protected override void OnInitialized()
+    {
+        _currentMessage = InitialMessage;
+    }
+
+    public void UpdateProgress(string message)
+    {
+        _currentMessage = message;
+        InvokeAsync(StateHasChanged);
+    }
+
+    public void SetError(string error)
+    {
+        _errorMessage = error;
+        _isComplete = true;
+        InvokeAsync(StateHasChanged);
+    }
+
+    public void SetComplete()
+    {
+        _isComplete = true;
+        InvokeAsync(StateHasChanged);
+    }
+
+    private void Close()
+    {
+        DialogService?.Close();
+    }
+}
