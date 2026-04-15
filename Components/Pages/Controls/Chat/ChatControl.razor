@@ -186,7 +186,8 @@
         if (diskGraph != null)
         {
             GraphState.Current = diskGraph;
-            GraphState.CurrentStory = objStory;
+            GraphState.CurrentStory = AIStoryBuildersService.LoadFullStory(
+                new Story { Title = objStory.Title });
             _graphBuilt = true;
             return;
         }

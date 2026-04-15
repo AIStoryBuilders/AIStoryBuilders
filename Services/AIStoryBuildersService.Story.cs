@@ -5,6 +5,7 @@ using Microsoft.Extensions.AI;
 using static AIStoryBuilders.AI.OrchestratorMethods;
 using Character = AIStoryBuilders.Models.Character;
 using Microsoft.Maui.Devices.Sensors;
+using System.Text.RegularExpressions;
 
 namespace AIStoryBuilders.Services
 {
@@ -1390,7 +1391,7 @@ namespace AIStoryBuilders.Services
             }
         }
 
-        public void UpdateCharacterName(Character character, string paramOrginalCharcterName)
+        public async Task UpdateCharacterNameAsync(Character character, string paramOrginalCharcterName)
         {
             string StoryPath = $"{BasePath}/{character.Story.Title}";
             string CharactersPath = $"{StoryPath}/Characters";
@@ -1449,8 +1450,31 @@ namespace AIStoryBuilders.Services
                         // Set the Character array back to the ParagraphArray
                         ParagraphArray[2] = ParagraphCharacterString;
 
+                        // Update prose content in ParagraphArray[3]
+                        bool proseChanged = false;
+                        if (ParagraphArray.Length > 3)
+                        {
+                            string originalProse = ParagraphArray[3];
+                            string updatedProse = ReplaceCharacterNameInProse(
+                                originalProse, paramOrginalCharcterName, character.CharacterName);
+
+                            proseChanged = (originalProse != updatedProse);
+                            if (proseChanged)
+                            {
+                                ParagraphArray[3] = updatedProse;
+                            }
+                        }
+
                         // Put the ParagraphContent back together
                         ParagraphContent[0] = string.Join("|", ParagraphArray);
+
+                        // Regenerate embedding if prose changed
+                        if (proseChanged && ParagraphArray.Length > 4)
+                        {
+                            string newEmbedding = await OrchestratorMethods.GetVectorEmbedding(ParagraphArray[3], false);
+                            ParagraphArray[ParagraphArray.Length - 1] = newEmbedding;
+                            ParagraphContent[0] = string.Join("|", ParagraphArray);
+                        }
 
                         // Write the ParagraphContent back to the file
                         File.WriteAllLines(ParagraphPath, ParagraphContent);
@@ -1461,6 +1485,12 @@ namespace AIStoryBuilders.Services
                 string NewCharacterPath = $"{CharactersPath}/{character.CharacterName.Trim()}.csv";
                 File.Move(CharacterPath, NewCharacterPath);
             }
+        }
+
+        private string ReplaceCharacterNameInProse(string prose, string oldName, string newName)
+        {
+            string pattern = @"\b" + Regex.Escape(oldName) + @"\b";
+            return Regex.Replace(prose, pattern, newName);
         }
         #endregion
 

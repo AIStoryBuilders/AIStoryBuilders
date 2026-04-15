@@ -137,13 +137,15 @@ public class GraphMutationService : IGraphMutationService
             CharacterName = newName,
             Story = GraphState.CurrentStory
         };
-        _storyService.UpdateCharacterName(character, currentName);
+        await _storyService.UpdateCharacterNameAsync(character, currentName);
         await RefreshGraph();
 
         result.Success = true;
+        result.EmbeddingsUpdated = true;
         result.GraphRefreshed = true;
         result.AffectedFiles.Add($"Characters/{newName}.csv (renamed from {currentName}.csv)");
-        result.AffectedFiles.Add("All paragraph files with character references updated");
+        result.AffectedFiles.Add("All paragraph character lists and prose content updated");
+        result.AffectedFiles.Add("Embeddings regenerated for paragraphs with prose changes");
         return result;
     }
 
