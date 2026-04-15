@@ -186,11 +186,11 @@ public class StoryChatService : IStoryChatService
                 new AzureOpenAIClientOptions { NetworkTimeout = LlmTimeout })
                 .GetChatClient(_settingsService.AIModel).AsIChatClient(),
 
-            "Anthropic" => new AnthropicChatClient(
-                _settingsService.ApiKey, _settingsService.AIModel),
+            "Anthropic" => new Anthropic.SDK.AnthropicClient(
+                _settingsService.ApiKey).Messages,
 
-            "Google AI" => new GoogleAIChatClient(
-                _settingsService.ApiKey, _settingsService.AIModel),
+            "Google AI" => new Mscc.GenerativeAI.Microsoft.GeminiChatClient(
+                apiKey: _settingsService.ApiKey, _settingsService.AIModel),
 
             _ => new OpenAIClient(new System.ClientModel.ApiKeyCredential(_settingsService.ApiKey),
                 new OpenAIClientOptions { NetworkTimeout = LlmTimeout })
