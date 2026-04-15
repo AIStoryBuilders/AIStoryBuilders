@@ -69,6 +69,10 @@ namespace AIStoryBuilders
             builder.Services.AddSingleton<AIStoryBuildersService>();
             builder.Services.AddSingleton<AIModelService>();
             builder.Services.AddSingleton<ManuscriptParsingService>();
+            builder.Services.AddSingleton<IGraphBuilder, GraphBuilder>();
+            builder.Services.AddSingleton<IGraphQueryService, GraphQueryService>();
+            builder.Services.AddSingleton<IGraphMutationService, GraphMutationService>();
+            builder.Services.AddSingleton<IStoryChatService, StoryChatService>();
 
             // Radzen
             builder.Services.AddScoped<DialogService>();

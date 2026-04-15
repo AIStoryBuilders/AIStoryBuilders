@@ -99,8 +99,10 @@ Models/
  Chapter.cs
  Character.cs
  CharacterBackground.cs
+ ChatModels.cs
  Conversation.cs
  Enums.cs
+ GraphModels.cs
  JSON/
   JSONChapters.cs
   JSONManifest.cs
@@ -135,10 +137,15 @@ Services/
  AIStoryBuildersService.ReEmbed.cs
  AIStoryBuildersService.Story.cs
  DatabaseService.cs
+ GraphBuilder.cs
+ GraphMutationService.cs
+ GraphQueryService.cs
+ GraphState.cs
  LogService.cs
  ManuscriptParsingService.cs
  MasterStoryBuilder.cs
  SettingsService.cs
+ StoryChatService.cs
  TextSanitiser.cs
 
 [metadataReferences]
@@ -499,6 +506,9 @@ Components/Pages/Controls/
   CharacterBackgroundEdit.razor
   CharacterEdit.razor
   CharactersEdit.razor
+ Chat/
+  ChatControl.razor
+  ChatMessageRenderer.razor
  EditControls/ModelEdit.razor
  Locations/
   LocationDescriptionEdit.razor
@@ -542,6 +552,9 @@ Components/Pages/Controls/
   CharacterBackgroundEdit.razor
   CharacterEdit.razor
   CharactersEdit.razor
+ Chat/
+  ChatControl.razor
+  ChatMessageRenderer.razor
  EditControls/ModelEdit.razor
  Locations/
   LocationDescriptionEdit.razor
