@@ -6,7 +6,8 @@ public enum NodeType
     Location,
     Timeline,
     Chapter,
-    Paragraph
+    Paragraph,
+    Attribute
 }
 
 public class GraphNode

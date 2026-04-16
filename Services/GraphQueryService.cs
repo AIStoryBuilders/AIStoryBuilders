@@ -24,6 +24,9 @@ public interface IGraphQueryService
     string GetStoryTheme();
     string GetStorySynopsis();
     string GetStoryWorldFacts();
+    List<AttributeDto> GetEntityAttributes(string entityType, string entityName);
+    List<AttributeDto> GetAttributesByType(string attributeType);
+    List<AttributeDto> GetTimelineAttributes(string timelineName);
 }
 
 public class GraphQueryService : IGraphQueryService
@@ -401,5 +404,89 @@ public class GraphQueryService : IGraphQueryService
     public string GetStoryWorldFacts()
     {
         return GraphState.CurrentStory?.WorldFacts ?? "";
+    }
+
+    public List<AttributeDto> GetEntityAttributes(string entityType, string entityName)
+    {
+        var graph = GraphState.Current;
+        if (graph == null) return new();
+
+        var parentId = $"{entityType.ToLowerInvariant()}:{entityName.ToLowerInvariant().Trim()}";
+
+        var attrNodeIds = graph.Edges
+            .Where(e => e.Label == "HAS_ATTRIBUTE" &&
+                        e.SourceId.Equals(parentId, StringComparison.OrdinalIgnoreCase))
+            .Select(e => e.TargetId)
+            .ToHashSet(StringComparer.OrdinalIgnoreCase);
+
+        return graph.Nodes
+            .Where(n => n.Type == NodeType.Attribute && attrNodeIds.Contains(n.Id))
+            .Select(n => new AttributeDto
+            {
+                ParentType = n.Properties.GetValueOrDefault("parentType", ""),
+                ParentName = n.Properties.GetValueOrDefault("parentName", ""),
+                AttributeType = n.Properties.GetValueOrDefault("attributeType", ""),
+                Description = n.Properties.GetValueOrDefault("description", ""),
+                Timeline = n.Properties.GetValueOrDefault("timeline", ""),
+                Sequence = int.TryParse(
+                    n.Properties.GetValueOrDefault("sequence", "0"), out var s) ? s : 0
+            })
+            .OrderBy(a => a.Sequence)
+            .ToList();
+    }
+
+    public List<AttributeDto> GetAttributesByType(string attributeType)
+    {
+        var graph = GraphState.Current;
+        if (graph == null) return new();
+
+        return graph.Nodes
+            .Where(n => n.Type == NodeType.Attribute &&
+                        (n.Properties.GetValueOrDefault("attributeType", ""))
+                            .Equals(attributeType, StringComparison.OrdinalIgnoreCase))
+            .Select(n => new AttributeDto
+            {
+                ParentType = n.Properties.GetValueOrDefault("parentType", ""),
+                ParentName = n.Properties.GetValueOrDefault("parentName", ""),
+                AttributeType = n.Properties.GetValueOrDefault("attributeType", ""),
+                Description = n.Properties.GetValueOrDefault("description", ""),
+                Timeline = n.Properties.GetValueOrDefault("timeline", ""),
+                Sequence = int.TryParse(
+                    n.Properties.GetValueOrDefault("sequence", "0"), out var s) ? s : 0
+            })
+            .OrderBy(a => a.ParentName)
+            .ThenBy(a => a.Sequence)
+            .ToList();
+    }
+
+    public List<AttributeDto> GetTimelineAttributes(string timelineName)
+    {
+        var graph = GraphState.Current;
+        if (graph == null) return new();
+
+        var tlId = $"timeline:{timelineName.ToLowerInvariant().Trim()}";
+
+        var attrNodeIds = graph.Edges
+            .Where(e => e.Label == "IN_TIMELINE" &&
+                        e.TargetId.Equals(tlId, StringComparison.OrdinalIgnoreCase))
+            .Select(e => e.SourceId)
+            .ToHashSet(StringComparer.OrdinalIgnoreCase);
+
+        return graph.Nodes
+            .Where(n => n.Type == NodeType.Attribute && attrNodeIds.Contains(n.Id))
+            .Select(n => new AttributeDto
+            {
+                ParentType = n.Properties.GetValueOrDefault("parentType", ""),
+                ParentName = n.Properties.GetValueOrDefault("parentName", ""),
+                AttributeType = n.Properties.GetValueOrDefault("attributeType", ""),
+                Description = n.Properties.GetValueOrDefault("description", ""),
+                Timeline = n.Properties.GetValueOrDefault("timeline", ""),
+                Sequence = int.TryParse(
+                    n.Properties.GetValueOrDefault("sequence", "0"), out var s) ? s : 0
+            })
+            .OrderBy(a => a.ParentType)
+            .ThenBy(a => a.ParentName)
+            .ThenBy(a => a.Sequence)
+            .ToList();
     }
 }

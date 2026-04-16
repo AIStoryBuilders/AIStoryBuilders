@@ -117,6 +117,18 @@ public class StoryDetailsDto
     public string WorldFacts { get; set; } = "";
 }
 
+// ── Attribute DTO ──────────────────────────────────────────
+
+public class AttributeDto
+{
+    public string ParentType { get; set; } = "";
+    public string ParentName { get; set; } = "";
+    public string AttributeType { get; set; } = "";
+    public string Description { get; set; } = "";
+    public string Timeline { get; set; } = "";
+    public int Sequence { get; set; }
+}
+
 // ── Write-Tool DTO ─────────────────────────────────────────
 
 public class MutationResult

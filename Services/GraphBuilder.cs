@@ -43,6 +43,44 @@ public class GraphBuilder : IGraphBuilder
                 Type = NodeType.Character,
                 Properties = new() { ["role"] = role, ["backstory"] = backstory }
             };
+
+            // Attribute nodes for each CharacterBackground entry
+            int attrSeq = 0;
+            foreach (var bg in c.CharacterBackground ?? new())
+            {
+                attrSeq++;
+                var attrType = bg.Type ?? "Facts";
+                var attrDesc = bg.Description ?? "";
+                if (string.IsNullOrWhiteSpace(attrDesc)) continue;
+
+                var attrId = $"attribute:character:{name.ToLowerInvariant()}:{attrType.ToLowerInvariant()}:{attrSeq}";
+                if (nodes.ContainsKey(attrId)) continue;
+
+                nodes[attrId] = new GraphNode
+                {
+                    Id = attrId,
+                    Label = $"{attrType}: {Truncate(attrDesc, 60)}",
+                    Type = NodeType.Attribute,
+                    Properties = new()
+                    {
+                        ["parentType"] = "character",
+                        ["parentName"] = name,
+                        ["attributeType"] = attrType,
+                        ["description"] = attrDesc,
+                        ["timeline"] = bg.Timeline?.TimelineName ?? "",
+                        ["sequence"] = attrSeq.ToString()
+                    }
+                };
+
+                AddEdge(graph, edgeIds, id, attrId, "HAS_ATTRIBUTE");
+
+                var tlName = bg.Timeline?.TimelineName;
+                if (IsValidEntity(tlName))
+                {
+                    var tlId = $"timeline:{Normalize(tlName).ToLowerInvariant()}";
+                    AddEdge(graph, edgeIds, attrId, tlId, "IN_TIMELINE");
+                }
+            }
         }
 
         // Locations
@@ -64,6 +102,43 @@ public class GraphBuilder : IGraphBuilder
                 Type = NodeType.Location,
                 Properties = new() { ["description"] = desc }
             };
+
+            // Attribute nodes for each LocationDescription entry
+            int locAttrSeq = 0;
+            foreach (var ld in loc.LocationDescription ?? new())
+            {
+                locAttrSeq++;
+                var ldDesc = ld.Description ?? "";
+                if (string.IsNullOrWhiteSpace(ldDesc)) continue;
+
+                var attrId = $"attribute:location:{name.ToLowerInvariant()}:description:{locAttrSeq}";
+                if (nodes.ContainsKey(attrId)) continue;
+
+                nodes[attrId] = new GraphNode
+                {
+                    Id = attrId,
+                    Label = $"Description: {Truncate(ldDesc, 60)}",
+                    Type = NodeType.Attribute,
+                    Properties = new()
+                    {
+                        ["parentType"] = "location",
+                        ["parentName"] = name,
+                        ["attributeType"] = "Description",
+                        ["description"] = ldDesc,
+                        ["timeline"] = ld.Timeline?.TimelineName ?? "",
+                        ["sequence"] = locAttrSeq.ToString()
+                    }
+                };
+
+                AddEdge(graph, edgeIds, id, attrId, "HAS_ATTRIBUTE");
+
+                var tlName = ld.Timeline?.TimelineName;
+                if (IsValidEntity(tlName))
+                {
+                    var tlId = $"timeline:{Normalize(tlName).ToLowerInvariant()}";
+                    AddEdge(graph, edgeIds, attrId, tlId, "IN_TIMELINE");
+                }
+            }
         }
 
         // Timelines
@@ -317,4 +392,7 @@ public class GraphBuilder : IGraphBuilder
     {
         return System.Text.RegularExpressions.Regex.Replace(value.Trim(), @"[\s_-]+", " ");
     }
+
+    private static string Truncate(string s, int maxLen)
+        => s.Length <= maxLen ? s : s[..maxLen] + "...";
 }

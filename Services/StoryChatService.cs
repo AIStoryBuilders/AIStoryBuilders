@@ -38,6 +38,11 @@ public class StoryChatService : IStoryChatService
         - Brainstorming improvements or alternatives
         - Making changes to the story — adding, updating, renaming, or removing
           characters, locations, timelines, chapters, and paragraphs
+        - Querying and analyzing entity attributes (Appearance, Goals, History,
+          Aliases, Facts for characters; Description for locations) — each
+          attribute is a separate graph node connected to its parent entity
+          via HAS_ATTRIBUTE edges, and optionally scoped to a timeline via
+          IN_TIMELINE edges
 
         Use the available tools to query the graph when you need specific data.
         Do not guess — always verify with a tool call when facts are available
@@ -325,6 +330,25 @@ public class StoryChatService : IStoryChatService
                 [Description("Get the world-building facts of the current story.")]
                 () => _queryService.GetStoryWorldFacts(),
                 nameof(IGraphQueryService.GetStoryWorldFacts)),
+
+            AIFunctionFactory.Create(
+                [Description("Get all attributes (Appearance, Goals, History, Aliases, Facts, Description) for a character or location")]
+                ([Description("Entity type: 'character' or 'location'")] string entityType,
+                 [Description("Entity name")] string entityName)
+                    => _queryService.GetEntityAttributes(entityType, entityName),
+                "GetEntityAttributes"),
+
+            AIFunctionFactory.Create(
+                [Description("Get all attributes of a specific type across all entities (e.g., all Appearance attributes)")]
+                ([Description("Attribute type: Appearance, Goals, History, Aliases, Facts, or Description")] string attributeType)
+                    => _queryService.GetAttributesByType(attributeType),
+                "GetAttributesByType"),
+
+            AIFunctionFactory.Create(
+                [Description("Get all attributes scoped to a specific timeline")]
+                ([Description("Timeline name")] string timelineName)
+                    => _queryService.GetTimelineAttributes(timelineName),
+                "GetTimelineAttributes"),
 
             // ── Write / Mutation Tools (20) ────────────────────────
 
