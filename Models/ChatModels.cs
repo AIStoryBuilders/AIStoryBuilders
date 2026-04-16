@@ -108,6 +108,15 @@ public class GraphSummaryDto
     public Dictionary<string, int> ByType { get; set; } = new();
 }
 
+public class StoryDetailsDto
+{
+    public string Title { get; set; } = "";
+    public string Style { get; set; } = "";
+    public string Theme { get; set; } = "";
+    public string Synopsis { get; set; } = "";
+    public string WorldFacts { get; set; } = "";
+}
+
 // ── Write-Tool DTO ─────────────────────────────────────────
 
 public class MutationResult

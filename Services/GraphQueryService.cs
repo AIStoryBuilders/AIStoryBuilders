@@ -19,6 +19,11 @@ public interface IGraphQueryService
     List<ArcStepDto> GetCharacterArc(string characterName);
     List<LocationEventDto> GetLocationTimeline(string locationName);
     GraphSummaryDto GetGraphSummary();
+    StoryDetailsDto GetStoryDetails();
+    string GetStoryStyle();
+    string GetStoryTheme();
+    string GetStorySynopsis();
+    string GetStoryWorldFacts();
 }
 
 public class GraphQueryService : IGraphQueryService
@@ -361,5 +366,40 @@ public class GraphQueryService : IGraphQueryService
                 .GroupBy(n => n.Type.ToString())
                 .ToDictionary(g => g.Key, g => g.Count())
         };
+    }
+
+    public StoryDetailsDto GetStoryDetails()
+    {
+        var story = GraphState.CurrentStory;
+        if (story == null) return new StoryDetailsDto();
+
+        return new StoryDetailsDto
+        {
+            Title = story.Title ?? "",
+            Style = story.Style ?? "",
+            Theme = story.Theme ?? "",
+            Synopsis = story.Synopsis ?? "",
+            WorldFacts = story.WorldFacts ?? ""
+        };
+    }
+
+    public string GetStoryStyle()
+    {
+        return GraphState.CurrentStory?.Style ?? "";
+    }
+
+    public string GetStoryTheme()
+    {
+        return GraphState.CurrentStory?.Theme ?? "";
+    }
+
+    public string GetStorySynopsis()
+    {
+        return GraphState.CurrentStory?.Synopsis ?? "";
+    }
+
+    public string GetStoryWorldFacts()
+    {
+        return GraphState.CurrentStory?.WorldFacts ?? "";
     }
 }

@@ -57,18 +57,31 @@ public class StoryChatService : IStoryChatService
     private readonly IGraphQueryService _queryService;
     private readonly IGraphMutationService _mutationService;
     private readonly SettingsService _settingsService;
+    private readonly LogService _logService;
 
     private IChatClient _chatClient;
     private string _cachedSettingsKey;
 
+    private static readonly HashSet<string> MutationTools = new(StringComparer.OrdinalIgnoreCase)
+    {
+        "AddCharacter", "UpdateCharacter", "RenameCharacter", "DeleteCharacter",
+        "AddLocation", "UpdateLocation", "RenameLocation", "DeleteLocation",
+        "AddTimeline", "UpdateTimeline", "RenameTimeline", "DeleteTimeline",
+        "AddChapter", "UpdateChapter", "DeleteChapter",
+        "AddParagraph", "UpdateParagraph", "DeleteParagraph",
+        "UpdateStoryDetails", "ReEmbedStory"
+    };
+
     public StoryChatService(
         IGraphQueryService queryService,
         IGraphMutationService mutationService,
-        SettingsService settingsService)
+        SettingsService settingsService,
+        LogService logService)
     {
         _queryService = queryService;
         _mutationService = mutationService;
         _settingsService = settingsService;
+        _logService = logService;
     }
 
     public async IAsyncEnumerable<string> SendMessageAsync(
@@ -119,7 +132,7 @@ public class StoryChatService : IStoryChatService
                 messages.Add(lastMessage);
                 foreach (var toolCall in toolCalls)
                 {
-                    var result = await DispatchToolCallAsync(toolCall.Name, toolCall.Arguments);
+                    var result = await DispatchToolCallAsync(toolCall.Name, toolCall.Arguments, sessionId);
                     messages.Add(new ChatMessage(ChatRole.Tool,
                         [new FunctionResultContent(toolCall.CallId, result)]));
                 }
@@ -287,6 +300,31 @@ public class StoryChatService : IStoryChatService
                 [Description("Get high-level graph statistics")]
                 () => _queryService.GetGraphSummary(),
                 "GetGraphSummary"),
+
+            AIFunctionFactory.Create(
+                [Description("Get full story metadata: title, style, theme, synopsis, and world facts.")]
+                () => _queryService.GetStoryDetails(),
+                nameof(IGraphQueryService.GetStoryDetails)),
+
+            AIFunctionFactory.Create(
+                [Description("Get the writing style of the current story.")]
+                () => _queryService.GetStoryStyle(),
+                nameof(IGraphQueryService.GetStoryStyle)),
+
+            AIFunctionFactory.Create(
+                [Description("Get the theme of the current story.")]
+                () => _queryService.GetStoryTheme(),
+                nameof(IGraphQueryService.GetStoryTheme)),
+
+            AIFunctionFactory.Create(
+                [Description("Get the synopsis of the current story.")]
+                () => _queryService.GetStorySynopsis(),
+                nameof(IGraphQueryService.GetStorySynopsis)),
+
+            AIFunctionFactory.Create(
+                [Description("Get the world-building facts of the current story.")]
+                () => _queryService.GetStoryWorldFacts(),
+                nameof(IGraphQueryService.GetStoryWorldFacts)),
 
             // ── Write / Mutation Tools (20) ────────────────────────
 
@@ -467,9 +505,14 @@ public class StoryChatService : IStoryChatService
         ];
     }
 
-    private async Task<string> DispatchToolCallAsync(string toolName, IDictionary<string, object> args)
+    private async Task<string> DispatchToolCallAsync(
+        string toolName, IDictionary<string, object> args, string sessionId)
     {
         args ??= new Dictionary<string, object>();
+
+        var toolType = MutationTools.Contains(toolName) ? "MUTATION" : "READ";
+        var argsJson = JsonSerializer.Serialize(args);
+        var timestamp = DateTime.UtcNow.ToString("o");
 
         object result;
         try
@@ -501,6 +544,11 @@ public class StoryChatService : IStoryChatService
                 "GetLocationTimeline" => _queryService.GetLocationTimeline(
                     GetArg<string>(args, "locationName")),
                 "GetGraphSummary" => _queryService.GetGraphSummary(),
+                "GetStoryDetails" => _queryService.GetStoryDetails(),
+                "GetStoryStyle" => _queryService.GetStoryStyle(),
+                "GetStoryTheme" => _queryService.GetStoryTheme(),
+                "GetStorySynopsis" => _queryService.GetStorySynopsis(),
+                "GetStoryWorldFacts" => _queryService.GetStoryWorldFacts(),
 
                 // Write / Mutation Tools
                 "AddCharacter" => await _mutationService.AddCharacterAsync(
@@ -595,7 +643,16 @@ public class StoryChatService : IStoryChatService
             result = new { error = ex.Message };
         }
 
-        return JsonSerializer.Serialize(result, new JsonSerializerOptions { WriteIndented = false });
+        var resultJson = JsonSerializer.Serialize(result, new JsonSerializerOptions { WriteIndented = false });
+
+        var logResult = resultJson.Length > 2000
+            ? resultJson[..2000] + "...(truncated)"
+            : resultJson;
+
+        _logService.WriteToLog(
+            $"TOOL_CALL|{timestamp}|{sessionId}|{toolType}|{toolName}|{argsJson}|{logResult}");
+
+        return resultJson;
     }
 
     private static T GetArg<T>(IDictionary<string, object> args, string key)

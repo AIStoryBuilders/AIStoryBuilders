@@ -13,10 +13,6 @@
     <div class="card-header d-flex align-items-center justify-content-between">
         <div class="d-flex align-items-center gap-2">
             <span class="fw-bold">Story Chat Assistant</span>
-            <RadzenButton Text="Rebuild Knowledge Graph" Icon="account_tree"
-                          ButtonStyle="ButtonStyle.Warning" Variant="Variant.Outlined"
-                          Size="ButtonSize.Small" Click="RebuildGraph"
-                          Disabled="@(_isStreaming || _isRebuilding)" />
             @if (_models.Count > 0)
             {
                 <RadzenDropDown @bind-Value="_selectedModel" Data="_models"
@@ -84,7 +80,7 @@
                       @onkeydown="HandleKeyDown"
                       disabled="@_isStreaming"></textarea>
             <button class="btn btn-primary" @onclick="SendMessage"
-                    disabled="@(_isStreaming || string.IsNullOrWhiteSpace(_userInput))">
+                    disabled="@(_isStreaming || _isLoadingGraph || string.IsNullOrWhiteSpace(_userInput))">
                 Send
             </button>
         </div>
@@ -97,7 +93,7 @@
     private List<ChatDisplayMessage> _messages = new();
     private string _userInput = "";
     private bool _isStreaming;
-    private bool _isRebuilding;
+    private bool _isLoadingGraph;
     private string _streamingContent = "";
     private string _sessionId = Guid.NewGuid().ToString();
     private bool _graphBuilt;
@@ -172,36 +168,7 @@
     {
         if (objStory == null) return;
 
-        // Check if graph is already loaded and matches the current story
-        if (GraphState.Current != null &&
-            GraphState.Current.StoryTitle == objStory.Title)
-        {
-            _graphBuilt = true;
-            return;
-        }
-
-        // Try to load from disk
-        string storyPath = $"{AIStoryBuildersService.BasePath}/{objStory.Title}";
-        var diskGraph = AIStoryBuildersService.LoadGraphFromDisk(storyPath);
-        if (diskGraph != null)
-        {
-            GraphState.Current = diskGraph;
-            GraphState.CurrentStory = AIStoryBuildersService.LoadFullStory(
-                new Story { Title = objStory.Title });
-            _graphBuilt = true;
-            return;
-        }
-
-        // Build from story data and persist
-        await AIStoryBuildersService.EnsureGraphExistsAsync(objStory.Title, GraphBuilder);
-        _graphBuilt = true;
-    }
-
-    private async Task RebuildGraph()
-    {
-        if (objStory == null) return;
-
-        _isRebuilding = true;
+        _isLoadingGraph = true;
         StateHasChanged();
 
         try
@@ -214,14 +181,6 @@
             GraphState.Current = graph;
             GraphState.CurrentStory = fullStory;
             _graphBuilt = true;
-
-            NotificationService.Notify(new NotificationMessage
-            {
-                Severity = NotificationSeverity.Success,
-                Summary = "Knowledge Graph Rebuilt",
-                Detail = $"{graph.Nodes.Count} nodes, {graph.Edges.Count} edges",
-                Duration = 4000
-            });
         }
         catch (Exception ex)
         {
@@ -235,7 +194,7 @@
         }
         finally
         {
-            _isRebuilding = false;
+            _isLoadingGraph = false;
             StateHasChanged();
         }
     }
