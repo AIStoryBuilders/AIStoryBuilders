@@ -220,6 +220,19 @@ namespace AIStoryBuilders.Services
         #region public Story LoadFullStory(Story storyMeta)
         public Story LoadFullStory(Story storyMeta)
         {
+            // Populate story-level metadata from CSV
+            var allStories = GetStorys();
+            var csvStory = allStories.FirstOrDefault(s =>
+                s.Title.Equals(storyMeta.Title, StringComparison.OrdinalIgnoreCase));
+            if (csvStory != null)
+            {
+                storyMeta.Id = csvStory.Id;
+                storyMeta.Style = csvStory.Style;
+                storyMeta.Theme = csvStory.Theme;
+                storyMeta.Synopsis = csvStory.Synopsis;
+                storyMeta.WorldFacts = csvStory.WorldFacts;
+            }
+
             storyMeta.Character = GetCharacters(storyMeta);
             storyMeta.Location = GetLocations(storyMeta);
             storyMeta.Timeline = GetTimelines(storyMeta);

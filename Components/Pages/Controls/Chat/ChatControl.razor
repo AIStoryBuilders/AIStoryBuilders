@@ -7,6 +7,7 @@
 @inject AIStoryBuildersService AIStoryBuildersService
 @inject NotificationService NotificationService
 @inject SettingsService SettingsService
+@inject AIModelService AIModelService
 @inherits OwningComponentBase
 
 <div class="card mt-2">
@@ -120,19 +121,14 @@
         {
             SettingsService.LoadSettings();
 
-            if (SettingsService.AIType == "OpenAI")
-            {
-                _models = await OrchestratorMethods.ListAllModelsAsync();
-            }
-            else
-            {
-                var model = new AIStoryBuilderModel
-                {
-                    ModelId = SettingsService.AIModel,
-                    ModelName = SettingsService.AIModel
-                };
-                _models = new List<AIStoryBuilderModel> { model };
-            }
+            var modelIds = await AIModelService.GetModelsAsync(
+                SettingsService.AIType,
+                SettingsService.ApiKey,
+                SettingsService.Endpoint);
+
+            _models = modelIds
+                .Select(id => new AIStoryBuilderModel { ModelId = id, ModelName = id })
+                .ToList();
 
             _selectedModel = SettingsService.AIModel;
 
@@ -140,7 +136,12 @@
                 !_models.Any(m => m.ModelId == _selectedModel) &&
                 _models.Count > 0)
             {
-                _selectedModel = _models[0].ModelId;
+                // Ensure the current model is in the list even if not returned by API
+                _models.Insert(0, new AIStoryBuilderModel
+                {
+                    ModelId = _selectedModel,
+                    ModelName = _selectedModel
+                });
             }
         }
         catch (Exception ex)
