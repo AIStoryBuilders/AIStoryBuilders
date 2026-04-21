@@ -27,6 +27,7 @@ public interface IGraphQueryService
     List<AttributeDto> GetEntityAttributes(string entityType, string entityName);
     List<AttributeDto> GetAttributesByType(string attributeType);
     List<AttributeDto> GetTimelineAttributes(string timelineName);
+    TimelineContextDto GetTimelineContext(string timelineName, int upToChapterSequence = int.MaxValue, int upToParagraphSequence = int.MaxValue);
 }
 
 public class GraphQueryService : IGraphQueryService
@@ -488,5 +489,115 @@ public class GraphQueryService : IGraphQueryService
             .ThenBy(a => a.ParentName)
             .ThenBy(a => a.Sequence)
             .ToList();
+    }
+
+    public TimelineContextDto GetTimelineContext(string timelineName, int upToChapterSequence = int.MaxValue, int upToParagraphSequence = int.MaxValue)
+    {
+        var graph = GraphState.Current;
+        var story = GraphState.CurrentStory;
+        if (graph == null || story == null) return new();
+        if (string.IsNullOrWhiteSpace(timelineName)) return new();
+
+        var tlId = $"timeline:{timelineName.ToLowerInvariant().Trim()}";
+        var tlNode = graph.Nodes.FirstOrDefault(
+            n => n.Id.Equals(tlId, StringComparison.OrdinalIgnoreCase));
+        if (tlNode == null) return new();
+
+        var dto = new TimelineContextDto
+        {
+            TimelineName = tlNode.Label,
+            TimelineDescription = tlNode.Properties.GetValueOrDefault("description", ""),
+            StartDate = DateTime.TryParse(
+                tlNode.Properties.GetValueOrDefault("startDate", ""), out var sd) ? sd : null,
+            EndDate = DateTime.TryParse(
+                tlNode.Properties.GetValueOrDefault("endDate", ""), out var ed) ? ed : null
+        };
+
+        // Attributes scoped to this timeline
+        var attrNodeIds = graph.Edges
+            .Where(e => e.Label == "IN_TIMELINE" &&
+                        e.TargetId.Equals(tlId, StringComparison.OrdinalIgnoreCase))
+            .Select(e => e.SourceId)
+            .ToHashSet(StringComparer.OrdinalIgnoreCase);
+
+        var attrNodes = graph.Nodes
+            .Where(n => n.Type == NodeType.Attribute && attrNodeIds.Contains(n.Id))
+            .ToList();
+
+        // Group character attributes
+        var charAttrs = attrNodes
+            .Where(n => n.Properties.GetValueOrDefault("parentType", "") == "character")
+            .GroupBy(n => n.Properties.GetValueOrDefault("parentName", ""));
+
+        foreach (var group in charAttrs)
+        {
+            var charNode = graph.Nodes.FirstOrDefault(
+                n => n.Type == NodeType.Character &&
+                     n.Label.Equals(group.Key, StringComparison.OrdinalIgnoreCase));
+            dto.Characters.Add(new TimelineCharacterDto
+            {
+                Name = group.Key,
+                Role = charNode?.Properties.GetValueOrDefault("role", "") ?? "",
+                Attributes = group
+                    .Select(a => a.Properties.GetValueOrDefault("description", ""))
+                    .Where(d => !string.IsNullOrWhiteSpace(d))
+                    .ToList()
+            });
+        }
+
+        // Group location attributes
+        var locAttrs = attrNodes
+            .Where(n => n.Properties.GetValueOrDefault("parentType", "") == "location")
+            .GroupBy(n => n.Properties.GetValueOrDefault("parentName", ""));
+
+        foreach (var group in locAttrs)
+        {
+            dto.Locations.Add(new TimelineLocationDto
+            {
+                Name = group.Key,
+                Description = string.Join("; ",
+                    group.Select(a => a.Properties.GetValueOrDefault("description", ""))
+                         .Where(d => !string.IsNullOrWhiteSpace(d)))
+            });
+        }
+
+        // Events: paragraphs in chapters covered by this timeline, bounded to
+        // the point the author is currently writing.
+        var coveredChapterIds = graph.Edges
+            .Where(e => e.Label == "COVERS" &&
+                        e.SourceId.Equals(tlId, StringComparison.OrdinalIgnoreCase))
+            .Select(e => e.TargetId)
+            .ToHashSet(StringComparer.OrdinalIgnoreCase);
+
+        foreach (var ch in (story.Chapter ?? new()).OrderBy(c => c.Sequence))
+        {
+            if (ch.Sequence > upToChapterSequence) continue;
+
+            var chId = $"chapter:{(ch.ChapterName ?? "").ToLowerInvariant().Trim()}";
+            if (!coveredChapterIds.Contains(chId)) continue;
+
+            foreach (var p in (ch.Paragraph ?? new()).OrderBy(p => p.Sequence))
+            {
+                // Exclude current and future paragraphs within the current chapter.
+                if (ch.Sequence == upToChapterSequence && p.Sequence >= upToParagraphSequence)
+                    continue;
+
+                if (!(p.Timeline?.TimelineName ?? "")
+                    .Equals(timelineName, StringComparison.OrdinalIgnoreCase))
+                    continue;
+
+                dto.Events.Add(new TimelineEventDto
+                {
+                    Chapter = ch.ChapterName ?? "",
+                    ParagraphIndex = p.Sequence,
+                    Characters = (p.Characters ?? new())
+                        .Select(c => c.CharacterName ?? "")
+                        .Where(n => n.Length > 0).ToList(),
+                    Location = p.Location?.LocationName ?? ""
+                });
+            }
+        }
+
+        return dto;
     }
 }

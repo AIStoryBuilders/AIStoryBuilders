@@ -51,12 +51,75 @@ namespace AIStoryBuilders.Services
                 return json;
             }).ToList();
 
+            // --- Timeline-aware graph retrieval ---
+            // Ensure the knowledge graph reflects the latest story state before
+            // extracting a timeline-scoped summary, then bound the query to the
+            // paragraph the author is currently writing so nothing from later in
+            // the story leaks into the prompt.
+            objMasterStory.TimelineSummary = await BuildTimelineSummaryAsync(objChapter, objParagraph);
+
             // §4.3.3 — World Facts
             objMasterStory.WorldFacts = (objChapter.Story.WorldFacts ?? "")
                 .Split('\n', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
                 .ToList();
 
             return objMasterStory;
+        }
+        #endregion
+
+        #region private async Task<string> BuildTimelineSummaryAsync(Chapter objChapter, Paragraph objParagraph)
+        private async Task<string> BuildTimelineSummaryAsync(Chapter objChapter, Paragraph objParagraph)
+        {
+            try
+            {
+                var currentTimeline = objParagraph.Timeline?.TimelineName ?? "";
+                if (string.IsNullOrWhiteSpace(currentTimeline))
+                    return "";
+
+                if (GraphState.IsDirty || GraphState.Current == null || GraphState.CurrentStory == null)
+                {
+                    var storyTitle = objChapter.Story?.Title ?? "";
+                    if (string.IsNullOrWhiteSpace(storyTitle))
+                        return "";
+
+                    var stories = GetStorys();
+                    var storyMeta = stories.FirstOrDefault(s => s.Title == storyTitle);
+                    if (storyMeta == null)
+                        return "";
+
+                    var fullStory = LoadFullStory(storyMeta);
+                    var builder = new GraphBuilder();
+                    var graph = builder.Build(fullStory);
+
+                    GraphState.Current = graph;
+                    GraphState.CurrentStory = fullStory;
+
+                    try
+                    {
+                        await PersistGraphAsync(fullStory, graph, $"{BasePath}/{storyTitle}");
+                    }
+                    catch (Exception persistEx)
+                    {
+                        LogService.WriteToLog($"BuildTimelineSummaryAsync: PersistGraphAsync failed: {persistEx.Message}");
+                    }
+
+                    GraphState.IsDirty = false;
+                }
+
+                var query = new GraphQueryService();
+                var context = query.GetTimelineContext(
+                    currentTimeline,
+                    objChapter.Sequence,
+                    objParagraph.Sequence);
+
+                var generator = new TimelineSummaryGenerator();
+                return generator.GenerateSummary(context);
+            }
+            catch (Exception ex)
+            {
+                LogService.WriteToLog($"BuildTimelineSummaryAsync failed: {ex.Message}");
+                return "";
+            }
         }
         #endregion
 

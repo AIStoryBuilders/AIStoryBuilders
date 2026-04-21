@@ -193,6 +193,7 @@ namespace AIStoryBuilders.Services
                     {
                         GraphState.CurrentStory = LoadFullStory(storyMeta);
                     }
+                    GraphState.IsDirty = false;
                     return;
                 }
             }
@@ -212,6 +213,7 @@ namespace AIStoryBuilders.Services
 
             GraphState.Current = graph;
             GraphState.CurrentStory = fullStory;
+            GraphState.IsDirty = false;
 
             LogService.WriteToLog($"EnsureGraphExistsAsync: Graph built and persisted for '{storyTitle}'");
         }

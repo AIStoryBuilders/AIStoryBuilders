@@ -13,5 +13,6 @@
         public JSONChapter CurrentChapter { get; set; }
         public JSONParagraphs CurrentParagraph { get; set; }
         public List<string> WorldFacts { get; set; }
+        public string TimelineSummary { get; set; }
     }
 }

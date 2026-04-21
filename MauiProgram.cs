@@ -73,6 +73,7 @@ namespace AIStoryBuilders
             builder.Services.AddSingleton<IGraphQueryService, GraphQueryService>();
             builder.Services.AddSingleton<IGraphMutationService, GraphMutationService>();
             builder.Services.AddSingleton<IStoryChatService, StoryChatService>();
+            builder.Services.AddSingleton<ITimelineSummaryGenerator, TimelineSummaryGenerator>();
 
             // Radzen
             builder.Services.AddScoped<DialogService>();

@@ -129,6 +129,40 @@ public class AttributeDto
     public int Sequence { get; set; }
 }
 
+// ── Timeline Context DTOs ──────────────────────────────────
+
+public class TimelineContextDto
+{
+    public string TimelineName { get; set; } = "";
+    public string TimelineDescription { get; set; } = "";
+    public DateTime? StartDate { get; set; }
+    public DateTime? EndDate { get; set; }
+    public List<TimelineCharacterDto> Characters { get; set; } = new();
+    public List<TimelineLocationDto> Locations { get; set; } = new();
+    public List<TimelineEventDto> Events { get; set; } = new();
+}
+
+public class TimelineCharacterDto
+{
+    public string Name { get; set; } = "";
+    public string Role { get; set; } = "";
+    public List<string> Attributes { get; set; } = new();
+}
+
+public class TimelineLocationDto
+{
+    public string Name { get; set; } = "";
+    public string Description { get; set; } = "";
+}
+
+public class TimelineEventDto
+{
+    public string Chapter { get; set; } = "";
+    public int ParagraphIndex { get; set; }
+    public List<string> Characters { get; set; } = new();
+    public string Location { get; set; } = "";
+}
+
 // ── Write-Tool DTO ─────────────────────────────────────────
 
 public class MutationResult

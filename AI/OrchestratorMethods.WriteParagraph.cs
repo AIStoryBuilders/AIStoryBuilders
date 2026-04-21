@@ -49,6 +49,7 @@ namespace AIStoryBuilders.AI
                     ["StorySynopsis"] = objJSONMasterStory.StorySynopsis ?? "",
                     ["SystemMessage"] = objJSONMasterStory.SystemMessage ?? "",
                     ["WorldFacts"] = System.Text.Json.JsonSerializer.Serialize(objJSONMasterStory.WorldFacts ?? new List<string>()),
+                    ["TimelineSummary"] = objJSONMasterStory.TimelineSummary ?? "",
                     ["CurrentChapter"] = System.Text.Json.JsonSerializer.Serialize(objJSONMasterStory.CurrentChapter),
                     ["PreviousParagraphs"] = System.Text.Json.JsonSerializer.Serialize(
                         objJSONMasterStory.PreviousParagraphs?.Select(p => new { p.sequence, p.contents, p.location_name, p.timeline_name, p.character_names }) ?? Enumerable.Empty<object>()),

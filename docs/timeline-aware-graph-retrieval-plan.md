@@ -131,12 +131,12 @@ flowchart TD
 
 ### 2. Timeline-Scoped Graph Query
 
-A new method on `GraphQueryService` collects all entities and relationships relevant to a specific timeline.
+A new method on `GraphQueryService` collects all entities and relationships relevant to a specific timeline, bounded by the point in the story the user is currently writing.
 
 #### Interface addition
 
 ```csharp
-TimelineContextDto GetTimelineContext(string timelineName);
+TimelineContextDto GetTimelineContext(string timelineName, int upToChapterSequence = int.MaxValue, int upToParagraphSequence = int.MaxValue);
 ```
 
 #### TimelineContextDto model
@@ -179,11 +179,11 @@ public class TimelineEventDto
 
 ```mermaid
 flowchart TD
-    A["GetTimelineContext(timelineName)"] --> B["Find timeline node by ID"]
+    A["GetTimelineContext(...)"] --> B["Find timeline node by ID"]
     B --> C["Collect IN_TIMELINE attribute nodes"]
     C --> D["Group attributes by parent entity"]
-    D --> E["Collect COVERS edges to find chapters"]
-    E --> F["For each chapter: find paragraphs with matching timeline"]
+    D --> E["Collect COVERS edges to find chapters up to current"]
+    E --> F["For each relevant chapter: find paragraphs up to current with matching timeline"]
     F --> G["Extract characters and locations from those paragraphs"]
     G --> H["Build and return TimelineContextDto"]
 ```
@@ -195,7 +195,7 @@ flowchart TD
 | 1 | Find node `timeline:{name}` | Timeline description, start/end dates |
 | 2 | Follow `IN_TIMELINE` edges **inward** to attribute nodes | Character and location attributes scoped to this timeline |
 | 3 | Follow `COVERS` edges from the timeline node to chapter nodes | Chapter names covered by this timeline |
-| 4 | For each covered chapter, find paragraph nodes via `CONTAINS` edges | Paragraph nodes |
+| 4 | For each covered chapter (up to current sequence), find paragraph nodes (up to current sequence) | Relevant paragraph nodes |
 | 5 | Filter paragraphs whose `timeline` property matches | Only paragraphs in the target timeline |
 | 6 | Follow `MENTIONED_IN` edges inward from character nodes to those paragraphs | Characters active in this timeline |
 | 7 | Read `location` property from each paragraph node | Locations used in this timeline |
@@ -352,7 +352,7 @@ flowchart TD
     F --> G["Read timeline name from current paragraph"]
     G --> H{"Timeline name empty?"}
     H -->|Yes| I["Set TimelineSummary to empty string"]
-    H -->|No| J["GraphQueryService.GetTimelineContext(timelineName)"]
+    H -->|No| J["GraphQueryService.GetTimelineContext(timelineName, chapter.Sequence, paragraph.Sequence)"]
     J --> K["TimelineSummaryGenerator.GenerateSummary(context)"]
     K --> L["Assign to JSONMasterStory.TimelineSummary"]
     I --> M["Build WorldFacts"]
@@ -387,7 +387,7 @@ sequenceDiagram
     SVC->>SVC: PersistGraphAsync(graph)
 
     Note over SVC: Step C - Timeline query
-    SVC->>GQ: GetTimelineContext(timelineName)
+    SVC->>GQ: GetTimelineContext(timelineName, chapter.Sequence, paragraph.Sequence)
     GQ-->>SVC: TimelineContextDto
 
     Note over SVC: Step D - Summary generation
@@ -432,14 +432,14 @@ flowchart LR
 
 ### Step 1 — DTOs and Interface
 
-Add `TimelineContextDto`, `TimelineCharacterDto`, `TimelineLocationDto`, and `TimelineEventDto` classes. Add `GetTimelineContext(string timelineName)` to `IGraphQueryService`.
+Add `TimelineContextDto`, `TimelineCharacterDto`, `TimelineLocationDto`, and `TimelineEventDto` classes. Add `GetTimelineContext(string timelineName, int upToChapterSequence = int.MaxValue, int upToParagraphSequence = int.MaxValue)` to `IGraphQueryService`.
 
 ### Step 2 — GetTimelineContext Implementation
 
 Implement the graph traversal in `GraphQueryService`:
 
 ```csharp
-public TimelineContextDto GetTimelineContext(string timelineName)
+public TimelineContextDto GetTimelineContext(string timelineName, int upToChapterSequence = int.MaxValue, int upToParagraphSequence = int.MaxValue)
 {
     var graph = GraphState.Current;
     var story = GraphState.CurrentStory;
@@ -514,11 +514,15 @@ public TimelineContextDto GetTimelineContext(string timelineName)
 
     foreach (var ch in (story.Chapter ?? new()).OrderBy(c => c.Sequence))
     {
+        if (ch.Sequence > upToChapterSequence) continue;
+
         var chId = $"chapter:{(ch.ChapterName ?? "").ToLowerInvariant().Trim()}";
         if (!coveredChapterIds.Contains(chId)) continue;
 
         foreach (var p in (ch.Paragraph ?? new()).OrderBy(p => p.Sequence))
         {
+            if (ch.Sequence == upToChapterSequence && p.Sequence >= upToParagraphSequence) continue;
+
             if (!(p.Timeline?.TimelineName ?? "")
                 .Equals(timelineName, StringComparison.OrdinalIgnoreCase))
                 continue;
@@ -670,7 +674,7 @@ var currentTimeline = objParagraph.Timeline?.TimelineName ?? "";
 if (!string.IsNullOrWhiteSpace(currentTimeline))
 {
     var gqs = new GraphQueryService();
-    var tlContext = gqs.GetTimelineContext(currentTimeline);
+    var tlContext = gqs.GetTimelineContext(currentTimeline, objChapter.Sequence, objParagraph.Sequence);
     var summaryGen = new TimelineSummaryGenerator();
     objMasterStory.TimelineSummary = summaryGen.GenerateSummary(tlContext);
 }
