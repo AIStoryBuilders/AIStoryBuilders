@@ -26,6 +26,7 @@ public class PromptTemplateService
             <story_synopsis>{StorySynopsis}</story_synopsis>
             <system_directions>{SystemMessage}</system_directions>
             <world_facts>{WorldFacts}</world_facts>
+            <timeline_summary>{TimelineSummary}</timeline_summary>
             <current_chapter>{CurrentChapter}</current_chapter>
             <previous_paragraphs>{PreviousParagraphs}</previous_paragraphs>
             <current_location>{CurrentLocation}</current_location>
@@ -38,6 +39,8 @@ public class PromptTemplateService
             - Write in the writing style of the provided content.
             - Insert a line break before dialogue when a character speaks for the first time.
             - Produce a single paragraph of {NumberOfWords} words maximum.
+            - The <timeline_summary> describes what has happened so far in the current timeline. Do not contradict these facts.
+            - Do not reference events from other timelines unless they are explicitly mentioned in the provided context.
             </constraints>
             """;
 

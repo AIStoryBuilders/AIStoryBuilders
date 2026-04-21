@@ -7,6 +7,7 @@
 @using AIStoryBuilders.Components.Pages.Controls.Characters
 @using AIStoryBuilders.Components.Pages.Controls.Locations;
 @using AIStoryBuilders.Components.Pages.Controls.Story
+@using AIStoryBuilders.Components.Pages.Controls.Chat;
 @using AIStoryBuilders.Components.Pages.Controls.Timelines;
 @using AIStoryBuilders.Services;
 @using static AIStoryBuilders.AI.OrchestratorMethods
@@ -33,6 +34,9 @@
         <RadzenTabsItem Text="Chapters">
             <ChaptersControl @ref="chaptersControl" objStory="objStory" />
         </RadzenTabsItem>
+        <RadzenTabsItem Text="Chat">
+            <ChatControl @ref="chatControl" objStory="objStory" />
+        </RadzenTabsItem>
     </Tabs>
 </RadzenTabs>
 @code {
@@ -43,6 +47,7 @@
     TimelinesControl timelinesControl;
     LocationsControl locationsControl;
     ChaptersControl chaptersControl;
+    ChatControl chatControl;
     // AIControl aIControl;
 
     AIStoryBuildersService AIStoryBuildersService;
@@ -130,7 +135,8 @@
                 await chaptersControl.LoadChapters(objStory, null);
                 break;
             case 5:
-                // AI
+                // Chat
+                await chatControl.BuildGraph();
                 break;
             default:
                 break;

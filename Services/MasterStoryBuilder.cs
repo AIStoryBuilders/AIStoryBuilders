@@ -86,6 +86,7 @@ public class MasterStoryBuilder
             story.StorySynopsis ?? "",
             story.SystemMessage ?? "",
             string.Join("\n", story.WorldFacts ?? new List<string>()),
+            story.TimelineSummary ?? "",
             JsonConvert.SerializeObject(story.CurrentChapter),
             JsonConvert.SerializeObject(story.CurrentLocation),
             JsonConvert.SerializeObject(story.CharacterList),

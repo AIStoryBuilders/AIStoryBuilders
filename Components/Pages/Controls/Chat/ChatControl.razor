@@ -1,0 +1,251 @@
+@using AIStoryBuilders.AI
+@using AIStoryBuilders.Model
+@using AIStoryBuilders.Models
+@using AIStoryBuilders.Services
+@inject IStoryChatService ChatService
+@inject IGraphBuilder GraphBuilder
+@inject AIStoryBuildersService AIStoryBuildersService
+@inject NotificationService NotificationService
+@inject SettingsService SettingsService
+@inject AIModelService AIModelService
+@inherits OwningComponentBase
+
+<div class="card mt-2">
+    <div class="card-header d-flex align-items-center justify-content-between">
+        <div class="d-flex align-items-center gap-2">
+            <span class="fw-bold">Story Chat Assistant</span>
+            @if (_models.Count > 0)
+            {
+                <RadzenDropDown @bind-Value="_selectedModel" Data="_models"
+                                TextProperty="ModelName" ValueProperty="ModelId"
+                                Style="width: 250px;" Size="ButtonSize.Small"
+                                Change="OnModelChanged" />
+            }
+        </div>
+        <div>
+            <button class="btn btn-sm btn-outline-secondary"
+                    @onclick="ClearChat" title="Clear conversation">🔄</button>
+        </div>
+    </div>
+    <div class="card-body d-flex flex-column" style="height:400px;">
+        <div class="flex-grow-1 overflow-auto mb-2" id="chatMessages">
+            @if (_messages.Count == 0 && !_isStreaming)
+            {
+                <div class="text-muted text-center mt-5">
+                    <p>No messages yet. Ask a question about your story!</p>
+                    <p class="small">Examples: "Are there any orphaned characters?",
+                       "Tell me about the main characters"</p>
+                </div>
+            }
+
+            @foreach (var msg in _messages)
+            {
+                <div class="mb-3 d-flex @(msg.IsUser ? "justify-content-end" : "justify-content-start")">
+                    <div class="p-2 rounded-3 @(msg.IsUser ? "bg-primary text-white" : "bg-light border")"
+                         style="max-width: 80%; word-wrap: break-word;">
+                        <small class="d-block fw-bold mb-1">@(msg.IsUser ? "You" : "AI")</small>
+                        @if (msg.IsUser)
+                        {
+                            <span style="white-space: pre-wrap;">@msg.Content</span>
+                        }
+                        else
+                        {
+                            <ChatMessageRenderer Content="@msg.Content" />
+                        }
+                    </div>
+                </div>
+            }
+
+            @if (_isStreaming)
+            {
+                <div class="mb-3 d-flex justify-content-start">
+                    <div class="p-2 rounded-3 bg-light border"
+                         style="max-width: 80%; word-wrap: break-word;">
+                        <small class="d-block fw-bold mb-1">AI</small>
+                        @if (string.IsNullOrEmpty(_streamingContent))
+                        {
+                            <span class="text-muted">Thinking...</span>
+                        }
+                        else
+                        {
+                            <ChatMessageRenderer Content="@_streamingContent" />
+                        }
+                    </div>
+                </div>
+            }
+        </div>
+        <div class="input-group">
+            <textarea class="form-control" rows="2"
+                      placeholder="Ask about your story..."
+                      @bind="_userInput" @bind:event="oninput"
+                      @onkeydown="HandleKeyDown"
+                      disabled="@_isStreaming"></textarea>
+            <button class="btn btn-primary" @onclick="SendMessage"
+                    disabled="@(_isStreaming || _isLoadingGraph || string.IsNullOrWhiteSpace(_userInput))">
+                Send
+            </button>
+        </div>
+    </div>
+</div>
+
+@code {
+    [Parameter] public Story objStory { get; set; }
+
+    private List<ChatDisplayMessage> _messages = new();
+    private string _userInput = "";
+    private bool _isStreaming;
+    private bool _isLoadingGraph;
+    private string _streamingContent = "";
+    private string _sessionId = Guid.NewGuid().ToString();
+    private bool _graphBuilt;
+
+    // Model dropdown
+    private List<AIStoryBuilderModel> _models = new();
+    private string _selectedModel = "";
+
+    OrchestratorMethods OrchestratorMethods;
+
+    protected override void OnInitialized()
+    {
+        OrchestratorMethods = (OrchestratorMethods)ScopedServices.GetService(typeof(OrchestratorMethods));
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadModels();
+    }
+
+    private async Task LoadModels()
+    {
+        try
+        {
+            SettingsService.LoadSettings();
+
+            var modelIds = await AIModelService.GetModelsAsync(
+                SettingsService.AIType,
+                SettingsService.ApiKey,
+                SettingsService.Endpoint);
+
+            _models = modelIds
+                .Select(id => new AIStoryBuilderModel { ModelId = id, ModelName = id })
+                .ToList();
+
+            _selectedModel = SettingsService.AIModel;
+
+            if (!string.IsNullOrEmpty(_selectedModel) &&
+                !_models.Any(m => m.ModelId == _selectedModel) &&
+                _models.Count > 0)
+            {
+                // Ensure the current model is in the list even if not returned by API
+                _models.Insert(0, new AIStoryBuilderModel
+                {
+                    ModelId = _selectedModel,
+                    ModelName = _selectedModel
+                });
+            }
+        }
+        catch (Exception ex)
+        {
+            NotificationService.Notify(new NotificationMessage
+            {
+                Severity = NotificationSeverity.Warning,
+                Summary = "Model Loading",
+                Detail = $"Could not load models: {ex.Message}",
+                Duration = 4000
+            });
+        }
+    }
+
+    private void OnModelChanged()
+    {
+        if (!string.IsNullOrEmpty(_selectedModel))
+        {
+            SettingsService.AIModel = _selectedModel;
+            ChatService.RefreshClient();
+        }
+    }
+
+    public async Task BuildGraph()
+    {
+        if (objStory == null) return;
+
+        _isLoadingGraph = true;
+        StateHasChanged();
+
+        try
+        {
+            var fullStory = AIStoryBuildersService.LoadFullStory(
+                new Story { Title = objStory.Title });
+            var graph = GraphBuilder.Build(fullStory);
+            string storyPath = $"{AIStoryBuildersService.BasePath}/{objStory.Title}";
+            await AIStoryBuildersService.PersistGraphAsync(fullStory, graph, storyPath);
+            GraphState.Current = graph;
+            GraphState.CurrentStory = fullStory;
+            _graphBuilt = true;
+        }
+        catch (Exception ex)
+        {
+            NotificationService.Notify(new NotificationMessage
+            {
+                Severity = NotificationSeverity.Error,
+                Summary = "Error",
+                Detail = ex.Message,
+                Duration = 8000
+            });
+        }
+        finally
+        {
+            _isLoadingGraph = false;
+            StateHasChanged();
+        }
+    }
+
+    private async Task SendMessage()
+    {
+        if (string.IsNullOrWhiteSpace(_userInput) || _isStreaming) return;
+
+        // Ensure graph is built
+        if (!_graphBuilt) await BuildGraph();
+
+        var input = _userInput.Trim();
+        _userInput = "";
+        _messages.Add(new ChatDisplayMessage { IsUser = true, Content = input });
+        _isStreaming = true;
+        _streamingContent = "";
+        StateHasChanged();
+
+        try
+        {
+            await foreach (var chunk in ChatService.SendMessageAsync(input, _sessionId))
+            {
+                _streamingContent += chunk;
+                StateHasChanged();
+            }
+            _messages.Add(new ChatDisplayMessage { IsUser = false, Content = _streamingContent });
+        }
+        catch (Exception ex)
+        {
+            _messages.Add(new ChatDisplayMessage { IsUser = false, Content = $"Error: {ex.Message}" });
+        }
+        finally
+        {
+            _isStreaming = false;
+            _streamingContent = "";
+            StateHasChanged();
+        }
+    }
+
+    private async Task HandleKeyDown(KeyboardEventArgs e)
+    {
+        if (e.Key == "Enter" && !e.ShiftKey)
+        {
+            await SendMessage();
+        }
+    }
+
+    private void ClearChat()
+    {
+        _messages.Clear();
+        ChatService.ClearSession(_sessionId);
+    }
+}

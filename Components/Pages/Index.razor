@@ -14,6 +14,7 @@
 @inject DialogService dialogService
 @inject NotificationService NotificationService
 @inject SettingsService SettingsService
+@inject IGraphBuilder GraphBuilder
 @implements IDisposable
 <PageTitle>AI Story Builders</PageTitle>
 <RadzenMenu>
@@ -170,6 +171,9 @@
                     // Save Story to the database
                     await AIStoryBuildersService.AddStory(objStory, objStory.ModelId);
 
+                    // Build Knowledge Graph for the new story
+                    await AIStoryBuildersService.EnsureGraphExistsAsync(objStory.Title, GraphBuilder);
+
                     HomeVisible = true;
                     InProgress = false;
                     StateHasChanged();
@@ -251,7 +255,14 @@
                         });
                 }
 
+                // Build Knowledge Graph if missing for the imported story
                 colStorys = AIStoryBuildersService.GetStorys();
+                var importedStory = colStorys.LastOrDefault();
+                if (importedStory != null)
+                {
+                    await AIStoryBuildersService.EnsureGraphExistsAsync(importedStory.Title, GraphBuilder);
+                }
+
                 StateHasChanged();
             }
         }
@@ -310,8 +321,8 @@
             var parsedStory = await ManuscriptParsingService.ParseManuscriptAsync(
                 result.FullPath, progress, statusProgress);
 
-            // Persist to AIStoryBuilders file system
-            await AIStoryBuildersService.PersistImportedStoryAsync(parsedStory, OrchestratorMethods);
+            // Persist to AIStoryBuilders file system and build Knowledge Graph
+            await AIStoryBuildersService.PersistImportedStoryAsync(parsedStory, OrchestratorMethods, GraphBuilder);
 
             // Refresh story list
             colStorys = AIStoryBuildersService.GetStorys();

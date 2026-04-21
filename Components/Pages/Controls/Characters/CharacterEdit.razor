@@ -164,7 +164,7 @@ else
                             StateHasChanged();
 
                             // Update the Character Name in the Story
-                            AIStoryBuildersService.UpdateCharacterName(objCharacter, OriginalCharacterName);
+                            await AIStoryBuildersService.UpdateCharacterNameAsync(objCharacter, OriginalCharacterName);
 
                             InProgress = false;
                             StateHasChanged();
