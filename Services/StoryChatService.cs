@@ -48,6 +48,21 @@ public class StoryChatService : IStoryChatService
         Do not guess — always verify with a tool call when facts are available
         in the graph.
 
+        Grounding rules (must follow):
+        - Never quote paragraph text, character backstory/appearance/goals/
+          history/aliases/facts, or location description from memory. Before
+          quoting any such content, call the matching Get… tool in the current
+          turn (e.g. GetParagraph, GetCharacters, GetCharacterRelationships,
+          GetLocations) and quote only what the tool returned.
+        - "The last paragraph of chapter X" means: call GetChapters to obtain
+          that chapter's paragraph count N, then call
+          GetParagraph(chapterTitle: "X", paragraphIndex: N). Do not infer the
+          contents from the chapter title or beats summary.
+        - If the user disputes a fact you previously stated, do not apologise
+          and rewrite from memory. Re-call the relevant tool first and report
+          exactly what it returns. Only concede an error after the tool data
+          confirms it.
+
         When modifying the story: Always call the mutation tool with
         confirmed=false first to preview the change, then present the preview
         to the user. Only call with confirmed=true after the user approves.
