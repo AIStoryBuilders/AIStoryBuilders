@@ -1,0 +1,46 @@
+name: Update Wiki
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - 'wiki-content/**'
+    branches:
+      - main
+
+jobs:
+  update-wiki:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write  # Required to push to wiki repository
+    steps:
+      - name: Checkout main repository
+        uses: actions/checkout@v4
+
+      - name: Checkout wiki repository
+        uses: actions/checkout@v4
+        with:
+          repository: ${{ github.repository }}.wiki
+          path: wiki
+
+      - name: Copy wiki content
+        run: |
+          if [ -d "wiki-content" ] && [ "$(ls -A wiki-content)" ]; then
+            cp -r wiki-content/* wiki/
+          else
+            echo "Error: wiki-content directory is empty or does not exist"
+            exit 1
+          fi
+
+      - name: Commit and push wiki changes
+        working-directory: wiki
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add .
+          if git diff --staged --quiet; then
+            echo "No changes to commit"
+          else
+            git commit -m "Update wiki pages from wiki-content directory"
+            git push
+          fi
