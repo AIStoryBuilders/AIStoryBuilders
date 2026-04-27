@@ -25,11 +25,13 @@
 - [Characters](Characters)
 - [Chapters](Chapters)
 - [Sections](Sections)
+- [Chat](Chat)
 
 **Technical**
 
 - [Logs](Logs)
 - [Settings](Settings)
+- [Import](Import)
 - [Utility/Fine-Tuning](Utility-Fine-Tuning)
 
 **Advanced**
