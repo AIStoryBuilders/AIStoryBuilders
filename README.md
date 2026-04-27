@@ -10,7 +10,7 @@ Write your next novel faster and easier.
  
 * [Click here to download and install it from the Microsoft Store](https://apps.microsoft.com/detail/9NCJN9W323DB?rtc=1&hl=en-us&gl=US)
 
-* [Documentation](https://documentation.aistorybuilders.com/)
+* [Documentation](https://github.com/AIStoryBuilders/AIStoryBuilders/wiki)
 
 * [github.com/AIStoryBuilders/AIStoryBuildersOnline](https://github.com/AIStoryBuilders/AIStoryBuildersOnline)
 

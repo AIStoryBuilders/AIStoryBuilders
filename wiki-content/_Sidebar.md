@@ -1,8 +1,5 @@
-# AIStoryBuilders Wiki
+**AIStoryBuilders**
 
-Welcome to the **AIStoryBuilders** wiki.
-
-Write your next novel faster and easier.
 
 **Installing/Upgrading**
 
@@ -18,7 +15,6 @@ Write your next novel faster and easier.
 - [Writing Styles](Writing-Styles)
 
 [**Story Database**](Story-Database)
-
 
 **Writing with AIStoryBuilders**
 
@@ -39,9 +35,3 @@ Write your next novel faster and easier.
 
 - [Anatomy of a Prompt](Anatomy-Of-A-Prompt)
 
-## Links
-
-- [Website](https://aistorybuilders.com/)
-- [Online version](https://online.aistorybuilders.com/)
-- [Microsoft Store](https://apps.microsoft.com/detail/9NCJN9W323DB)
-- [AIStoryBuildersOnline repository](https://github.com/AIStoryBuilders/AIStoryBuildersOnline)

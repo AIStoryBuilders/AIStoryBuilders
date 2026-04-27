@@ -1288,7 +1288,7 @@ classDiagram
 
 ### 4.1 Current Pain Points
 
-Based on analysis of the code and the [AIStoryBuilders documentation](https://documentation.aistorybuilders.com/) / [Anatomy of a Prompt](https://documentation.aistorybuilders.com/AnatomyOfAPrompt.html):
+Based on analysis of the code and the [AIStoryBuilders wiki](https://github.com/AIStoryBuilders/AIStoryBuilders/wiki) / [Anatomy of a Prompt](https://github.com/AIStoryBuilders/AIStoryBuilders/wiki/Anatomy-Of-A-Prompt):
 
 | # | Issue | Root Cause | Planned Fix |
 |---|---|---|---|

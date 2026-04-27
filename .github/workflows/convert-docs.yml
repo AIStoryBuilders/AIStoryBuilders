@@ -1,0 +1,67 @@
+name: Convert HTML Docs to Wiki
+
+# Manually run this workflow to regenerate `wiki-content/` from a zip of the
+# legacy HTML documentation site. The maintainer uploads the zip as the
+# `source` input. The job converts the pages, copies referenced assets, and
+# opens a pull request with the result. The existing `update-wiki.yml`
+# workflow then publishes the merged content to the GitHub wiki.
+on:
+  workflow_dispatch:
+    inputs:
+      branch_name:
+        description: 'Branch to open the PR from'
+        required: false
+        default: 'docs/regenerate-wiki'
+      overwrite_home:
+        description: 'Overwrite Home.md (otherwise preserved)'
+        required: false
+        default: 'false'
+
+jobs:
+  convert:
+    runs-on: windows-latest
+    permissions:
+      contents: write
+      pull-requests: write
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+
+      - name: Download source HTML artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: aistorybuilders-html-source
+          path: ${{ runner.temp }}/html-source
+
+      - name: Restore WikiConverter
+        working-directory: tools/WikiConverter
+        run: dotnet restore
+
+      - name: Run conversion
+        shell: pwsh
+        run: |
+          $extra = @()
+          if ('${{ github.event.inputs.overwrite_home }}' -eq 'true') { $extra += '--overwrite-home' }
+          dotnet run --project tools/WikiConverter -- `
+            --source "${{ runner.temp }}/html-source" `
+            --target "wiki-content" `
+            --validate `
+            --verbose @extra
+
+      - name: Create pull request
+        uses: peter-evans/create-pull-request@v6
+        with:
+          branch: ${{ github.event.inputs.branch_name }}
+          commit-message: "docs(wiki): regenerate from HTML source"
+          title: "docs(wiki): regenerate wiki-content from HTML source"
+          body: |
+            Regenerated `wiki-content/` from the uploaded HTML source artifact via `tools/WikiConverter`.
+
+            Once merged to `main`, the existing **Update Wiki** workflow will publish the changes to the GitHub wiki.
+          add-paths: wiki-content/**
