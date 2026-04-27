@@ -1,7 +1,4 @@
 # Locations
-
-[[home](Home)]
-
 * * *
 
 ![](images/img57.jpg)

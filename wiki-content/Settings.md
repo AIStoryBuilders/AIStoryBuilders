@@ -1,7 +1,4 @@
 # Settings
-
-[[home](Home)]
-
 * * *
 
 ![](images/img24.jpg)

@@ -1,7 +1,4 @@
 # Chapters
-
-[[home](Home)]
-
 * * *
 
 ![](images/img5D.jpg)

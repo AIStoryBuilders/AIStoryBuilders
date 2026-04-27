@@ -1,7 +1,4 @@
 # Writing Styles
-
-[[home](Home)]
-
 * * *
 
 **AIStoryBuilders** supports two different writing styles.

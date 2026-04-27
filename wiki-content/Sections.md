@@ -1,7 +1,4 @@
 # Sections
-
-[[home](Home)]
-
 * * *
 
 The **Chapters** tab contains one or more paragraph **Sections**. A **Section** is usually composed of a single

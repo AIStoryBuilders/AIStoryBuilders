@@ -1,7 +1,4 @@
 # Characters
-
-[[home](Home)]
-
 * * *
 
 ![](images/img5A.jpg)

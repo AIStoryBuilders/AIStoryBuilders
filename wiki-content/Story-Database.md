@@ -1,7 +1,4 @@
 # Story Database
-
-[[home](Home)]
-
 * * *
 
 ![](images/img3A.jpg)

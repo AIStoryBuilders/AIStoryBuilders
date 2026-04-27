@@ -1,7 +1,4 @@
 # Utility and Fine-Tuning
-
-[[home](Home)]
-
 * * *
 
 (**Note:** Fine-Tuning is only available when using OpenAI not Azure OpenAI)

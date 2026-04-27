@@ -1,7 +1,4 @@
 # Anatomy Of A Prompt
-
-[[home](Home)]
-
 * * *
 
 ![](images/img22.jpg)

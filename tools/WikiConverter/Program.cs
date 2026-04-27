@@ -401,6 +401,9 @@ internal sealed class Converter
             @"\[!\\\[(?<alt>[^\]]*)\\\]\((?<src>[^)]+)\)\]\((?<href>[^)]+)\)",
             m => $"[![{m.Groups["alt"].Value}]({m.Groups["src"].Value})]({m.Groups["href"].Value})");
 
+        // Strip the legacy "[[home](...)]" back-link rows present in every source page.
+        body = Regex.Replace(body, @"(?im)^\s*\[\[home\]\([^)]*\)\]\s*$\r?\n?", string.Empty);
+
         if (!body.StartsWith("# "))
         {
             body = $"# {info.Title}\n\n{body}\n";
@@ -459,7 +462,6 @@ internal sealed class Converter
         sb.AppendLine();
         sb.AppendLine("---");
         sb.AppendLine();
-        sb.AppendLine("[Home](Home)");
         return sb.ToString();
     }
 

@@ -1,7 +1,4 @@
 # Logs
-
-[[home](Home)]
-
 * * *
 
 ![](images/img27.jpg)

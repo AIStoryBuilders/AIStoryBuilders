@@ -1,7 +1,4 @@
 # Timelines
-
-[[home](Home)]
-
 * * *
 
 ![](images/img53.jpg)

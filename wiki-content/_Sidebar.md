@@ -14,7 +14,8 @@
 
 - [Writing Styles](Writing-Styles)
 
-[**Story Database**](Story-Database)
+**Story Database**
+
 
 **Writing with AIStoryBuilders**
 
@@ -34,4 +35,6 @@
 **Advanced**
 
 - [Anatomy of a Prompt](Anatomy-Of-A-Prompt)
+
+---
 

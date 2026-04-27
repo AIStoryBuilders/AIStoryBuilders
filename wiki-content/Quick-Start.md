@@ -1,7 +1,4 @@
 # Quick-Start
-
-[[home](Home)]
-
 * * *
 
 **NOTE:** If this is your first time using the prgram, you will have to set up a

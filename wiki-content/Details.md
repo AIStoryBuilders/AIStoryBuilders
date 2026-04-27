@@ -1,7 +1,4 @@
 # Details
-
-[[home](Home)]
-
 * * *
 
 ![](images/img31.jpg)
