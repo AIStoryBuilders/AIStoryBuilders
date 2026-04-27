@@ -14,8 +14,7 @@
 
 - [Writing Styles](Writing-Styles)
 
-**Story Database**
-
+[**Story Database**](Story-Database)
 
 **Writing with AIStoryBuilders**
 

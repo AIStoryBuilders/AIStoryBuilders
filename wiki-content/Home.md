@@ -19,7 +19,6 @@ Write your next novel faster and easier.
 
 [**Story Database**](Story-Database)
 
-
 **Writing with AIStoryBuilders**
 
 - [Details](Details)
@@ -28,6 +27,7 @@ Write your next novel faster and easier.
 - [Characters](Characters)
 - [Chapters](Chapters)
 - [Sections](Sections)
+- [Chat](Chat)
 
 **Technical**
 
