@@ -1,6 +1,3 @@
-# Story Database
-* * *
-
 ![](images/img3A.jpg)
 
 **AIStoryBuilders** uses a proprietary database format that

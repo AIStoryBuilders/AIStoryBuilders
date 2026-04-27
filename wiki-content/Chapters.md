@@ -1,6 +1,3 @@
-# Chapters
-* * *
-
 ![](images/img5D.jpg)
 
 When editing a story the fifth tab is the **Chapters** tab. This

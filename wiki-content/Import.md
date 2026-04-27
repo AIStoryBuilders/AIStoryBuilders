@@ -1,6 +1,3 @@
-# Import
-* * *
-
 The **Home** screen of **AIStoryBuilders** has two import buttons that allow
 you to bring an existing story into the application:
 

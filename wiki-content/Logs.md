@@ -1,6 +1,3 @@
-# Logs
-* * *
-
 ![](images/img27.jpg)
 
 The **Logs** allows you to investigate any performance issues in

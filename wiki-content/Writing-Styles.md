@@ -1,6 +1,3 @@
-# Writing Styles
-* * *
-
 **AIStoryBuilders** supports two different writing styles.
 Database first and writing first. **AIStoryBuilders** requires an
 extensive database composed of **Timelines** **Locations** and

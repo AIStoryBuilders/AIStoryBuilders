@@ -1,6 +1,3 @@
-# Settings
-* * *
-
 ![](images/img24.jpg)
 
 There is no charge to use **AIStoryBuilders** software. However,

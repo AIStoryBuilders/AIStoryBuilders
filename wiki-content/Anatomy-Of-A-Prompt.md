@@ -1,6 +1,3 @@
-# Anatomy Of A Prompt
-* * *
-
 ![](images/img22.jpg)
 
 In this section we will describe how **AIStoryBuilders** creates

@@ -1,6 +1,3 @@
-# Details
-* * *
-
 ![](images/img31.jpg)
 
 When editing a story the first tab is the **Details** tab. This

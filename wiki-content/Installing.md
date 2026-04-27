@@ -1,5 +1,3 @@
-# Installing
-
 ###  Requirements
 
 - An **OpenAI** account ([navigate to the **OpenAI** page](https://platform.openai.com/api-keys) to obtain one)

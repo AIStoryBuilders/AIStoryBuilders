@@ -1,6 +1,3 @@
-# Quick-Start
-* * *
-
 **NOTE:** If this is your first time using the prgram, you will have to set up a
 connection to the OpenAI or Azure OpenAI service. See directions here: [Settings](Settings)
 

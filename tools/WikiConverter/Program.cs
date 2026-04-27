@@ -404,14 +404,12 @@ internal sealed class Converter
         // Strip the legacy "[[home](...)]" back-link rows present in every source page.
         body = Regex.Replace(body, @"(?im)^\s*\[\[home\]\([^)]*\)\]\s*$\r?\n?", string.Empty);
 
-        if (!body.StartsWith("# "))
-        {
-            body = $"# {info.Title}\n\n{body}\n";
-        }
-        else
-        {
-            body += "\n";
-        }
+        // GitHub renders the page title automatically from the filename, so strip
+        // a leading "# Title" plus the optional "* * *" horizontal-rule separator
+        // that the legacy HTML pages emit at the top of every page.
+        body = Regex.Replace(body, @"^\s*#\s+[^\r\n]+\r?\n(\s*\*\s\*\s\*\s*\r?\n)?\s*", string.Empty);
+
+        body = body.TrimStart() + "\n";
         return body;
     }
 

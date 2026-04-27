@@ -1,6 +1,3 @@
-# Locations
-* * *
-
 ![](images/img57.jpg)
 
 When editing a story the third tab is the **Locations** tab.

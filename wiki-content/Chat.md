@@ -1,6 +1,3 @@
-# Chat
-* * *
-
 When editing a story, the **Chat** tab provides a conversational AI assistant
 that is aware of the entire story you are working on — its **Details**,
 **Timelines**, **Locations**, **Characters**, **Chapters**, and the

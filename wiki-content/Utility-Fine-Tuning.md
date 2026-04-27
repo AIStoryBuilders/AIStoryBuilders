@@ -1,6 +1,3 @@
-# Utility and Fine-Tuning
-* * *
-
 (**Note:** Fine-Tuning is only available when using OpenAI not Azure OpenAI)
 
 ![](images/img1E.jpg)

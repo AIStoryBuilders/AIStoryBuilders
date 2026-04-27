@@ -1,6 +1,3 @@
-# Timelines
-* * *
-
 ![](images/img53.jpg)
 
 When editing a story the second tab is the **Timelines** tab.

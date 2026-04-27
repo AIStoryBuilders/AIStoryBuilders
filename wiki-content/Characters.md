@@ -1,6 +1,3 @@
-# Characters
-* * *
-
 ![](images/img5A.jpg)
 
 When editing a story the fourth tab is the **Characters** tab.
