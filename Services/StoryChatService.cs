@@ -128,27 +128,103 @@ public class StoryChatService : IStoryChatService
         messages.AddRange(session.Messages.TakeLast(20));
 
         var tools = BuildTools();
+        var modelId = _settingsService.AIModel;
+        var aiType = _settingsService.AIType;
+
+        // Google Gemini's tool schema validator is stricter than OpenAI/Anthropic.
+        // Run our tools through a sanitizer that rewrites their JSON schemas to
+        // a Gemini-compatible subset (object root with properties map, no
+        // additionalProperties / oneOf / nullable type arrays, etc.).
+        if (string.Equals(aiType, "Google AI", StringComparison.OrdinalIgnoreCase))
+        {
+            tools = GeminiToolSanitizer.SanitizeForGemini(tools);
+        }
+
         var options = new ChatOptions
         {
-            ModelId = _settingsService.AIModel,
-            Temperature = 0.7f,
+            ModelId = modelId,
             MaxOutputTokens = 4096,
             Tools = tools
         };
 
+        // Some models (OpenAI GPT-5 family and o-series reasoning models) reject any
+        // non-default temperature. Only set Temperature when the model supports it.
+        if (SupportsCustomTemperature(modelId))
+        {
+            options.Temperature = 0.7f;
+        }
+
         var responseBuilder = new StringBuilder();
+        var isGemini = string.Equals(aiType, "Google AI", StringComparison.OrdinalIgnoreCase);
 
         // Tool-call loop: max 10 rounds
         for (int round = 0; round < 10; round++)
         {
             cancellationToken.ThrowIfCancellationRequested();
 
-            var response = await chatClient.GetResponseAsync(messages, options, cancellationToken);
+            ChatResponse response;
+            try
+            {
+                response = await chatClient.GetResponseAsync(messages, options, cancellationToken);
+            }
+            catch (Exception ex) when (isGemini && options.Tools != null)
+            {
+                // Gemini periodically rejects function declarations whose schemas
+                // don't match its strict subset, returning a generic
+                // INVALID_ARGUMENT. Log the failure with detail and retry once
+                // without tools so the user still gets a useful response.
+                _logService?.WriteToLog(
+                    $"Gemini call failed with tools attached. Retrying without tools. " +
+                    $"Model={modelId}. Round={round}. Error={ex.Message}");
+
+                options = new ChatOptions
+                {
+                    ModelId = options.ModelId,
+                    MaxOutputTokens = options.MaxOutputTokens,
+                    Temperature = options.Temperature,
+                    Tools = null
+                };
+                response = await chatClient.GetResponseAsync(messages, options, cancellationToken);
+            }
+
             var lastMessage = response.Messages[^1];
 
             var toolCalls = lastMessage.Contents.OfType<FunctionCallContent>().ToList();
             if (toolCalls.Count > 0)
             {
+                if (isGemini)
+                {
+                    // Gemini's follow-up turn after a tool call (sending
+                    // FunctionCall + FunctionResponse parts back) is fragile —
+                    // it requires thought-signature handling that the Mscc SDK
+                    // doesn't always emit correctly for Gemini 3, producing
+                    // INVALID_ARGUMENT. To stay reliable, run all requested
+                    // tools, append their results as a plain user message, and
+                    // ask once more *without tools* for the final answer.
+                    var toolOutput = new StringBuilder();
+                    toolOutput.AppendLine("Tool call results (use these to answer the user):");
+                    foreach (var toolCall in toolCalls)
+                    {
+                        var result = await DispatchToolCallAsync(
+                            toolCall.Name, toolCall.Arguments, sessionId);
+                        toolOutput.AppendLine();
+                        toolOutput.AppendLine($"### {toolCall.Name}");
+                        toolOutput.AppendLine("```json");
+                        toolOutput.AppendLine(SerializeToolResult(result));
+                        toolOutput.AppendLine("```");
+                    }
+
+                    messages.Add(new ChatMessage(ChatRole.User, toolOutput.ToString()));
+                    options = new ChatOptions
+                    {
+                        ModelId = options.ModelId,
+                        MaxOutputTokens = options.MaxOutputTokens,
+                        Temperature = options.Temperature,
+                        Tools = null
+                    };
+                    continue;
+                }
+
                 messages.Add(lastMessage);
                 foreach (var toolCall in toolCalls)
                 {
@@ -167,6 +243,21 @@ public class StoryChatService : IStoryChatService
         }
 
         session.Messages.Add(new ChatMessage(ChatRole.Assistant, responseBuilder.ToString()));
+    }
+
+    private static string SerializeToolResult(object result)
+    {
+        if (result is null) return "null";
+        if (result is string s) return s;
+        try
+        {
+            return System.Text.Json.JsonSerializer.Serialize(result,
+                new System.Text.Json.JsonSerializerOptions { WriteIndented = true });
+        }
+        catch
+        {
+            return result.ToString() ?? "";
+        }
     }
 
     public void ClearSession(string sessionId)
@@ -191,6 +282,22 @@ public class StoryChatService : IStoryChatService
             Id = id,
             CreatedAt = DateTime.UtcNow
         });
+    }
+
+    private static bool SupportsCustomTemperature(string modelId)
+    {
+        if (string.IsNullOrWhiteSpace(modelId))
+            return true;
+
+        var id = modelId.Trim().ToLowerInvariant();
+
+        // OpenAI GPT-5 family and o-series reasoning models only allow the
+        // default temperature value. Setting Temperature triggers a 400
+        // "unsupported_value" error at the API.
+        if (id.StartsWith("gpt-5") || id.StartsWith("o1") || id.StartsWith("o3") || id.StartsWith("o4"))
+            return false;
+
+        return true;
     }
 
     private IChatClient GetOrCreateChatClient()
