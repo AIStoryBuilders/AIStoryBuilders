@@ -1,0 +1,15 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(ls ~/.claude/projects/ 2>&1 | head -50)",
+      "Bash(awk '{print $2}')",
+      "Bash(ls -la \"C:\\\\Users\\\\webma\\\\.claude.json\" 2>&1)",
+      "Bash(ls ~/.claude/projects/ | head -20)",
+      "Bash(ls -la ~/.claude/settings.json .claude/settings.json .claude/settings.local.json 2>&1)",
+      "Bash(rm .claude/extract_tools.ps1)",
+      "mcp__higgsfield__balance",
+      "Skill(anthropic-skills:setup-cowork)",
+      "Skill(anthropic-skills:setup-cowork:*)"
+    ]
+  }
+}

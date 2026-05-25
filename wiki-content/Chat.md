@@ -11,7 +11,7 @@ the chat uses the graph to answer questions accurately and quickly without
 re-sending the entire story to the AI on every message.
 
 ## Opening the Chat
-
+![](images/Image036.png)
 While editing a story, click the **Chat** tab (the seventh tab in the
 story-editing dialog, after **Chapters**).
 
@@ -37,6 +37,8 @@ question or instruction here.
 
 ## Asking Questions about Your Story
 
+![](images/Image035.png)
+
 The chat is grounded in the actual content of the story you are editing, so
 you can ask **AIStoryBuilders** about anything in the **Story Database**.
 Possible questions include (but are not limited to):
@@ -53,7 +55,7 @@ The assistant will look up the relevant **Characters**, **Locations**,
 knowledge graph and answer based on what it finds.
 
 ## Brainstorming and Suggestions
-
+![](images/Image037.png)
 You can also use the **Chat** tab as a creative collaborator. Useful
 prompts include:
 
@@ -68,7 +70,7 @@ stay consistent with the **Characters**, **Locations**, and **Timelines**
 you have already defined.
 
 ## Making Changes to Your Story
-
+![](images/Image038.png)
 In addition to answering questions, the **Chat** tab can make changes to
 the story for you. You can ask it to add, rename, update, or remove
 **Characters**, **Locations**, **Timelines**, **Chapters**, and paragraph
