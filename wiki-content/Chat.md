@@ -99,8 +99,7 @@ if you had made them through the **Details**, **Timelines**, **Locations**,
 
 ## Notes
 
-- The **Chat** tab requires a valid **OpenAI** key or **Azure OpenAI**
-configuration on the **Settings** page, the same as the rest of the
+- The **Chat** tab requires a valid **OAI** key. Use the configuration on the **Settings** page, the same as the rest of the
 application.
 - All conversations and tool calls are recorded in the **Logs**. If a chat
 response is missing data or behaves unexpectedly, the **Logs** page is the
