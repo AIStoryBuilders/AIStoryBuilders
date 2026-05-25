@@ -14,7 +14,7 @@ re-sending the entire story to the AI on every message.
 
 ![](images/Image036.png)
 
-While editing a story, click the **Chat** tab (the seventh tab in the
+While editing a story, click the **Chat** tab (the tab in the
 story-editing dialog, after **Chapters**).
 
 The **Chat** panel has the following features:
