@@ -7,9 +7,17 @@ namespace AIStoryBuilders.AI;
 /// </summary>
 public static class ChatOptionsFactory
 {
-    public static ChatOptions CreateJsonOptions(string aiServiceType, string modelId = null)
+    public static ChatOptions CreateJsonOptions(
+        string aiServiceType,
+        string modelId = null,
+        float? temperature = 0.1f,
+        int? maxOutputTokens = 4096)
     {
-        var options = new ChatOptions();
+        var options = new ChatOptions
+        {
+            Temperature = temperature,
+            MaxOutputTokens = maxOutputTokens
+        };
 
         if (modelId != null)
             options.ModelId = modelId;

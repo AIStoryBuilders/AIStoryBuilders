@@ -211,6 +211,7 @@ public class ManuscriptParsingService
                 {
                     chapter.Synopsis = await _orchestrator.SummarizeChapterAsync(chapter.RawText);
                 }
+                catch (LlmCallException ex) when (ex.IsAuthenticationError) { throw; }
                 catch (Exception ex)
                 {
                     _logService.WriteToLog($"ManuscriptImport: Summary failed ch {ci + 1}: {ex.Message}");
@@ -224,6 +225,7 @@ public class ManuscriptParsingService
                 {
                     chapter.BeatsSummary = await _orchestrator.ExtractBeatsAsync(chapter.Synopsis);
                 }
+                catch (LlmCallException ex) when (ex.IsAuthenticationError) { throw; }
                 catch (Exception ex)
                 {
                     _logService.WriteToLog($"ManuscriptImport: Beats failed ch {ci + 1}: {ex.Message}");
@@ -236,7 +238,7 @@ public class ManuscriptParsingService
                 try
                 {
                     var chapterCharacters = await _orchestrator.ExtractCharactersFromSummaryAsync(
-                        chapter.Synopsis, chapter.Title);
+                        chapter.Synopsis, chapter.Title, chapter.RawText);
 
                     foreach (var newChar in chapterCharacters)
                     {
@@ -252,6 +254,7 @@ public class ManuscriptParsingService
                         }
                     }
                 }
+                catch (LlmCallException ex) when (ex.IsAuthenticationError) { throw; }
                 catch (Exception ex)
                 {
                     _logService.WriteToLog($"ManuscriptImport: Characters failed ch {ci + 1}: {ex.Message}");
@@ -263,7 +266,7 @@ public class ManuscriptParsingService
                 try
                 {
                     var chapterLocations = await _orchestrator.ExtractLocationsFromSummaryAsync(
-                        chapter.Synopsis, chapter.Title);
+                        chapter.Synopsis, chapter.Title, chapter.RawText);
 
                     foreach (var newLoc in chapterLocations)
                     {
@@ -281,6 +284,7 @@ public class ManuscriptParsingService
                         }
                     }
                 }
+                catch (LlmCallException ex) when (ex.IsAuthenticationError) { throw; }
                 catch (Exception ex)
                 {
                     _logService.WriteToLog($"ManuscriptImport: Locations failed ch {ci + 1}: {ex.Message}");
@@ -292,7 +296,7 @@ public class ManuscriptParsingService
                 try
                 {
                     var chapterTimelines = await _orchestrator.ExtractTimelinesFromSummaryAsync(
-                        chapter.Synopsis, chapter.Title, chapter.Index);
+                        chapter.Synopsis, chapter.Title, chapter.Index, chapter.RawText);
 
                     foreach (var newTl in chapterTimelines)
                     {
@@ -310,6 +314,7 @@ public class ManuscriptParsingService
                         }
                     }
                 }
+                catch (LlmCallException ex) when (ex.IsAuthenticationError) { throw; }
                 catch (Exception ex)
                 {
                     _logService.WriteToLog($"ManuscriptImport: Timelines failed ch {ci + 1}: {ex.Message}");
@@ -333,6 +338,7 @@ public class ManuscriptParsingService
                         chapter.Paragraphs, allCharacters, allLocations, allTimelines);
                     chapter.Paragraphs = annotated;
                 }
+                catch (LlmCallException ex) when (ex.IsAuthenticationError) { throw; }
                 catch (Exception ex)
                 {
                     _logService.WriteToLog($"ManuscriptImport: Entity association failed ch {ci + 1}: {ex.Message}");

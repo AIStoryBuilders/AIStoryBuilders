@@ -39,7 +39,7 @@ public class AIModelService
         string apiVersion = null)
     {
         if (string.IsNullOrWhiteSpace(apiKey))
-            return GetDefaultModels(serviceType);
+            return new List<string>();
 
         try
         {
@@ -56,7 +56,7 @@ public class AIModelService
         catch (Exception ex)
         {
             _logService.WriteToLog($"AIModelService.GetModelsAsync failed for {serviceType}: {ex.Message}");
-            return GetDefaultModels(serviceType);
+            return new List<string>();
         }
     }
 
@@ -71,7 +71,7 @@ public class AIModelService
         string apiVersion = null)
     {
         if (string.IsNullOrWhiteSpace(apiKey))
-            return GetDefaultModels(serviceType);
+            return new List<string>();
 
         try
         {
@@ -82,35 +82,8 @@ public class AIModelService
         catch (Exception ex)
         {
             _logService.WriteToLog($"AIModelService.RefreshModelsAsync failed for {serviceType}: {ex.Message}");
-            return GetDefaultModels(serviceType);
+            return new List<string>();
         }
-    }
-
-    /// <summary>
-    /// Returns a hard-coded fallback list for the given provider.
-    /// </summary>
-    public static List<string> GetDefaultModels(string serviceType)
-    {
-        return serviceType switch
-        {
-            "OpenAI" => new List<string>
-            {
-                "gpt-5", "gpt-5-mini", "gpt-4.1", "gpt-4.1-mini", "gpt-4.1-nano",
-                "gpt-4o", "gpt-4o-mini", "o4-mini", "o3", "o3-mini"
-            },
-            "Azure OpenAI" => new List<string>
-            {
-                "gpt-4o", "gpt-4o-mini", "gpt-4-turbo", "gpt-4", "gpt-35-turbo"
-            },
-            "Anthropic" => GetKnownAnthropicModels(),
-            "Google AI" => new List<string>
-            {
-                "gemini-2.5-pro-preview-06-05", "gemini-2.5-flash-preview-05-20",
-                "gemini-2.0-flash", "gemini-2.0-flash-lite",
-                "gemini-1.5-pro", "gemini-1.5-flash"
-            },
-            _ => new List<string>()
-        };
     }
 
     // ──────────────────────────────────────────
@@ -124,9 +97,9 @@ public class AIModelService
         {
             "OpenAI" => await FetchOpenAIModelsAsync(apiKey),
             "Azure OpenAI" => await FetchAzureOpenAIModelsAsync(apiKey, endpoint, apiVersion),
-            "Anthropic" => GetKnownAnthropicModels(),
+            "Anthropic" => await FetchAnthropicModelsAsync(apiKey),
             "Google AI" => await FetchGoogleAIModelsAsync(apiKey),
-            _ => GetDefaultModels(serviceType)
+            _ => new List<string>()
         };
     }
 
@@ -149,14 +122,14 @@ public class AIModelService
             .OrderByDescending(m => m)
             .ToList();
 
-        return models.Count > 0 ? models : GetDefaultModels("OpenAI");
+        return models;
     }
 
     private async Task<List<string>> FetchAzureOpenAIModelsAsync(
         string apiKey, string endpoint, string apiVersion)
     {
         if (string.IsNullOrWhiteSpace(endpoint))
-            return GetDefaultModels("Azure OpenAI");
+            return new List<string>();
 
         if (string.IsNullOrWhiteSpace(apiVersion))
             apiVersion = "2024-10-21";
@@ -197,10 +170,10 @@ public class AIModelService
         }
         catch
         {
-            // Fall through to defaults
+            // Fall through to empty list
         }
 
-        return GetDefaultModels("Azure OpenAI");
+        return new List<string>();
     }
 
     private static List<string> ParseAzureModelList(string json)
@@ -225,18 +198,64 @@ public class AIModelService
         return models.Distinct().OrderByDescending(m => m).ToList();
     }
 
-    private static List<string> GetKnownAnthropicModels()
+    private async Task<List<string>> FetchAnthropicModelsAsync(string apiKey)
     {
-        return new List<string>
+        try
         {
-            "claude-sonnet-4-20250514",
-            "claude-opus-4-20250514",
-            "claude-3-7-sonnet-latest",
-            "claude-3-5-sonnet-latest",
-            "claude-3-5-haiku-latest",
-            "claude-3-opus-latest",
-            "claude-3-haiku-20240307"
-        };
+            var models = new List<string>();
+            var url = "https://api.anthropic.com/v1/models?limit=1000";
+
+            using var http = new HttpClient();
+
+            // Page through results in case there are more than the page size.
+            while (!string.IsNullOrEmpty(url))
+            {
+                using var request = new HttpRequestMessage(HttpMethod.Get, url);
+                request.Headers.TryAddWithoutValidation("x-api-key", apiKey);
+                request.Headers.TryAddWithoutValidation("anthropic-version", "2023-06-01");
+                request.Headers.TryAddWithoutValidation("anthropic-dangerous-direct-browser-access", "true");
+
+                var response = await http.SendAsync(request);
+                if (!response.IsSuccessStatusCode)
+                    return models;
+
+                var json = await response.Content.ReadAsStringAsync();
+                using var doc = JsonDocument.Parse(json);
+                var root = doc.RootElement;
+
+                if (root.TryGetProperty("data", out var dataArray) &&
+                    dataArray.ValueKind == JsonValueKind.Array)
+                {
+                    foreach (var item in dataArray.EnumerateArray())
+                    {
+                        if (item.TryGetProperty("id", out var idProp))
+                        {
+                            var id = idProp.GetString();
+                            if (!string.IsNullOrWhiteSpace(id))
+                                models.Add(id);
+                        }
+                    }
+                }
+
+                var hasMore = root.TryGetProperty("has_more", out var hasMoreProp) &&
+                              hasMoreProp.ValueKind == JsonValueKind.True;
+                var lastId = root.TryGetProperty("last_id", out var lastIdProp)
+                    ? lastIdProp.GetString()
+                    : null;
+
+                url = hasMore && !string.IsNullOrEmpty(lastId)
+                    ? $"https://api.anthropic.com/v1/models?limit=1000&after_id={Uri.EscapeDataString(lastId)}"
+                    : null;
+            }
+
+            models = models.Distinct().OrderByDescending(m => m, StringComparer.Ordinal).ToList();
+            return models;
+        }
+        catch (Exception ex)
+        {
+            _logService.WriteToLog($"AIModelService.FetchAnthropicModelsAsync failed: {ex.Message}");
+            return new List<string>();
+        }
     }
 
     private async Task<List<string>> FetchGoogleAIModelsAsync(string apiKey)
@@ -259,7 +278,7 @@ public class AIModelService
             .OrderByDescending(m => m)
             .ToList();
 
-        return models.Count > 0 ? models : GetDefaultModels("Google AI");
+        return models;
     }
 
     // ──────────────────────────────────────────

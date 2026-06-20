@@ -259,7 +259,7 @@
         }
         catch
         {
-            availableModels = AI.AIModelService.GetDefaultModels(AIType);
+            availableModels = new();
         }
         finally
         {
@@ -313,7 +313,7 @@
                     Detail = $"Could not fetch models: {ex.Message}",
                     Duration = 4000
                 });
-            availableModels = AI.AIModelService.GetDefaultModels(AIType);
+            availableModels = new();
         }
         finally
         {

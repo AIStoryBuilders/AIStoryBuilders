@@ -58,7 +58,7 @@ public partial class OrchestratorMethods
             jObj =>
             {
                 var chapters = new List<ParsedChapter>();
-                var chaptersArray = jObj["chapters"] as JArray;
+                var chaptersArray = LlmCallHelper.ExtractNamedArray(jObj, "chapters");
                 if (chaptersArray != null)
                 {
                     foreach (var ch in chaptersArray)
@@ -86,9 +86,9 @@ public partial class OrchestratorMethods
         return SplitTextByBoundaries(rawText, result.Item2);
     }
 
-    private static List<ParsedChapter> SplitTextByBoundaries(string rawText, JObject jObj)
+    private static List<ParsedChapter> SplitTextByBoundaries(string rawText, JToken jObj)
     {
-        var chaptersArray = jObj["chapters"] as JArray;
+        var chaptersArray = LlmCallHelper.ExtractNamedArray(jObj, "chapters");
         if (chaptersArray == null || chaptersArray.Count == 0)
             return new List<ParsedChapter> { new() { Index = 1, Title = "Chapter 1", RawText = rawText.Trim() } };
 
@@ -179,6 +179,32 @@ public partial class OrchestratorMethods
     //  Chapter summarization
     // ═══════════════════════════════════════════════════════
 
+    // Must cover a full chapter so the summary / extraction passes see all of it.
+    private const int MaxChapterPreviewChars = 24000;
+
+    /// <summary>
+    /// Builds the user-message content for an entity-extraction call. The chapter
+    /// summary supplies structure; when the full chapter text is available it is
+    /// appended so single-mention entities a weak summary omitted can still be found.
+    /// </summary>
+    private static string BuildExtractionUserContent(string chapterSummary, string chapterText)
+    {
+        if (string.IsNullOrWhiteSpace(chapterText))
+            return chapterSummary;
+
+        var preview = chapterText.Length > MaxChapterPreviewChars
+            ? chapterText[..MaxChapterPreviewChars] + "..."
+            : chapterText;
+
+        var sb = new StringBuilder();
+        sb.AppendLine("CHAPTER SUMMARY (use for structure):");
+        sb.AppendLine(chapterSummary);
+        sb.AppendLine();
+        sb.AppendLine("FULL CHAPTER TEXT (scan for any additional named entities the summary omitted):");
+        sb.AppendLine(preview);
+        return sb.ToString();
+    }
+
     public async Task<string> SummarizeChapterAsync(string chapterText)
     {
         LogService.WriteToLog("ManuscriptParsing: SummarizeChapterAsync - Start");
@@ -186,24 +212,43 @@ public partial class OrchestratorMethods
         var client = CreateOpenAIClient();
 
         var systemPrompt = """
-            You are a narrative analysis assistant. Write a comprehensive summary of this chapter. Include:
+            You are a narrative analysis assistant. Write a comprehensive, detailed summary of this chapter.
+            This summary is the SOLE evidence sheet used downstream to extract characters, locations,
+            timelines, and story beats — extraction can only find what this summary explicitly mentions,
+            so be thorough and do not be terse.
+
+            Include:
             - Key events that advance the plot
             - Character decisions, revelations, or arcs
             - Changes in situation, stakes, or setting
             - Important dialogue or confrontations
             - Emotional beats and tonal shifts
-            Be thorough — this summary will be used to extract characters, locations, timelines, and story beats.
+
+            You MUST also explicitly enumerate, even when something is mentioned only once:
+            - EVERY named character, including minor/secondary characters AND organisations, companies,
+              firms, or groups that act in the story — name each one explicitly.
+            - EVERY distinct place or setting, including specific rooms, buildings, and outdoor locations.
+            - EVERY distinct time period or narrative thread (e.g. present-day events vs. backstory /
+              flashback vs. investigation history) — describe each thread.
+
             Return ONLY the summary text (no JSON, no markdown fences).
             """;
 
-        var preview = chapterText.Length > 8000 ? chapterText[..8000] + "..." : chapterText;
+        var preview = chapterText.Length > MaxChapterPreviewChars
+            ? chapterText[..MaxChapterPreviewChars] + "..."
+            : chapterText;
         var messages = new List<ChatMessage>
         {
             new(ChatRole.System, systemPrompt),
             new(ChatRole.User, preview)
         };
 
-        var options = new ChatOptions { ModelId = SettingsService.AIModel };
+        var options = new ChatOptions
+        {
+            ModelId = SettingsService.AIModel,
+            Temperature = 0.1f,
+            MaxOutputTokens = 4096
+        };
 
         return await LlmCallHelper.CallLlmForText(client, messages, options, LogService);
     }
@@ -236,7 +281,12 @@ public partial class OrchestratorMethods
             new(ChatRole.User, chapterSummary)
         };
 
-        var options = new ChatOptions { ModelId = SettingsService.AIModel };
+        var options = new ChatOptions
+        {
+            ModelId = SettingsService.AIModel,
+            Temperature = 0.1f,
+            MaxOutputTokens = 1024
+        };
 
         return await LlmCallHelper.CallLlmForText(client, messages, options, LogService);
     }
@@ -246,14 +296,23 @@ public partial class OrchestratorMethods
     // ═══════════════════════════════════════════════════════
 
     public async Task<List<ParsedCharacterInfo>> ExtractCharactersFromSummaryAsync(
-        string chapterSummary, string chapterTitle)
+        string chapterSummary, string chapterTitle, string chapterText = null)
     {
         LogService.WriteToLog("ManuscriptParsing: ExtractCharactersFromSummaryAsync - Start");
+
+        if (string.IsNullOrWhiteSpace(chapterSummary) && string.IsNullOrWhiteSpace(chapterText))
+            return new List<ParsedCharacterInfo>();
 
         var client = CreateOpenAIClient();
 
         var systemPrompt = $$$"""
-            You are a narrative analysis assistant. Extract named characters from this chapter summary.
+            You are a narrative analysis assistant. Extract every named character from the material below.
+            Be thorough and inclusive:
+            - Include MINOR and secondary named characters, not only the protagonists.
+            - Include organisations, companies, firms, and groups that act as agents in the story
+              (e.g. a law firm or a corporation) — give each its own character entry.
+            - Use each character's fullest form of their name (e.g. "Marcus Sterling", not just
+              "Mr. Sterling" or "Marcus"); record shorter forms under an "Aliases" background.
             Return ONLY a JSON object with this schema (no markdown fences, no explanation):
             {
               "characters": [
@@ -276,7 +335,7 @@ public partial class OrchestratorMethods
         var messages = new List<ChatMessage>
         {
             new(ChatRole.System, systemPrompt),
-            new(ChatRole.User, chapterSummary)
+            new(ChatRole.User, BuildExtractionUserContent(chapterSummary, chapterText))
         };
 
         var options = ChatOptionsFactory.CreateJsonOptions(SettingsService.AIType, SettingsService.AIModel);
@@ -286,7 +345,7 @@ public partial class OrchestratorMethods
             jObj =>
             {
                 var characters = new List<ParsedCharacterInfo>();
-                var arr = jObj["characters"] as JArray;
+                var arr = LlmCallHelper.ExtractNamedArray(jObj, "characters");
                 if (arr != null)
                 {
                     foreach (var ch in arr)
@@ -327,15 +386,25 @@ public partial class OrchestratorMethods
     // ═══════════════════════════════════════════════════════
 
     public async Task<List<ParsedLocationInfo>> ExtractLocationsFromSummaryAsync(
-        string chapterSummary, string chapterTitle)
+        string chapterSummary, string chapterTitle, string chapterText = null)
     {
         LogService.WriteToLog("ManuscriptParsing: ExtractLocationsFromSummaryAsync - Start");
+
+        if (string.IsNullOrWhiteSpace(chapterSummary) && string.IsNullOrWhiteSpace(chapterText))
+            return new List<ParsedLocationInfo>();
 
         var client = CreateOpenAIClient();
 
         var systemPrompt = """
-            You are a narrative analysis assistant. Extract named or clearly described locations from this chapter summary.
-            Identify named places, specific rooms/areas, and outdoor locations.
+            You are a narrative analysis assistant. Extract every named or clearly described location from the material below.
+            Be granular and thorough:
+            - Identify named places, specific rooms/areas, buildings, and outdoor locations.
+            - SPLIT composite places into their distinct sub-locations (a city, a specific building within
+              it, and a specific room are each separate entries).
+            - Use a CANONICAL naming convention so the same place always gets the same label: prefer
+              "<Owner or proper name>'s <place>" (e.g. "Arthur Vance's office", never "Arthur's office"
+              or just "the office"), and always use the fullest proper name available.
+            - Include a place even if it is mentioned only once.
             Exclude vague references and generic terms.
             Output ONLY a valid JSON object. No commentary, no markdown fences.
             The JSON must match this exact schema:
@@ -352,7 +421,7 @@ public partial class OrchestratorMethods
         var messages = new List<ChatMessage>
         {
             new(ChatRole.System, systemPrompt),
-            new(ChatRole.User, chapterSummary)
+            new(ChatRole.User, BuildExtractionUserContent(chapterSummary, chapterText))
         };
 
         var options = ChatOptionsFactory.CreateJsonOptions(SettingsService.AIType, SettingsService.AIModel);
@@ -362,7 +431,7 @@ public partial class OrchestratorMethods
             jObj =>
             {
                 var locations = new List<ParsedLocationInfo>();
-                var arr = jObj["locations"] as JArray;
+                var arr = LlmCallHelper.ExtractNamedArray(jObj, "locations");
                 if (arr != null)
                 {
                     foreach (var loc in arr)
@@ -390,15 +459,21 @@ public partial class OrchestratorMethods
     // ═══════════════════════════════════════════════════════
 
     public async Task<List<ParsedTimelineInfo>> ExtractTimelinesFromSummaryAsync(
-        string chapterSummary, string chapterTitle, int chapterIndex)
+        string chapterSummary, string chapterTitle, int chapterIndex, string chapterText = null)
     {
         LogService.WriteToLog("ManuscriptParsing: ExtractTimelinesFromSummaryAsync - Start");
+
+        if (string.IsNullOrWhiteSpace(chapterSummary) && string.IsNullOrWhiteSpace(chapterText))
+            return new List<ParsedTimelineInfo>();
 
         var client = CreateOpenAIClient();
 
         var systemPrompt = """
-            You are a narrative analysis assistant. Based on this chapter summary, identify timeline events.
+            You are a narrative analysis assistant. Identify every distinct timeline or narrative thread in the material below.
+            Treat each of these as a SEPARATE timeline when present: present-day events, backstory or
+            flashback sequences, investigation/history threads, and any dream or imagined sequences.
             Consider chronological order, character involvement, plot beats, and temporal markers.
+            Include a timeline even if it is referenced only once.
             Output ONLY a valid JSON object. No commentary, no markdown fences.
             The JSON must match this exact schema:
             {
@@ -414,7 +489,7 @@ public partial class OrchestratorMethods
         var messages = new List<ChatMessage>
         {
             new(ChatRole.System, systemPrompt),
-            new(ChatRole.User, chapterSummary)
+            new(ChatRole.User, BuildExtractionUserContent(chapterSummary, chapterText))
         };
 
         var options = ChatOptionsFactory.CreateJsonOptions(SettingsService.AIType, SettingsService.AIModel);
@@ -424,7 +499,7 @@ public partial class OrchestratorMethods
             jObj =>
             {
                 var timelines = new List<ParsedTimelineInfo>();
-                var arr = jObj["timelines"] as JArray;
+                var arr = LlmCallHelper.ExtractNamedArray(jObj, "timelines");
                 if (arr != null)
                 {
                     foreach (var tl in arr)
@@ -508,7 +583,7 @@ public partial class OrchestratorMethods
             client, messages, options,
             jObj =>
             {
-                var arr = jObj["paragraphs"] as JArray;
+                var arr = LlmCallHelper.ExtractNamedArray(jObj, "paragraphs");
                 if (arr != null)
                 {
                     foreach (var annotation in arr)
@@ -572,7 +647,7 @@ public partial class OrchestratorMethods
             client, messages, options,
             jObj =>
             {
-                var arr = jObj["paragraphs"] as JArray;
+                var arr = LlmCallHelper.ExtractNamedArray(jObj, "paragraphs");
                 if (arr != null && arr.Count > 1)
                 {
                     return arr.Select(p => p.Value<string>() ?? "").Where(p => p != "").ToList();

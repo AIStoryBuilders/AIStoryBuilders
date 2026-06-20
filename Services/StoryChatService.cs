@@ -192,39 +192,11 @@ public class StoryChatService : IStoryChatService
             var toolCalls = lastMessage.Contents.OfType<FunctionCallContent>().ToList();
             if (toolCalls.Count > 0)
             {
-                if (isGemini)
-                {
-                    // Gemini's follow-up turn after a tool call (sending
-                    // FunctionCall + FunctionResponse parts back) is fragile —
-                    // it requires thought-signature handling that the Mscc SDK
-                    // doesn't always emit correctly for Gemini 3, producing
-                    // INVALID_ARGUMENT. To stay reliable, run all requested
-                    // tools, append their results as a plain user message, and
-                    // ask once more *without tools* for the final answer.
-                    var toolOutput = new StringBuilder();
-                    toolOutput.AppendLine("Tool call results (use these to answer the user):");
-                    foreach (var toolCall in toolCalls)
-                    {
-                        var result = await DispatchToolCallAsync(
-                            toolCall.Name, toolCall.Arguments, sessionId);
-                        toolOutput.AppendLine();
-                        toolOutput.AppendLine($"### {toolCall.Name}");
-                        toolOutput.AppendLine("```json");
-                        toolOutput.AppendLine(SerializeToolResult(result));
-                        toolOutput.AppendLine("```");
-                    }
-
-                    messages.Add(new ChatMessage(ChatRole.User, toolOutput.ToString()));
-                    options = new ChatOptions
-                    {
-                        ModelId = options.ModelId,
-                        MaxOutputTokens = options.MaxOutputTokens,
-                        Temperature = options.Temperature,
-                        Tools = null
-                    };
-                    continue;
-                }
-
+                // All providers (including Google Gemini) now go through the
+                // standard tool round-trip: append the assistant message that
+                // requested the calls, run each tool, and send the results back
+                // as Tool messages. GoogleAIChatClient translates these into
+                // Gemini functionCall / functionResponse parts.
                 messages.Add(lastMessage);
                 foreach (var toolCall in toolCalls)
                 {
@@ -243,21 +215,6 @@ public class StoryChatService : IStoryChatService
         }
 
         session.Messages.Add(new ChatMessage(ChatRole.Assistant, responseBuilder.ToString()));
-    }
-
-    private static string SerializeToolResult(object result)
-    {
-        if (result is null) return "null";
-        if (result is string s) return s;
-        try
-        {
-            return System.Text.Json.JsonSerializer.Serialize(result,
-                new System.Text.Json.JsonSerializerOptions { WriteIndented = true });
-        }
-        catch
-        {
-            return result.ToString() ?? "";
-        }
     }
 
     public void ClearSession(string sessionId)
@@ -297,7 +254,26 @@ public class StoryChatService : IStoryChatService
         if (id.StartsWith("gpt-5") || id.StartsWith("o1") || id.StartsWith("o3") || id.StartsWith("o4"))
             return false;
 
+        // Newer Anthropic Claude models (Opus 4.5+) have deprecated the
+        // temperature parameter. Sending it returns an invalid_request_error
+        // ("temperature is deprecated for this model"), so omit it for them.
+        if (IsTemperatureDeprecatedClaudeModel(id))
+            return false;
+
         return true;
+    }
+
+    private static bool IsTemperatureDeprecatedClaudeModel(string id)
+    {
+        // Match "claude-opus-4-5", "claude-opus-4-8", etc. where the minor
+        // version is 5 or higher (the versions that deprecated temperature).
+        const string prefix = "claude-opus-4-";
+        if (!id.StartsWith(prefix))
+            return false;
+
+        var rest = id.Substring(prefix.Length);
+        var minorText = new string(rest.TakeWhile(char.IsDigit).ToArray());
+        return int.TryParse(minorText, out var minor) && minor >= 5;
     }
 
     private IChatClient GetOrCreateChatClient()

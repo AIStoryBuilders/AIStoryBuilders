@@ -90,6 +90,7 @@ namespace AIStoryBuilders.AI
             string ApiKey = SettingsService.ApiKey;
             string AIModel = paramAIModel;
 
+            IChatClient client;
             switch (SettingsService.AIType)
             {
                 case "OpenAI":
@@ -100,7 +101,8 @@ namespace AIStoryBuilders.AI
                         NetworkTimeout = TimeSpan.FromSeconds(520)
                     };
                     var openAiClient = new OpenAIClient(new ApiKeyCredential(ApiKey), options);
-                    return openAiClient.GetChatClient(AIModel).AsIChatClient();
+                    client = openAiClient.GetChatClient(AIModel).AsIChatClient();
+                    break;
                 }
 
                 case "Azure OpenAI":
@@ -112,19 +114,28 @@ namespace AIStoryBuilders.AI
                     var azureClient = new AzureOpenAIClient(
                                new Uri(SettingsService.Endpoint),
                                new AzureKeyCredential(ApiKey), options);
-                    return azureClient.GetChatClient(AIModel).AsIChatClient();
+                    client = azureClient.GetChatClient(AIModel).AsIChatClient();
+                    break;
                 }
 
                 case "Anthropic":
-                    return new AnthropicChatClient(ApiKey, AIModel);
+                    client = new AnthropicChatClient(ApiKey, AIModel);
+                    break;
 
                 case "Google AI":
-                    return new GoogleAIChatClient(ApiKey, AIModel);
+                    client = new GoogleAIChatClient(ApiKey, AIModel);
+                    break;
 
                 default:
                     throw new NotSupportedException(
                         $"AI provider '{SettingsService.AIType}' is not supported.");
             }
+
+            // Newer reasoning models reject a non-default temperature (e.g. OpenAI
+            // gpt-5.x returns HTTP 400, some Anthropic models report it deprecated).
+            // Wrap every client so such calls retry without temperature instead of
+            // failing silently and producing an empty result.
+            return new TemperatureFallbackChatClient(client);
         }
         #endregion
 
