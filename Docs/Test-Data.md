@@ -266,8 +266,26 @@ LLM output varies, so each check names words that must or must not appear, compa
 | T16 generate, checked | Chapter 2 → Paragraph 2 → AI | Prompt `Freya studies the necklace and remembers who made it.`, 100 words, Search knowledgebase **checked** | The generated text contains `Hrafnkel` or `fallen star` |
 | T16 generate, unchecked | Same, **unchecked** | Same prompt | Success is not judged on content. Check only that the retriever was not called. |
 | T16 retrieval failure | Same as checked, with the provider made unreachable during retrieval only (test double) | Generate | A warning toast appears, the paragraph is still generated, and Undo works |
+| T19 voice (judged by a person) | `before/` story. Make a strongly marked fingerprint: copy `Fixtures/Fingerprint/valid-bare.json`, set the invariants to "Second person" and "Present tense", and add the directive "Use no adjectives." | Chapter 2 → Paragraph 2 → AI, prompt `Freya studies the necklace.`, 100 words. Generate once without the fingerprint and once after uploading it. | With it, the paragraph is in second person and present tense; without it, it isn't. Record the model and result here. |
 
 ---
+
+## 9. Lexical fingerprint fixtures: `Fixtures/Fingerprint/` (T19)
+
+All content is invented. Real fingerprints quote the author's prose, so they are never committed; `RealFingerprintSampleTests` checks one when `ASB_FINGERPRINT_SAMPLE` names a file (Dev-Environment §6).
+
+| File | Content | Expected |
+|---|---|---|
+| `valid-bare.json` | A complete fingerprint: four invariants, all 17 criteria, two signature moves, three anti-patterns, four directives | Ok; the name comes from the file name. Renders `valid-bare.card.txt` exactly. |
+| `valid-bare.card.txt` | The golden style card for `valid-bare.json` named "Harbor voice" (LF line endings) | `FingerprintPromptRendererTests` compares it byte for byte. Regenerate with `ASB_UPDATE_GOLDEN=1` only after a deliberate renderer change. |
+| `valid-wrapped.json` | `{ "title": "  Harbor voice  ", "fingerprint": … }` with an unknown key `generator_note` | Ok, name "Harbor voice", unknown key kept in the stored file |
+| `valid-bom.json` | `valid-bare` with a UTF-8 BOM and surrounding blank lines | Ok |
+| `missing-criterion.json` | `fragment_usage` removed | "This file does not match a lexical fingerprint. Missing criterion: fragment_usage" |
+| `bad-rating.json` | `verb_energy` rated 12 | "… Invalid criterion payload: verb_energy" |
+| `partial-move.json` | A signature move with an empty template | "… Invalid signature_moves" |
+| `injection.json` | Directives and a title that try to close the fence, open `<system>` and ask for `DeleteChapter` | Ok; the card has exactly one opening and one closing tag and no `<` or `>` inside |
+| `huge-strings.json` | Very long strings and lists everywhere | Ok; the card is at most 12,000 characters and keeps the profile, invariants and first directives |
+| over 1 MB | Built in memory by the tests | "The file is larger than 1 MB." |
 
 ## 8. Embedding self-test sentences (T4)
 

@@ -151,6 +151,31 @@ Use the **Details** tab to set the style and the instructions the AI follows for
 
 The **Details** tab also has **Save Word Doc**, **Export Project**, **Delete** and **Re-load Story**. See [12. Export, back up and maintain a story](#12-export-back-up-and-maintain-a-story).
 
+### Give the story your writing voice
+
+A **lexical fingerprint** is a short profile of how you write: sentence rhythm, word choice, punctuation, point of view, and the habits you avoid. When a story has one, the AI writes new sections, and Story Chat writes its changes, in that voice.
+
+**Get a fingerprint:**
+
+1. On the **Details** tab, scroll down to **Writing voice**.
+2. Click **Get your lexical fingerprint**. A free, external site opens in your browser.
+3. Upload a sample of your own prose (PDF, Word or Markdown, under 5,000 words) and download the `.json` file it gives you.
+
+**Upload it:**
+
+1. Back in AI StoryBuilders, click **Upload fingerprint** and choose the `.json` file.
+
+**What you should see:** **Fingerprint** / **Saved. New AI writing will use this voice.** The section shows the fingerprint's name, the start of its profile and the upload date.
+
+**Replace or remove it:**
+
+- To use a new fingerprint, click **Replace**, choose the new file, and click **Yes**.
+- To stop using one, click **Remove**, then **Yes**. Text the AI already wrote is not changed.
+
+**What changes:** while the story has a fingerprint, every **Generate** and every chat message for that story includes it, and the AI prompt and the chat header show **Writing in the voice of …** or **Voice: …**. The **Style** dropdown still sets the genre. The fingerprint is saved in the story folder, so **Export Project** includes it.
+
+If you use Ollama with a small context size, raise the model's context size or remove the fingerprint, because it adds up to about 3,000 tokens to each request.
+
 ## 6. Add timelines
 
 Timelines are the periods of your story. Sections, character backgrounds and location descriptions can each belong to a timeline, so the AI knows what's true at that point.
@@ -278,6 +303,8 @@ Use this to have the AI write or rewrite a section. It uses the chapter synopsis
 6. Check **Search knowledgebase** if you want the AI to use your knowledge base pages. It's turned off when the story's knowledge base is empty.
 7. Click **Generate**.
 
+If the story has a writing voice, the note **Writing in the voice of "…" (lexical fingerprint).** shows under the model, and the AI writes in that voice. See [Give the story your writing voice](#give-the-story-your-writing-voice).
+
 ![AI Prompt Instructions](images/user-guide/24-ai-prompt.png)
 
 **What you should see:** **Writing…** while the AI works. Then the editor shows the new text with the note **AI rewrote this section. Use Undo to restore the previous text.** The text isn't saved yet.
@@ -298,6 +325,8 @@ Use the **Chat** tab to ask questions about your story, check for problems, or a
 3. Check **Include Knowledgebase** if the answer may be in your knowledge base pages, or if you want the chat to edit them. Deleting a page or folder works either way.
 4. Type a question in **Ask about your story...**. For example: *Are there any orphaned characters?* or *Tell me about the main characters*.
 5. Press **Enter** or click **Send**. Press **Shift+Enter** for a new line.
+
+If the story has a writing voice, the header shows **Voice: …** and any prose the chat writes or proposes uses that voice.
 
 ![The empty Chat tab](images/user-guide/29-chat-empty.png)
 
@@ -367,7 +396,7 @@ All of these are on the **Details** tab.
 | Button | What it does |
 |---|---|
 | **Save Word Doc** | Saves the whole story as a Word document (`.docx`). |
-| **Export Project** | Saves the whole story, including its knowledge base, as a project file (`.stybld`). Use it as a backup, or to move a story to another computer or browser. |
+| **Export Project** | Saves the whole story, including its knowledge base and writing voice, as a project file (`.stybld`). Use it as a backup, or to move a story to another computer or browser. |
 | **Re-load Story** | Rebuilds the story's search data and story graph. Use it if chat answers or AI writing seem to miss recent changes. |
 | **Delete** | Deletes the story, after you confirm. This can't be undone, so export it first. |
 
@@ -519,6 +548,9 @@ Most problems show a message in the top-right corner, like this one:
 | "Names can't contain '/' or '\'." or "'`<name>`' already exists in this folder." | A knowledge base page or folder name isn't allowed. | Pick another name. |
 | "Page too large" | A knowledge base page is over 1 MB. | Split it into smaller pages. |
 | **This page changed** | The page was changed somewhere else while you edited it. | Click **Reload** to get the latest version, or **Overwrite** to keep your text. |
+| "This file does not match a lexical fingerprint. …" | The file you uploaded under **Writing voice** isn't a fingerprint, or is missing a part the message names. | Download the `.json` file from the fingerprint site again, and upload it without editing it. |
+| "The fingerprint file is not valid JSON." or "The file is larger than 1 MB." | The file is damaged, isn't a `.json` fingerprint, or is too big. | Upload the `.json` file the fingerprint site gave you. |
+| **Writing voice** says "This story's fingerprint file can't be read, so the AI isn't using it." | The story's fingerprint file was changed or damaged, for example in a project file from someone else. | Click **Replace** to upload a good fingerprint, or **Remove**. The AI keeps writing without it meanwhile. |
 
 ## Frequently asked questions
 
@@ -533,6 +565,9 @@ Only the text the AI needs for a task is sent, and only to the provider you pick
 
 **Why isn't my model in the list?**
 Only verified models are listed. Add the model under **Verified models** in **Settings**. If it fails the check, it can't reliably do the app's AI tasks.
+
+**Is my writing sample or fingerprint sent anywhere?**
+AI StoryBuilders never contacts the fingerprint site; it only links to it, and you upload your sample there yourself. The fingerprint you upload is stored with the story and is sent only to the AI provider you picked in **Settings**, as part of the prompts that already contain your story.
 
 **Can the chat change my story without asking?**
 No. The chat can only propose changes. Nothing changes until you click **Apply**.

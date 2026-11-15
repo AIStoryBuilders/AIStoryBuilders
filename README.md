@@ -102,6 +102,9 @@ Base per story.
 - **Knowledge Base** (V2 only, optional)
   - *Pages* (Markdown files in `{Title}/KnowledgeBase/`)
 
+- **Writing voice** (V2 only, optional)
+  - *Lexical fingerprint* (`{Title}/LexicalFingerprint.json`, a JSON style profile made with an external tool; see [Docs/Lexical-Fingerprint-Plan.md](Docs/Lexical-Fingerprint-Plan.md))
+
 ## Where your stories live
 
 | App | Location |
@@ -118,6 +121,7 @@ in `.stybld` exports.
 V2 reads and writes V1's story files unchanged, so both apps can open the same stories. **Run one app at a time:**
 if both edit the same story at once, the last save wins. V2 never reads or changes V1's
 `AIStoryBuildersSettings.config` or `ModelCache\`; that file may still hold a V1 API key in plain text.
+V1 ignores V2's `KnowledgeBase\` folder and `LexicalFingerprint.json`, but carries both through its own Export and Import.
 
 ### Browser storage
 

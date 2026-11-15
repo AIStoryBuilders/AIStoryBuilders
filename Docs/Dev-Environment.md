@@ -89,6 +89,9 @@ An agent can't complete these on its own. Leave them unchecked and report them (
 | T9a, T10a, T18 | V1 coexistence | Open a V2-edited story in V1 and the reverse, and import V2's `.stybld` into V1 |
 | T11, T15 | Visual match | Compare with the artboards at 1440 px |
 | T12b | Speech-to-text in WebView2 | Try the microphone button in the MAUI app |
+| T19e | Writing voice link and screenshots | In the MAUI app, click **Get your lexical fingerprint** on the Details tab and check it opens in the system browser. Capture `Docs/images/user-guide/09b-details-writing-voice.png` (Ok state) and add its reference to User-Guide §5 in the same commit. Upload, replace and remove `Fixtures/Fingerprint/valid-wrapped.json` in both apps, and check a tampered file shows the Invalid card. |
+| T19e | V1 round trip | Export a story with a fingerprint, import it into V1, export it from V1, import it into V2, and check **Writing voice** shows it |
+| T19f | Live style check | [Test-Data.md](Test-Data.md) §7, row "T19 voice" |
 | Q25 | Store submission | Try the packaged app (§4a), then upload the `.msix` in Partner Center, update the listing's description and screenshots, and submit |
 
 ## 6. Environment variables (opt-in live tests)
@@ -101,11 +104,13 @@ Live tests are skipped unless these are set. Never commit values.
 | `ASB_LIVE_KEY` | `<api-key>` | same |
 | `ASB_LIVE_MODEL` | `<model-id>` (must be one that passes the probe) | same |
 | `ASB_LIVE_ENDPOINT` | `https://<resource>.openai.azure.com/` or `http://<ollama-host>:11434/` | Azure and Ollama only |
+| `ASB_FINGERPRINT_SAMPLE` | `C:\path\to\my-fingerprint.json` (a real file from the fingerprint tool; never commit it) | `RealFingerprintSampleTests` (T19): parses, saves and renders it, and prints the style card to the test output |
 
 One more variable is not a live test. It rewrites committed test fixtures, so review the diff before committing:
 
 | Variable | Value | Used by |
 |---|---|---|
+| `ASB_UPDATE_GOLDEN` | `1` | Rewrites `Fixtures/Fingerprint/valid-bare.card.txt` (`FingerprintPromptRendererTests`) after a deliberate change to the style card |
 | `ASB_REGENERATE_FIXTURES` | `1` | Rewrites `Fixtures/V1Story/before/` (`StoryReadTests`), `Fixtures/V1Story/graph` (`GraphTests`) and `Fixtures/embeddings.json` (`EmbeddingTests`). Those tests also write the graph and embeddings files when they are missing. |
 
 PowerShell, for the current session only:
