@@ -4,7 +4,7 @@
 |---|---|
 | Status | Draft for implementation |
 | Date | 2026-11-14 |
-| Scope | Let each story hold one **lexical fingerprint**, a JSON style profile that the user makes with an external free tool. The user uploads, replaces or removes it on the story's **Details** tab. It is stored inside the story folder, so it travels in `.stybld` exports and WASM saves. While a story has one, **paragraph Generate** and **Story Chat** write in its voice. |
+| Scope | Let each story hold one **lexical fingerprint**, a JSON style profile that the user makes with an [external free tool](https://worldspring.press/lexical-fingerprint). The user uploads, replaces or removes it on the story's **Details** tab. It is stored inside the story folder, so it travels in `.stybld` exports and WASM saves. While a story has one, **paragraph Generate** and **Story Chat** write in its voice. |
 | Audience | A developer or agent session that has not seen the planning conversation |
 | Parent plan | [AIStoryBuildersV2-Plan.md](AIStoryBuildersV2-Plan.md). Its rules (D1–D32, [AGENTS.md](../AGENTS.md)) still apply, except the one change to D4 recorded here as LF1. |
 
