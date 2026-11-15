@@ -167,6 +167,8 @@ A **lexical fingerprint** is a short profile of how you write: sentence rhythm, 
 
 **What you should see:** **Fingerprint** / **Saved. New AI writing will use this voice.** The section shows the fingerprint's name, the start of its profile and the upload date.
 
+![The Writing voice section with a fingerprint](images/user-guide/09b-details-writing-voice.png)
+
 **Replace or remove it:**
 
 - To use a new fingerprint, click **Replace**, choose the new file, and click **Yes**.

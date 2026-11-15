@@ -49,6 +49,8 @@ public class FingerprintStorageTests : IDisposable
         var root = JsonNode.Parse(text)!.AsObject();
         Assert.Equal(["title", "uploadedUtc", "fingerprint"], root.Select(p => p.Key));
         Assert.Equal("Harbor voice", root["title"]!.GetValue<string>());
+        Assert.EndsWith("Z", root["uploadedUtc"]!.GetValue<string>());
+        Assert.DoesNotContain("\\u002B", text);
         Assert.Equal("kept as an unknown key", root["fingerprint"]!["generator_note"]!.GetValue<string>());
 
         var read = await _f.Service.GetLexicalFingerprintAsync(Title);

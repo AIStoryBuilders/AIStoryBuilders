@@ -21,14 +21,14 @@
         </span>
         @if (voice.Status == FingerprintStatus.Ok)
         {
-            <span class="asb-chip asb-voice-chip" title="Story Chat writes prose in this story's lexical fingerprint voice.">
-                <span class="mi" aria-hidden="true">fingerprint</span> Voice: @voice.Name
+            <span class="asb-chip asb-voice-chip" title="@($"Voice: {voice.Name}. Story Chat writes prose in this story's lexical fingerprint voice.")">
+                <span class="mi" aria-hidden="true">fingerprint</span><span class="asb-voice-chip-text">Voice: @voice.Name</span>
             </span>
         }
         else if (voice.Status == FingerprintStatus.Invalid)
         {
             <span class="asb-chip asb-voice-chip asb-voice-chip-bad" title="This story's lexical fingerprint can't be read, so Story Chat isn't using it. Fix it on the Details tab.">
-                <span class="mi" aria-hidden="true">error_outline</span> Voice file unreadable
+                <span class="mi" aria-hidden="true">error_outline</span><span class="asb-voice-chip-text">Voice file unreadable</span>
             </span>
         }
         <span class="asb-sp"></span>

@@ -267,7 +267,9 @@ h3.asb-ws-sec { font-size: 18px; font-weight: 700; margin: 0 0 16px; color: var(
 .asb-voice-profile { overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; line-clamp: 2; -webkit-box-orient: vertical; word-break: break-word; }
 .asb-voice-note { display: flex; align-items: center; gap: 4px; }
 .asb-voice-note .mi { font-size: 14px; }
-.asb-voice-chip { gap: 4px; max-width: 220px; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; cursor: default; }
+/* The chip takes only leftover header space (basis 0, up to its own width), so it shortens with an ellipsis instead of wrapping Clear. */
+.asb-voice-chip { flex: 1000 1 0; min-width: 0; max-width: max-content; gap: 4px; overflow: hidden; white-space: nowrap; cursor: default; }
+.asb-voice-chip-text { min-width: 0; overflow: hidden; text-overflow: ellipsis; }
 .asb-voice-chip .mi { font-size: 14px; }
 .asb-voice-chip-bad { color: var(--asb-danger); background: var(--asb-panel); border-color: var(--asb-danger); }
 .asb-st { font-size: 11px; color: var(--asb-accent); font-weight: 600; }

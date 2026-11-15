@@ -73,7 +73,7 @@ public partial class AIStoryBuildersService
         var wrapper = new JsonObject
         {
             ["title"] = name,
-            ["uploadedUtc"] = uploaded.ToString("o", CultureInfo.InvariantCulture),
+            ["uploadedUtc"] = uploaded.UtcDateTime.ToString("o", CultureInfo.InvariantCulture),   // "…Z", as in §6.2
             ["fingerprint"] = parsed.Raw!.DeepClone(),
         };
         var json = wrapper.ToJsonString(FingerprintJsonOptions);

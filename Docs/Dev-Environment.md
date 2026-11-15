@@ -89,7 +89,7 @@ An agent can't complete these on its own. Leave them unchecked and report them (
 | T9a, T10a, T18 | V1 coexistence | Open a V2-edited story in V1 and the reverse, and import V2's `.stybld` into V1 |
 | T11, T15 | Visual match | Compare with the artboards at 1440 px |
 | T12b | Speech-to-text in WebView2 | Try the microphone button in the MAUI app |
-| T19e | Writing voice link and screenshots | In the MAUI app, click **Get your lexical fingerprint** on the Details tab and check it opens in the system browser. Capture `Docs/images/user-guide/09b-details-writing-voice.png` (Ok state) and add its reference to User-Guide §5 in the same commit. Upload, replace and remove `Fixtures/Fingerprint/valid-wrapped.json` in both apps, and check a tampered file shows the Invalid card. |
+| T19e | Writing voice link | In the MAUI app, click **Get your lexical fingerprint** on the Details tab and check it opens in the system browser. (Done on 2026-11-15 in the MAUI app: upload, refusal of a bad file, replace with confirm, remove with confirm, the Invalid card and chip, the paragraph dialog note, Delete removing the file, and the `09b-details-writing-voice.png` screenshot. Only this link click is left.) |
 | T19e | V1 round trip | Export a story with a fingerprint, import it into V1, export it from V1, import it into V2, and check **Writing voice** shows it |
 | T19f | Live style check | [Test-Data.md](Test-Data.md) §7, row "T19 voice" |
 | Q25 | Store submission | Try the packaged app (§4a), then upload the `.msix` in Partner Center, update the listing's description and screenshots, and submit |
