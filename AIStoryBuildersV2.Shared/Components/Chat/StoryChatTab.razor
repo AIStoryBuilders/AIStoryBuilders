@@ -19,6 +19,18 @@
             <RadzenCheckBox TValue="bool" Value="searchKb" ValueChanged="OnSearchKbChanged" Name="chat-kb" Disabled="@(kbEmpty || streaming)" />
             <RadzenLabel Text="Include Knowledgebase" Component="chat-kb" />
         </span>
+        @if (voice.Status == FingerprintStatus.Ok)
+        {
+            <span class="asb-chip asb-voice-chip" title="Story Chat writes prose in this story's lexical fingerprint voice.">
+                <span class="mi" aria-hidden="true">fingerprint</span> Voice: @voice.Name
+            </span>
+        }
+        else if (voice.Status == FingerprintStatus.Invalid)
+        {
+            <span class="asb-chip asb-voice-chip asb-voice-chip-bad" title="This story's lexical fingerprint can't be read, so Story Chat isn't using it. Fix it on the Details tab.">
+                <span class="mi" aria-hidden="true">error_outline</span> Voice file unreadable
+            </span>
+        }
         <span class="asb-sp"></span>
         <button class="asb-icon-btn-plain" title="Clear conversation" aria-label="Clear conversation"
                 disabled="@(streaming || (Bubbles.Count == 0 && pending.Count == 0))" @onclick="Clear">
@@ -121,6 +133,7 @@
     bool loadingGraph = true;
     bool kbEmpty = true;
     bool searchKb;
+    StoryFingerprint voice = StoryFingerprint.NoneValue;
     bool applying;
     IReadOnlyList<PendingMutation> pending = [];
     readonly CancellationTokenSource cts = new();
@@ -133,6 +146,7 @@
     {
         pending = Chat.PendingChanges(Story.Title);
         (kbEmpty, searchKb) = await Choice.DefaultAsync(Story.Title, KnowledgeSearchChoice.Chat);
+        voice = await Svc.GetLexicalFingerprintAsync(Story.Title);   // never throws; each turn re-reads the file itself
         // Build the KB graph now so citations in answers resolve.
         if (CurKb.Current is { } kb && !kbEmpty)
         {

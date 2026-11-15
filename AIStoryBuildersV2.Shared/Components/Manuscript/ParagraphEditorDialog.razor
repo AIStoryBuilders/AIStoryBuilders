@@ -103,6 +103,14 @@
                     {
                         <div class="kgb-help">This story's knowledge base is empty</div>
                     }
+                    @if (voice.Status == FingerprintStatus.Ok)
+                    {
+                        <div class="kgb-help asb-voice-note"><span class="mi" aria-hidden="true">fingerprint</span> Writing in the voice of "@voice.Name" (lexical fingerprint).</div>
+                    }
+                    else if (voice.Status == FingerprintStatus.Invalid)
+                    {
+                        <div class="kgb-help asb-voice-note"><span class="mi" aria-hidden="true">error_outline</span> This story's lexical fingerprint can't be read, so it isn't used.</div>
+                    }
                 </div>
             </div>
             <div class="asb-dialog-actions">
@@ -180,6 +188,7 @@
     string? model;
     bool searchKb;
     bool kbEmpty = true;
+    StoryFingerprint voice = StoryFingerprint.NoneValue;
 
     List<Character> storyCharacters = [];
     List<string> allCharacters = [];
@@ -219,6 +228,7 @@
         timelineOptions = [None, .. Svc.GetTimelines(Story).Select(t => t.TimelineName).OrderBy(n => n, StringComparer.OrdinalIgnoreCase)];
 
         (kbEmpty, searchKb) = await Ai.KnowledgeBaseDefaultAsync(Story.Title);
+        voice = await Svc.GetLexicalFingerprintAsync(Story.Title);   // never throws; Generate re-reads the file itself
     }
 
     protected override async Task OnAfterRenderAsync(bool firstRender)

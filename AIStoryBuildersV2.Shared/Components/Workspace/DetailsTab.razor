@@ -6,6 +6,7 @@
 @inject IFileExportService Export
 @inject NavigationManager Nav
 @inject LogService Log
+@inject IStoryPersistence Persist
 
 <h3 class="asb-ws-sec">Story details</h3>
 <div class="asb-field">
@@ -42,6 +43,52 @@
     <RadzenButton Text="Re-load Story" Icon="sync" ButtonStyle="ButtonStyle.Warning" Disabled="busy" Click="ReloadAsync" />
 </div>
 
+@* Writing voice (Lexical-Fingerprint-Plan §5.2, §6.6) *@
+<section class="asb-voice asb-mt" aria-labelledby="d-voice-h">
+    <h3 class="asb-ws-sec" id="d-voice-h">Writing voice</h3>
+    @if (fingerprint.Status == FingerprintStatus.Ok)
+    {
+        <p class="asb-sub">This story writes in the voice below. To change it, make a new fingerprint at @ToolLink and click Replace.</p>
+        <div class="asb-subcard asb-voice-card">
+            <span class="mi asb-voice-icon" aria-hidden="true">fingerprint</span>
+            <div class="asb-voice-text">
+                <b>@fingerprint.Name</b>
+                <div class="asb-note asb-voice-profile" title="@fingerprint.Fingerprint?.CondensedProfile">@ProfilePreview</div>
+                @if (fingerprint.UploadedUtc is { } uploaded)
+                {
+                    <div class="asb-note">Uploaded @uploaded.ToLocalTime().ToString("d")</div>
+                }
+            </div>
+        </div>
+    }
+    else
+    {
+        <p class="asb-sub">
+            A lexical fingerprint is a short profile of how you write: sentence rhythm, word choice, punctuation, point of view, and the
+            habits you avoid. It is built from a sample of your own prose. When this story has one, the AI writes new paragraphs and Story
+            Chat edits in your voice. To get one, open @ToolLink, upload a writing sample (PDF, Word or Markdown, under 5,000 words), and
+            download the .json file it gives you. Then come back here and click Upload fingerprint.
+        </p>
+        @if (fingerprint.Status == FingerprintStatus.Invalid)
+        {
+            <div class="asb-subcard asb-voice-card" role="alert">
+                <span class="mi asb-voice-icon asb-err" aria-hidden="true">error_outline</span>
+                <div class="asb-voice-text">This story's fingerprint file can't be read, so the AI isn't using it. @fingerprint.Error</div>
+            </div>
+        }
+    }
+    <div class="asb-actions">
+        <label class="rz-button rz-button-md rz-variant-filled rz-primary rz-shade-default asb-file-button @(busy ? "rz-state-disabled" : "")">
+            <span class="rz-button-box"><i class="notranslate rz-button-icon-left rzi">upload_file</i><span class="rz-button-text">@(fingerprint.Status == FingerprintStatus.None ? "Upload fingerprint" : "Replace")</span></span>
+            <InputFile @key="fingerprintKey" accept=".json,application/json" OnChange="UploadFingerprintAsync" disabled="@busy" />
+        </label>
+        @if (fingerprint.Status != FingerprintStatus.None)
+        {
+            <RadzenButton Text="Remove" Icon="delete" ButtonStyle="ButtonStyle.Danger" Disabled="busy" Click="RemoveFingerprintAsync" />
+        }
+    </div>
+</section>
+
 @code {
     [Parameter, EditorRequired] public Story Story { get; set; } = default!;
     [Parameter] public EventCallback OnDeleted { get; set; }
@@ -50,10 +97,112 @@
     public static readonly string[] Styles = ["Drama", "Sci-Fi", "Romance", "Comedy", "Fantasy", "Mystery", "Thriller", "Children", "Young Adult", "Action", "Crime", "Dystopian", "Horror"];
 
     bool busy;
+    StoryFingerprint fingerprint = StoryFingerprint.NoneValue;
+    string? fingerprintTitle;
+    int fingerprintKey;
 
-    protected override void OnParametersSet()
+    RenderFragment ToolLink => @<span><a href="@LexicalFingerprintDefaults.ToolUrl" target="_blank" rel="noopener noreferrer">Get your lexical fingerprint</a> (free, external site)</span>;
+
+    string ProfilePreview => fingerprint.Fingerprint?.CondensedProfile is { } p && p.Length > 200 ? p[..200].TrimEnd() + "…" : fingerprint.Fingerprint?.CondensedProfile ?? "";
+
+    /// <summary>The name in confirms: "{Name}" in quotes, or "the current fingerprint" (§6.6).</summary>
+    string OldName => string.IsNullOrEmpty(fingerprint.Name) ? "the current fingerprint" : $"\"{fingerprint.Name}\"";
+
+    protected override async Task OnParametersSetAsync()
     {
         if (string.IsNullOrEmpty(Story.Style)) Story.Style = "Drama";
+        // Only when the story changes: WASM saves re-render the workspace, and a reload each time would re-log an invalid file (§5.2).
+        if (Story.Title != fingerprintTitle) await LoadFingerprintAsync();
+    }
+
+    async Task LoadFingerprintAsync()
+    {
+        fingerprintTitle = Story.Title;
+        fingerprint = await Svc.GetLexicalFingerprintAsync(Story.Title, logInvalid: true);
+    }
+
+    async Task UploadFingerprintAsync(InputFileChangeEventArgs e)
+    {
+        var file = e.File;
+        if (file.Size > LexicalFingerprintDefaults.MaxFileBytes)
+        {
+            fingerprintKey++;
+            Notify.Notify(NotificationSeverity.Error, "Fingerprint", LexicalFingerprintParser.TooLarge, 4000);
+            return;
+        }
+
+        busy = true;
+        var saved = false;
+        try
+        {
+            // Read the file before re-rendering: a new key replaces the InputFile its stream reads through.
+            byte[] bytes;
+            using (var buffer = new MemoryStream())
+            {
+                await file.OpenReadStream(LexicalFingerprintDefaults.MaxFileBytes).CopyToAsync(buffer);
+                bytes = buffer.ToArray();
+            }
+
+            var parsed = LexicalFingerprintParser.Parse(bytes, file.Name);
+            if (!parsed.Ok)
+            {
+                Notify.Notify(NotificationSeverity.Error, "Fingerprint", parsed.Error, 6000);
+                return;
+            }
+            if (fingerprint.Status != FingerprintStatus.None &&
+                await Dialogs.Confirm($"Replace {OldName} with \"{parsed.SuggestedName}\"?", "Replace Fingerprint",
+                    new ConfirmOptions { OkButtonText = "Yes", CancelButtonText = "No" }) != true)
+                return;
+
+            var result = await Svc.SaveLexicalFingerprintAsync(Story.Title, bytes, file.Name);
+            if (result.Status != FingerprintStatus.Ok)
+            {
+                Notify.Notify(NotificationSeverity.Error, "Fingerprint", result.Error, 6000);
+                return;
+            }
+            saved = true;
+            await Persist.FlushAsync(Story.Title);
+            Notify.Notify(NotificationSeverity.Success, "Fingerprint", "Saved. New AI writing will use this voice.", 4000);
+        }
+        catch (Exception ex)
+        {
+            Fail(ex);
+        }
+        finally
+        {
+            busy = false;
+            fingerprintKey++;   // a fresh InputFile so the same file can be picked again
+            // Reload even when the flush failed: the file is in MEMFS and the AI uses it in this tab (§6.6).
+            if (saved) await LoadFingerprintAsync();
+        }
+    }
+
+    async Task RemoveFingerprintAsync()
+    {
+        if (await Dialogs.Confirm($"Remove {OldName} from this story? New AI writing will stop using it.", "Remove Fingerprint",
+                new ConfirmOptions { OkButtonText = "Yes", CancelButtonText = "No" }) != true) return;
+        busy = true;
+        try
+        {
+            if (await Svc.RemoveLexicalFingerprintAsync(Story.Title))
+            {
+                await Persist.FlushAsync(Story.Title);
+                Notify.Notify(NotificationSeverity.Success, "Fingerprint", "Removed.", 3000);
+            }
+            else
+            {
+                Notify.Notify(NotificationSeverity.Info, "Fingerprint", "There was no fingerprint to remove.", 3000);
+            }
+        }
+        catch (Exception ex)
+        {
+            Fail(ex);
+        }
+        finally
+        {
+            busy = false;
+            await LoadFingerprintAsync();
+        }
     }
 
     void Fail(Exception ex)

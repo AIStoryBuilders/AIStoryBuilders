@@ -356,6 +356,27 @@ No validation on Save (V1).
 
 Keyboard: none.
 
+### 10.3 Writing voice **(new, plan D33)**
+
+A section below the button row, separated by `asb-mt` and a rule, with the heading `h3.asb-ws-sec` "Writing voice". It manages the story's lexical fingerprint, `{Title}/LexicalFingerprint.json` ([Lexical-Fingerprint-Plan.md](Lexical-Fingerprint-Plan.md) §5.2, §6.6). All controls are disabled while busy.
+
+| State | Shows |
+|---|---|
+| **None** (no file) | The explainer: "A lexical fingerprint is a short profile of how you write: sentence rhythm, word choice, punctuation, point of view, and the habits you avoid. It is built from a sample of your own prose. When this story has one, the AI writes new paragraphs and Story Chat edits in your voice. To get one, open {link}, upload a writing sample (PDF, Word or Markdown, under 5,000 words), and download the .json file it gives you. Then come back here and click Upload fingerprint." `{link}` is the anchor "Get your lexical fingerprint" (`target="_blank" rel="noopener noreferrer"`, to the fingerprint tool) followed by "(free, external site)". Then the file button **Upload fingerprint** (Primary · `upload_file`, `accept=".json,application/json"`). |
+| **Ok** | "This story writes in the voice below. To change it, make a new fingerprint at {link} and click Replace." Then an `.asb-subcard` with the `fingerprint` icon, **{Name}**, the first 200 characters of the profile (`.asb-note`, clamped to two lines, full text in the tooltip) and "Uploaded {local short date}" when known. Then **Replace** (file button, Primary · `upload_file`) and **Remove** (Danger · `delete`). |
+| **Invalid** | The None explainer, then an `.asb-subcard` with `error_outline` in `--asb-danger`: "This story's fingerprint file can't be read, so the AI isn't using it. {Error}". Then **Replace** and **Remove**. |
+
+The state is loaded with `GetLexicalFingerprintAsync(title, logInvalid: true)` when the tab is shown, after this section's own save or remove, and when the story title changes, never on every parameter set (WASM saves re-render the workspace).
+
+| Event | Result |
+|---|---|
+| File larger than 1 MB | `Error · "Fingerprint" / "The file is larger than 1 MB." · 4 s`; nothing is read |
+| Parse fails | `Error · "Fingerprint" / "{Error}" · 6 s` (the §6.1 message, for example "This file does not match a lexical fingerprint. Missing criterion: fragment_usage"); nothing is written |
+| Replace (state Ok or Invalid) | Confirm **Replace Fingerprint** / `Replace {old} with "{new}"?` Yes/No. `{old}` is `"{Name}"`, or `the current fingerprint` when there is no name. No writes nothing. |
+| Saved | `Persist.FlushAsync(title)` (MAUI: no-op), then `Success · "Fingerprint" / "Saved. New AI writing will use this voice." · 4 s` |
+| Remove | Confirm **Remove Fingerprint** / `Remove {old} from this story? New AI writing will stop using it.` Yes/No. Removed: flush, then `Success · "Fingerprint" / "Removed." · 3 s`. No file: `Info · "Fingerprint" / "There was no fingerprint to remove." · 3 s`. The state reloads either way. |
+| Write or flush fails | The tab's `Fail` path; a full browser storage gives the quota toast and the workspace banner. No success toast. |
+
 ---
 
 ## 11. Timelines tab and Timeline dialog
@@ -582,6 +603,7 @@ Busy: an indeterminate bar replaces the toolbar and text area (V1); Esc and X ar
 | "Number of words to generate:" | `RadzenDropDown`: 10, 20, 50, 100, 200, 300, 500, 800, 1000 | — | V1 `SetNumberOfWords(text)`: fewer than 10 words gives 200; under 20 gives 20; under 50 gives 50; under 100 gives 100; under 200 gives 200; under 300 gives 300; under 500 gives 500; under 800 gives 800; otherwise 1000 |
 | "AI Model:" | Verified-model dropdown (§0.3) | — | the default model |
 | Search knowledgebase **(plan)** | `RadzenCheckBox` under AI Model | — | D16: checked when `await CurKb.IsEmptyAsync()` is false. When the KB is empty: unchecked and disabled, with the help text "This story's knowledge base is empty" **(plan)**. The choice is kept per story and per surface for this session (D16). |
+| Voice note **(new, D33)** | `kgb-help` line under the Search knowledgebase row | — | Ok: `fingerprint` icon + `Writing in the voice of "{Name}" (lexical fingerprint).` Invalid: `error_outline` + `This story's lexical fingerprint can't be read, so it isn't used.` None: nothing. Loaded once when the dialog opens; Generate re-reads the file itself, so the card in the prompt is never stale. While Ok, `CreateMasterStory` fills `WritingStyleFingerprint` and the style card is appended to the prompt (no checkbox, always on). |
 
 | Control | Style/icon | Enabled when | Action | Confirm | Success | Failure |
 |---|---|---|---|---|---|---|
@@ -642,6 +664,7 @@ V1: [ChatControl.razor](../../../ADefWebserver/AIStoryBuilders/Components/Pages/
 | Header "Story Chat Assistant" | `forum` icon | — | — | — | — | — |
 | Model dropdown | Verified models (§0.3) | not streaming | Sets the model for the next turns. It does **not** change the saved default (V1 changed it in memory). Kept for the session. | — | — | — |
 | Include Knowledgebase **(plan)** | `RadzenCheckBox` next to the model | not streaming; disabled when the KB is empty, with the tooltip "This story's knowledge base is empty" **(plan)** | Sets `StoryChatRequest.SearchKnowledgeBase`. When checked, the chat can read **and propose edits to** every KB page and manage its folders (see "Knowledge base page edits" and "Knowledge base folders" below). When unchecked, it can't read the KB but can still propose deleting a page or folder by path (plan Q21). Default and persistence as in D16. | — | — | — |
+| Voice chip **(new, D33)** | `.asb-chip` after the KB checkbox | — | Ok: `fingerprint` icon + `Voice: {Name}`, tooltip `Story Chat writes prose in this story's lexical fingerprint voice.` Invalid: `error_outline` + `Voice file unreadable`, tooltip `This story's lexical fingerprint can't be read, so Story Chat isn't using it. Fix it on the Details tab.` None: not shown. Loaded when the tab opens; each turn re-reads the file. While Ok, the system prompt gets a fixed writing-voice instruction and the style card is prepended to the outgoing copy of the current message only (never kept in the history). | — | — | — |
 | Clear conversation | Icon button · `restart_alt` **(new icon; V1 uses the 🔄 emoji)**, title "Clear conversation" | not streaming, at least one message or proposed change | Clear the bubbles and proposed changes; `IStoryChatService.ClearSession(title)` | — (V1 has none) | Empty state shows | — |
 | Input | A plain `<textarea rows="2">` (`asb-chat-composer`, aria-label "Message"), placeholder "Ask about your story..." | disabled while streaming | Enter sends; Shift+Enter adds a newline (V1, Plan §5.6) | — | — | — |
 | Send | Primary · —, text "Send" | not streaming, the graph is not loading, input not blank | Add the user bubble, clear the input, stream `SendMessageAsync(new StoryChatRequest(title, text, model, kbChecked))`, appending chunks to the AI bubble | — | The AI bubble is final | Exception: an error bubble with "Error: {message}" (V1) and **Retry** **(plan)** |
@@ -836,3 +859,4 @@ Name dialog inline errors **(KGB)**: "Names can't contain '/' or '\\'.", "The na
 | 22 | V1 renders prose as `MarkupString` | Plain text with CSS indenting (Plan §9) |
 | 23 | V1's Import Story toast is always Info | Success or Error, depending on whether a story was added **(new)** |
 | 24 | The Story Workspace artboard puts Chat before Knowledgebase | The owner's order: Knowledgebase, then Chat as the last tab (§9.4, Plan Q19) |
+| 25 | The Story Workspace artboard's Details tab has no Writing voice section | Added below the button row (plan D33, [Lexical-Fingerprint-Plan.md](Lexical-Fingerprint-Plan.md) LF2): heading, muted explainer, subcard, buttons, all from existing classes. The artboard is not changed. **(new)** |

@@ -94,6 +94,10 @@ A tabbed surface (opened for one story). Tabs, left→right:
   Message** and **World Facts** panels. Buttons: **Save** (`save`), **Save Word Doc** (`print`),
   **Export Project** (`save_alt`), **Delete** (danger), **Re-load Story** (warning, `sync` — rebuilds
   embeddings + knowledge graph).
+  Below the buttons, a **Writing voice** section (new, not in the artboard; plan D33): an `h3.asb-ws-sec`
+  heading, a muted `.asb-sub` explainer with a link to the fingerprint tool, an `.asb-subcard` with the
+  `fingerprint` icon, name, two-line profile and upload date, then **Upload fingerprint** / **Replace**
+  (primary, `upload_file`) and **Remove** (danger, `delete`). Styles: `.asb-voice*` in `app.css`, tokens only.
 - **Timelines / Locations / Characters** — a **New …** (success) button + a list of cards, each with
   **Edit**. Edit opens a dialog:
   - *Character*: Character Name; Background Type dropdown + **Add Background**; a list of background
