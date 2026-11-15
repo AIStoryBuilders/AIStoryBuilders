@@ -64,6 +64,18 @@ Serve `AIStoryBuildersV2.Web/bin/Release/net11.0/publish/wwwroot` from any stati
 - serve `.wasm` as `application/wasm`, and serve `.onnx` and `.dat` as `application/octet-stream`
 - keep the `<base href>` correct when the app runs under a sub-path. Test this once with a sub-path, because D18 depends on it.
 
+## 4a. Building the Microsoft Store package
+
+The Windows app ships as an update to V1's Store listing (plan Q25). Its identity is in `AIStoryBuildersV2/Platforms/Windows/Package.appxmanifest`. Before each submission, raise `Identity/@Version` above the version that is live in the Store, and keep its last part `0`.
+
+```bash
+dotnet publish AIStoryBuildersV2/AIStoryBuildersV2.csproj -f net11.0-windows10.0.19041.0 -c Release -p:WindowsPackageType=MSIX -p:RuntimeIdentifierOverride=win-x64 -p:UapAppxPackageBuildMode=SideloadOnly -p:AppxBundle=Never
+```
+
+The package is `AIStoryBuildersV2/AppPackages/AIStoryBuildersV2_<version>_x64_Test/AIStoryBuildersV2_<version>_x64.msix`. It is unsigned: upload it in Partner Center (**Packages**), which signs it. The `_Test` folder name comes from the sideload build mode; the `.msix` is the same one a Store build would make.
+
+To try the package locally without replacing an installed V1, unzip it, change `Identity/@Name` in `AppxManifest.xml` to a test name, delete `AppxSignature.p7x`, `AppxBlockMap.xml` and `[Content_Types].xml`, and run `Add-AppxPackage -Register <folder>\AppxManifest.xml` (Developer Mode must be on). Remove it afterwards with `Get-AppxPackage <test name> | Remove-AppxPackage`. It uses the real `Documents\AIStoryBuilders`, so §8 applies.
+
 ## 5. Steps that need a person
 
 An agent can't complete these on its own. Leave them unchecked and report them (AGENTS.md, "How to work").
@@ -77,6 +89,7 @@ An agent can't complete these on its own. Leave them unchecked and report them (
 | T9a, T10a, T18 | V1 coexistence | Open a V2-edited story in V1 and the reverse, and import V2's `.stybld` into V1 |
 | T11, T15 | Visual match | Compare with the artboards at 1440 px |
 | T12b | Speech-to-text in WebView2 | Try the microphone button in the MAUI app |
+| Q25 | Store submission | Try the packaged app (§4a), then upload the `.msix` in Partner Center, update the listing's description and screenshots, and submit |
 
 ## 6. Environment variables (opt-in live tests)
 
