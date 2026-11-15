@@ -1207,7 +1207,7 @@ The lexical fingerprint (D33) follows T18. Each task's scope and *done when* che
 - [x] **T19b: Storage and the rule change.**
 - [x] **T19c: Style card and paragraph Generate.**
 - [x] **T19d: Story Chat.**
-- [ ] **T19e: UI.** (The MAUI link check and the screenshots need a person.)
+- [ ] **T19e: UI.** (Only the V1 round trip is left; it needs V1. See Dev-Environment §5.)
 - [x] **T19f: User-facing and remaining docs.**
 
 ---
