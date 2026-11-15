@@ -41,8 +41,9 @@
         <ApplicationDisplayVersion>1.0</ApplicationDisplayVersion>
         <ApplicationVersion>1</ApplicationVersion>
 
-        <!-- To develop, package, and publish an app to the Microsoft Store, see: https://aka.ms/MauiTemplateUnpackaged -->
-        <WindowsPackageType>None</WindowsPackageType>
+        <!-- Day-to-day builds are unpackaged. The Microsoft Store build passes -p:WindowsPackageType=MSIX
+             (Docs/Dev-Environment.md §4a). The Store identity is in Platforms\Windows\Package.appxmanifest. -->
+        <WindowsPackageType Condition="'$(WindowsPackageType)' == ''">None</WindowsPackageType>
 
         <SupportedOSPlatformVersion Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'ios'">15.0</SupportedOSPlatformVersion>
         <SupportedOSPlatformVersion Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'maccatalyst'">15.0</SupportedOSPlatformVersion>
@@ -69,12 +70,38 @@
         <MauiAsset Include="Resources\Raw\**" LogicalName="%(RecursiveDir)%(Filename)%(Extension)" />
     </ItemGroup>
 
+    <!-- V1's Store tiles, logos and splash image, referenced by Package.appxmanifest. They are plain package
+         content (not MauiImage), so the scale-NNN names reach the package unchanged. -->
+    <ItemGroup Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'windows'">
+        <Content Include="Resources\Store\*.png" CopyToOutputDirectory="PreserveNewest" />
+    </ItemGroup>
+
+    <!-- Microsoft Store package settings (only used when WindowsPackageType is MSIX). The Store signs the package. -->
+    <PropertyGroup Condition="'$(WindowsPackageType)' == 'MSIX'">
+        <AppxPackageSigningEnabled>False</AppxPackageSigningEnabled>
+        <GenerateAppInstallerFile>False</GenerateAppInstallerFile>
+        <!-- The symbol-package and .msixupload tasks fail under the dotnet CLI's MSBuild (they need mspdbcmf.exe
+             and System.Security.Permissions), so the Store build makes a plain .msix, which Partner Center accepts. -->
+        <AppxSymbolPackageEnabled>False</AppxSymbolPackageEnabled>
+        <AppxAutoIncrementPackageRevision>False</AppxAutoIncrementPackageRevision>
+    </PropertyGroup>
+
     <ItemGroup>
         <PackageReference Include="Microsoft.Maui.Controls" Version="$(MauiVersion)" />
         <PackageReference Include="Microsoft.AspNetCore.Components.WebView.Maui" Version="$(MauiVersion)" />
         <PackageReference Include="Microsoft.Extensions.Logging.Debug" Version="11.0.0" />
         <PackageReference Include="CommunityToolkit.Maui" Version="15.0.1" />
     </ItemGroup>
+
+    <!-- Windows App SDK 2.x brings Microsoft.Windows.AI.MachineLearning, which ships its own onnxruntime.dll.
+         The embeddings use Microsoft.ML.OnnxRuntime's copy, so drop the other one. Otherwise the unpackaged
+         output gets whichever copy lands last, and the MSIX build fails with APPX1101 (two files, same path). -->
+    <Target Name="DropWindowsMLOnnxRuntime" AfterTargets="ResolvePackageAssets">
+        <ItemGroup>
+            <NativeCopyLocalItems Remove="@(NativeCopyLocalItems)" Condition="'%(NativeCopyLocalItems.NuGetPackageId)' == 'Microsoft.Windows.AI.MachineLearning' And '%(Filename)%(Extension)' == 'onnxruntime.dll'" />
+            <RuntimeTargetsCopyLocalItems Remove="@(RuntimeTargetsCopyLocalItems)" Condition="'%(RuntimeTargetsCopyLocalItems.NuGetPackageId)' == 'Microsoft.Windows.AI.MachineLearning' And '%(Filename)%(Extension)' == 'onnxruntime.dll'" />
+        </ItemGroup>
+    </Target>
 
     <ItemGroup>
         <ProjectReference Include="..\AIStoryBuildersV2.Shared\AIStoryBuildersV2.Shared.csproj" />

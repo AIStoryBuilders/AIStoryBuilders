@@ -6,14 +6,17 @@
   xmlns:rescap="http://schemas.microsoft.com/appx/manifest/foundation/windows10/restrictedcapabilities"
   IgnorableNamespaces="uap rescap">
 
-  <Identity Name="maui-package-name-placeholder" Publisher="CN=User Name" Version="0.0.0.0" />
+  <!-- V1's Microsoft Store identity, so the Store build updates the existing AIStoryBuilders listing.
+       The version must be higher than the one live in the Store, with a revision (last part) of 0. -->
+  <Identity Name="41860Defwebs.com.25552E5BE9548" Publisher="CN=1B36D735-B652-43DB-8420-7E444D9AB5F0" Version="4.0.0.0" />
 
-  <mp:PhoneIdentity PhoneProductId="D4FA7D27-690F-494B-81C9-8296E70C67D8" PhonePublisherId="00000000-0000-0000-0000-000000000000"/>
+  <mp:PhoneIdentity PhoneProductId="2d1aaec0-7ebe-499f-b3ff-7de0713c7a2e" PhonePublisherId="00000000-0000-0000-0000-000000000000"/>
 
   <Properties>
-    <DisplayName>$placeholder$</DisplayName>
-    <PublisherDisplayName>User Name</PublisherDisplayName>
-    <Logo>$placeholder$.png</Logo>
+    <!-- Must match the name reserved in Partner Center -->
+    <DisplayName>AIStoryBuilders</DisplayName>
+    <PublisherDisplayName>BlazorData.net</PublisherDisplayName>
+    <Logo>Resources\Store\applogo.png</Logo>
   </Properties>
 
   <Dependencies>
@@ -28,13 +31,20 @@
   <Applications>
     <Application Id="App" Executable="$targetnametoken$.exe" EntryPoint="$targetentrypoint$">
       <uap:VisualElements
-        DisplayName="$placeholder$"
+        DisplayName="AIStoryBuilders"
         Description="$placeholder$"
-        Square150x150Logo="$placeholder$.png"
-        Square44x44Logo="$placeholder$.png"
+        Square150x150Logo="Resources\Store\mediumtile.png"
+        Square44x44Logo="Resources\Store\appicon.png"
         BackgroundColor="transparent">
-        <uap:DefaultTile Square71x71Logo="$placeholder$.png" Wide310x150Logo="$placeholder$.png" Square310x310Logo="$placeholder$.png" />
-        <uap:SplashScreen Image="$placeholder$.png" />
+        <uap:DefaultTile Square71x71Logo="Resources\Store\smailltile.png" Wide310x150Logo="Resources\Store\widetile.png" Square310x310Logo="Resources\Store\largetile.png" ShortName="AIStoryBuilders">
+          <uap:ShowNameOnTiles>
+            <uap:ShowOn Tile="square150x150Logo"/>
+            <uap:ShowOn Tile="wide310x150Logo"/>
+            <uap:ShowOn Tile="square310x310Logo"/>
+          </uap:ShowNameOnTiles>
+        </uap:DefaultTile>
+        <uap:SplashScreen Image="Resources\Store\aistorybuilders.png" />
+        <uap:LockScreen Notification="badgeAndTileText" BadgeLogo="Resources\Store\badgelogo.png"/>
       </uap:VisualElements>
     </Application>
   </Applications>
