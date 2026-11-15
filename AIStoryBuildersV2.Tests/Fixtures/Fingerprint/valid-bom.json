@@ -1,0 +1,148 @@
+﻿
+
+   {
+  "invariants": {
+    "point_of_view": "Close third person, one viewpoint per scene",
+    "tense": "Past tense",
+    "narrative_distance": "Close, with brief pull-backs at scene ends",
+    "dialogue_ratio": "About 20% of the text"
+  },
+  "criteria": {
+    "sentence_length_variability": {
+      "rating": 4,
+      "measurement": "Mean 15 words; range 2 to 41",
+      "pattern": "Short arrests between longer chains",
+      "example": "The lamp held. Barely."
+    },
+    "clause_architecture": {
+      "rating": -2,
+      "measurement": "Mostly one or two clauses per sentence",
+      "pattern": "Main clause first, detail added after a comma",
+      "example": "She left early, before the rain."
+    },
+    "fragment_usage": {
+      "rating": 1,
+      "measurement": "Fragments are about 5% of sentences",
+      "pattern": "Fragments mark a sudden noticing",
+      "example": "Footsteps. Then nothing."
+    },
+    "paragraph_density": {
+      "rating": -3,
+      "measurement": "Mean 3.4 sentences per paragraph",
+      "pattern": "Short paragraphs, one beat each",
+      "example": "He waited. The gate stayed shut."
+    },
+    "punctuation_texture": {
+      "rating": -1,
+      "measurement": "Periods and commas dominate; rare dashes",
+      "pattern": "One dash per scene at most",
+      "example": "It was late - too late."
+    },
+    "formality_register": {
+      "rating": -4,
+      "measurement": "Plain, everyday vocabulary",
+      "pattern": "Prefer the short word",
+      "example": "He got up and left."
+    },
+    "concreteness": {
+      "rating": 6,
+      "measurement": "Most sentences name an object or a sensation",
+      "pattern": "Anchor every feeling in a thing",
+      "example": "Her hands smelled of tar."
+    },
+    "verb_energy": {
+      "rating": 3,
+      "measurement": "Action verbs in scenes, state verbs in reflection",
+      "pattern": "Kinetic verbs at turning points",
+      "example": "The boat lurched."
+    },
+    "modifier_frequency": {
+      "rating": -3,
+      "measurement": "About one adjective per sentence",
+      "pattern": "One precise modifier, never a stack",
+      "example": "A thin, grey light."
+    },
+    "lexical_diversity": {
+      "rating": 2,
+      "measurement": "Moderate vocabulary breadth",
+      "pattern": "Motif words recur on purpose",
+      "example": "The tide again."
+    },
+    "intentional_repetition": {
+      "rating": 5,
+      "measurement": "Two motif words recur in every chapter",
+      "pattern": "Echo an opening image at the close",
+      "example": "Salt, always salt."
+    },
+    "sentence_openers": {
+      "rating": 1,
+      "measurement": "Half of sentences open with the subject",
+      "pattern": "Vary with a fronted time phrase",
+      "example": "By noon, the nets were dry."
+    },
+    "transitions_connectors": {
+      "rating": -5,
+      "measurement": "Few explicit connectors",
+      "pattern": "Juxtapose instead of explaining",
+      "example": "The gull cried. She looked up."
+    },
+    "figurative_density": {
+      "rating": -4,
+      "measurement": "About two figures per thousand words",
+      "pattern": "Brief similes from work and weather",
+      "example": "Quiet as a banked fire."
+    },
+    "dialogue_tag_style": {
+      "rating": -6,
+      "measurement": "Mostly 'said' or no tag",
+      "pattern": "Action beats instead of tags",
+      "example": "\"Fine.\" He set the cup down."
+    },
+    "dialogue_rendering": {
+      "rating": 0,
+      "measurement": "Voices differ by word choice, not dialect",
+      "pattern": "Each speaker has one verbal habit",
+      "example": "\"Well, now,\" said the miller."
+    },
+    "sonic_ornamentation": {
+      "rating": -7,
+      "measurement": "No deliberate alliteration",
+      "pattern": "Rhythm comes from clause length",
+      "example": "The road ran on."
+    }
+  },
+  "diction_domains": [
+    "harbor and boats",
+    "kitchen work",
+    "weather"
+  ],
+  "figurative_source_domains": [
+    "fire and embers",
+    "tides"
+  ],
+  "signature_moves": [
+    {
+      "name": "The flat close",
+      "template": "End a scene on one concrete object.",
+      "example": "The kettle went cold."
+    },
+    {
+      "name": "Delayed name",
+      "template": "Describe a person before naming them.",
+      "example": "The tall one, the one with the limp, was Ada."
+    }
+  ],
+  "anti_patterns": [
+    "Stacked adjectives.",
+    "Exclamation marks in narration.",
+    "Explaining a joke after it lands."
+  ],
+  "style_directives": [
+    "Default to 10-18 word sentences, with a short one after each long one.",
+    "Ground every emotion in a physical detail within the same paragraph.",
+    "Use 'said' or an action beat for dialogue attribution.",
+    "Keep similes short and drawn from work or weather."
+  ],
+  "condensed_profile": "Close third-person past narration with plain diction, short paragraphs and concrete detail. Feeling is shown through objects and gesture, transitions are implicit, and scenes end on a flat, physical image."
+}
+	 

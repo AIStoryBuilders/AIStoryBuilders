@@ -729,7 +729,7 @@ Run all of them with `dotnet test AIStoryBuildersV2.Tests/AIStoryBuildersV2.Test
 
 Add these to the parent plan §12 as **T19a–T19f**, after T18, in this order. The code they build on is already committed: T9a–T9c (`eb9b5a9`), T10a–T12b (`1083e06`), T13 (`f51206e`), T16 (`f2c08b5`) and T18 (`0f86a18`). Several of those boxes are still unticked in the parent plan, because their remaining checks need a person (AGENTS.md step 5) **(assumed from the commit history; read each commit message's "not verified" list to confirm)**. So the "previous task's *done when*" rule doesn't block T19a. Each task here is one commit or PR. After each task, run the three AGENTS.md commands and tick it here and in the parent plan.
 
-- [ ] **T19a (LF-T1): Fingerprint model and parser.** `Shared/Fingerprint/` defaults, records and `LexicalFingerprintParser`, plus the fixtures and `LexicalFingerprintParserTests`. No UI and no storage.
+- [x] **T19a (LF-T1): Fingerprint model and parser.** `Shared/Fingerprint/` defaults, records and `LexicalFingerprintParser`, plus the fixtures and `LexicalFingerprintParserTests`. No UI and no storage.
   - *Done when:* every parser row in §10 passes, and the parser has no `throw` reachable from bad input (a test feeds random bytes and every fixture).
 - [ ] **T19b (LF-T2): Storage and the rule change.** `AIStoryBuildersService.Fingerprint.cs` (Get, Save, Remove, Path), the MarkDirty cases, the `.stybld` and zip round-trip tests. Docs: AGENTS.md hard rule, parent D4, D33, §4.2, §5.4, §6.2, and V1-File-Format §2, §3.12 and §7.
   - *Done when:* the storage, MarkDirty, `.stybld` and zip rows in §10 pass, and `grep` finds the D33 row and the amended AGENTS.md rule.
