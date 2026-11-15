@@ -91,7 +91,7 @@ An agent can't complete these on its own. Leave them unchecked and report them (
 | T12b | Speech-to-text in WebView2 | Try the microphone button in the MAUI app |
 | T19e | Writing voice link | **Done (2026-11-15).** The owner clicked **Get your lexical fingerprint** in the MAUI app and it opened in the system browser. The rest of the MAUI pass was done the same day: upload, refusal of a bad file, replace with confirm, remove with confirm, the Invalid card and chip, the paragraph dialog note, Delete removing the file, and the `09b-details-writing-voice.png` screenshot. |
 | T19e | V1 round trip | **Done (2026-11-15)** with V1 03.62.00 built unpackaged from commit `4fd86d8` (the last V1 commit in this repo): V2 exported a story with a fingerprint, V1 imported it, opened it and exported it again, and V2 imported V1's export and showed the fingerprint on **Writing voice**. `LexicalFingerprint.json` had the same SHA-256 at every step, and V1's Delete removed it with the story. To repeat: `git archive 4fd86d8` into an empty folder, then `dotnet build AIStoryBuilders.csproj -f net10.0-windows10.0.22621.0 -p:WindowsPackageType=None -p:WindowsAppSDKSelfContained=true` and run `AIStoryBuilders.exe` from `bin`. |
-| T19f | Live style check | [Test-Data.md](Test-Data.md) §7, row "T19 voice" |
+| T19f | Live style check | **Done (2026-11-15), pass.** See [Test-Data.md](Test-Data.md) §7, rows "T19 voice". |
 | Q25 | Store submission | Try the packaged app (§4a), then upload the `.msix` in Partner Center, update the listing's description and screenshots, and submit |
 
 ## 6. Environment variables (opt-in live tests)
