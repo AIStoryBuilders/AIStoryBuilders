@@ -1,0 +1,97 @@
+@page "/logs"
+@using System.Net
+@using System.Text
+@using AIStoryBuildersV2.Shared.Knowledge
+@implements IDisposable
+@inject LogService Log
+@inject IFileExportService Export
+@inject NotificationService Notify
+@inject DialogService Dialogs
+<PageTitle>Logs · AI StoryBuilders</PageTitle>
+
+<h3 class="asb-sec">Logs</h3>
+<p class="asb-sub">Activity and error log for this installation.</p>
+
+<div class="asb-actions">
+    <RadzenButton Text="Export Log" Icon="save_alt" ButtonStyle="ButtonStyle.Primary" Disabled="@(rows.Count == 0)" Click="ExportAsync" />
+    <RadzenButton Text="Clear Log" Icon="delete" ButtonStyle="ButtonStyle.Danger" Click="ClearAsync" />
+</div>
+
+@if (rows.Count == 0)
+{
+    <p class="asb-note">The log is empty.</p>
+}
+else
+{
+    <RadzenDataGrid TItem="Row" Data="@rows" AllowPaging="true" PageSize="20" ShowPagingSummary="true" class="asb-grid">
+        <Columns>
+            <RadzenDataGridColumn TItem="Row" Property="Date" Title="Date" Width="190px" />
+            <RadzenDataGridColumn TItem="Row" Property="Entry" Title="Entry" />
+        </Columns>
+    </RadzenDataGrid>
+}
+
+@code {
+    // A class, not a record: the grid keys rows by item, and the log can hold identical lines.
+    sealed class Row(string date, string entry)
+    {
+        public string Date { get; } = date;
+        public string Entry { get; } = entry;
+    }
+
+    List<Row> rows = [];
+
+    protected override void OnInitialized()
+    {
+        Load();
+        Log.Changed += OnLogChanged;
+    }
+
+    void Load() =>
+        rows = Log.Lines.Select(line =>
+        {
+            var (date, entry) = LogService.SplitTimestamp(line);
+            return new Row(date ?? "—", entry);
+        }).ToList();
+
+    void OnLogChanged() => _ = InvokeAsync(() => { Load(); StateHasChanged(); });
+
+    async Task ExportAsync()
+    {
+        try
+        {
+            // V1's HTML table, with each line HTML-encoded (UI-Behavior-Spec §7).
+            var html = new StringBuilder("<table>");
+            foreach (var line in Log.Lines) html.Append("<tr><td>").Append(WebUtility.HtmlEncode(line)).Append("</td></tr>");
+            html.Append("</table>");
+            using var stream = new MemoryStream(Encoding.UTF8.GetBytes(html.ToString()));
+            if (await Export.SaveAsync($"AIStoryBuildersLog_{DateTime.Now:yyyy-MM-dd_HH-mm-ss}.html", stream, "text/html"))
+                Notify.Notify(NotificationSeverity.Success, "Saved", "The file was saved successfully.", 4000);
+        }
+        catch (Exception ex)
+        {
+            Notify.Notify(NotificationSeverity.Error, "Error", ex.Message, 4000);
+        }
+    }
+
+    async Task ClearAsync()
+    {
+        if (await Dialogs.Confirm("Are you sure?", "Clear Log", new ConfirmOptions { OkButtonText = "Yes", CancelButtonText = "No" }) != true) return;
+        try
+        {
+            await Log.ClearAsync();
+            Load();
+            Notify.Notify(NotificationSeverity.Success, "Success", "Log Cleared", 4000);
+        }
+        catch (StorageQuotaExceededException)
+        {
+            Notify.Notify(NotificationSeverity.Error, "Browser storage is full", "", 8000);
+        }
+        catch (Exception ex)
+        {
+            Notify.Notify(NotificationSeverity.Error, "Error", ex.Message, 4000);
+        }
+    }
+
+    public void Dispose() => Log.Changed -= OnLogChanged;
+}

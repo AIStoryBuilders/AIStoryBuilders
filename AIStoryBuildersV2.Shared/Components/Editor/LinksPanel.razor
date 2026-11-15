@@ -1,0 +1,92 @@
+@implements IDisposable
+@inject ICurrentStoryKnowledgeBase CurKb
+
+<section class="kgb-lp" aria-label="Links">
+    <div class="kgb-lph">
+        <span class="mi s16" aria-hidden="true">hub</span>
+        <span class="grow">Links</span>
+        <button type="button" class="kgb-lpg asb-linkbtn" title="Show this page and its links as a graph" @onclick="@(() => OnShowInGraph.InvokeAsync(Path))">
+            <span class="mi s14" aria-hidden="true">bubble_chart</span>Show in graph</button>
+    </div>
+    @if (links is null)
+    {
+        <div style="padding:10px;display:flex;flex-direction:column;gap:8px"><div class="kgb-sk" style="width:60%"></div><div class="kgb-sk" style="width:40%"></div></div>
+    }
+    else
+    {
+        <div class="kgb-lpc">
+            <div>
+                <div class="row sm t2" style="font-weight:500">Outgoing <span class="kgb-cnt">@resolved.Count</span></div>
+                @foreach (var l in resolved)
+                {
+                    <div class="kgb-li"><span class="mi s14 t3" aria-hidden="true">arrow_outward</span>
+                        <a class="wl ell" href="@Kb.Links.PageHref(l.ResolvedPath!)" title="@l.ResolvedPath">@Label(l.ResolvedPath!)</a></div>
+                }
+                @if (resolved.Count == 0) { <div class="xs t3">No links to other pages.</div> }
+            </div>
+            <div>
+                <div class="row sm t2" style="font-weight:500">Backlinks <span class="kgb-cnt">@links.Backlinks.Count</span></div>
+                @foreach (var l in links.Backlinks)
+                {
+                    <div class="kgb-li"><span class="mi s14 t3" aria-hidden="true">subdirectory_arrow_left</span>
+                        <a class="wl ell" href="@Kb.Links.PageHref(l.SourcePath)" title="@l.SourcePath">@Label(l.SourcePath)</a>
+                        <span class="xs t3 mono">L@(l.Line)</span></div>
+                }
+                @if (links.Backlinks.Count == 0) { <div class="xs t3">No pages link here yet.</div> }
+            </div>
+            <div>
+                <div class="row sm t2" style="font-weight:500">Unresolved <span class="kgb-cnt">@unresolved.Count</span></div>
+                @foreach (var l in unresolved)
+                {
+                    <div class="kgb-li">
+                        <span class="wu ell" title="No page named @l.RawTarget"><span class="mi" aria-hidden="true">link_off</span>@l.RawTarget</span>
+                        <RadzenButton Text="Create" Icon="add" Size="ButtonSize.ExtraSmall" Variant="Variant.Text" Click="@(() => OnCreate.InvokeAsync(l.RawTarget))" aria-label="@($"Create page {l.RawTarget}")" />
+                    </div>
+                }
+                @if (unresolved.Count == 0) { <div class="xs t3">Every link resolves.</div> }
+            </div>
+        </div>
+    }
+</section>
+
+@code {
+    /// <summary>The open story's KB (D13), captured on first use so disposal still reaches it after the workspace clears it.</summary>
+    IStoryKnowledgeBase? kb;
+    IStoryKnowledgeBase Kb => kb ??= CurKb.Current ?? throw new InvalidOperationException("No story knowledge base is open.");
+    IKnowledgeWorkspace Workspace => Kb.Workspace;
+
+    [Parameter, EditorRequired] public string Path { get; set; } = "";
+    [Parameter] public EventCallback<string> OnCreate { get; set; }
+
+    /// <summary>Switches the Knowledgebase tab to the graph around this page (UI-Behavior-Spec §17.4).</summary>
+    [Parameter] public EventCallback<string> OnShowInGraph { get; set; }
+
+    PageLinks? links;
+    List<LinkRef> resolved = [];
+    List<LinkRef> unresolved = [];
+    string? loadedFor;
+
+    protected override void OnInitialized() => Workspace.Changed += OnChanged;
+
+    protected override async Task OnParametersSetAsync()
+    {
+        if (loadedFor == Path) return;
+        loadedFor = Path;
+        await LoadAsync();
+    }
+
+    async Task LoadAsync()
+    {
+        links = await Workspace.Graph.GetLinksAsync(Path);
+        resolved = links.Outgoing.Where(l => l.ResolvedPath is not null)
+            .GroupBy(l => l.ResolvedPath!, StringComparer.OrdinalIgnoreCase).Select(g => g.First()).ToList();
+        unresolved = links.Outgoing.Where(l => l.ResolvedPath is null)
+            .GroupBy(l => l.RawTarget, StringComparer.OrdinalIgnoreCase).Select(g => g.First()).ToList();
+    }
+
+    void OnChanged(KnowledgeChange change) => _ = InvokeAsync(async () => { await LoadAsync(); StateHasChanged(); });
+
+    static string Label(string path) => KnowledgePath.StripExtension(path);
+
+    public void Dispose() => Workspace.Changed -= OnChanged;
+}

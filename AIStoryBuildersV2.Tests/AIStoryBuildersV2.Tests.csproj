@@ -1,0 +1,34 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net11.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <IsPackable>false</IsPackable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="coverlet.collector" Version="6.0.4" />
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.14.1" />
+    <PackageReference Include="xunit" Version="2.9.3" />
+    <PackageReference Include="xunit.runner.visualstudio" Version="3.1.4" />
+    <PackageReference Include="RichardSzalay.MockHttp" Version="7.1.0" />
+    <!-- Golden V1 fixtures are made by a person (T2b); their tests skip until the folders exist. -->
+    <PackageReference Include="Xunit.SkippableFact" Version="1.5.85" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\AIStoryBuildersV2.Shared\AIStoryBuildersV2.Shared.csproj" />
+    <ProjectReference Include="..\AIStoryBuildersV2.Embeddings.Onnx\AIStoryBuildersV2.Embeddings.Onnx.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Using Include="Xunit" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- KGB's seed pages, used only by the ported KB tests (V2 never seeds a story's KB). -->
+    <EmbeddedResource Include="Knowledge\Seed\**\*.md" LogicalName="Seed/%(RecursiveDir)%(Filename)%(Extension)" />
+  </ItemGroup>
+
+</Project>

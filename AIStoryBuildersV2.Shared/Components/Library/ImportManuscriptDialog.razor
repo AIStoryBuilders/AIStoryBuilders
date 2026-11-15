@@ -1,0 +1,92 @@
+@* Import docx / pdf / txt (UI-Behavior-Spec §5): pick a file, then the parse and persist pipeline with progress. *@
+@inject DialogService Dialogs
+@inject NotificationService Notify
+@inject ManuscriptParsingService Parser
+@inject AIStoryBuildersService Svc
+@inject LogService Log
+
+@if (busy)
+{
+    @if (progress == 0)
+    {
+        <RadzenProgressBar Value="100" ShowValue="false" Mode="ProgressBarMode.Indeterminate" />
+    }
+    else
+    {
+        <RadzenProgressBar Value="@progress" Max="100" ShowValue="true" />
+    }
+    <p class="asb-note asb-mt">@status</p>
+}
+else
+{
+    <p class="asb-note">Choose a .docx, .pdf, .txt or .md file. The AI splits it into chapters and paragraphs and finds the characters, locations and timelines.</p>
+    <InputFile @key="pickerKey" accept=".docx,.pdf,.txt,.md" OnChange="OnFileAsync" class="asb-file" />
+    <div class="asb-dialog-actions">
+        <RadzenButton Text="Cancel" ButtonStyle="ButtonStyle.Light" Click="@(() => Dialogs.Close(null))" />
+    </div>
+}
+
+@code {
+    /// <summary>The options this dialog was opened with; X and Esc are turned off while the import runs (§5, §0.3).</summary>
+    [Parameter] public DialogOptions? Options { get; set; }
+
+    bool busy;
+    int progress;
+    string status = "";
+    int pickerKey;
+
+    async Task OnFileAsync(InputFileChangeEventArgs e)
+    {
+        var file = e.File;
+        if (file.Size > StoryStorageConstants.MaxManuscriptImportBytes)
+        {
+            Notify.Notify(NotificationSeverity.Error, "Error", $"The file is larger than {StoryStorageConstants.MaxManuscriptImportBytes / 1024 / 1024} MB.", 4000);
+            pickerKey++;
+            return;
+        }
+
+        // Read the file before re-rendering: the busy view removes the InputFile, and its stream reads through it.
+        using var stream = new MemoryStream();
+        try
+        {
+            await file.OpenReadStream(StoryStorageConstants.MaxManuscriptImportBytes).CopyToAsync(stream);
+            stream.Position = 0;
+        }
+        catch (Exception ex)
+        {
+            Notify.Notify(NotificationSeverity.Error, "Import Error", ex.Message, 4000);
+            Log.WriteToLog("ImportManuscript: " + ex.Message);
+            pickerKey++;
+            return;
+        }
+
+        SetBusy(true);
+        progress = 0;
+        status = "Starting import...";
+        StateHasChanged();
+        try
+        {
+            var story = await Parser.ParseManuscriptAsync(stream, file.Name,
+                new Progress<int>(p => { progress = p; InvokeAsync(StateHasChanged); }),
+                new Progress<string>(s => { status = s; InvokeAsync(StateHasChanged); }));
+            await Svc.PersistImportedStoryAsync(story);
+            Dialogs.Close(story.Title);
+        }
+        catch (Exception ex)
+        {
+            Notify.Notify(NotificationSeverity.Error, "Import Error", ex.Message, 4000);
+            Log.WriteToLog("ImportManuscript: " + ex.Message);
+            SetBusy(false);
+            pickerKey++;
+        }
+    }
+
+    void SetBusy(bool value)
+    {
+        busy = value;
+        if (Options is null) return;
+        Options.ShowClose = !value;
+        Options.CloseDialogOnEsc = !value;
+        Dialogs.Refresh();
+    }
+}

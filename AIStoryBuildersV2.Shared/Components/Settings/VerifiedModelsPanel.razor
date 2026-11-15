@@ -1,0 +1,146 @@
+@* The models that passed the capability probe for the current provider and host (plan §5.9, UI-Behavior-Spec §6.3). *@
+@using AIStoryBuildersV2.Shared.Llm
+@using AIStoryBuildersV2.Shared.Settings
+@implements IDisposable
+@inject IAppSettingsService Settings
+@inject NotificationService Notify
+@inject DialogService Dialogs
+
+<div class="asb-panel kgb-light">
+    <h4 class="asb-panel-h">Verified models</h4>
+    <p class="asb-note">Only these models can be used for writing and chat. A model is added after it calls a tool and reads a small knowledge graph correctly.</p>
+
+    @if (current is null)
+    {
+        <div class="kgb-sk" style="width:70%"></div>
+        <div class="kgb-sk" style="width:50%"></div>
+    }
+    else
+    {
+        @if (current.VerifiedModels.Count == 0)
+        {
+            <p class="asb-note"><i>No verified models yet. Save your settings, or add a model, to run the capability check.</i></p>
+        }
+        @foreach (var m in current.VerifiedModels.OrderBy(m => m.Model, StringComparer.OrdinalIgnoreCase))
+        {
+            var isDefault = m.Model == current.Model;
+            <div class="asb-vm-row">
+                <span class="mono grow ell">@m.Model</span>
+                @if (isDefault) { <span class="bdg b-su">Default</span> }
+                <span class="asb-note">Verified @m.VerifiedAt.ToLocalTime().ToString("d")</span>
+                <span title="@(isDefault ? "This is the default model. Pick another default first." : null)">
+                    <RadzenButton Icon="delete" Variant="Variant.Text" ButtonStyle="ButtonStyle.Danger" Size="ButtonSize.Small" aria-label="@($"Remove {m.Model}")"
+                                  Disabled="@(isDefault || busy)" Click="@(() => RemoveAsync(m.Model))" />
+                </span>
+            </div>
+        }
+
+        <div class="row asb-mt" style="gap:6px">
+            @if (models.Count > 0 && !typeModel)
+            {
+                <RadzenDropDown TValue="string" Data="@models" @bind-Value="@toAdd" AllowFiltering="true" FilterCaseSensitivity="FilterCaseSensitivity.CaseInsensitive"
+                                Placeholder="Model to add" Style="flex:1;min-width:0" class="mono" Disabled="@(!CanAdd)" />
+            }
+            else
+            {
+                <RadzenTextBox @bind-Value="@toAdd" @oninput="@(e => toAdd = e.Value?.ToString())" Placeholder="Model to add" Style="flex:1;min-width:0" class="mono" Disabled="@(!CanAdd)" />
+            }
+            <RadzenButton Text="Add model" Icon="add" ButtonStyle="ButtonStyle.Success" IsBusy="@busy" BusyText="Verifying…" Click="AddAsync"
+                          Disabled="@(!CanAdd || string.IsNullOrWhiteSpace(toAdd) || current.VerifiedModels.Any(v => v.Model == toAdd?.Trim()))" />
+        </div>
+        @if (models.Count > 0)
+        {
+            <div class="kgb-help"><a href="" @onclick="@(() => typeModel = !typeModel)" @onclick:preventDefault="true">@(typeModel ? "Pick from the list" : "Type a name instead")</a></div>
+        }
+        @if (failure is not null)
+        {
+            <div class="kgb-callout da asb-mt" role="alert"><span class="mi" aria-hidden="true">error</span><div>@failure</div></div>
+        }
+    }
+</div>
+
+@code {
+    AppSettings? current;
+    IReadOnlyList<string> models = [];
+    string? toAdd;
+    bool typeModel;
+    bool busy;
+    string? failure;
+
+    /// <summary>Adding needs saved settings: a key (when the provider needs one) and an endpoint (Azure, Ollama).</summary>
+    bool CanAdd => current is not null && !busy
+        && (!LlmDefaults.RequiresKey(current.Provider) || current.ApiKeyConfigured)
+        && (!LlmDefaults.RequiresEndpoint(current.Provider) || !string.IsNullOrWhiteSpace(current.Endpoint));
+
+    protected override async Task OnInitializedAsync()
+    {
+        Settings.Changed += OnChanged;
+        await LoadAsync();
+    }
+
+    async Task LoadAsync()
+    {
+        current = await Settings.GetAsync();
+        if (CanAdd)
+        {
+            var list = await Settings.ListModelsAsync(current.Provider, current.Endpoint, null, false, CancellationToken.None);
+            models = list.Models;
+        }
+    }
+
+    void OnChanged() => _ = InvokeAsync(async () => { await LoadAsync(); StateHasChanged(); });
+
+    static string StageName(ProbeStage? stage) => stage switch
+    {
+        ProbeStage.Connect => "connection",
+        ProbeStage.ToolCall => "tool call",
+        ProbeStage.GraphParse => "knowledge graph",
+        _ => "capability",
+    };
+
+    async Task AddAsync()
+    {
+        var model = toAdd?.Trim();
+        if (string.IsNullOrEmpty(model)) return;
+        busy = true;
+        failure = null;
+        try
+        {
+            var result = await Settings.VerifyModelAsync(model, CancellationToken.None);
+            if (result.Passed)
+            {
+                toAdd = null;
+                Notify.Notify(NotificationSeverity.Success, "Model verified", $"{model} passed the capability check.", 4000);
+            }
+            else
+            {
+                failure = $"{model} did not pass the {StageName(result.FailedAt)} check: {result.Message}";
+            }
+        }
+        catch (Exception ex)
+        {
+            Notify.Notify(NotificationSeverity.Error, "Error", ex.Message, 4000);
+        }
+        finally
+        {
+            busy = false;
+        }
+    }
+
+    async Task RemoveAsync(string model)
+    {
+        var ok = await Dialogs.Confirm($"Remove {model} from the verified models? It will have to pass the check again before it can be used.",
+            "Remove model", new ConfirmOptions { OkButtonText = "Yes", CancelButtonText = "No" });
+        if (ok != true) return;
+        try
+        {
+            await Settings.RemoveVerifiedModelAsync(model);
+        }
+        catch (Exception ex)
+        {
+            Notify.Notify(NotificationSeverity.Error, "Error", ex.Message, 4000);
+        }
+    }
+
+    public void Dispose() => Settings.Changed -= OnChanged;
+}

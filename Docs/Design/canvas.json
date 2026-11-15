@@ -1,0 +1,50 @@
+{
+  "v": 3,
+  "attachments": {},
+  "boards": {
+    "ManuscriptEditor.dc.html": {
+      "expand": "fill",
+      "h": 960,
+      "is_interactive": true,
+      "title": "Story Editor — Single Page",
+      "w": 1440,
+      "x": 618,
+      "y": 0
+    },
+    "Library.dc.html": {
+      "expand": "fill",
+      "h": 960,
+      "is_interactive": true,
+      "title": "Home / Library (Settings · Logs · Utility)",
+      "w": 1440,
+      "x": 618,
+      "y": 1080
+    },
+    "StoryWorkspace.dc.html": {
+      "expand": "fill",
+      "h": 860,
+      "is_interactive": true,
+      "title": "Story Workspace — Details · Timelines · Locations · Characters · Chapters · Chat · Knowledgebase",
+      "w": 1200,
+      "x": 2138,
+      "y": 1080
+    }
+  },
+  "createdOnFiles": {
+    "at": "2026-11-04T00:00:00Z",
+    "v": 1
+  },
+  "designSystems": [],
+  "launch": {
+    "file": "Library.dc.html",
+    "view": "focused"
+  },
+  "notes": {},
+  "order": [
+    "ManuscriptEditor.dc.html",
+    "Library.dc.html",
+    "StoryWorkspace.dc.html"
+  ],
+  "pages": [],
+  "title": "AIStoryBuilders — App Redesign"
+}

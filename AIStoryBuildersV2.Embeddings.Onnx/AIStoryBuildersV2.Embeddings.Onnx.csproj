@@ -1,0 +1,22 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!-- D28: local embeddings for the MAUI app and the tests (all-MiniLM-L6-v2, 384 dimensions). -->
+  <PropertyGroup>
+    <TargetFramework>net11.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <RootNamespace>AIStoryBuildersV2.Embeddings.Onnx</RootNamespace>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.ML.OnnxRuntime" Version="1.24.3" />
+    <PackageReference Include="Microsoft.Extensions.AI.Abstractions" Version="10.11.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- V1's model and vocabulary (V1 Resources/Raw), so V1 and V2 produce the same vectors. -->
+    <None Include="Model\all-MiniLM-L6-v2.onnx" CopyToOutputDirectory="PreserveNewest" />
+    <None Include="Model\vocab.txt" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+
+</Project>

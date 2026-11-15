@@ -1,0 +1,146 @@
+@* Location dialog (UI-Behavior-Spec §12.2, V1 LocationEdit.razor). Description edits stay in memory until Save. *@
+@inject AIStoryBuildersService Svc
+@inject DialogService Dialogs
+@inject NotificationService Notify
+@inject LogService Log
+
+<div class="asb-eyebrow">Story element</div>
+@if (busy)
+{
+    <RadzenProgressBar Value="100" ShowValue="false" Mode="ProgressBarMode.Indeterminate" />
+}
+else
+{
+    <div class="asb-field">
+        <label for="l-name">Location Name:</label>
+        <RadzenTextBox id="l-name" MaxLength="100" @bind-Value="Location.LocationName" />
+    </div>
+    <div class="asb-ws-head" style="margin:0 0 8px">
+        <b class="asb-sub-h">Descriptions</b>
+        <RadzenButton Text="New Description" Icon="add" ButtonStyle="ButtonStyle.Success" Size="ButtonSize.Small" Click="@(() => EditDescriptionAsync(null))" />
+    </div>
+    <div class="asb-scroll">
+        @foreach (var d in Location.LocationDescription)
+        {
+            <div class="asb-subcard">
+                <div class="grow">
+                    <div class="asb-st">@(string.IsNullOrEmpty(d.Timeline?.TimelineName) ? "No timeline" : d.Timeline.TimelineName)</div>
+                    @if (!(d.Description ?? "").StartsWith('['))
+                    {
+                        <div>@d.Description</div>
+                    }
+                </div>
+                <RadzenButton Text="Edit" ButtonStyle="ButtonStyle.Light" Size="ButtonSize.Small" Click="@(() => EditDescriptionAsync(d))" />
+            </div>
+        }
+    </div>
+    <div class="asb-dialog-actions">
+        @if (Location.Id > 0)
+        {
+            <RadzenButton Text="Delete" Icon="delete" ButtonStyle="ButtonStyle.Danger" Click="DeleteAsync" />
+        }
+        <RadzenButton Text="Save" Icon="save" ButtonStyle="ButtonStyle.Success" Click="SaveAsync" />
+    </div>
+}
+
+@code {
+    [Parameter, EditorRequired] public Location Location { get; set; } = default!;
+
+    string? originalName;
+    bool busy;
+
+    protected override void OnInitialized()
+    {
+        originalName = Location.LocationName;
+        Location.LocationDescription ??= [];
+    }
+
+    void Error(string summary, string detail) => Notify.Notify(NotificationSeverity.Error, summary, detail, 4000);
+
+    async Task EditDescriptionAsync(LocationDescription? existing)
+    {
+        var description = existing is null
+            ? new LocationDescription { Id = -1, Description = "", Timeline = new Timeline { TimelineName = "" } }
+            : new LocationDescription { Id = existing.Id, Description = existing.Description, Timeline = existing.Timeline };
+        var result = await Dialogs.OpenAsync<LocationDescriptionDialog>(existing is null ? "New Location Description" : "Edit Location Description",
+            new Dictionary<string, object?> { ["Description"] = description, ["Story"] = Location.Story },
+            new DialogOptions { Width = "650px", CloseDialogOnEsc = true, ShowClose = true });
+        if (result is not LocationDescription edited) return;
+
+        if (existing is null)
+        {
+            edited.Id = Location.LocationDescription.Count == 0 ? 1 : Location.LocationDescription.Max(d => d.Id) + 1;
+            Location.LocationDescription.Add(edited);
+        }
+        else if (edited.Id == 0)
+        {
+            Location.LocationDescription.Remove(existing);
+        }
+        else
+        {
+            existing.Description = edited.Description;
+            existing.Timeline = edited.Timeline;
+        }
+    }
+
+    async Task SaveAsync()
+    {
+        Location.LocationName = (Location.LocationName ?? "").Trim().Replace("|", "");
+        if (Location.LocationName.Length == 0)
+        {
+            Error("Error", "Location Name is required");
+            return;
+        }
+        try
+        {
+            if (Location.Id == -1)
+            {
+                if (Svc.LocationExists(Location))
+                {
+                    Error("Validation Error", "Location Name already exists. Choose a new name");
+                    return;
+                }
+                busy = true;
+                await Svc.AddLocationAsync(Location);
+            }
+            else if (Location.LocationName != originalName)
+            {
+                if (await Dialogs.Confirm("Are you sure? The entire story will be updated to update the Location.", "Location Name Change",
+                        new ConfirmOptions { OkButtonText = "Yes", CancelButtonText = "No" }) != true) return;
+                busy = true;
+                Svc.UpdateLocationName(Location, originalName ?? "");
+                await Svc.UpdateLocationDescriptions(Location);
+            }
+            else
+            {
+                busy = true;
+                await Svc.UpdateLocationDescriptions(Location);
+            }
+            Dialogs.Close(Location);
+        }
+        catch (Exception ex)
+        {
+            busy = false;
+            Error("Error", ex.Message);
+            Log.WriteToLog(ex.Message);
+        }
+    }
+
+    async Task DeleteAsync()
+    {
+        if (await Dialogs.Confirm("Are you sure? The entire story will be updated to remove the Location.", "Delete Location",
+                new ConfirmOptions { OkButtonText = "Yes", CancelButtonText = "No" }) != true) return;
+        busy = true;
+        try
+        {
+            Location.LocationName = originalName;
+            Svc.DeleteLocation(Location);
+            Dialogs.Close(null);
+        }
+        catch (Exception ex)
+        {
+            busy = false;
+            Error("Error", ex.Message);
+        }
+    }
+}

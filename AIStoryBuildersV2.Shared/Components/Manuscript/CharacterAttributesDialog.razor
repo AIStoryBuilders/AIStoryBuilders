@@ -1,0 +1,17 @@
+@* Select Character Attributes (V1 CharacterAttributes.razor, UI-Behavior-Spec §15.6). Closing with X adds nothing. *@
+@inject DialogService Dialogs
+
+<div style="height:200px;overflow:auto">
+    <RadzenTree AllowCheckBoxes="true" AllowCheckChildren="false" @bind-CheckedValues="@checkedValues" Style="width:100%" Data="@Items">
+        <RadzenTreeLevel TextProperty="CharacterDisplay" Expanded="@(_ => true)" HasChildren="@(_ => false)" />
+    </RadzenTree>
+</div>
+<div class="asb-dialog-actions" style="justify-content:center">
+    <RadzenButton Text="Add Characters and Attributes" ButtonStyle="ButtonStyle.Primary" Click="@(() => Dialogs.Close(checkedValues?.Cast<SimpleCharacterSelector>().ToList() ?? []))" />
+</div>
+
+@code {
+    [Parameter, EditorRequired] public List<SimpleCharacterSelector> Items { get; set; } = [];
+
+    IEnumerable<object>? checkedValues;
+}

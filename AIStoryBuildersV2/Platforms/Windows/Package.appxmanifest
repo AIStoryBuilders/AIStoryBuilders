@@ -1,0 +1,56 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Package
+  xmlns="http://schemas.microsoft.com/appx/manifest/foundation/windows10"
+  xmlns:uap="http://schemas.microsoft.com/appx/manifest/uap/windows10"
+  xmlns:mp="http://schemas.microsoft.com/appx/2014/phone/manifest"
+  xmlns:rescap="http://schemas.microsoft.com/appx/manifest/foundation/windows10/restrictedcapabilities"
+  IgnorableNamespaces="uap rescap">
+
+  <!-- V1's Microsoft Store identity, so the Store build updates the existing AIStoryBuilders listing.
+       The version must be higher than the one live in the Store, with a revision (last part) of 0. -->
+  <Identity Name="41860Defwebs.com.25552E5BE9548" Publisher="CN=1B36D735-B652-43DB-8420-7E444D9AB5F0" Version="4.0.0.0" />
+
+  <mp:PhoneIdentity PhoneProductId="2d1aaec0-7ebe-499f-b3ff-7de0713c7a2e" PhonePublisherId="00000000-0000-0000-0000-000000000000"/>
+
+  <Properties>
+    <!-- Must match the name reserved in Partner Center -->
+    <DisplayName>AIStoryBuilders</DisplayName>
+    <PublisherDisplayName>BlazorData.net</PublisherDisplayName>
+    <Logo>Resources\Store\applogo.png</Logo>
+  </Properties>
+
+  <Dependencies>
+    <TargetDeviceFamily Name="Windows.Universal" MinVersion="10.0.17763.0" MaxVersionTested="10.0.19041.0" />
+    <TargetDeviceFamily Name="Windows.Desktop" MinVersion="10.0.17763.0" MaxVersionTested="10.0.19041.0" />
+  </Dependencies>
+
+  <Resources>
+    <Resource Language="x-generate" />
+  </Resources>
+
+  <Applications>
+    <Application Id="App" Executable="$targetnametoken$.exe" EntryPoint="$targetentrypoint$">
+      <uap:VisualElements
+        DisplayName="AIStoryBuilders"
+        Description="$placeholder$"
+        Square150x150Logo="Resources\Store\mediumtile.png"
+        Square44x44Logo="Resources\Store\appicon.png"
+        BackgroundColor="transparent">
+        <uap:DefaultTile Square71x71Logo="Resources\Store\smailltile.png" Wide310x150Logo="Resources\Store\widetile.png" Square310x310Logo="Resources\Store\largetile.png" ShortName="AIStoryBuilders">
+          <uap:ShowNameOnTiles>
+            <uap:ShowOn Tile="square150x150Logo"/>
+            <uap:ShowOn Tile="wide310x150Logo"/>
+            <uap:ShowOn Tile="square310x310Logo"/>
+          </uap:ShowNameOnTiles>
+        </uap:DefaultTile>
+        <uap:SplashScreen Image="Resources\Store\aistorybuilders.png" />
+        <uap:LockScreen Notification="badgeAndTileText" BadgeLogo="Resources\Store\badgelogo.png"/>
+      </uap:VisualElements>
+    </Application>
+  </Applications>
+
+  <Capabilities>
+    <rescap:Capability Name="runFullTrust" />
+  </Capabilities>
+
+</Package>

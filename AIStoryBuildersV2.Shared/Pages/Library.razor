@@ -1,0 +1,292 @@
+@page "/"
+@using AIStoryBuildersV2.Shared.Components.Library
+@using AIStoryBuildersV2.Shared.Knowledge
+@using AIStoryBuildersV2.Shared.Llm
+@using AIStoryBuildersV2.Shared.Settings
+@using AIStoryBuildersV2.Shared.Stories.Storage
+@inject AIStoryBuildersService Svc
+@inject IStoryLibraryStore Index
+@inject IStoryPersistence Persist
+@inject IAppSettingsService Settings
+@inject DialogService Dialogs
+@inject NotificationService Notify
+@inject NavigationManager Nav
+@inject LogService Log
+@inject AppSession Session
+<PageTitle>AI StoryBuilders</PageTitle>
+<ServiceEventToasts />
+
+<h3 class="asb-sec">Your stories</h3>
+<p class="asb-sub">Start a new manuscript, import a project, or open one you're working on.</p>
+
+<div class="asb-actions">
+    <RadzenButton Text="New Story" Icon="add" ButtonStyle="ButtonStyle.Success" Disabled="busy" Click="NewStoryAsync" />
+    <label class="rz-button rz-button-md rz-variant-filled rz-base rz-shade-default asb-file-button @(busy ? "rz-state-disabled" : "")">
+        <span class="rz-button-box"><i class="notranslate rz-button-icon-left rzi">publish</i><span class="rz-button-text">Import Story</span></span>
+        <InputFile @key="importKey" accept=".stybld" OnChange="ImportStoryAsync" disabled="@busy" />
+    </label>
+    <RadzenButton Text="Import docx / pdf / txt" Icon="description" ButtonStyle="ButtonStyle.Info" Disabled="busy" Click="ImportManuscriptAsync" />
+</div>
+
+@if (busy)
+{
+    <RadzenProgressBar Value="100" ShowValue="false" Mode="ProgressBarMode.Indeterminate" class="asb-mb" />
+}
+
+@if (noModel)
+{
+    <div class="asb-panel asb-nomodel">
+        <span class="mi" aria-hidden="true">key</span>
+        <div class="grow">Connect an AI provider and verify a model before you create or write stories.</div>
+        <RadzenButton Text="Open Settings" Icon="line_style" ButtonStyle="ButtonStyle.Primary" Click="@(() => Nav.NavigateTo("settings"))" />
+    </div>
+}
+
+@if (entries is null)
+{
+    <div class="asb-cards" aria-busy="true">
+        @for (var i = 0; i < 4; i++)
+        {
+            <div class="asb-scard asb-scard-sk">
+                <span class="asb-scover"></span>
+                <div class="asb-smeta"><div class="kgb-sk" style="width:70%"></div><div class="kgb-sk" style="width:35%"></div><div class="kgb-sk" style="width:50%"></div></div>
+            </div>
+        }
+    </div>
+}
+else if (entries.Count == 0)
+{
+    <div class="asb-lib-empty">
+        <span class="mi" aria-hidden="true">auto_stories</span>
+        <p>No stories yet. Create one with New Story, or import a project.</p>
+    </div>
+}
+else
+{
+    <div class="asb-lib-count">@(entries.Count == 1 ? "1 story" : $"{entries.Count} stories")</div>
+    <div class="asb-cards">
+        @foreach (var e in entries)
+        {
+            var isMissing = missing.Contains(e.Title);
+            <div class="asb-scard @(isMissing ? "asb-scard-missing" : "")" @onclick="@(() => OnCardClick(e.Title, isMissing))">
+                <span class="asb-scover @CoverClass(e.Style)" aria-hidden="true">
+                    <span class="asb-scover-ini">@Initial(e.Title)</span>
+                    <span class="asb-scover-mark mi">auto_stories</span>
+                </span>
+                <div class="asb-smeta">
+                    <b title="@e.Title">@e.Title</b>
+                    @if (isMissing)
+                    {
+                        <span class="asb-err">Story data is missing from browser storage</span>
+                        <div class="asb-sfoot">
+                            <span></span>
+                            <RadzenButton Text="Remove from library" Icon="delete" ButtonStyle="ButtonStyle.Danger" Size="ButtonSize.Small" Disabled="busy"
+                                          Click="@(() => RemoveAsync(e.Title))" @onclick:stopPropagation="true" />
+                        </div>
+                    }
+                    else
+                    {
+                        <span class="asb-stags"><span class="asb-chip">@StyleName(e)</span></span>
+                        <div class="asb-sfoot">
+                            @if (e.SavedAt is { } saved)
+                            {
+                                <span class="asb-sedit"><span class="mi" aria-hidden="true">schedule</span>Edited @Relative(saved)</span>
+                            }
+                            else
+                            {
+                                <span></span>
+                            }
+                            <RadzenButton Text="Select" Icon="arrow_forward" ButtonStyle="ButtonStyle.Light" Size="ButtonSize.Small" class="asb-sopen"
+                                          Disabled="busy" Click="@(() => SelectAsync(e.Title))" @onclick:stopPropagation="true" />
+                        </div>
+                    }
+                </div>
+            </div>
+        }
+    </div>
+}
+
+@code {
+    IReadOnlyList<StoryIndexEntry>? entries;
+    readonly HashSet<string> missing = new(StringComparer.OrdinalIgnoreCase);
+    bool busy;
+    bool noModel;
+    int importKey;
+
+    protected override async Task OnInitializedAsync()
+    {
+        var settings = await Settings.GetAsync();
+        noModel = settings.VerifiedModels.Count == 0;
+
+        // First run: a provider that needs a key and has none goes to Settings once per app start (UI-Behavior-Spec §1).
+        if (!Session.FirstRunRedirectDone && LlmDefaults.RequiresKey(settings.Provider) && !settings.ApiKeyConfigured)
+        {
+            Session.FirstRunRedirectDone = true;
+            Nav.NavigateTo("settings?firstRun=true");
+            return;
+        }
+        Session.FirstRunRedirectDone = true;
+        await LoadAsync();
+    }
+
+    async Task LoadAsync()
+    {
+        try
+        {
+            entries = await Index.ListAsync();
+        }
+        catch (Exception ex)
+        {
+            entries = [];
+            ShowError(ex);
+        }
+    }
+
+    static string StyleName(StoryIndexEntry e) => string.IsNullOrWhiteSpace(e.Style) ? "Story" : e.Style;
+
+    /// <summary>The cover color follows the story's style (V1's list), so a shelf of stories reads at a glance.</summary>
+    static string CoverClass(string? style) => "asb-g-" + (style ?? "").Trim().ToLowerInvariant() switch
+    {
+        "drama" or "sci-fi" or "romance" or "comedy" or "fantasy" or "mystery" or "thriller" or "children" or "action"
+            or "crime" or "dystopian" or "horror" => style!.Trim().ToLowerInvariant(),
+        "young adult" => "ya",
+        _ => "story",
+    };
+
+    static string Initial(string title) => title.TrimStart().Length == 0 ? "?" : char.ToUpperInvariant(title.TrimStart()[0]).ToString();
+
+    async Task OnCardClick(string title, bool isMissing)
+    {
+        if (!busy && !isMissing) await SelectAsync(title);
+    }
+
+    static string Relative(DateTimeOffset when)
+    {
+        var age = DateTimeOffset.UtcNow - when;
+        if (age < TimeSpan.FromMinutes(1)) return "just now";
+        if (age < TimeSpan.FromHours(1)) return $"{(int)age.TotalMinutes}m ago";
+        if (age < TimeSpan.FromDays(1)) return $"{(int)age.TotalHours}h ago";
+        if (age < TimeSpan.FromDays(2)) return "yesterday";
+        return $"{(int)age.TotalDays}d ago";
+    }
+
+    void ShowError(Exception ex)
+    {
+        Notify.Notify(NotificationSeverity.Error, "Error", ex.Message, 4000);
+        Log.WriteToLog(ex.Message);
+    }
+
+    async Task SelectAsync(string title)
+    {
+        busy = true;
+        try
+        {
+            await Persist.OpenAsync(title);
+            Nav.NavigateTo(StoryTitle.WorkspaceHref(title));
+        }
+        catch (StoryDataMissingException)
+        {
+            missing.Add(title);
+        }
+        catch (StorageQuotaExceededException)
+        {
+            Notify.Notify(NotificationSeverity.Error, "Error", "Browser storage is full. Your latest changes are kept in this tab but are not saved.", 8000);
+        }
+        catch (Exception ex)
+        {
+            ShowError(ex);
+        }
+        finally
+        {
+            busy = false;
+        }
+    }
+
+    async Task RemoveAsync(string title)
+    {
+        if (await Dialogs.Confirm("Are you sure?", "Remove from library", new ConfirmOptions { OkButtonText = "Yes", CancelButtonText = "No" }) != true) return;
+        try
+        {
+            await Svc.DeleteStoryAsync(title);
+            missing.Remove(title);
+            await LoadAsync();
+        }
+        catch (Exception ex)
+        {
+            ShowError(ex);
+        }
+    }
+
+    async Task NewStoryAsync()
+    {
+        var result = await Dialogs.OpenAsync<NewStoryDialog>("New Story", null, new DialogOptions { Width = "650px", CloseDialogOnEsc = true, ShowClose = true });
+        if (result is not Story story) return;
+
+        busy = true;
+        StateHasChanged();
+        try
+        {
+            await Svc.AddStory(story, story.ModelId);
+            await Svc.EnsureGraphExistsAsync(story.Title);
+            Nav.NavigateTo(StoryTitle.WorkspaceHref(story.Title, "chapters"));
+        }
+        catch (Exception ex)
+        {
+            ShowError(ex);
+            await LoadAsync();
+        }
+        finally
+        {
+            busy = false;
+        }
+    }
+
+    async Task ImportStoryAsync(InputFileChangeEventArgs e)
+    {
+        var file = e.File;
+        if (file.Size > StoryStorageConstants.MaxStybldImportBytes)
+        {
+            importKey++;
+            Notify.Notify(NotificationSeverity.Error, "Error", $"The file is larger than {StoryStorageConstants.MaxStybldImportBytes / 1024 / 1024} MB.", 4000);
+            return;
+        }
+
+        busy = true;
+        try
+        {
+            // Read the file before re-rendering: a new importKey replaces the InputFile its stream reads through.
+            using var buffer = new MemoryStream();
+            await file.OpenReadStream(StoryStorageConstants.MaxStybldImportBytes).CopyToAsync(buffer);
+            StateHasChanged();
+            var before = (await Index.ListAsync()).Select(x => x.Title).ToHashSet(StringComparer.OrdinalIgnoreCase);
+            var message = await Svc.ImportProjectAsync(buffer.ToArray());
+
+            var added = (await Index.ListAsync()).Select(x => x.Title).FirstOrDefault(t => !before.Contains(t));
+            Notify.Notify(added is null ? NotificationSeverity.Error : NotificationSeverity.Success, "Import Result", message, 4000);
+            if (added is not null) await Svc.EnsureGraphExistsAsync(added);
+        }
+        catch (StorageQuotaExceededException)
+        {
+            Notify.Notify(new NotificationMessage { Severity = NotificationSeverity.Error, Summary = "Browser storage is full", Detail = "The story was not imported. Delete stories you don't need, then try again.", Duration = int.MaxValue });
+        }
+        catch (Exception ex)
+        {
+            ShowError(ex);
+        }
+        finally
+        {
+            busy = false;
+            importKey++;   // a fresh InputFile so the same file can be picked again
+            await LoadAsync();
+        }
+    }
+
+    async Task ImportManuscriptAsync()
+    {
+        var options = new DialogOptions { Width = "520px", CloseDialogOnEsc = true, ShowClose = true };
+        var result = await Dialogs.OpenAsync<ImportManuscriptDialog>("Import docx / pdf / txt",
+            new Dictionary<string, object?> { ["Options"] = options }, options);
+        if (result is string title) Nav.NavigateTo(StoryTitle.WorkspaceHref(title, "chapters"));
+        else await LoadAsync();
+    }
+}

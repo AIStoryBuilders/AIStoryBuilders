@@ -1,0 +1,57 @@
+@* Re-load Story progress (UI-Behavior-Spec §10.2, V1 ProgressDialog.razor). *@
+@inject AIStoryBuildersService Svc
+@inject DialogService Dialogs
+@inject NotificationService Notify
+@inject LogService Log
+@inject IHostCapabilities Host
+
+@if (running)
+{
+    <RadzenProgressBar Value="100" ShowValue="false" Mode="ProgressBarMode.Indeterminate" />
+}
+@if (error is not null)
+{
+    <RadzenAlert AlertStyle="AlertStyle.Danger" Variant="Variant.Flat" Shade="Shade.Lighter" AllowClose="false" class="asb-mt">@error</RadzenAlert>
+}
+<p class="asb-note asb-mt">@message</p>
+@if (!running)
+{
+    <div class="asb-dialog-actions">
+        <RadzenButton Text="Close" ButtonStyle="ButtonStyle.Primary" Click="@(() => Dialogs.Close(error is null))" />
+    </div>
+}
+
+@code {
+    [Parameter, EditorRequired] public Story Story { get; set; } = default!;
+
+    bool running = true;
+    string message = "Re-loading Story: Processing all paragraphs, chapters, characters, locations, and Knowledge Graph...";
+    string? error;
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (!firstRender) return;
+        if (Host.IsBrowser)
+        {
+            // The first embed in the browser loads the model (R12).
+            message = "Loading the embedding model…";
+            StateHasChanged();
+        }
+        try
+        {
+            await Svc.ReloadStoryAsync(Story, new Progress<string>(m => { message = m; InvokeAsync(StateHasChanged); }));
+            Notify.Notify(NotificationSeverity.Success, "Complete", "All embeddings regenerated and Knowledge Graph rebuilt.", 4000);
+        }
+        catch (Exception ex)
+        {
+            error = ex.Message;
+            Notify.Notify(NotificationSeverity.Error, "Error", ex.Message, 8000);
+            Log.WriteToLog("ReloadStory: " + ex.Message);
+        }
+        finally
+        {
+            running = false;
+            StateHasChanged();
+        }
+    }
+}

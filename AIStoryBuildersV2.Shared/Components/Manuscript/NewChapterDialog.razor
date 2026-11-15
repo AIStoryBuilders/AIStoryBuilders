@@ -1,0 +1,25 @@
+@* New Chapter (UI-Behavior-Spec §14.3, V1 ChaptersEdit.razor). *@
+@inject DialogService Dialogs
+@inject NotificationService Notify
+
+<div class="asb-field">
+    <label for="nc-syn">Synopsis:</label>
+    <RadzenTextArea id="nc-syn" Rows="4" MaxLength="4000" @bind-Value="Chapter.Synopsis" Style="width:100%" />
+</div>
+<div class="asb-dialog-actions">
+    <RadzenButton Text="Save" Icon="save" ButtonStyle="ButtonStyle.Success" Click="Save" />
+</div>
+
+@code {
+    [Parameter, EditorRequired] public Chapter Chapter { get; set; } = default!;
+
+    void Save()
+    {
+        if (string.IsNullOrWhiteSpace(Chapter.Synopsis))
+        {
+            Notify.Notify(NotificationSeverity.Error, "Error", "Synopsis is required", 4000);
+            return;
+        }
+        Dialogs.Close(Chapter);
+    }
+}

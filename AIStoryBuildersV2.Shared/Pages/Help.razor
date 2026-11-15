@@ -1,0 +1,21 @@
+@page "/help"
+@using AIStoryBuildersV2.Shared.Markdown
+<PageTitle>Help · AI StoryBuilders</PageTitle>
+
+@* The user guide (Docs/User-Guide.md), rendered as it is on GitHub. *@
+<div class="asb-help">
+    <nav class="asb-help-toc" aria-label="Contents">
+        <span class="asb-help-toc-h">Contents</span>
+        @foreach (var section in guide.Sections)
+        {
+            <a href="@($"help#{section.Id}")">@section.Title</a>
+        }
+    </nav>
+    <article class="asb-help-doc">@((MarkupString)guide.Html)</article>
+</div>
+
+@code {
+    HelpDocument guide = null!;
+
+    protected override void OnInitialized() => guide = HelpMarkdown.LoadGuide();
+}

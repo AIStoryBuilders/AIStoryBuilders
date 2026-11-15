@@ -1,0 +1,267 @@
+@* Knowledgebase tab (UI-Behavior-Spec §17): KGB's explorer, editor, links and graph for the open story's KB (D11–D13).
+   Routed as KGB's WorkspacePage, but inside /story/{title}?tab=kb&p=<path>. *@
+@implements IAsyncDisposable
+@inject NavigationManager Nav
+@inject BrowserInterop Browser
+@inject DialogService Dialogs
+@inject NotificationService Notify
+@inject ICurrentStoryKnowledgeBase CurKb
+
+<div class="asb-kb">
+    <div class="asb-kb-bar">
+        <div class="asb-seg" role="group" aria-label="Knowledgebase view">
+            <button type="button" class="@(view == View.Pages ? "on" : "")" aria-pressed="@(view == View.Pages ? "true" : "false")" @onclick="@(() => SetView(View.Pages))">
+                <span class="mi s16" aria-hidden="true">description</span>Pages</button>
+            <button type="button" class="@(view == View.Graph ? "on" : "")" aria-pressed="@(view == View.Graph ? "true" : "false")" @onclick="@(() => ShowGraph(null))">
+                <span class="mi s16" aria-hidden="true">hub</span>Graph</button>
+        </div>
+        @if (stats is not null)
+        {
+            <span class="asb-kb-stat">@stats.Pages @(stats.Pages == 1 ? "page" : "pages") · @stats.Links @(stats.Links == 1 ? "link" : "links")</span>
+        }
+    </div>
+
+    <NavigationLock OnBeforeInternalNavigation="@OnBeforeNavigationAsync" ConfirmExternalNavigation="@State.HasUnsaved" />
+
+    @if (view == View.Graph)
+    {
+        <div class="asb-kb-main">
+            <KnowledgeGraphView @key="graphKey" OpenPage="@P" AroundPath="@graphAround" InitialDepth="@graphDepth"
+                                OnOpen="@OpenAsync" OnCreate="@CreatePageAsync" />
+        </div>
+    }
+    else if (State.IsWide)
+    {
+        <RadzenSplitter Orientation="Orientation.Horizontal" Style="flex:1;min-height:0" class="asb-kb-main">
+            <RadzenSplitterPane Size="272px" Min="200px" Max="50%">
+                <ExplorerPane SelectedPath="@P" SelectionVersion="@selectionVersion" OnOpen="@OpenAsync" ExportFirst="@ExportFirst" />
+            </RadzenSplitterPane>
+            <RadzenSplitterPane Min="320px">
+                <EditorPane @ref="editor" Path="@P" KbEmpty="@kbEmpty" OnCreatePage="@CreatePageAsync" OnNavigate="@OpenAsync" OnShowInGraph="@ShowGraph" />
+            </RadzenSplitterPane>
+        </RadzenSplitter>
+    }
+    else
+    {
+        <div class="kgb-tabs asb-kb-main">
+            <RadzenTabs RenderMode="TabRenderMode.Client" SelectedIndex="@State.ActiveTab" SelectedIndexChanged="@(i => State.SetActiveTab(i))" Style="height:100%">
+                <Tabs>
+                    <RadzenTabsItem Text="Explorer" Icon="folder">
+                        <ExplorerPane SelectedPath="@P" SelectionVersion="@selectionVersion" OnOpen="@OpenAsync" ExportFirst="@ExportFirst" />
+                    </RadzenTabsItem>
+                    <RadzenTabsItem Text="Editor" Template="@EditorTab">
+                        <EditorPane @ref="editor" Path="@P" KbEmpty="@kbEmpty" OnCreatePage="@CreatePageAsync" OnNavigate="@OpenAsync" OnShowInGraph="@ShowGraph" />
+                    </RadzenTabsItem>
+                </Tabs>
+            </RadzenTabs>
+        </div>
+    }
+</div>
+
+@code {
+    /// <summary>The open story's KB (D13), captured on first use so disposal still reaches it after the workspace clears it.</summary>
+    IStoryKnowledgeBase? kb;
+    IStoryKnowledgeBase Kb => kb ??= CurKb.Current ?? throw new InvalidOperationException("No story knowledge base is open.");
+    IKnowledgeWorkspace Workspace => Kb.Workspace;
+    WorkspaceState State => Kb.State;
+
+    public const int Breakpoint = 900;
+
+    enum View { Pages, Graph }
+
+    /// <summary>The page in <c>?p=</c>, or null.</summary>
+    [Parameter] public string? P { get; set; }
+
+    /// <summary><c>&amp;create=1</c>: create <see cref="P"/> instead of opening it (§17.5).</summary>
+    [Parameter] public bool Create { get; set; }
+
+    /// <summary>Runs Export Project; offered before a permanent delete.</summary>
+    [Parameter] public Func<Task>? ExportFirst { get; set; }
+
+    /// <summary>The story's title: links to other stories are not KB navigation.</summary>
+    [Parameter, EditorRequired] public string StoryTitle { get; set; } = "";
+
+    EditorPane? editor;
+    int selectionVersion;
+    View view = View.Pages;
+    string? graphAround;
+    int graphDepth;
+    int graphKey;
+    GraphStats? stats;
+    bool kbEmpty;
+    string? lastP;
+    bool createHandled;
+    DotNetObjectReference<KnowledgeBaseTab>? self;
+    IJSObjectReference? widthHandle;
+
+    RenderFragment<RadzenTabsItem> EditorTab => _ => __builder =>
+    {
+        <span class="mi s16" aria-hidden="true">edit_note</span><span>&nbsp;Editor</span>
+        @if (State.HasUnsaved) { <span class="dot" style="margin-left:6px" title="Unsaved changes"></span><span class="sr-only">unsaved</span> }
+    };
+
+    protected override async Task OnInitializedAsync()
+    {
+        State.Changed += OnStateChanged;
+        Workspace.Changed += OnWorkspaceChanged;
+        await RefreshStatsAsync();
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            self = DotNetObjectReference.Create(this);
+            try
+            {
+                widthHandle = await Browser.WatchWidthAsync(self, Breakpoint);
+                State.SetWide(await widthHandle.InvokeAsync<bool>("isWide"));
+            }
+            catch (JSException) { }
+        }
+    }
+
+    [JSInvokable]
+    public void OnWidthChanged(bool wide) => InvokeAsync(() => State.SetWide(wide));
+
+    void OnStateChanged() => InvokeAsync(StateHasChanged);
+
+    void OnWorkspaceChanged(KnowledgeChange change) => _ = InvokeAsync(async () =>
+    {
+        await RefreshStatsAsync();
+        StateHasChanged();
+    });
+
+    async Task RefreshStatsAsync()
+    {
+        try
+        {
+            stats = await Kb.Graph.GetStatsAsync();
+            kbEmpty = await Kb.IsEmptyAsync();
+        }
+        catch (KnowledgeException) { stats = null; }
+    }
+
+    protected override async Task OnParametersSetAsync()
+    {
+        if (Create && P is not null)
+        {
+            // Only once per link: the create link stays in the URL until the next navigation.
+            if (createHandled) return;
+            createHandled = true;
+            var target = P;
+            P = lastP;
+            await CreatePageAsync(target);
+            return;
+        }
+        createHandled = false;
+        if (P is not null && KnowledgePath.TryParse(P, isPage: true, out var page, out _)) P = page.Value;
+        else P = null;
+        // Opening a ?p= link always shows Pages (§17.1).
+        if (P is not null && !string.Equals(P, lastP, StringComparison.OrdinalIgnoreCase)) view = View.Pages;
+        lastP = P;
+    }
+
+    void SetView(View next) => view = next;
+
+    /// <summary>Graph view: the whole graph, or around <paramref name="path"/> at depth 1 (Links panel "Show in graph").</summary>
+    void ShowGraph(string? path)
+    {
+        graphAround = path;
+        graphDepth = path is null ? 0 : 1;
+        graphKey++;
+        view = View.Graph;
+    }
+
+    async Task OpenAsync(string? path)
+    {
+        view = View.Pages;
+        Nav.NavigateTo(path is null ? StoryTitle_KbHref() : Kb.Links.PageHref(path));
+        if (path is not null) State.SetActiveTab(1);
+        await Task.CompletedTask;
+    }
+
+    string StoryTitle_KbHref() => "story/" + Uri.EscapeDataString(StoryTitle) + "?tab=kb";
+
+    async Task CreatePageAsync(string target)
+    {
+        // From an unresolved link: create it next to the current page so the link resolves (KGB).
+        var folder = P is null ? "" : LinkResolver.FolderOf(P);
+        var name = target;
+        if (target.Contains('/'))
+        {
+            folder = LinkResolver.FolderOf(target);
+            name = target[(target.LastIndexOf('/') + 1)..];
+            if (folder.Length > 0 && !await Workspace.ExistsAsync(folder))
+            {
+                try { await Workspace.CreateFolderAsync(folder); }
+                catch (KnowledgeException ex) { PageCommands.ShowError(Notify, ex); return; }
+            }
+        }
+        var path = await PageCommands.CreatePageAsync(Dialogs, Workspace, Notify, folder, name.Length == 0 ? null : name);
+        if (path is not null) await OpenAsync(path);
+        else if (Create) Nav.NavigateTo(P is null ? StoryTitle_KbHref() : Kb.Links.PageHref(P), replace: true);
+    }
+
+    /// <summary>KGB's guard: a dirty page asks before another page, another tab or another screen opens (§17.5).</summary>
+    async Task OnBeforeNavigationAsync(LocationChangingContext context)
+    {
+        var uri = Nav.ToAbsoluteUri(context.TargetLocation);
+        var query = System.Web.HttpUtility.ParseQueryString(uri.Query);
+        var path = Uri.UnescapeDataString(Nav.ToBaseRelativePath(uri.GetLeftPart(UriPartial.Path)));
+        var sameStory = string.Equals(path, "story/" + StoryTitle, StringComparison.OrdinalIgnoreCase);
+        // Leaving the story is StoryWorkspace's guard, which calls ConfirmLeaveStoryAsync before it flushes.
+        if (!sameStory) return;
+        var targetIsKb = sameStory && string.Equals(query["tab"], "kb", StringComparison.OrdinalIgnoreCase);
+
+        if (targetIsKb && query["create"] == "1" && query["p"] is { Length: > 0 } create)
+        {
+            context.PreventNavigation();
+            await CreatePageAsync(create);
+            return;
+        }
+
+        var targetP = targetIsKb ? query["p"] ?? "" : "\u0000";
+        if (KnowledgePath.TryParse(targetP, isPage: true, out var parsed, out _)) targetP = parsed.Value;
+        var samePage = targetIsKb && string.Equals(targetP, P ?? "", StringComparison.OrdinalIgnoreCase);
+        if (samePage) return;
+        await ConfirmLeavePageAsync(context);
+    }
+
+    /// <summary>Called by StoryWorkspace when the navigation leaves the story. False when the user stayed.</summary>
+    public Task<bool> ConfirmLeaveStoryAsync(LocationChangingContext context) => ConfirmLeavePageAsync(context);
+
+    async Task<bool> ConfirmLeavePageAsync(LocationChangingContext context)
+    {
+        if (editor is null || !editor.IsDirty) return true;
+        switch (await Dialogs.AskUnsavedAsync([P ?? ""]))
+        {
+            case UnsavedChoice.Save:
+                if (await editor.SaveAsync()) return true;
+                StayOnPage(context);
+                return false;
+            case UnsavedChoice.Discard:
+                editor.Discard();
+                return true;
+            default:
+                StayOnPage(context);
+                return false;
+        }
+    }
+
+    void StayOnPage(LocationChangingContext context)
+    {
+        context.PreventNavigation();
+        // The tree already highlighted the item that was clicked; have it select the open page again.
+        selectionVersion++;
+        StateHasChanged();
+    }
+
+    public async ValueTask DisposeAsync()
+    {
+        State.Changed -= OnStateChanged;
+        Workspace.Changed -= OnWorkspaceChanged;
+        await BrowserInterop.DisposeHandleAsync(widthHandle);
+        self?.Dispose();
+    }
+}

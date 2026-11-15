@@ -1,0 +1,141 @@
+@* Character dialog (UI-Behavior-Spec §13.2, V1 CharacterEdit.razor). Backgrounds stay in memory until Save. *@
+@inject AIStoryBuildersService Svc
+@inject DialogService Dialogs
+@inject NotificationService Notify
+@inject LogService Log
+
+<div class="asb-eyebrow">Story element</div>
+@if (busy)
+{
+    <RadzenProgressBar Value="100" ShowValue="false" Mode="ProgressBarMode.Indeterminate" />
+}
+else
+{
+    <div class="asb-field">
+        <label for="c-name">Character Name:</label>
+        <RadzenTextBox id="c-name" MaxLength="100" @bind-Value="Character.CharacterName" />
+    </div>
+    <div class="row" style="gap:8px;align-items:flex-end;margin-bottom:10px">
+        <div class="asb-field grow" style="margin:0">
+            <label for="c-type">Background Type:</label>
+            <RadzenDropDown id="c-type" TValue="string" Data="@Types" @bind-Value="backgroundType" Style="width:100%" />
+        </div>
+        <RadzenButton Text="Add Background" Icon="add" ButtonStyle="ButtonStyle.Secondary" Click="@(() => EditBackgroundAsync(null))" />
+    </div>
+    <div class="asb-scroll">
+        @foreach (var b in Character.CharacterBackground)
+        {
+            <div class="asb-subcard">
+                <div class="grow">
+                    <div class="asb-st">@b.Type@(string.IsNullOrEmpty(b.Timeline?.TimelineName) ? "" : " · " + b.Timeline.TimelineName)</div>
+                    @if (!(b.Description ?? "").StartsWith('['))
+                    {
+                        <div>@b.Description</div>
+                    }
+                </div>
+                <RadzenButton Text="Edit" ButtonStyle="ButtonStyle.Light" Size="ButtonSize.Small" Click="@(() => EditBackgroundAsync(b))" />
+            </div>
+        }
+    </div>
+    <div class="asb-dialog-actions">
+        @if (Character.Id > 0)
+        {
+            <RadzenButton Text="Delete" Icon="delete" ButtonStyle="ButtonStyle.Danger" Click="DeleteAsync" />
+        }
+        <RadzenButton Text="Save" Icon="save" ButtonStyle="ButtonStyle.Success" Click="SaveAsync" />
+    </div>
+}
+
+@code {
+    [Parameter, EditorRequired] public Character Character { get; set; } = default!;
+    [Parameter] public List<Character> Existing { get; set; } = [];
+
+    /// <summary>V1's background types; they are written to the file and used by attribute detection.</summary>
+    public static readonly string[] Types = ["Appearance", "Goals", "History", "Aliases", "Facts"];
+
+    string? originalName;
+    string backgroundType = "Appearance";
+    bool busy;
+
+    protected override void OnInitialized() => originalName = Character.CharacterName;
+
+    void Error(string summary, string detail) => Notify.Notify(NotificationSeverity.Error, summary, detail, 4000);
+
+    async Task EditBackgroundAsync(CharacterBackground? existing)
+    {
+        var background = existing is null
+            ? new CharacterBackground { Id = -1, Type = backgroundType, Description = "", Timeline = new Timeline { TimelineName = "" } }
+            : new CharacterBackground { Id = existing.Id, Type = existing.Type, Description = existing.Description, Timeline = existing.Timeline };
+        var title = existing is null ? $"New Character Background - {background.Type}" : $"Edit Character Background  - {background.Type}";
+        var result = await Dialogs.OpenAsync<CharacterBackgroundDialog>(title,
+            new Dictionary<string, object?> { ["Background"] = background, ["Story"] = Character.Story },
+            new DialogOptions { Width = "500px", CloseDialogOnEsc = true, ShowClose = true });
+        if (result is not CharacterBackground edited) return;
+
+        if (existing is null)
+        {
+            edited.Id = Character.CharacterBackground.Count == 0 ? 1 : Character.CharacterBackground.Max(b => b.Id) + 1;
+            edited.Sequence = edited.Id;
+            Character.CharacterBackground.Add(edited);
+        }
+        else if (edited.Id == 0)
+        {
+            Character.CharacterBackground.Remove(existing);
+        }
+        else
+        {
+            existing.Description = edited.Description;
+            existing.Timeline = edited.Timeline;
+        }
+    }
+
+    async Task SaveAsync()
+    {
+        if (string.IsNullOrEmpty(Character.CharacterName))
+        {
+            Error("Error", "Character Name is required");
+            return;
+        }
+        Character.CharacterName = Character.CharacterName.Replace("|", "").Replace("[", "").Replace("]", "");
+        var renamed = Character.Id > 0 && Character.CharacterName != originalName;
+        if (Character.Id == -1 && Existing.Any(c => string.Equals(c.CharacterName, Character.CharacterName, StringComparison.OrdinalIgnoreCase)))
+        {
+            Error("Validation Error", "Character Name already exists. Choose a new name");
+            return;
+        }
+        // V2 asks before writing anything (UI-Behavior-Spec §19 #16).
+        if (renamed && await Dialogs.Confirm("Are you sure? The entire story will be updated to update the Character Name.", "Character Name Change",
+                new ConfirmOptions { OkButtonText = "Yes", CancelButtonText = "No" }) != true) return;
+
+        busy = true;
+        try
+        {
+            await Svc.AddUpdateCharacterAsync(Character, renamed ? originalName! : Character.CharacterName);
+            if (renamed) await Svc.UpdateCharacterNameAsync(Character, originalName!);
+            Dialogs.Close(Character);
+        }
+        catch (Exception ex)
+        {
+            busy = false;
+            Error("Error", ex.Message);
+            Log.WriteToLog(ex.Message);
+        }
+    }
+
+    async Task DeleteAsync()
+    {
+        if (await Dialogs.Confirm("Are you sure?", "Delete Character", new ConfirmOptions { OkButtonText = "Yes", CancelButtonText = "No" }) != true) return;
+        busy = true;
+        try
+        {
+            Character.CharacterName = originalName;
+            Svc.DeleteCharacter(Character, originalName ?? "");
+            Dialogs.Close(null);
+        }
+        catch (Exception ex)
+        {
+            busy = false;
+            Error("Error", ex.Message);
+        }
+    }
+}

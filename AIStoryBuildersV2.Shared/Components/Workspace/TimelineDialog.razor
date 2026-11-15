@@ -1,0 +1,120 @@
+@* Timeline dialog (UI-Behavior-Spec §11.2, V1 TimelinesEdit.razor). *@
+@inject AIStoryBuildersService Svc
+@inject DialogService Dialogs
+@inject NotificationService Notify
+@inject LogService Log
+
+<div class="asb-eyebrow">Story element</div>
+@if (busy)
+{
+    <RadzenProgressBar Value="100" ShowValue="false" Mode="ProgressBarMode.Indeterminate" />
+}
+else
+{
+    <div class="asb-field">
+        <label for="t-name">Timeline Name:</label>
+        <RadzenTextBox id="t-name" MaxLength="200" @bind-Value="Timeline.TimelineName" />
+    </div>
+    <div class="asb-field">
+        <label for="t-desc">Description:</label>
+        <RadzenTextArea id="t-desc" Rows="2" MaxLength="200" @bind-Value="Timeline.TimelineDescription" Style="width:100%" />
+    </div>
+    <div class="row" style="gap:16px">
+        <div class="asb-field grow">
+            <label for="t-start">Start Date:</label>
+            <RadzenDatePicker id="t-start" TValue="DateTime?" @bind-Value="Timeline.StartDate" ShowTime="true" AllowClear="false" Style="width:100%" />
+        </div>
+        <div class="asb-field grow">
+            <label for="t-stop">Stop Date:</label>
+            <RadzenDatePicker id="t-stop" TValue="DateTime?" @bind-Value="Timeline.StopDate" ShowTime="true" AllowClear="true" Style="width:100%" />
+        </div>
+    </div>
+    <div class="asb-dialog-actions">
+        @if (Timeline.Id > 0)
+        {
+            <RadzenButton Text="Delete" Icon="delete" ButtonStyle="ButtonStyle.Danger" Click="DeleteAsync" />
+        }
+        <RadzenButton Text="Save" Icon="save" ButtonStyle="ButtonStyle.Success" Click="SaveAsync" />
+    </div>
+}
+
+@code {
+    [Parameter, EditorRequired] public Timeline Timeline { get; set; } = default!;
+    [Parameter] public List<Timeline> Existing { get; set; } = [];
+
+    string? originalName;
+    bool busy;
+
+    protected override void OnInitialized() => originalName = Timeline.TimelineName;
+
+    void Error(string summary, string detail) => Notify.Notify(NotificationSeverity.Error, summary, detail, 4000);
+
+    async Task SaveAsync()
+    {
+        if (string.IsNullOrEmpty(Timeline.TimelineName))
+        {
+            Error("Error", "Timeline Name is required");
+            return;
+        }
+        Timeline.TimelineName = Timeline.TimelineName.Replace("|", "");
+        if (Existing.Any(t => t.TimelineName != originalName && string.Equals(t.TimelineName, Timeline.TimelineName, StringComparison.OrdinalIgnoreCase)))
+        {
+            Error("Validation Error", "Timeline Name already exists. Choose a new name");
+            return;
+        }
+        if (Timeline.StartDate is null)
+        {
+            Error("Error", "Start Date is required");
+            return;
+        }
+        if (Timeline.StopDate is { } stop && Timeline.StartDate >= stop)
+        {
+            Error("Error", "Start Date must be before Stop Date");
+            return;
+        }
+
+        try
+        {
+            if (Timeline.Id == -1)
+            {
+                Svc.AddTimeline(Timeline);
+            }
+            else if (Timeline.TimelineName != originalName)
+            {
+                if (await Dialogs.Confirm("Are you sure? The entire story will be updated to update the Timeline name.", "Timeline Name Change",
+                        new ConfirmOptions { OkButtonText = "Yes", CancelButtonText = "No" }) != true) return;
+                busy = true;
+                await Svc.UpdateTimelineAndTimelineNameAsync(Timeline, originalName ?? "");
+            }
+            else
+            {
+                Svc.UpdateTimeline(Timeline, originalName ?? "");
+            }
+            Dialogs.Close(Timeline);
+        }
+        catch (Exception ex)
+        {
+            busy = false;
+            Error("Error", ex.Message);
+            Log.WriteToLog(ex.Message);
+        }
+    }
+
+    async Task DeleteAsync()
+    {
+        if (await Dialogs.Confirm("Are you sure? The entire story will be updated to remove the Timeline.", "Delete Timeline",
+                new ConfirmOptions { OkButtonText = "Yes", CancelButtonText = "No" }) != true) return;
+        busy = true;
+        try
+        {
+            await Svc.DeleteTimelineAndTimelineNameAsync(Timeline, originalName ?? "");
+            Dialogs.Close(null);
+        }
+        catch (Exception ex)
+        {
+            busy = false;
+            Error("Error", ex.Message);
+            Log.WriteToLog(ex.Message);
+        }
+    }
+}

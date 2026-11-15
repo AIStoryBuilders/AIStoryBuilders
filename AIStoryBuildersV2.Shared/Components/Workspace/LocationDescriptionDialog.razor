@@ -1,0 +1,53 @@
+@* Location description (UI-Behavior-Spec §12.3). Returns the edited entry; Id 0 means "delete". *@
+@inject AIStoryBuildersService Svc
+@inject DialogService Dialogs
+@inject NotificationService Notify
+
+<div class="asb-field">
+    <label for="ld-desc">Location Description:</label>
+    <RadzenTextArea id="ld-desc" Rows="2" MaxLength="100" @bind-Value="Description.Description" Style="width:100%" />
+</div>
+<div class="asb-field">
+    <label for="ld-tl">Timeline:</label>
+    <RadzenDropDown id="ld-tl" TValue="string" Data="@timelines" @bind-Value="selected" Style="width:100%" />
+</div>
+<div class="asb-dialog-actions">
+    @if (Description.Id > 0)
+    {
+        <RadzenButton Text="Delete" Icon="delete" ButtonStyle="ButtonStyle.Danger" Click="DeleteAsync" />
+    }
+    <RadzenButton Text="Save" Icon="save" ButtonStyle="ButtonStyle.Success" Click="Save" />
+</div>
+
+@code {
+    [Parameter, EditorRequired] public LocationDescription Description { get; set; } = default!;
+    [Parameter, EditorRequired] public Story Story { get; set; } = default!;
+
+    List<string> timelines = [];
+    string selected = "";
+
+    protected override void OnInitialized()
+    {
+        timelines = [""];
+        timelines.AddRange(Svc.GetTimelines(Story).Select(t => t.TimelineName));
+        selected = Description.Timeline?.TimelineName ?? "";
+    }
+
+    void Save()
+    {
+        if (string.IsNullOrWhiteSpace(Description.Description))
+        {
+            Notify.Notify(NotificationSeverity.Error, "Error", "Description is required", 4000);
+            return;
+        }
+        Description.Timeline = string.IsNullOrEmpty(selected) ? null : new Timeline { TimelineName = selected };
+        Dialogs.Close(Description);
+    }
+
+    async Task DeleteAsync()
+    {
+        if (await Dialogs.Confirm("Are you sure?", "Delete Description", new ConfirmOptions { OkButtonText = "Yes", CancelButtonText = "No" }) != true) return;
+        Description.Id = 0;
+        Dialogs.Close(Description);
+    }
+}

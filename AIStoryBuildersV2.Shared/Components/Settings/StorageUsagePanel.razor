@@ -1,0 +1,48 @@
+@* WASM only: browser storage usage against the assumed 5 MB quota (plan §5.5 step 7, UI-Behavior-Spec §6.4). *@
+@implements IDisposable
+@inject IStoryPersistence Persist
+
+@if (_usage is { } usage)
+{
+    var pct = usage.AssumedQuotaBytes <= 0 ? 0 : (int)Math.Round(100.0 * usage.EstimatedBytes / usage.AssumedQuotaBytes);
+    <div class="asb-panel asb-usage">
+        <div class="asb-usage-label">
+            Browser storage: @FormatBytes(usage.EstimatedBytes) of about 5 MB (@pct%) · @usage.Stories @(usage.Stories == 1 ? "story" : "stories")
+        </div>
+        <RadzenProgressBar Value="@Math.Min(usage.EstimatedBytes, usage.AssumedQuotaBytes)" Max="@usage.AssumedQuotaBytes" ShowValue="false"
+                           ProgressBarStyle="@(pct >= 80 ? ProgressBarStyle.Warning : ProgressBarStyle.Primary)" aria-label="Browser storage usage" />
+        @if (usage.EstimatedBytes >= usage.AssumedQuotaBytes * StoryStorageConstants.WarnAtFraction)
+        {
+            <RadzenAlert AlertStyle="AlertStyle.Warning" Variant="Variant.Flat" Shade="Shade.Lighter" AllowClose="false" class="asb-mt">
+                Browser storage is almost full. Export the stories you want to keep, and delete the ones you don't need.
+            </RadzenAlert>
+        }
+    </div>
+}
+
+@code {
+    StorageUsage? _usage;
+
+    protected override async Task OnInitializedAsync()
+    {
+        _usage = await Persist.GetUsageAsync();
+        Persist.Changed += OnPersistenceChanged;
+    }
+
+    public async Task RefreshAsync()
+    {
+        _usage = await Persist.GetUsageAsync();
+        StateHasChanged();
+    }
+
+    void OnPersistenceChanged(StoryPersistenceEvent e) => _ = InvokeAsync(RefreshAsync);
+
+    public void Dispose() => Persist.Changed -= OnPersistenceChanged;
+
+    static string FormatBytes(long bytes) => bytes switch
+    {
+        >= 1_000_000 => $"{bytes / 1_000_000.0:0.0} MB",
+        >= 1_000 => $"{bytes / 1_000.0:0} KB",
+        _ => $"{bytes} bytes",
+    };
+}

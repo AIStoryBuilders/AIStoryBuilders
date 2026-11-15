@@ -1,0 +1,80 @@
+@using AIStoryBuildersV2.Shared.Knowledge
+@inject DialogService Dialogs
+@inject ICurrentStoryKnowledgeBase CurKb
+
+<div style="display:flex;flex-direction:column;gap:10px">
+    <div class="sm t2">Move <span class="mono">@SourcePath</span> to:</div>
+    <div style="border:1px solid var(--bd);border-radius:6px;padding:4px;max-height:320px;overflow:auto">
+        <RadzenTree Value="@selected" Change="@(args => selected = args.Value as string)" Expand="@OnExpand">
+            <RadzenTreeItem Value="@("")" Text="(Root)" HasChildren="true" Expanded="true">
+                @RenderFolders("")
+            </RadzenTreeItem>
+        </RadzenTree>
+    </div>
+    @if (selected is not null && DisabledReason(selected) is { } reason)
+    {
+        <div class="kgb-err" role="alert"><span class="mi s16" aria-hidden="true">block</span>@reason</div>
+    }
+    <div class="row" style="justify-content:flex-end">
+        <RadzenButton Text="Cancel" Variant="Variant.Outlined" ButtonStyle="ButtonStyle.Base" Click="@(() => Dialogs.Close(null))" />
+        <RadzenButton Text="Move" ButtonStyle="ButtonStyle.Primary" Disabled="@(selected is null || DisabledReason(selected) is not null)" Click="@(() => Dialogs.Close(selected))" />
+    </div>
+</div>
+
+@code {
+    /// <summary>The open story's KB (D13), captured on first use so disposal still reaches it after the workspace clears it.</summary>
+    IStoryKnowledgeBase? kb;
+    IStoryKnowledgeBase Kb => kb ??= CurKb.Current ?? throw new InvalidOperationException("No story knowledge base is open.");
+    IKnowledgeWorkspace Workspace => Kb.Workspace;
+
+    [Parameter] public string SourcePath { get; set; } = "";
+    [Parameter] public bool SourceIsFolder { get; set; }
+
+    readonly Dictionary<string, List<KnowledgeNode>> folders = new(StringComparer.OrdinalIgnoreCase);
+    string? selected;
+
+    string CurrentParent => SourcePath.Contains('/') ? SourcePath[..SourcePath.LastIndexOf('/')] : "";
+
+    protected override async Task OnInitializedAsync() => await LoadAsync("");
+
+    async Task LoadAsync(string folder)
+    {
+        if (folders.ContainsKey(folder)) return;
+        var nodes = await Workspace.GetChildrenAsync(folder);
+        folders[folder] = nodes.Where(n => n.IsFolder).ToList();
+        foreach (var f in folders[folder]) await LoadChildrenQuietly(f.Path);
+    }
+
+    async Task LoadChildrenQuietly(string folder)
+    {
+        if (folders.ContainsKey(folder)) return;
+        var nodes = await Workspace.GetChildrenAsync(folder);
+        folders[folder] = nodes.Where(n => n.IsFolder).ToList();
+    }
+
+    async Task OnExpand(TreeExpandEventArgs args)
+    {
+        if (args.Value is string folder && folders.TryGetValue(folder, out var list))
+            foreach (var f in list) await LoadChildrenQuietly(f.Path);
+    }
+
+    string? DisabledReason(string folder)
+    {
+        if (string.Equals(folder, CurrentParent, StringComparison.OrdinalIgnoreCase)) return "It's already in this folder.";
+        if (SourceIsFolder && (string.Equals(folder, SourcePath, StringComparison.OrdinalIgnoreCase) || folder.StartsWith(SourcePath + "/", StringComparison.OrdinalIgnoreCase)))
+            return "A folder can't be moved into itself or one of its subfolders.";
+        return null;
+    }
+
+    RenderFragment RenderFolders(string folder) => __builder =>
+    {
+        if (!folders.TryGetValue(folder, out var list)) return;
+        foreach (var f in list)
+        {
+            var hasChildren = !folders.TryGetValue(f.Path, out var sub) || sub.Count > 0;
+            <RadzenTreeItem @key="f.Path" Value="@f.Path" Text="@f.Name" HasChildren="@hasChildren">
+                @RenderFolders(f.Path)
+            </RadzenTreeItem>
+        }
+    };
+}

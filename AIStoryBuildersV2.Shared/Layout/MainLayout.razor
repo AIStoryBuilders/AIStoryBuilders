@@ -1,0 +1,45 @@
+@inherits LayoutComponentBase
+@inject AppMetadata AppMetadata
+@inject IUpdateCheck Updates
+
+<RadzenTheme Theme="material" />
+
+<div class="asb-app kgb-light">
+    @* Inside the app container so Radzen dialogs, menus and toasts get the asb tokens. *@
+    <RadzenComponents />
+    <header class="asb-topbar asb-main-top">
+        <a class="asb-brand" href="./">
+            <img src="_content/AIStoryBuildersV2.Shared/images/logo.png" alt="AIStoryBuilders logo" />
+            <span class="asb-ttl"><b>AI StoryBuilders</b><span>Manuscript studio</span></span>
+        </a>
+        <span class="asb-sp"></span>
+        <a class="asb-pro-pill" href="https://Pro.AIStoryBuilders.com" target="_blank" rel="noopener">Get a Developmental Edit Report</a>
+        <RadzenMenu Responsive="false" class="asb-menu" aria-label="Main menu">
+            <RadzenMenuItem Text="Home" Icon="home" Path="./" Match="NavLinkMatch.All" />
+            <RadzenMenuItem Text="Logs" Icon="assignment" Path="logs" />
+            <RadzenMenuItem Text="Settings" Icon="line_style" Path="settings" />
+            <RadzenMenuItem Text="Help" Icon="help_outline" Path="help" />
+        </RadzenMenu>
+    </header>
+    @if (updateAvailable)
+    {
+        <div class="asb-update">
+            <a href="https://documentation.aistorybuilders.com/" target="_blank" rel="noopener">* Update Available - Close web browser and reload *</a>
+        </div>
+    }
+    <main class="asb-page">
+        <div class="asb-wrap">
+            @Body
+        </div>
+    </main>
+    <footer class="asb-footer">
+        <a href="https://BlazorData.net" target="_blank" rel="noopener">© BlazorData.net</a>
+        <span class="asb-footer-build">Build @AppMetadata.Version</span>
+    </footer>
+</div>
+
+@code {
+    bool updateAvailable;
+
+    protected override async Task OnInitializedAsync() => updateAvailable = await Updates.IsUpdateAvailableAsync();
+}

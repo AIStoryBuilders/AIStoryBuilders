@@ -1,0 +1,23 @@
+<Project Sdk="Aspire.AppHost.Sdk/13.6.4">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net11.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <AspireUseCliBundle>true</AspireUseCliBundle>
+    <UserSecretsId>4da27c29-511d-4792-8133-fd7fa165eab7</UserSecretsId>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!-- Dev-time only (D4, G9): neither app needs Aspire at runtime. -->
+    <PackageReference Include="Aspire.Hosting.Maui" Version="13.6.4-preview.1.26523.11" />
+    <!-- Lifts the transitive MessagePack 2.5.302 past GHSA-qhrr-8q5h-9q3h (fixed in 2.5.303). -->
+    <PackageReference Include="MessagePack" Version="2.5.307" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\AIStoryBuildersV2.Web\AIStoryBuildersV2.Web.csproj" />
+  </ItemGroup>
+
+</Project>

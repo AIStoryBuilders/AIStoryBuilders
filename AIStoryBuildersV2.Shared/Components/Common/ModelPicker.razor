@@ -1,0 +1,68 @@
+@* Every AI model dropdown (UI-Behavior-Spec §0.3): verified models only, the default selected. *@
+@using AIStoryBuildersV2.Shared.Settings
+@implements IDisposable
+@inject IAppSettingsService Settings
+
+@if (_models.Count == 0)
+{
+    <RadzenDropDown TValue="string" Data="@NoModels" Disabled="true" Placeholder="No verified models" Style="@Style" />
+    <div class="kgb-help">No verified models. Verify a model in Settings. <a href="settings">Open Settings</a></div>
+}
+else
+{
+    <RadzenDropDown TValue="string" Data="@_models" TextProperty="Text" ValueProperty="Value" Value="@Value" ValueChanged="OnChanged"
+                    Disabled="@Disabled" Style="@Style" id="@Id" />
+}
+
+@code {
+    [Parameter] public string? Value { get; set; }
+    [Parameter] public EventCallback<string?> ValueChanged { get; set; }
+    [Parameter] public bool Disabled { get; set; }
+    [Parameter] public string Style { get; set; } = "width:100%";
+    [Parameter] public string? Id { get; set; }
+
+    /// <summary>Raised when the list loads, with whether any model is available.</summary>
+    [Parameter] public EventCallback<bool> AvailabilityChanged { get; set; }
+
+    static readonly string[] NoModels = [];
+
+    sealed record Option(string Text, string Value);
+
+    List<Option> _models = [];
+
+    protected override async Task OnInitializedAsync()
+    {
+        Settings.Changed += OnSettingsChanged;
+        await LoadAsync();
+    }
+
+    async Task LoadAsync()
+    {
+        var settings = await Settings.GetAsync();
+        _models = settings.VerifiedModels
+            .Select(m => new Option(m.Model, m.Model))
+            .OrderBy(m => m.Text, StringComparer.OrdinalIgnoreCase)
+            .ToList();
+
+        if (_models.Count > 0 && (Value is null || _models.All(m => m.Value != Value)))
+        {
+            var pick = _models.FirstOrDefault(m => m.Value == settings.Model)?.Value ?? _models[0].Value;
+            await OnChanged(pick);
+        }
+        else if (_models.Count == 0 && Value is not null)
+        {
+            await OnChanged(null);
+        }
+        await AvailabilityChanged.InvokeAsync(_models.Count > 0);
+    }
+
+    async Task OnChanged(string? value)
+    {
+        Value = value;
+        await ValueChanged.InvokeAsync(value);
+    }
+
+    void OnSettingsChanged() => _ = InvokeAsync(async () => { await LoadAsync(); StateHasChanged(); });
+
+    public void Dispose() => Settings.Changed -= OnSettingsChanged;
+}

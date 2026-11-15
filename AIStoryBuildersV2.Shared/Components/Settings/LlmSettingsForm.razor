@@ -1,0 +1,397 @@
+@* KGB's LlmSettingsForm (D7) with V1's labels and the capability probe on Save (plan §5.9, UI-Behavior-Spec §6.1–6.2). *@
+@using AIStoryBuildersV2.Shared.Knowledge
+@using AIStoryBuildersV2.Shared.Llm
+@using AIStoryBuildersV2.Shared.Settings
+@implements IDisposable
+@inject IAppSettingsService Settings
+@inject NotificationService Notify
+@inject IHostCapabilities Host
+@inject BrowserInterop Interop
+
+<div class="asb-panel kgb-light">
+    @if (current is null)
+    {
+        <div class="kgb-sk" style="width:60%"></div>
+    }
+    else
+    {
+        <div class="asb-field">
+            <label for="asb-provider">AI Provider:</label>
+            <RadzenDropDown id="asb-provider" TValue="LlmProvider" Data="@providers" TextProperty="Text" ValueProperty="Value"
+                            Value="@provider" ValueChanged="@OnProviderChanged" Style="width:100%" />
+        </div>
+
+        @if (LlmDefaults.RequiresKey(provider))
+        {
+            <div class="asb-field">
+                <label for="asb-key">API Key:</label>
+                @if (current.ApiKeyConfigured && !replacing && provider == current.Provider)
+                {
+                    <div class="row">
+                        <span class="bdg b-su"><span class="mi" aria-hidden="true">check</span>Configured</span>
+                        <RadzenButton Text="Replace" Size="ButtonSize.Small" ButtonStyle="ButtonStyle.Light" Click="@(() => replacing = true)" />
+                        <RadzenButton Text="Clear key" Size="ButtonSize.Small" Variant="Variant.Text" ButtonStyle="ButtonStyle.Danger" Click="@ClearKeyAsync" />
+                    </div>
+                }
+                else
+                {
+                    <div class="row">
+                        @if (!current.ApiKeyConfigured || provider != current.Provider) { <span class="bdg b-ne"><span class="mi" aria-hidden="true">key_off</span>Not set</span> }
+                        <RadzenPassword id="asb-key" Value="@newKey" @oninput="@(e => { newKey = e.Value?.ToString() ?? ""; ScheduleModelLoad(); })" Style="flex:1" AutoComplete="false" Placeholder="Paste the key" />
+                        @if (replacing) { <RadzenButton Text="Cancel" Size="ButtonSize.Small" Variant="Variant.Text" Click="@(() => { replacing = false; newKey = ""; ScheduleModelLoad(); })" /> }
+                    </div>
+                }
+                @if (KeyError is { } keyError)
+                {
+                    <div class="kgb-err">@keyError</div>
+                }
+                <div class="kgb-help"><span class="mi s16" aria-hidden="true">lock</span>
+                    @if (Host.IsBrowser)
+                    {
+                        <span>The API key is stored unencrypted in this browser and is sent only to <b class="mono">@(LlmDefaults.HostFor(provider, endpoint) ?? "the provider")</b>. Any script or extension with access to this page can read it, so use a key with a spending limit, and clear it on shared computers.</span>
+                    }
+                    else
+                    {
+                        <span>The key is kept in Windows secure storage and sent only to <b class="mono">@(LlmDefaults.HostFor(provider, endpoint) ?? "the provider")</b>. It is never shown again.</span>
+                    }
+                </div>
+                @if (ShowGetKey)
+                {
+                    <RadzenButton Text="@GetKeyText" ButtonStyle="ButtonStyle.Secondary" Size="ButtonSize.Small" class="asb-mt" Click="OpenConsoleAsync" />
+                }
+            </div>
+        }
+
+        @if (LlmDefaults.RequiresEndpoint(provider))
+        {
+            <div class="asb-field">
+                <label for="asb-endpoint">@(provider == LlmProvider.AzureOpenAI ? "Azure OpenAI Endpoint:" : "Endpoint")</label>
+                <RadzenTextBox id="asb-endpoint" Value="@endpoint" @oninput="@(e => { endpoint = e.Value?.ToString() ?? ""; ScheduleModelLoad(); })" Style="width:100%" class="mono"
+                               Placeholder="@(provider == LlmProvider.Ollama ? "http://localhost:11434/" : "https://<resource>.openai.azure.com/")" />
+                @if (EndpointError is { } endpointError)
+                {
+                    <div class="kgb-err">@endpointError</div>
+                }
+                @if (provider == LlmProvider.Ollama && Host.IsBrowser)
+                {
+                    <div class="kgb-help"><span class="mi s16" aria-hidden="true">info</span>The Ollama host must allow this page's origin: set OLLAMA_ORIGINS on the machine running Ollama.</div>
+                }
+            </div>
+        }
+
+        <div class="asb-field">
+            <label for="asb-model">@ModelLabel</label>
+            <div class="row" style="gap:6px">
+                @if (models.Count > 0 && !typeModel)
+                {
+                    <RadzenDropDown id="asb-model" TValue="string" Data="@ModelOptions" Value="@model" ValueChanged="@((string? v) => model = v ?? "")"
+                                    AllowFiltering="true" FilterCaseSensitivity="FilterCaseSensitivity.CaseInsensitive" Placeholder="Pick a model"
+                                    Style="flex:1;min-width:0" class="mono" />
+                }
+                else
+                {
+                    <RadzenTextBox id="asb-model" Value="@model" @oninput="@(e => model = e.Value?.ToString() ?? "")" Style="flex:1;min-width:0" class="mono"
+                                   Placeholder="@(provider == LlmProvider.AzureOpenAI ? "Deployment name" : "Model name")" />
+                }
+                <RadzenButton Icon="refresh" ButtonStyle="ButtonStyle.Light" IsBusy="@loadingModels" title="Refresh models from API"
+                              aria-label="Refresh models from API" Click="RefreshModelsAsync" />
+            </div>
+            <div class="kgb-help">
+                @if (loadingModels)
+                {
+                    <span>Loading models…</span>
+                }
+                else if (models.Count > 0)
+                {
+                    <span>@models.Count @(provider == LlmProvider.AzureOpenAI ? "deployment" : "model")@(models.Count == 1 ? "" : "s") available.</span>
+                    <a href="" @onclick="@(() => typeModel = !typeModel)" @onclick:preventDefault="true">@(typeModel ? "Pick from the list" : "Type a name instead")</a>
+                }
+                else if (modelStatus is not null)
+                {
+                    <span class="tw">@modelStatus Type the name instead.</span>
+                }
+            </div>
+            @if (showValidation && string.IsNullOrWhiteSpace(model) && provider != LlmProvider.Fake)
+            {
+                <div class="kgb-err">Pick or type a model name.</div>
+            }
+        </div>
+
+        <p class="asb-note">Embeddings are handled locally (no cloud embedding calls needed).</p>
+
+        @if (error is not null)
+        {
+            <div class="kgb-callout da" role="alert"><span class="mi" aria-hidden="true">error</span><div>@error</div></div>
+        }
+        @if (testResult is not null)
+        {
+            <div class="kgb-callout @(testOk ? "su" : "da")" role="status" style="margin-top:10px">
+                <span class="mi" aria-hidden="true">@(testOk ? "check_circle" : "error")</span><div>@testResult</div>
+            </div>
+        }
+
+        <div class="kgb-callout ne" style="margin-top:12px">
+            <span class="mi" aria-hidden="true">privacy_tip</span>
+            <div>Page text the assistant reads is sent to the selected provider. Ollama keeps everything on the machine that runs it.</div>
+        </div>
+
+        <div class="row" style="justify-content:flex-end;margin-top:14px">
+            <RadzenButton Text="Test connection" Icon="network_check" ButtonStyle="ButtonStyle.Light" Click="@TestAsync" IsBusy="@testing" BusyText="Testing…" Disabled="@saving" />
+            <RadzenButton Text="Save" Icon="save" ButtonStyle="ButtonStyle.Primary" Click="@SaveAsync" Disabled="@(!Dirty || testing)" IsBusy="@saving" BusyText="Verifying model…" />
+        </div>
+    }
+</div>
+
+@code {
+    /// <summary>Raised after a successful save (the first-run redirect returns to the Library).</summary>
+    [Parameter] public EventCallback Saved { get; set; }
+
+    sealed record Option(string Text, LlmProvider Value);
+
+    readonly List<Option> providers = LlmDefaults.Available().Select(p => new Option(LlmDefaults.DisplayName(p), p)).ToList();
+
+    AppSettings? current;
+    LlmProvider provider;
+    string model = "";
+    string endpoint = "";
+    string newKey = "";
+    bool replacing;
+    bool saving;
+    bool testing;
+    bool testOk;
+    bool showValidation;
+    string? testResult;
+    string? error;
+    IReadOnlyList<string> models = [];
+    string? modelStatus;
+    bool loadingModels;
+    bool typeModel;
+    CancellationTokenSource? modelLoad;
+    Timer? debounce;
+
+    IEnumerable<string> ModelOptions =>
+        string.IsNullOrWhiteSpace(model) || models.Contains(model) ? models : models.Prepend(model);
+
+    bool Dirty => current is not null && (provider != current.Provider || model != current.Model || (endpoint ?? "") != (current.Endpoint ?? "") || newKey.Length > 0);
+
+    bool KeyAvailable => newKey.Length > 0 || (current?.ApiKeyConfigured == true && provider == current.Provider);
+
+    string ModelLabel => provider switch
+    {
+        LlmProvider.AzureOpenAI => "Azure OpenAI Model Deployment Name:",
+        LlmProvider.Anthropic => "Anthropic Model:",
+        LlmProvider.GoogleAI => "Google AI Model:",
+        _ => "Default AI Model:",
+    };
+
+    bool ShowGetKey => LlmDefaults.RequiresKey(provider) && !KeyAvailable;
+
+    string GetKeyText => provider switch
+    {
+        LlmProvider.OpenAI => "An OpenAI API Key is required (Click here to get one)",
+        LlmProvider.AzureOpenAI => "An Azure OpenAI API Key is required (Click here to get one)",
+        LlmProvider.Anthropic => "An Anthropic API Key is required (Click here to get one)",
+        _ => "A Google AI API Key is required (Click here to get one)",
+    };
+
+    static string ConsoleUrl(LlmProvider p) => p switch
+    {
+        LlmProvider.OpenAI => "https://platform.openai.com/api-keys",
+        LlmProvider.AzureOpenAI => "https://portal.azure.com/",
+        LlmProvider.Anthropic => "https://console.anthropic.com/settings/keys",
+        _ => "https://aistudio.google.com/app/apikey",
+    };
+
+    string? KeyError
+    {
+        get
+        {
+            if (!LlmDefaults.RequiresKey(provider)) return null;
+            if (provider == LlmProvider.OpenAI && newKey.Length > 0 && !newKey.Trim().StartsWith("sk-", StringComparison.Ordinal))
+                return "Invalid API Key - must start with: sk-";
+            return showValidation && !KeyAvailable ? "Enter an API key." : null;
+        }
+    }
+
+    string? EndpointError
+    {
+        get
+        {
+            if (!showValidation || !LlmDefaults.RequiresEndpoint(provider)) return null;
+            if (string.IsNullOrWhiteSpace(endpoint)) return "Enter the endpoint URL.";
+            return Uri.TryCreate(endpoint.Trim(), UriKind.Absolute, out var u) && u.Scheme is "http" or "https"
+                ? null : "Enter a full URL that starts with https:// or http://.";
+        }
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        Settings.Changed += OnChanged;
+        await LoadAsync();
+        _ = LoadModelsAsync();
+    }
+
+    void ScheduleModelLoad()
+    {
+        debounce?.Dispose();
+        debounce = new Timer(_ => _ = InvokeAsync(() => LoadModelsAsync()), null, 750, Timeout.Infinite);
+    }
+
+    async Task<ModelListResult?> LoadModelsAsync(bool refresh = false)
+    {
+        modelLoad?.Cancel();
+        var cts = modelLoad = new CancellationTokenSource();
+        loadingModels = true;
+        StateHasChanged();
+        try
+        {
+            var result = await Settings.ListModelsAsync(provider, endpoint, newKey.Length > 0 ? newKey : null, refresh, cts.Token);
+            if (cts.IsCancellationRequested) return null;
+            models = result.Models;
+            modelStatus = result.Status == ModelListStatus.Success ? null : result.Message;
+            if (models.Count == 0) typeModel = false;
+            return result;
+        }
+        catch (OperationCanceledException) { return null; }
+        finally
+        {
+            if (ReferenceEquals(modelLoad, cts)) loadingModels = false;
+            StateHasChanged();
+        }
+    }
+
+    async Task RefreshModelsAsync()
+    {
+        if (LlmDefaults.RequiresKey(provider) && !KeyAvailable)
+        {
+            Notify.Notify(NotificationSeverity.Warning, "API Key Required", "Enter an API key first to fetch available models.", 3000);
+            return;
+        }
+        var result = await LoadModelsAsync(refresh: true);
+        if (result is null) return;
+        if (result.Status == ModelListStatus.Success)
+            Notify.Notify(NotificationSeverity.Success, "Models Refreshed", $"Found {result.Models.Count} available models.", 3000);
+        else
+            Notify.Notify(NotificationSeverity.Error, "Refresh Failed", $"Could not fetch models: {result.Message}", 4000);
+    }
+
+    async Task LoadAsync()
+    {
+        current = await Settings.GetAsync();
+        provider = current.Provider;
+        model = current.Model;
+        endpoint = current.Endpoint ?? "";
+    }
+
+    void OnChanged() => _ = InvokeAsync(async () =>
+    {
+        if (!Dirty) await LoadAsync();
+        else current = await Settings.GetAsync();
+        StateHasChanged();
+    });
+
+    void OnProviderChanged(LlmProvider value)
+    {
+        if (value == provider) return;
+        model = value == current?.Provider ? current.Model : LlmDefaults.DefaultModel(value);
+        provider = value;
+        newKey = "";   // a key typed for another provider must never be saved for this one
+        replacing = false;
+        error = null;
+        testResult = null;
+        showValidation = false;
+        models = [];
+        modelStatus = null;
+        _ = LoadModelsAsync();
+    }
+
+    static string StageName(ProbeStage? stage) => stage switch
+    {
+        ProbeStage.Connect => "connection",
+        ProbeStage.ToolCall => "tool call",
+        ProbeStage.GraphParse => "knowledge graph",
+        _ => "capability",
+    };
+
+    async Task<bool> SaveAsync()
+    {
+        error = null;
+        testResult = null;
+        showValidation = true;
+        if (KeyError is not null || EndpointError is not null || (string.IsNullOrWhiteSpace(model) && provider != LlmProvider.Fake)) return false;
+
+        saving = true;
+        try
+        {
+            var r = await Settings.SaveAsync(provider, model, endpoint, newKey.Length > 0 ? newKey : null, CancellationToken.None);
+            if (!r.Saved)
+            {
+                error = r.Probe is { } p
+                    ? $"{model} did not pass the {StageName(p.FailedAt)} check: {p.Message} Nothing was saved."
+                    : r.Error;
+                return false;
+            }
+
+            newKey = "";
+            replacing = false;
+            showValidation = false;
+            current = await Settings.GetAsync();
+            Notify.Notify(NotificationSeverity.Success, "Settings saved", "", 3000);
+            if (r.Probe is not null) Notify.Notify(NotificationSeverity.Success, "Model verified", $"{model} passed the capability check.", 4000);
+            _ = LoadModelsAsync();
+            await Saved.InvokeAsync();
+            return true;
+        }
+        catch (StorageQuotaExceededException)
+        {
+            error = "Browser storage is full, so the settings weren't saved. Export stories you don't need with Export Project, then delete them from the Library.";
+            return false;
+        }
+        catch (Exception ex)
+        {
+            error = ex.Message;
+            return false;
+        }
+        finally
+        {
+            saving = false;
+        }
+    }
+
+    async Task ClearKeyAsync()
+    {
+        await Settings.ClearApiKeyAsync();
+        current = await Settings.GetAsync();
+        testResult = null;
+        Notify.Notify(NotificationSeverity.Info, "API key cleared", "", 3000);
+        _ = LoadModelsAsync();
+    }
+
+    async Task OpenConsoleAsync()
+    {
+        try { await Interop.OpenUrlAsync(ConsoleUrl(provider)); }
+        catch (Exception ex) { Notify.Notify(NotificationSeverity.Error, "Error", ex.Message, 4000); }
+    }
+
+    async Task TestAsync()
+    {
+        if (Dirty && !await SaveAsync()) return;
+        testing = true;
+        testResult = null;
+        try
+        {
+            using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(30));
+            var result = await Settings.TestConnectionAsync(cts.Token);
+            testOk = result is null;
+            testResult = result ?? $"Connected to {LlmDefaults.DisplayName(provider)} ({model}).";
+        }
+        finally { testing = false; }
+    }
+
+    public void Dispose()
+    {
+        Settings.Changed -= OnChanged;
+        debounce?.Dispose();
+        modelLoad?.Cancel();
+    }
+}

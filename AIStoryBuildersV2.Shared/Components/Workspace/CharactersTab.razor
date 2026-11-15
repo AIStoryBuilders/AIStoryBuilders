@@ -1,0 +1,59 @@
+@* Characters tab (UI-Behavior-Spec §13.1). *@
+@inject AIStoryBuildersService Svc
+@inject DialogService Dialogs
+@inject NotificationService Notify
+
+<div class="asb-ws-head">
+    <h3 class="asb-ws-sec">Characters</h3>
+    <RadzenButton Text="New Character" Icon="add" ButtonStyle="ButtonStyle.Success" Click="@(() => OpenAsync(null))" />
+</div>
+@if (characters.Count == 0)
+{
+    <p class="asb-note">No characters yet.</p>
+}
+@foreach (var c in characters)
+{
+    <div class="asb-ecard">
+        <span class="asb-avatar" aria-hidden="true">@(string.IsNullOrEmpty(c.CharacterName) ? "?" : c.CharacterName[..1].ToUpperInvariant())</span>
+        <div class="asb-eline">
+            <b>@c.CharacterName</b>
+            <span class="asb-emeta">@Meta(c)</span>
+        </div>
+        <RadzenButton Text="Edit" ButtonStyle="ButtonStyle.Light" Size="ButtonSize.Small" Click="@(() => OpenAsync(c))" />
+    </div>
+}
+
+@code {
+    [Parameter, EditorRequired] public Story Story { get; set; } = default!;
+
+    List<Character> characters = [];
+
+    protected override void OnParametersSet() => Load();
+
+    void Load() => characters = Svc.GetCharacters(Story);
+
+    static string Meta(Character c)
+    {
+        var first = c.CharacterBackground?.FirstOrDefault(b => !string.IsNullOrEmpty(b.Description))?.Description ?? "";
+        return first.Length > 60 ? first[..60] + "…" : first;
+    }
+
+    async Task OpenAsync(Character? existing)
+    {
+        var character = existing is null
+            ? new Character { Id = -1, CharacterName = "", CharacterBackground = [], Story = Story }
+            : new Character { Id = existing.Id, CharacterName = existing.CharacterName, Story = Story,
+                              CharacterBackground = existing.CharacterBackground.Select(b => new CharacterBackground { Id = b.Id, Sequence = b.Sequence, Type = b.Type, Description = b.Description, Timeline = b.Timeline }).ToList() };
+        try
+        {
+            await Dialogs.OpenAsync<CharacterDialog>(existing is null ? "New Character" : "Edit Character",
+                new Dictionary<string, object?> { ["Character"] = character, ["Existing"] = characters },
+                new DialogOptions { Width = "650px", CloseDialogOnEsc = true, ShowClose = true });
+            Load();
+        }
+        catch (Exception ex)
+        {
+            Notify.Notify(NotificationSeverity.Error, "Error", ex.Message, 4000);
+        }
+    }
+}

@@ -1,0 +1,19 @@
+@* V1 ChatMessageRenderer with KGB's SafeMarkdown.ForChat: no raw HTML, no images, inert external links (plan §8). *@
+@using AIStoryBuildersV2.Shared.Knowledge
+@using AIStoryBuildersV2.Shared.Markdown
+
+<div class="asb-chat-md">
+    @((MarkupString)RenderedHtml)
+</div>
+
+@code {
+    [Parameter, EditorRequired] public string Content { get; set; } = "";
+
+    /// <summary>The story's KB links; null renders [[path]] citations as plain text.</summary>
+    [Parameter] public KbLinkBuilder? Links { get; set; }
+
+    /// <summary>Resolves a [[target]] to a page path, or null when the page does not exist.</summary>
+    [Parameter] public Func<string, string?>? Resolve { get; set; }
+
+    string RenderedHtml => string.IsNullOrEmpty(Content) ? "" : SafeMarkdown.ForChat(Content, Links, Resolve ?? (_ => null));
+}

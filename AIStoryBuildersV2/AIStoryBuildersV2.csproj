@@ -1,0 +1,111 @@
+﻿<Project Sdk="Microsoft.NET.Sdk.Razor">
+
+    <PropertyGroup>
+        <!-- Only Windows is a supported target (plan §2). The mobile TFMs build only with
+             -p:IncludeMobileTargets=true, so restore does not need the mobile workloads (plan §6.6, R5). -->
+        <IncludeMobileTargets Condition="'$(IncludeMobileTargets)' == ''">false</IncludeMobileTargets>
+        <TargetFrameworks Condition="$([MSBuild]::IsOSPlatform('windows'))">net11.0-windows10.0.19041.0</TargetFrameworks>
+        <TargetFrameworks Condition="'$(IncludeMobileTargets)' == 'true'">$(TargetFrameworks);net11.0-android</TargetFrameworks>
+        <TargetFrameworks Condition="'$(IncludeMobileTargets)' == 'true' And !$([MSBuild]::IsOSPlatform('linux'))">$(TargetFrameworks);net11.0-ios;net11.0-maccatalyst</TargetFrameworks>
+
+        <!-- Note for MacCatalyst:
+            The default runtime is maccatalyst-x64, except in Release config, in which case the default is maccatalyst-x64;maccatalyst-arm64.
+            When specifying both architectures, use the plural <RuntimeIdentifiers> instead of the singular <RuntimeIdentifier>.
+            The Mac App Store will NOT accept apps with ONLY maccatalyst-arm64 indicated;
+            either BOTH runtimes must be indicated or ONLY macatalyst-x64. -->
+        <!-- For example: <RuntimeIdentifiers>maccatalyst-x64;maccatalyst-arm64</RuntimeIdentifiers> -->
+
+        <OutputType>Exe</OutputType>
+        <RootNamespace>AIStoryBuildersV2</RootNamespace>
+        <UseMaui>true</UseMaui>
+        <SingleProject>true</SingleProject>
+        <ImplicitUsings>enable</ImplicitUsings>
+        <EnableDefaultCssItems>false</EnableDefaultCssItems>
+        <Nullable>enable</Nullable>
+
+        <!-- Enable XAML source generation for faster build times and improved performance.
+             This generates C# code from XAML at compile time instead of runtime inflation.
+             To disable, remove this line.
+             For individual files, you can override by setting Inflator metadata:
+               <MauiXaml Update="MyPage.xaml" Inflator="Default" /> (reverts to defaults: Runtime for Debug, XamlC for Release)
+               <MauiXaml Update="MyPage.xaml" Inflator="Runtime" /> (force runtime inflation) -->
+        <MauiXamlInflator>SourceGen</MauiXamlInflator>
+
+        <!-- Display name -->
+        <ApplicationTitle>AI StoryBuilders</ApplicationTitle>
+
+        <!-- App Identifier -->
+        <ApplicationId>com.companyname.aistorybuildersv2</ApplicationId>
+
+        <!-- Versions -->
+        <ApplicationDisplayVersion>1.0</ApplicationDisplayVersion>
+        <ApplicationVersion>1</ApplicationVersion>
+
+        <!-- Day-to-day builds are unpackaged. The Microsoft Store build passes -p:WindowsPackageType=MSIX
+             (Docs/Dev-Environment.md §4a). The Store identity is in Platforms\Windows\Package.appxmanifest. -->
+        <WindowsPackageType Condition="'$(WindowsPackageType)' == ''">None</WindowsPackageType>
+
+        <SupportedOSPlatformVersion Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'ios'">15.0</SupportedOSPlatformVersion>
+        <SupportedOSPlatformVersion Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'maccatalyst'">15.0</SupportedOSPlatformVersion>
+        <SupportedOSPlatformVersion Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'android'">24.0</SupportedOSPlatformVersion>
+        <SupportedOSPlatformVersion Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'windows'">10.0.17763.0</SupportedOSPlatformVersion>
+        <TargetPlatformMinVersion Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'windows'">10.0.17763.0</TargetPlatformMinVersion>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <!-- App Icon -->
+        <MauiIcon Include="Resources\AppIcon\appicon.svg" ForegroundFile="Resources\AppIcon\appiconfg.svg" Color="#512BD4" />
+
+        <!-- Splash Screen -->
+        <MauiSplashScreen Include="Resources\Splash\splash.svg" Color="#512BD4" BaseSize="128,128" />
+
+        <!-- Images -->
+        <MauiImage Include="Resources\Images\*" />
+        <MauiImage Update="Resources\Images\dotnet_bot.svg" BaseSize="168,208" />
+
+        <!-- Custom Fonts -->
+        <MauiFont Include="Resources\Fonts\*" />
+
+        <!-- Raw Assets (also remove the "Resources\Raw" prefix) -->
+        <MauiAsset Include="Resources\Raw\**" LogicalName="%(RecursiveDir)%(Filename)%(Extension)" />
+    </ItemGroup>
+
+    <!-- V1's Store tiles, logos and splash image, referenced by Package.appxmanifest. They are plain package
+         content (not MauiImage), so the scale-NNN names reach the package unchanged. -->
+    <ItemGroup Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'windows'">
+        <Content Include="Resources\Store\*.png" CopyToOutputDirectory="PreserveNewest" />
+    </ItemGroup>
+
+    <!-- Microsoft Store package settings (only used when WindowsPackageType is MSIX). The Store signs the package. -->
+    <PropertyGroup Condition="'$(WindowsPackageType)' == 'MSIX'">
+        <AppxPackageSigningEnabled>False</AppxPackageSigningEnabled>
+        <GenerateAppInstallerFile>False</GenerateAppInstallerFile>
+        <!-- The symbol-package and .msixupload tasks fail under the dotnet CLI's MSBuild (they need mspdbcmf.exe
+             and System.Security.Permissions), so the Store build makes a plain .msix, which Partner Center accepts. -->
+        <AppxSymbolPackageEnabled>False</AppxSymbolPackageEnabled>
+        <AppxAutoIncrementPackageRevision>False</AppxAutoIncrementPackageRevision>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <PackageReference Include="Microsoft.Maui.Controls" Version="$(MauiVersion)" />
+        <PackageReference Include="Microsoft.AspNetCore.Components.WebView.Maui" Version="$(MauiVersion)" />
+        <PackageReference Include="Microsoft.Extensions.Logging.Debug" Version="11.0.0" />
+        <PackageReference Include="CommunityToolkit.Maui" Version="15.0.1" />
+    </ItemGroup>
+
+    <!-- Windows App SDK 2.x brings Microsoft.Windows.AI.MachineLearning, which ships its own onnxruntime.dll.
+         The embeddings use Microsoft.ML.OnnxRuntime's copy, so drop the other one. Otherwise the unpackaged
+         output gets whichever copy lands last, and the MSIX build fails with APPX1101 (two files, same path). -->
+    <Target Name="DropWindowsMLOnnxRuntime" AfterTargets="ResolvePackageAssets">
+        <ItemGroup>
+            <NativeCopyLocalItems Remove="@(NativeCopyLocalItems)" Condition="'%(NativeCopyLocalItems.NuGetPackageId)' == 'Microsoft.Windows.AI.MachineLearning' And '%(Filename)%(Extension)' == 'onnxruntime.dll'" />
+            <RuntimeTargetsCopyLocalItems Remove="@(RuntimeTargetsCopyLocalItems)" Condition="'%(RuntimeTargetsCopyLocalItems.NuGetPackageId)' == 'Microsoft.Windows.AI.MachineLearning' And '%(Filename)%(Extension)' == 'onnxruntime.dll'" />
+        </ItemGroup>
+    </Target>
+
+    <ItemGroup>
+        <ProjectReference Include="..\AIStoryBuildersV2.Shared\AIStoryBuildersV2.Shared.csproj" />
+        <ProjectReference Include="..\AIStoryBuildersV2.Embeddings.Onnx\AIStoryBuildersV2.Embeddings.Onnx.csproj" />
+    </ItemGroup>
+
+</Project>

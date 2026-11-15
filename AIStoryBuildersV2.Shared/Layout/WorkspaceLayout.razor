@@ -1,0 +1,15 @@
+@inherits LayoutComponentBase
+@inject IUpdateCheck Updates
+
+@* The Story Workspace has its own top bar, so the main menu is hidden inside /story/* (UI-Behavior-Spec §1). *@
+<RadzenTheme Theme="material" />
+
+<div class="asb-app asb-ws-app kgb-light">
+    <RadzenComponents />
+    @Body
+</div>
+
+@code {
+    // A page load that opens a story directly is still an app start, so it makes the same one check as the library.
+    protected override Task OnInitializedAsync() => Updates.IsUpdateAvailableAsync();
+}

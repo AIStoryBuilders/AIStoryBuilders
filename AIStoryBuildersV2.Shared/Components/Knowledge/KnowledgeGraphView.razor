@@ -1,0 +1,558 @@
+@* KGB's GraphPage as a component of the Knowledgebase tab (D13, UI-Behavior-Spec §17.6). Scope changes are component
+   state instead of graph?p=&d= routes. *@
+@implements IAsyncDisposable
+@inject NavigationManager Nav
+@inject BrowserInterop Browser
+@inject ICurrentStoryKnowledgeBase CurKb
+
+<section class="kgb-graph" aria-label="Graph">
+    <div class="kgb-gbar">
+        <RadzenSelectBar TValue="bool" Value="@local" ValueChanged="@SetScopeAsync" Size="ButtonSize.Small" aria-label="Graph scope">
+            <Items>
+                <RadzenSelectBarItem Text="Whole graph" Value="false" />
+                <RadzenSelectBarItem Text="Around page" Value="true" Disabled="@(P is null)" title="@(P is null ? "Select a page first" : P)" />
+            </Items>
+        </RadzenSelectBar>
+        @if (local)
+        {
+            <RadzenDropDown TValue="int" Data="@depths" Value="@lastDepth" ValueChanged="@SetDepthAsync" TextProperty="Text" ValueProperty="Value"
+                            Style="width:150px" aria-label="Link depth" />
+        }
+        <div class="row" style="gap:6px">
+            <RadzenSwitch Value="@showMissing" ValueChanged="@SetMissingAsync" InputAttributes="@(new Dictionary<string, object> { ["aria-label"] = "Show missing pages" })" />
+            <span class="sm t2">Missing pages</span>
+        </div>
+        <div class="row" style="gap:6px">
+            <RadzenTextBox Placeholder="Find a node" Value="@find" @oninput="@(e => SetFind(e.Value?.ToString() ?? ""))" @onkeydown="@OnFindKeyAsync"
+                           Style="width:180px" aria-label="Find a node" title="Enter goes to the next match" />
+            @if (find.Trim().Length > 0)
+            {
+                <span class="xs t3" role="status">@(hits.Count == 0 ? "No matches" : hitIndex >= 0 ? $"{hitIndex + 1} of {hits.Count}" : $"{hits.Count} found")</span>
+            }
+        </div>
+        <span class="grow"></span>
+        @if (view.Nodes.Count > 0)
+        {
+            <span class="xs t3">@PageCount pages · @view.Edges.Count links@(view.Truncated ? $" · showing the {PageCount} best-connected of {view.TotalPages}" : "")</span>
+        }
+        @if (pinned.Count > 0)
+        {
+            <RadzenButton Icon="restart_alt" Variant="Variant.Text" ButtonStyle="ButtonStyle.Base" Size="ButtonSize.Small" title="Put moved nodes back" aria-label="Put moved nodes back" Click="@ResetLayoutAsync" />
+        }
+        <RadzenButton Icon="fit_screen" Variant="Variant.Text" ButtonStyle="ButtonStyle.Base" Size="ButtonSize.Small" title="Fit to window" aria-label="Fit to window" Click="@FitAsync" />
+    </div>
+
+    <div class="@(Panel is null ? "kgb-gwrap" : "kgb-gwrap has-panel")">
+        @if (loading)
+        {
+            <div class="kgb-empty"><RadzenProgressBarCircular ShowValue="false" Mode="ProgressBarMode.Indeterminate" Size="ProgressBarCircularSize.Small" />Laying out the graph…</div>
+        }
+        else if (view.Nodes.Count == 0)
+        {
+            <div class="kgb-empty">
+                <span class="mi s40" aria-hidden="true">hub</span>
+                @if (hiddenFolders.Count > 0)
+                {
+                    <span>Every page here is in a hidden folder.</span>
+                    <RadzenButton Text="Show all folders" Size="ButtonSize.Small" Variant="Variant.Outlined" ButtonStyle="ButtonStyle.Base" Click="@ShowAllFoldersAsync" />
+                }
+                else
+                {
+                    <span>No pages to show yet.</span>
+                }
+            </div>
+        }
+        else
+        {
+            <svg @ref="svgRef" class="kgb-gsvg" viewBox="@homeBox" data-home="@homeBox" role="img" aria-label="@AriaSummary">
+                <g class="kgb-gview">
+                    @foreach (var e in view.Edges)
+                    {
+                        if (!byId.TryGetValue(e.From, out var a) || !byId.TryGetValue(e.To, out var b)) continue;
+                        var (x1, y1, x2, y2) = Trim(a, b);
+                        <line class="@(e.ToMissing ? "kgb-gedge missing" : "kgb-gedge")" data-from="@a.Id" data-to="@b.Id"
+                              x1="@F(x1)" y1="@F(y1)" x2="@F(x2)" y2="@F(y2)" />
+                    }
+                    @foreach (var n in view.Nodes)
+                    {
+                        var css = "kgb-gnode " + (n.Missing ? "missing" : "g" + GroupIndex(n.Group))
+                                  + (IsCenter(n) ? " center" : "")
+                                  + (n.Id == selected ? " selected" : "")
+                                  + (hitIds.Contains(n.Id) ? " found" : find.Trim().Length > 0 ? " dim" : "")
+                                  + (ShowLabel(n) ? " labeled" : "");
+                        <g class="@css" data-id="@n.Id" transform="translate(@F(n.X) @F(n.Y))" tabindex="0" role="button"
+                           aria-label="@(n.Missing ? $"{n.Label} (no page yet)" : n.Label)" @onclick="@(() => Select(n))"
+                           @onkeydown="@(e => OnNodeKey(e, n))">
+                            <title>@(n.Missing ? $"{n.Label} — no page yet" : n.Path)</title>
+                            <circle r="@F(n.Radius)" />
+                            <text y="@F(n.Radius + 3)">@n.Label</text>
+                        </g>
+                    }
+                </g>
+            </svg>
+        }
+
+        @if (Panel is { } s)
+        {
+            <aside class="kgb-gpanel" aria-label="@s.Label">
+                <div class="row">
+                    <span class="mi s16 @(s.Missing ? "tw" : "tp")" aria-hidden="true">@(s.Missing ? "link_off" : "description")</span>
+                    <b class="grow ell" title="@s.Label">@s.Label</b>
+                    <RadzenButton Icon="close" Variant="Variant.Text" ButtonStyle="ButtonStyle.Base" Size="ButtonSize.ExtraSmall" aria-label="Close" Click="@ClosePanel" />
+                </div>
+                @if (s.Missing)
+                {
+                    <div class="xs t2">No page yet.</div>
+                    <div class="row" style="margin-top:8px">
+                        <RadzenButton Text="Create page" Icon="note_add" Size="ButtonSize.Small" Click="@(() => OnCreate.InvokeAsync(s.Label))" />
+                    </div>
+                }
+                else
+                {
+                    <div class="mono xs t3 ell" title="@s.Path">@s.Path</div>
+                    <div class="row" style="margin-top:8px">
+                        <RadzenButton Text="Open" Icon="edit_note" Size="ButtonSize.Small" Click="@(() => OnOpen.InvokeAsync(s.Path!))" />
+                        <RadzenButton Text="Show around" Icon="hub" Size="ButtonSize.Small" Variant="Variant.Outlined" ButtonStyle="ButtonStyle.Base"
+                                      Click="@(() => GoAsync(s.Path, Math.Max(1, lastDepth)))" />
+                    </div>
+                }
+
+                @{ var connected = Neighbors(s); }
+                <h3 class="kgb-gph">@(s.Missing ? "Linked from" : "Connected") <span class="t3">@connected.Count</span></h3>
+                @if (!byId.ContainsKey(s.Id))
+                {
+                    <div class="xs t3">This page isn't in the current view. Use Show around to see its links.</div>
+                }
+                else if (connected.Count == 0)
+                {
+                    <div class="xs t3">No links in this view.</div>
+                }
+                else
+                {
+                    <ul class="kgb-gconn">
+                        @foreach (var c in connected.Take(MaxConnected))
+                        {
+                            <li>
+                                <button type="button" class="@(c.Missing ? "missing" : "g" + GroupIndex(c.Group))" title="@(c.Path ?? $"{c.Label} — no page yet")"
+                                        @onclick="@(() => SelectAndCenterAsync(c))">
+                                    <i class="kgb-gdot @(c.Missing ? "missing" : "")"></i><span class="ell">@c.Label</span>
+                                </button>
+                            </li>
+                        }
+                    </ul>
+                    @if (connected.Count > MaxConnected)
+                    {
+                        <div class="xs t3">and @(connected.Count - MaxConnected) more</div>
+                    }
+                }
+
+                @if (!s.Missing)
+                {
+                    <h3 class="kgb-gph">Page</h3>
+                    <div @ref="panelRef" class="kgb-preview kgb-gprev">
+                        @if (previewHtml is null)
+                        {
+                            <div class="kgb-sk" style="width:70%"></div>
+                            <div class="kgb-sk" style="width:50%;margin-top:8px"></div>
+                        }
+                        else
+                        {
+                            @((MarkupString)previewHtml)
+                        }
+                    </div>
+                }
+            </aside>
+        }
+
+        @if (!loading && view.Folders.Count > 0)
+        {
+            <div class="kgb-glegend xs t3" role="group" aria-label="Folders">
+                @foreach (var f in view.Folders)
+                {
+                    var on = !hiddenFolders.Contains(f.Name);
+                    <button type="button" class="@($"kgb-gchip g{GroupIndex(f.Name)}{(on ? "" : " off")}")" aria-pressed="@(on ? "true" : "false")"
+                            title="@(on ? "Hide" : "Show") @FolderName(f.Name) (@f.Pages @(f.Pages == 1 ? "page" : "pages"))" @onclick="@(() => ToggleFolderAsync(f.Name))">
+                        <i class="kgb-gdot"></i>@FolderName(f.Name)
+                    </button>
+                }
+                @if (hiddenFolders.Count > 0)
+                {
+                    <button type="button" class="kgb-gchip all" @onclick="@ShowAllFoldersAsync">Show all</button>
+                }
+                @if (view.Nodes.Any(n => n.Missing))
+                {
+                    <span><i class="kgb-gdot missing"></i>No page yet</span>
+                }
+                <span class="kgb-ghint">Scroll to zoom · drag to pan · drag a node to move it</span>
+            </div>
+        }
+    </div>
+</section>
+
+@code {
+    /// <summary>The open story's KB (D13), captured on first use so disposal still reaches it after the workspace clears it.</summary>
+    IStoryKnowledgeBase? kb;
+    IStoryKnowledgeBase Kb => kb ??= CurKb.Current ?? throw new InvalidOperationException("No story knowledge base is open.");
+    IKnowledgeWorkspace Workspace => Kb.Workspace;
+    IKnowledgeGraphIndex Graph => Kb.Graph;
+
+    /// <summary>The page open in the Pages view; "Around page" centers on it.</summary>
+    [Parameter] public string? OpenPage { get; set; }
+
+    /// <summary>The page to center on when the view opens (Links panel "Show in graph"), or null.</summary>
+    [Parameter] public string? AroundPath { get; set; }
+
+    /// <summary>0 = whole graph, 1-3 = links away from the center.</summary>
+    [Parameter] public int InitialDepth { get; set; }
+
+    [Parameter] public EventCallback<string> OnOpen { get; set; }
+    [Parameter] public EventCallback<string> OnCreate { get; set; }
+
+    // KGB kept these in the URL (graph?p=&d=); here they are component state.
+    string? P;
+    int? D;
+
+    sealed record DepthOption(string Text, int Value);
+    static readonly DepthOption[] depths = [new("1 link away", 1), new("2 links away", 2), new("3 links away", 3)];
+    const int MaxConnected = 40;
+
+    GraphView view = GraphView.Empty;
+    Dictionary<string, GraphNode> byId = new();
+    readonly Dictionary<string, int> groups = new(StringComparer.OrdinalIgnoreCase);
+    readonly HashSet<string> hiddenFolders = new(StringComparer.OrdinalIgnoreCase);
+    // Nodes the user dragged, kept in place when the graph is rebuilt for the same scope.
+    readonly Dictionary<string, (double X, double Y)> pinned = new(StringComparer.OrdinalIgnoreCase);
+    bool local;
+    bool showMissing = true;
+    bool loading = true;
+    string homeBox = "0 0 900 560";
+    string find = "";
+    IReadOnlyList<GraphNode> hits = [];
+    HashSet<string> hitIds = new(StringComparer.OrdinalIgnoreCase);
+    int hitIndex = -1;
+    string? selected;
+    // A page opened from a link in the panel that isn't in the current view.
+    GraphNode? outside;
+    string? previewFor;
+    string? previewHtml;
+    string? builtFor;
+    string? scopeFor;
+    ElementReference svgRef;
+    ElementReference panelRef;
+    bool bindPending;
+    bool bindPanelPending;
+    DotNetObjectReference<KnowledgeGraphView>? self;
+    IJSObjectReference? graphHandle;
+    CancellationTokenSource? rebuildDelay;
+
+    int Depth => Math.Clamp(D ?? 1, 0, 3);
+
+    // Missing nodes have no path, and P is null on the plain Graph page, so compare only real paths.
+    bool IsCenter(GraphNode n) => n.Path is not null && string.Equals(n.Path, P, StringComparison.OrdinalIgnoreCase);
+    int lastDepth = 1;
+    int PageCount => view.Nodes.Count(n => !n.Missing);
+    GraphNode? Panel => selected is not null && byId.TryGetValue(selected, out var n) ? n : outside;
+    string AriaSummary => $"Graph of {PageCount} pages and {view.Edges.Count} links";
+
+    protected override void OnInitialized()
+    {
+        self = DotNetObjectReference.Create(this);
+        Workspace.Changed += OnWorkspaceChanged;
+        P = AroundPath ?? OpenPage;
+        D = AroundPath is null ? 0 : InitialDepth;
+    }
+
+    protected override Task OnParametersSetAsync() => RefreshAsync();
+
+    async Task GoAsync(string? path, int depth)
+    {
+        P = path;
+        D = depth;
+        await RefreshAsync();
+    }
+
+    async Task RefreshAsync()
+    {
+        local = P is not null && Depth > 0;
+        if (local) lastDepth = Depth;
+        var scope = $"{P}|{Depth}";
+        if (scope != scopeFor)
+        {
+            // A new scope gets a fresh layout, and "Around page" opens the center page in the panel.
+            scopeFor = scope;
+            pinned.Clear();
+            outside = null;
+            selected = local ? P : selected;
+        }
+        if (Key == builtFor) return;
+        await BuildAsync();
+        if (Panel is { Missing: false, Path: { } path }) await LoadPreviewAsync(path);
+    }
+
+    string Key => $"{P}|{Depth}|{showMissing}|{string.Join("/", hiddenFolders.Order(StringComparer.OrdinalIgnoreCase))}";
+
+    async Task BuildAsync()
+    {
+        loading = view.Nodes.Count == 0;
+        await Graph.GetStatsAsync();
+        var options = new GraphViewOptions(local ? P : null, Depth, showMissing, HiddenFolders: [.. hiddenFolders]);
+        var snapshot = Graph.Snapshot;
+        // The layout is CPU-bound: off the UI thread where the host has threads (MAUI). WASM runs it inline, after
+        // letting the browser paint the "Laying out" state.
+        if (OperatingSystem.IsBrowser())
+        {
+            StateHasChanged();
+            await Task.Delay(30);
+            view = GraphViewBuilder.Build(snapshot, options);
+        }
+        else
+        {
+            view = await Task.Run(() => GraphViewBuilder.Build(snapshot, options));
+        }
+        byId = view.Nodes.ToDictionary(n => n.Id, StringComparer.OrdinalIgnoreCase);
+        foreach (var (id, at) in pinned)
+            if (byId.TryGetValue(id, out var n)) (n.X, n.Y) = at;
+        // Colors follow the folder order, so they stay put when folders are hidden and shown again.
+        foreach (var f in view.Folders) GroupIndex(f.Name);
+        var (minX, minY, width, height) = view.Bounds();
+        homeBox = $"{F(minX)} {F(minY)} {F(width)} {F(height)}";
+        if (selected is not null && !byId.ContainsKey(selected)) selected = null;
+        UpdateHits();
+        builtFor = Key;
+        loading = false;
+        bindPending = true;
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (bindPending && view.Nodes.Count > 0)
+        {
+            bindPending = false;
+            // A new layout may sit in a new <svg>: drop the old bindings before binding again (plan §5.7).
+            await BrowserInterop.DisposeHandleAsync(graphHandle);
+            graphHandle = null;
+            try { graphHandle = await Browser.BindGraphAsync(svgRef, self!); }
+            catch (JSException) { }
+        }
+        if (bindPanelPending && previewHtml is not null)
+        {
+            bindPanelPending = false;
+            try { await Browser.BindGraphPanelAsync(panelRef, self!); }
+            catch (JSException) { }
+        }
+    }
+
+    void OnWorkspaceChanged(KnowledgeChange change) => _ = InvokeAsync(async () =>
+    {
+        // Saves come in bursts (a rename rewrites several pages); rebuild once they settle.
+        rebuildDelay?.Cancel();
+        var cts = rebuildDelay = new CancellationTokenSource();
+        try { await Task.Delay(400, cts.Token); } catch (OperationCanceledException) { return; }
+        await BuildAsync();
+        if (Panel is { Missing: false, Path: { } path }) await LoadPreviewAsync(path);
+        else if (outside is not null) outside = null;
+        StateHasChanged();
+    });
+
+    async Task SetScopeAsync(bool value)
+    {
+        if (value == local || P is null) return;
+        await GoAsync(P, value ? Math.Max(1, lastDepth) : 0);
+    }
+
+    Task SetDepthAsync(int value) => GoAsync(P, value);
+
+    async Task SetMissingAsync(bool value)
+    {
+        showMissing = value;
+        pinned.Clear();
+        await BuildAsync();
+    }
+
+    async Task ToggleFolderAsync(string folder)
+    {
+        if (!hiddenFolders.Remove(folder)) hiddenFolders.Add(folder);
+        pinned.Clear();
+        await BuildAsync();
+    }
+
+    async Task ShowAllFoldersAsync()
+    {
+        hiddenFolders.Clear();
+        pinned.Clear();
+        await BuildAsync();
+    }
+
+    async Task ResetLayoutAsync()
+    {
+        pinned.Clear();
+        await BuildAsync();
+    }
+
+    static string FolderName(string folder) => folder.Length == 0 ? "Top level" : folder;
+
+
+    async Task Select(GraphNode n)
+    {
+        outside = null;
+        if (selected == n.Id) { selected = null; return; }
+        selected = n.Id;
+        if (n.Path is not null) await LoadPreviewAsync(n.Path);
+    }
+
+    async Task SelectAndCenterAsync(GraphNode n)
+    {
+        outside = null;
+        selected = n.Id;
+        try { await Browser.CenterGraphAsync(svgRef, n.X, n.Y); }
+        catch (JSException) { }
+        if (n.Path is not null) await LoadPreviewAsync(n.Path);
+    }
+
+    void ClosePanel()
+    {
+        selected = null;
+        outside = null;
+    }
+
+    async Task OnNodeKey(KeyboardEventArgs e, GraphNode n)
+    {
+        if (e.Key is "Enter" or " ") await Select(n);
+    }
+
+    async Task LoadPreviewAsync(string path)
+    {
+        previewFor = path;
+        previewHtml = null;
+        string html;
+        try
+        {
+            var page = await Workspace.ReadPageAsync(path);
+            var snapshot = Graph.Snapshot;
+            html = SafeMarkdown.ForPreview(page.Markdown, Kb.Links,
+                target => LinkResolver.ResolveWiki(snapshot.Directory, path, target)?.Path,
+                url => LinkResolver.ResolveMarkdown(snapshot.Directory, path, url),
+                path);
+        }
+        catch (KnowledgeNotFoundException) { html = "<p>This page no longer exists.</p>"; }
+        catch (KnowledgeException ex) { html = $"<p>{System.Net.WebUtility.HtmlEncode(ex.Message)}</p>"; }
+        if (previewFor != path) return; // A newer selection won.
+        previewHtml = html;
+        bindPanelPending = true;
+    }
+
+    /// <summary>Links in the preview: a page in the view is selected and centered, any other page opens in the panel.</summary>
+    [JSInvokable]
+    public Task OnPanelLink(string href) => InvokeAsync(async () =>
+    {
+        // Panel links are KbLinkBuilder hrefs: story/{title}?tab=kb&p=<path>[&create=1].
+        var query = System.Web.HttpUtility.ParseQueryString(Nav.ToAbsoluteUri(href).Query);
+        if (query["tab"] != "kb" || query["p"] is not { Length: > 0 } path)
+        {
+            Nav.NavigateTo(href);
+            return;
+        }
+        if (query["create"] == "1")
+        {
+            await OnCreate.InvokeAsync(path);
+            return;
+        }
+        if (byId.TryGetValue(path, out var n))
+        {
+            await SelectAndCenterAsync(n);
+        }
+        else if (Graph.Snapshot.Pages.TryGetValue(path, out var p))
+        {
+            selected = null;
+            outside = new GraphNode(p.Parsed.Path, p.Parsed.Title, p.Parsed.Path, "", false, 0);
+            await LoadPreviewAsync(p.Parsed.Path);
+        }
+        StateHasChanged();
+    });
+
+    /// <summary>The browser moved a node; keep it there on the next render.</summary>
+    [JSInvokable]
+    public Task OnNodeMoved(string id, double x, double y) => InvokeAsync(() =>
+    {
+        if (!byId.TryGetValue(id, out var n)) return;
+        (n.X, n.Y) = (Math.Round(x, 1), Math.Round(y, 1));
+        pinned[id] = (n.X, n.Y);
+        StateHasChanged();
+    });
+
+    IReadOnlyList<GraphNode> Neighbors(GraphNode n)
+    {
+        if (!byId.ContainsKey(n.Id)) return [];
+        var ids = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+        foreach (var e in view.Edges)
+        {
+            if (string.Equals(e.From, n.Id, StringComparison.OrdinalIgnoreCase)) ids.Add(e.To);
+            else if (string.Equals(e.To, n.Id, StringComparison.OrdinalIgnoreCase)) ids.Add(e.From);
+        }
+        return ids.Select(id => byId.GetValueOrDefault(id)).OfType<GraphNode>()
+                  .OrderBy(c => c.Missing).ThenByDescending(c => c.Degree).ThenBy(c => c.Label, StringComparer.OrdinalIgnoreCase).ToList();
+    }
+
+    async Task FitAsync()
+    {
+        try { await Browser.FitGraphAsync(svgRef); }
+        catch (JSException) { }
+    }
+
+    void SetFind(string value)
+    {
+        find = value;
+        UpdateHits();
+    }
+
+    void UpdateHits()
+    {
+        hits = GraphSearch.Find(view, Graph.Snapshot, find);
+        hitIds = new(hits.Select(h => h.Id), StringComparer.OrdinalIgnoreCase);
+        hitIndex = -1;
+    }
+
+    /// <summary>Enter goes to the best match, and each further Enter to the next one; Escape clears the search.</summary>
+    async Task OnFindKeyAsync(KeyboardEventArgs e)
+    {
+        if (e.Key == "Escape") { SetFind(""); return; }
+        if (e.Key != "Enter" || hits.Count == 0) return;
+        hitIndex = (hitIndex + 1) % hits.Count;
+        await SelectAndCenterAsync(hits[hitIndex]);
+    }
+
+    /// <summary>
+    /// Small graphs label every node; big ones label the hubs, the center, the selection and search matches. Zooming in
+    /// labels the rest (the "zoomed" class from kgb.js).
+    /// </summary>
+    bool ShowLabel(GraphNode n) =>
+        view.Nodes.Count <= 80 || n.Degree >= 6 || n.Id == selected || hitIds.Contains(n.Id) || IsCenter(n);
+
+    int GroupIndex(string group)
+    {
+        if (!groups.TryGetValue(group, out var i)) groups[group] = i = groups.Count % 8;
+        return i;
+    }
+
+    /// <summary>Starts and ends each line at the circles' edges.</summary>
+    static (double, double, double, double) Trim(GraphNode a, GraphNode b)
+    {
+        var dx = b.X - a.X;
+        var dy = b.Y - a.Y;
+        var len = Math.Sqrt(dx * dx + dy * dy);
+        if (len < 1e-6) return (a.X, a.Y, b.X, b.Y);
+        var ux = dx / len;
+        var uy = dy / len;
+        return (a.X + ux * a.Radius, a.Y + uy * a.Radius, b.X - ux * (b.Radius + 2), b.Y - uy * (b.Radius + 2));
+    }
+
+    static string F(double v) => v.ToString("0.#", System.Globalization.CultureInfo.InvariantCulture);
+
+    public async ValueTask DisposeAsync()
+    {
+        Workspace.Changed -= OnWorkspaceChanged;
+        rebuildDelay?.Cancel();
+        await BrowserInterop.DisposeHandleAsync(graphHandle);
+        self?.Dispose();
+    }
+}

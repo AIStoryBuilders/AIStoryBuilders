@@ -1,0 +1,517 @@
+{
+  "storyTitle": "Forgetting Baldur",
+  "nodes": [
+    {
+      "id": "character:balt",
+      "label": "Balt",
+      "type": "character",
+      "properties": {
+        "role": "Appearance",
+        "backstory": "Tall, with a scar across his left cheek.; Fought beside his father at the ridge."
+      }
+    },
+    {
+      "id": "attribute:character:balt:appearance:1",
+      "label": "Appearance: Tall, with a scar across his left cheek.",
+      "type": "attribute",
+      "properties": {
+        "parentType": "character",
+        "parentName": "Balt",
+        "attributeType": "Appearance",
+        "description": "Tall, with a scar across his left cheek.",
+        "timeline": "",
+        "sequence": "1"
+      }
+    },
+    {
+      "id": "attribute:character:balt:history:2",
+      "label": "History: Fought beside his father at the ridge.",
+      "type": "attribute",
+      "properties": {
+        "parentType": "character",
+        "parentName": "Balt",
+        "attributeType": "History",
+        "description": "Fought beside his father at the ridge.",
+        "timeline": "Years Before",
+        "sequence": "2"
+      }
+    },
+    {
+      "id": "character:father",
+      "label": "Father",
+      "type": "character",
+      "properties": {
+        "role": "History",
+        "backstory": "Vanished after the battle at the ridge."
+      }
+    },
+    {
+      "id": "attribute:character:father:history:1",
+      "label": "History: Vanished after the battle at the ridge.",
+      "type": "attribute",
+      "properties": {
+        "parentType": "character",
+        "parentName": "Father",
+        "attributeType": "History",
+        "description": "Vanished after the battle at the ridge.",
+        "timeline": "Years Before",
+        "sequence": "1"
+      }
+    },
+    {
+      "id": "character:freya",
+      "label": "Freya",
+      "type": "character",
+      "properties": {
+        "role": "Appearance",
+        "backstory": "Red hair, always carries a bow."
+      }
+    },
+    {
+      "id": "attribute:character:freya:appearance:1",
+      "label": "Appearance: Red hair, always carries a bow.",
+      "type": "attribute",
+      "properties": {
+        "parentType": "character",
+        "parentName": "Freya",
+        "attributeType": "Appearance",
+        "description": "Red hair, always carries a bow.",
+        "timeline": "",
+        "sequence": "1"
+      }
+    },
+    {
+      "id": "location:ridge",
+      "label": "Ridge",
+      "type": "location",
+      "properties": {
+        "description": "A windswept ridge above the fjord."
+      }
+    },
+    {
+      "id": "attribute:location:ridge:description:1",
+      "label": "Description: A windswept ridge above the fjord.",
+      "type": "attribute",
+      "properties": {
+        "parentType": "location",
+        "parentName": "Ridge",
+        "attributeType": "Description",
+        "description": "A windswept ridge above the fjord.",
+        "timeline": "",
+        "sequence": "1"
+      }
+    },
+    {
+      "id": "location:village",
+      "label": "Village",
+      "type": "location",
+      "properties": {
+        "description": "A cluster of turf houses by the water."
+      }
+    },
+    {
+      "id": "attribute:location:village:description:1",
+      "label": "Description: A cluster of turf houses by the water.",
+      "type": "attribute",
+      "properties": {
+        "parentType": "location",
+        "parentName": "Village",
+        "attributeType": "Description",
+        "description": "A cluster of turf houses by the water.",
+        "timeline": "Present Day",
+        "sequence": "1"
+      }
+    },
+    {
+      "id": "timeline:years before",
+      "label": "Years Before",
+      "type": "timeline",
+      "properties": {
+        "description": "The battle at the ridge and its aftermath.",
+        "startDate": "2026-11-01T06:00:00.0000000",
+        "endDate": "2026-11-02T06:00:00.0000000"
+      }
+    },
+    {
+      "id": "timeline:present day",
+      "label": "Present Day",
+      "type": "timeline",
+      "properties": {
+        "description": "Balt\u0027s search begins.",
+        "startDate": "2026-11-03T06:00:00.0000000",
+        "endDate": "2026-11-04T06:00:00.0000000"
+      }
+    },
+    {
+      "id": "chapter:chapter 1",
+      "label": "Chapter 1",
+      "type": "chapter",
+      "properties": {
+        "index": "1",
+        "beatsSummary": "The battle at the ridge, and Father\u0027s disappearance."
+      }
+    },
+    {
+      "id": "paragraph:chapter 1:p1",
+      "label": "P1",
+      "type": "paragraph",
+      "properties": {
+        "text": "Balt and his father held the ridge until dusk.",
+        "location": "Ridge",
+        "timeline": "Years Before"
+      }
+    },
+    {
+      "id": "paragraph:chapter 1:p2",
+      "label": "P2",
+      "type": "paragraph",
+      "properties": {
+        "text": "When the smoke cleared, Father was gone.",
+        "location": "Ridge",
+        "timeline": "Years Before"
+      }
+    },
+    {
+      "id": "paragraph:chapter 1:p3",
+      "label": "P3",
+      "type": "paragraph",
+      "properties": {
+        "text": "Years later, Freya found Balt mending nets.",
+        "location": "Village",
+        "timeline": "Present Day"
+      }
+    },
+    {
+      "id": "chapter:chapter 2",
+      "label": "Chapter 2",
+      "type": "chapter",
+      "properties": {
+        "index": "2",
+        "beatsSummary": "Balt and Freya set out to learn the truth."
+      }
+    },
+    {
+      "id": "paragraph:chapter 2:p1",
+      "label": "P1",
+      "type": "paragraph",
+      "properties": {
+        "text": "Freya handed Balt a raven feather.",
+        "location": "Village",
+        "timeline": "Present Day"
+      }
+    },
+    {
+      "id": "paragraph:chapter 2:p2",
+      "label": "P2",
+      "type": "paragraph",
+      "properties": {
+        "text": "At the ridge, Freya found a silver necklace in the heather.",
+        "location": "Ridge",
+        "timeline": "Present Day"
+      }
+    }
+  ],
+  "edges": [
+    {
+      "id": "character:balt--HAS_ATTRIBUTE--attribute:character:balt:appearance:1",
+      "sourceId": "character:balt",
+      "targetId": "attribute:character:balt:appearance:1",
+      "label": "HAS_ATTRIBUTE",
+      "properties": {}
+    },
+    {
+      "id": "character:balt--HAS_ATTRIBUTE--attribute:character:balt:history:2",
+      "sourceId": "character:balt",
+      "targetId": "attribute:character:balt:history:2",
+      "label": "HAS_ATTRIBUTE",
+      "properties": {}
+    },
+    {
+      "id": "attribute:character:balt:history:2--IN_TIMELINE--timeline:years before",
+      "sourceId": "attribute:character:balt:history:2",
+      "targetId": "timeline:years before",
+      "label": "IN_TIMELINE",
+      "properties": {}
+    },
+    {
+      "id": "character:father--HAS_ATTRIBUTE--attribute:character:father:history:1",
+      "sourceId": "character:father",
+      "targetId": "attribute:character:father:history:1",
+      "label": "HAS_ATTRIBUTE",
+      "properties": {}
+    },
+    {
+      "id": "attribute:character:father:history:1--IN_TIMELINE--timeline:years before",
+      "sourceId": "attribute:character:father:history:1",
+      "targetId": "timeline:years before",
+      "label": "IN_TIMELINE",
+      "properties": {}
+    },
+    {
+      "id": "character:freya--HAS_ATTRIBUTE--attribute:character:freya:appearance:1",
+      "sourceId": "character:freya",
+      "targetId": "attribute:character:freya:appearance:1",
+      "label": "HAS_ATTRIBUTE",
+      "properties": {}
+    },
+    {
+      "id": "location:ridge--HAS_ATTRIBUTE--attribute:location:ridge:description:1",
+      "sourceId": "location:ridge",
+      "targetId": "attribute:location:ridge:description:1",
+      "label": "HAS_ATTRIBUTE",
+      "properties": {}
+    },
+    {
+      "id": "location:village--HAS_ATTRIBUTE--attribute:location:village:description:1",
+      "sourceId": "location:village",
+      "targetId": "attribute:location:village:description:1",
+      "label": "HAS_ATTRIBUTE",
+      "properties": {}
+    },
+    {
+      "id": "attribute:location:village:description:1--IN_TIMELINE--timeline:present day",
+      "sourceId": "attribute:location:village:description:1",
+      "targetId": "timeline:present day",
+      "label": "IN_TIMELINE",
+      "properties": {}
+    },
+    {
+      "id": "chapter:chapter 1--CONTAINS--paragraph:chapter 1:p1",
+      "sourceId": "chapter:chapter 1",
+      "targetId": "paragraph:chapter 1:p1",
+      "label": "CONTAINS",
+      "properties": {}
+    },
+    {
+      "id": "character:balt--MENTIONED_IN--paragraph:chapter 1:p1",
+      "sourceId": "character:balt",
+      "targetId": "paragraph:chapter 1:p1",
+      "label": "MENTIONED_IN",
+      "properties": {}
+    },
+    {
+      "id": "character:balt--APPEARS_IN--chapter:chapter 1",
+      "sourceId": "character:balt",
+      "targetId": "chapter:chapter 1",
+      "label": "APPEARS_IN",
+      "properties": {}
+    },
+    {
+      "id": "character:balt--SEEN_AT--location:ridge",
+      "sourceId": "character:balt",
+      "targetId": "location:ridge",
+      "label": "SEEN_AT",
+      "properties": {}
+    },
+    {
+      "id": "character:father--MENTIONED_IN--paragraph:chapter 1:p1",
+      "sourceId": "character:father",
+      "targetId": "paragraph:chapter 1:p1",
+      "label": "MENTIONED_IN",
+      "properties": {}
+    },
+    {
+      "id": "character:father--APPEARS_IN--chapter:chapter 1",
+      "sourceId": "character:father",
+      "targetId": "chapter:chapter 1",
+      "label": "APPEARS_IN",
+      "properties": {}
+    },
+    {
+      "id": "character:father--SEEN_AT--location:ridge",
+      "sourceId": "character:father",
+      "targetId": "location:ridge",
+      "label": "SEEN_AT",
+      "properties": {}
+    },
+    {
+      "id": "character:balt--INTERACTS_WITH--character:father",
+      "sourceId": "character:balt",
+      "targetId": "character:father",
+      "label": "INTERACTS_WITH",
+      "properties": {}
+    },
+    {
+      "id": "chapter:chapter 1--CONTAINS--paragraph:chapter 1:p2",
+      "sourceId": "chapter:chapter 1",
+      "targetId": "paragraph:chapter 1:p2",
+      "label": "CONTAINS",
+      "properties": {}
+    },
+    {
+      "id": "character:balt--MENTIONED_IN--paragraph:chapter 1:p2",
+      "sourceId": "character:balt",
+      "targetId": "paragraph:chapter 1:p2",
+      "label": "MENTIONED_IN",
+      "properties": {}
+    },
+    {
+      "id": "chapter:chapter 1--CONTAINS--paragraph:chapter 1:p3",
+      "sourceId": "chapter:chapter 1",
+      "targetId": "paragraph:chapter 1:p3",
+      "label": "CONTAINS",
+      "properties": {}
+    },
+    {
+      "id": "character:balt--MENTIONED_IN--paragraph:chapter 1:p3",
+      "sourceId": "character:balt",
+      "targetId": "paragraph:chapter 1:p3",
+      "label": "MENTIONED_IN",
+      "properties": {}
+    },
+    {
+      "id": "character:balt--SEEN_AT--location:village",
+      "sourceId": "character:balt",
+      "targetId": "location:village",
+      "label": "SEEN_AT",
+      "properties": {}
+    },
+    {
+      "id": "character:freya--MENTIONED_IN--paragraph:chapter 1:p3",
+      "sourceId": "character:freya",
+      "targetId": "paragraph:chapter 1:p3",
+      "label": "MENTIONED_IN",
+      "properties": {}
+    },
+    {
+      "id": "character:freya--APPEARS_IN--chapter:chapter 1",
+      "sourceId": "character:freya",
+      "targetId": "chapter:chapter 1",
+      "label": "APPEARS_IN",
+      "properties": {}
+    },
+    {
+      "id": "character:freya--SEEN_AT--location:village",
+      "sourceId": "character:freya",
+      "targetId": "location:village",
+      "label": "SEEN_AT",
+      "properties": {}
+    },
+    {
+      "id": "character:balt--INTERACTS_WITH--character:freya",
+      "sourceId": "character:balt",
+      "targetId": "character:freya",
+      "label": "INTERACTS_WITH",
+      "properties": {}
+    },
+    {
+      "id": "location:ridge--SETTING_OF--chapter:chapter 1",
+      "sourceId": "location:ridge",
+      "targetId": "chapter:chapter 1",
+      "label": "SETTING_OF",
+      "properties": {}
+    },
+    {
+      "id": "location:village--SETTING_OF--chapter:chapter 1",
+      "sourceId": "location:village",
+      "targetId": "chapter:chapter 1",
+      "label": "SETTING_OF",
+      "properties": {}
+    },
+    {
+      "id": "timeline:years before--COVERS--chapter:chapter 1",
+      "sourceId": "timeline:years before",
+      "targetId": "chapter:chapter 1",
+      "label": "COVERS",
+      "properties": {}
+    },
+    {
+      "id": "timeline:present day--COVERS--chapter:chapter 1",
+      "sourceId": "timeline:present day",
+      "targetId": "chapter:chapter 1",
+      "label": "COVERS",
+      "properties": {}
+    },
+    {
+      "id": "chapter:chapter 2--CONTAINS--paragraph:chapter 2:p1",
+      "sourceId": "chapter:chapter 2",
+      "targetId": "paragraph:chapter 2:p1",
+      "label": "CONTAINS",
+      "properties": {}
+    },
+    {
+      "id": "character:balt--MENTIONED_IN--paragraph:chapter 2:p1",
+      "sourceId": "character:balt",
+      "targetId": "paragraph:chapter 2:p1",
+      "label": "MENTIONED_IN",
+      "properties": {}
+    },
+    {
+      "id": "character:balt--APPEARS_IN--chapter:chapter 2",
+      "sourceId": "character:balt",
+      "targetId": "chapter:chapter 2",
+      "label": "APPEARS_IN",
+      "properties": {}
+    },
+    {
+      "id": "character:freya--MENTIONED_IN--paragraph:chapter 2:p1",
+      "sourceId": "character:freya",
+      "targetId": "paragraph:chapter 2:p1",
+      "label": "MENTIONED_IN",
+      "properties": {}
+    },
+    {
+      "id": "character:freya--APPEARS_IN--chapter:chapter 2",
+      "sourceId": "character:freya",
+      "targetId": "chapter:chapter 2",
+      "label": "APPEARS_IN",
+      "properties": {}
+    },
+    {
+      "id": "chapter:chapter 2--CONTAINS--paragraph:chapter 2:p2",
+      "sourceId": "chapter:chapter 2",
+      "targetId": "paragraph:chapter 2:p2",
+      "label": "CONTAINS",
+      "properties": {}
+    },
+    {
+      "id": "character:freya--MENTIONED_IN--paragraph:chapter 2:p2",
+      "sourceId": "character:freya",
+      "targetId": "paragraph:chapter 2:p2",
+      "label": "MENTIONED_IN",
+      "properties": {}
+    },
+    {
+      "id": "character:freya--SEEN_AT--location:ridge",
+      "sourceId": "character:freya",
+      "targetId": "location:ridge",
+      "label": "SEEN_AT",
+      "properties": {}
+    },
+    {
+      "id": "location:village--SETTING_OF--chapter:chapter 2",
+      "sourceId": "location:village",
+      "targetId": "chapter:chapter 2",
+      "label": "SETTING_OF",
+      "properties": {}
+    },
+    {
+      "id": "location:ridge--SETTING_OF--chapter:chapter 2",
+      "sourceId": "location:ridge",
+      "targetId": "chapter:chapter 2",
+      "label": "SETTING_OF",
+      "properties": {}
+    },
+    {
+      "id": "timeline:present day--COVERS--chapter:chapter 2",
+      "sourceId": "timeline:present day",
+      "targetId": "chapter:chapter 2",
+      "label": "COVERS",
+      "properties": {}
+    },
+    {
+      "id": "character:balt--ACTIVE_ON--timeline:years before",
+      "sourceId": "character:balt",
+      "targetId": "timeline:years before",
+      "label": "ACTIVE_ON",
+      "properties": {}
+    },
+    {
+      "id": "character:father--ACTIVE_ON--timeline:years before",
+      "sourceId": "character:father",
+      "targetId": "timeline:years before",
+      "label": "ACTIVE_ON",
+      "properties": {}
+    }
+  ]
+}

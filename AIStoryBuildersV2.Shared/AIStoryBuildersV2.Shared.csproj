@@ -1,0 +1,56 @@
+<Project Sdk="Microsoft.NET.Sdk.Razor">
+
+  <PropertyGroup>
+    <TargetFramework>net11.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <RootNamespace>AIStoryBuildersV2.Shared</RootNamespace>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <SupportedPlatform Include="browser" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- UI -->
+    <PackageReference Include="Microsoft.AspNetCore.Components.Web" Version="11.0.0" />
+    <PackageReference Include="Radzen.Blazor" Version="[12.1.9]" />
+
+    <!-- Content / parsing (manuscript import, world facts, markdown knowledgebase) -->
+    <PackageReference Include="Markdig" Version="1.5.1" />
+    <PackageReference Include="YamlDotNet" Version="18.1.0" />
+
+    <!-- AI (multi-provider: OpenAI / Azure OpenAI / others via Microsoft.Extensions.AI) -->
+    <PackageReference Include="Microsoft.Extensions.AI" Version="10.11.0" />
+    <PackageReference Include="Microsoft.Extensions.AI.OpenAI" Version="10.11.0" />
+    <PackageReference Include="OpenAI" Version="2.14.0" />
+    <PackageReference Include="Azure.AI.OpenAI" Version="2.1.0" />
+    <PackageReference Include="OllamaSharp" Version="5.5.0" />
+
+    <!-- Story files, import and export (plan §6.6) -->
+    <PackageReference Include="Newtonsoft.Json" Version="13.0.4" />
+    <PackageReference Include="DocX" Version="5.0.0" />
+    <PackageReference Include="PdfPig" Version="0.1.14" />
+
+    <!-- Knowledge base conflict diff -->
+    <PackageReference Include="DiffPlex" Version="1.9.0" />
+  </ItemGroup>
+
+  <ItemGroup Condition="'$(Configuration)' == 'Debug'">
+    <!-- Reference vectors for the DEBUG embedding self-test (plan §10); made by the Tests project. -->
+    <EmbeddedResource Include="..\AIStoryBuildersV2.Tests\Fixtures\embeddings.json" LogicalName="embeddings.json" Condition="Exists('..\AIStoryBuildersV2.Tests\Fixtures\embeddings.json')" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- The Help page shows the user guide itself. Its screenshots stay in Docs/ and are served from
+         _content/AIStoryBuildersV2.Shared/images/user-guide/. ContentRoot lets the dev server find them there. -->
+    <EmbeddedResource Include="..\Docs\User-Guide.md" LogicalName="Help/User-Guide.md" />
+    <Content Include="..\Docs\images\user-guide\*.png" Link="wwwroot\images\user-guide\%(Filename)%(Extension)"
+             ContentRoot="$([System.IO.Path]::GetFullPath('$(MSBuildThisFileDirectory)..\Docs\'))" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="AIStoryBuildersV2.Tests" />
+  </ItemGroup>
+
+</Project>

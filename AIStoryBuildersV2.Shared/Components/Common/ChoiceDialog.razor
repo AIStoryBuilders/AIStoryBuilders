@@ -1,0 +1,61 @@
+@using AIStoryBuildersV2.Shared.Knowledge
+@inject DialogService Dialogs
+
+<div style="display:flex;flex-direction:column;gap:12px">
+    <div class="kgb-callout @Tone">
+        @if (!string.IsNullOrEmpty(Icon))
+        {
+            <span class="mi" aria-hidden="true">@Icon</span>
+        }
+        <div>@Message</div>
+    </div>
+    @if (Items is { Count: > 0 })
+    {
+        <ul class="mono" style="margin:0;padding-left:20px;max-height:160px;overflow:auto">
+            @foreach (var item in Items)
+            {
+                <li>@item</li>
+            }
+        </ul>
+    }
+    @if (ConfirmText is not null)
+    {
+        <div>
+            <label class="kgb-lbl" for="kgb-confirm">Type <b>@ConfirmText</b> to confirm</label>
+            <RadzenTextBox id="kgb-confirm" Value="@typed" @oninput="@(e => typed = e.Value?.ToString() ?? "")" Style="width:100%" />
+        </div>
+    }
+    <div class="row" style="justify-content:flex-end;flex-wrap:wrap">
+        @foreach (var choice in Choices)
+        {
+            <RadzenButton Text="@choice.Text" ButtonStyle="@choice.Style" Variant="@choice.Variant"
+                          Disabled="@(choice.NeedsConfirm && ConfirmText is not null && typed != ConfirmText)"
+                          Click="@(() => OnChoice(choice))" autofocus="@choice.Default" />
+        }
+    </div>
+</div>
+
+@code {
+    public sealed record Choice(string Text, string? Value, ButtonStyle Style = ButtonStyle.Base, Variant Variant = Variant.Outlined,
+                                bool Default = false, bool NeedsConfirm = false, Func<Task>? Action = null);
+
+    [Parameter] public string Message { get; set; } = "";
+    [Parameter] public string? Icon { get; set; }
+    [Parameter] public string Tone { get; set; } = "ne";
+    [Parameter] public IReadOnlyList<string>? Items { get; set; }
+    [Parameter] public IReadOnlyList<Choice> Choices { get; set; } = [];
+    [Parameter] public string? ConfirmText { get; set; }
+
+    string typed = "";
+
+    async Task OnChoice(Choice choice)
+    {
+        // A choice with an action (for example Export first) runs it and keeps the dialog open.
+        if (choice.Action is not null)
+        {
+            await choice.Action();
+            return;
+        }
+        Dialogs.Close(choice.Value);
+    }
+}

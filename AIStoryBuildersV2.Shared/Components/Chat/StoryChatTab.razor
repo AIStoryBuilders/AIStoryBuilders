@@ -1,0 +1,282 @@
+@* Chat tab (UI-Behavior-Spec §16; V1 ChatControl.razor). *@
+@using AIStoryBuildersV2.Shared.Knowledge
+@using AIStoryBuildersV2.Shared.StoryChat
+@using AIStoryBuildersV2.Shared.KnowledgeAssist
+@implements IDisposable
+@inject IStoryChatService Chat
+@inject AIStoryBuildersService Svc
+@inject BrowserInterop Js
+@inject LogService Log
+@inject KnowledgeSearchChoice Choice
+@inject ICurrentStoryKnowledgeBase CurKb
+
+<div class="asb-chat">
+    <div class="asb-chat-head">
+        <span class="mi" aria-hidden="true">forum</span>
+        <b>Story Chat Assistant</b>
+        <ModelPicker @bind-Value="model" Disabled="streaming" Style="width:220px" Id="chat-model" />
+        <span class="row asb-chat-kb" title="@(kbEmpty ? "This story's knowledge base is empty" : null)">
+            <RadzenCheckBox TValue="bool" Value="searchKb" ValueChanged="OnSearchKbChanged" Name="chat-kb" Disabled="@(kbEmpty || streaming)" />
+            <RadzenLabel Text="Include Knowledgebase" Component="chat-kb" />
+        </span>
+        <span class="asb-sp"></span>
+        <button class="asb-icon-btn-plain" title="Clear conversation" aria-label="Clear conversation"
+                disabled="@(streaming || (Bubbles.Count == 0 && pending.Count == 0))" @onclick="Clear">
+            <span class="mi" aria-hidden="true">restart_alt</span>
+        </button>
+    </div>
+    @if (loadingGraph)
+    {
+        <div class="asb-chat-loading" role="status">Loading the story graph…</div>
+    }
+    <div class="asb-chat-body" id="asb-chat-body">
+        @if (Bubbles.Count == 0)
+        {
+            <div class="asb-chat-empty">
+                <p>No messages yet. Ask a question about your story!</p>
+                <small>Examples: "Are there any orphaned characters?", "Tell me about the main characters"</small>
+            </div>
+        }
+        @foreach (var b in Bubbles)
+        {
+            if (b.IsUser)
+            {
+                <div class="asb-bubble asb-b-user"><small>You</small><span class="asb-user-text">@b.Text</span></div>
+            }
+            else if (b.RetryText is not null)
+            {
+                <div class="asb-bubble asb-b-ai asb-b-error" role="alert">
+                    <small>AI</small>@b.Text
+                    <div class="asb-mt">
+                        <RadzenButton Text="Retry" Icon="refresh" ButtonStyle="ButtonStyle.Light" Size="ButtonSize.Small"
+                                      Disabled="streaming" Click="@(() => RetryAsync(b))" />
+                    </div>
+                </div>
+            }
+            else
+            {
+                <div class="asb-bubble asb-b-ai">
+                    <small>AI</small>
+                    @if (b.Thinking)
+                    {
+                        <em>Thinking...</em>
+                    }
+                    else
+                    {
+                        <ChatMessageRenderer Content="@b.Text" Links="@Links" Resolve="@Resolve" />
+                    }
+                </div>
+            }
+        }
+        @foreach (var p in pending)
+        {
+            @* SEC-001: the model only proposes; nothing is written until the user clicks Apply. *@
+            <div class="asb-bubble asb-b-ai asb-b-proposal" role="group" aria-label="Proposed change">
+                <small>Proposed change · @p.ToolName</small>
+                <div>@p.Preview.Summary</div>
+                @if (p.Arguments.Count > 0)
+                {
+                    <details class="asb-proposal-args">
+                        <summary>Details</summary>
+                        <dl>
+                            @foreach (var a in p.Arguments)
+                            {
+                                <dt>@a.Key</dt>
+                                <dd>@(a.Value.Length > 0 ? a.Value : "(none)")</dd>
+                            }
+                        </dl>
+                    </details>
+                }
+                <div class="asb-mt row">
+                    <RadzenButton Text="Apply" Icon="check" ButtonStyle="ButtonStyle.Primary" Size="ButtonSize.Small"
+                                  Disabled="@(streaming || applying)" Click="@(() => ApplyAsync(p))" />
+                    <RadzenButton Text="Discard" Icon="close" ButtonStyle="ButtonStyle.Light" Size="ButtonSize.Small"
+                                  Disabled="@(streaming || applying)" Click="@(() => Discard(p))" />
+                </div>
+            </div>
+        }
+    </div>
+    <div class="asb-chat-input">
+        <textarea id="asb-chat-composer" rows="2" placeholder="Ask about your story..." @bind="input" @bind:event="oninput"
+                  disabled="@streaming" aria-label="Message"></textarea>
+        <RadzenButton Text="Send" ButtonStyle="ButtonStyle.Primary" Disabled="@(!CanSend)" Click="SendAsync" Style="align-self:stretch" />
+    </div>
+</div>
+
+@code {
+    [Parameter, EditorRequired] public Story Story { get; set; } = default!;
+
+    /// <summary>Owned by StoryWorkspace so the conversation survives tab switches.</summary>
+    [Parameter, EditorRequired] public List<ChatBubble> Bubbles { get; set; } = default!;
+
+    /// <summary>[[path]] citations link to the story's KB page (D13), or render as text when no KB is open.</summary>
+    KbLinkBuilder? Links => CurKb.Current?.Links;
+
+    string? Resolve(string target) =>
+        CurKb.Current is { } kb ? LinkResolver.ResolveWiki(kb.Graph.Snapshot.Directory, "", target)?.Path : null;
+
+    string? model;
+    string input = "";
+    bool streaming;
+    bool loadingGraph = true;
+    bool kbEmpty = true;
+    bool searchKb;
+    bool applying;
+    IReadOnlyList<PendingMutation> pending = [];
+    readonly CancellationTokenSource cts = new();
+    DotNetObjectReference<StoryChatTab>? selfRef;
+    int scrolledTo;
+
+    bool CanSend => !streaming && !loadingGraph && !string.IsNullOrWhiteSpace(input);
+
+    protected override async Task OnInitializedAsync()
+    {
+        pending = Chat.PendingChanges(Story.Title);
+        (kbEmpty, searchKb) = await Choice.DefaultAsync(Story.Title, KnowledgeSearchChoice.Chat);
+        // Build the KB graph now so citations in answers resolve.
+        if (CurKb.Current is { } kb && !kbEmpty)
+        {
+            try { await kb.Graph.GetStatsAsync(); }
+            catch (KnowledgeException) { }
+        }
+        try
+        {
+            await Svc.EnsureGraphExistsAsync(Story.Title);
+        }
+        catch (Exception ex)
+        {
+            Log.WriteToLog($"Story Chat: could not load the story graph: {ex.Message}");
+        }
+        loadingGraph = false;
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            selfRef = DotNetObjectReference.Create(this);
+            await Js.BindComposerAsync("asb-chat-composer", selfRef);
+        }
+        var signature = Bubbles.Count == 0 ? 0 : Bubbles.Count * 31 + Bubbles[^1].Text.Length + pending.Count * 7;
+        if (signature != scrolledTo && Bubbles.Count > 0)
+        {
+            scrolledTo = signature;
+            await Js.ScrollIntoViewAsync("#asb-chat-body > :last-child", "end");
+        }
+    }
+
+    [JSInvokable]
+    public async Task OnComposerEnter(string value)
+    {
+        input = value;
+        if (CanSend) await SendAsync();
+    }
+
+    [JSInvokable]
+    public void OnComposerEscape() { }
+
+    void OnSearchKbChanged(bool value)
+    {
+        searchKb = value;
+        Choice.Remember(Story.Title, KnowledgeSearchChoice.Chat, value);
+    }
+
+    async Task SendAsync()
+    {
+        if (!CanSend) return;
+        var text = input.Trim();
+        Bubbles.Add(new ChatBubble { IsUser = true, Text = text });
+        input = "";
+        await Js.ClearValueAsync("asb-chat-composer");
+        await StreamAsync(text);
+    }
+
+    async Task RetryAsync(ChatBubble error)
+    {
+        if (streaming || error.RetryText is null) return;
+        Bubbles.Remove(error);
+        await StreamAsync(error.RetryText);
+    }
+
+    async Task StreamAsync(string text)
+    {
+        var ai = new ChatBubble { Thinking = true };
+        Bubbles.Add(ai);
+        streaming = true;
+        StateHasChanged();
+        try
+        {
+            var request = new StoryChatRequest(Story.Title, text, model ?? "", searchKb && !kbEmpty);
+            await foreach (var chunk in Chat.SendMessageAsync(request, cts.Token))
+            {
+                ai.Text += chunk;
+                ai.Thinking = false;
+                StateHasChanged();
+            }
+            ai.Thinking = false;
+        }
+        catch (OperationCanceledException) when (cts.IsCancellationRequested)
+        {
+            return;
+        }
+        catch (Exception ex)
+        {
+            Bubbles.Remove(ai);
+            Bubbles.Add(new ChatBubble { Text = "Error: " + ex.Message, RetryText = text });
+            Log.WriteToLog($"Story Chat error: {ex.Message}");
+        }
+        finally
+        {
+            streaming = false;
+            pending = Chat.PendingChanges(Story.Title);
+        }
+        StateHasChanged();
+    }
+
+    async Task ApplyAsync(PendingMutation p)
+    {
+        if (streaming || applying) return;
+        applying = true;
+        try
+        {
+            var result = await Chat.ApplyPendingAsync(Story.Title, p.Id);
+            if (result is null) Bubbles.Add(new ChatBubble { Text = "This change is no longer pending." });
+            else if (result.Success) Bubbles.Add(new ChatBubble { Text = "Applied: " + AppliedSummary(p, result) });
+            else Bubbles.Add(new ChatBubble { Text = $"Could not apply the change: {result.Error}" });
+        }
+        finally
+        {
+            applying = false;
+            pending = Chat.PendingChanges(Story.Title);
+        }
+    }
+
+    /// <summary>
+    /// The proposal's summary, or the applied result's when it adds to it (a KB folder rename or move adds
+    /// "Links updated in N pages", plan Q20). Other results keep the proposal's wording.
+    /// </summary>
+    internal static string AppliedSummary(PendingMutation p, MutationResult result) =>
+        !string.IsNullOrEmpty(result.Summary) && result.Summary.StartsWith(p.Preview.Summary, StringComparison.Ordinal)
+            ? result.Summary
+            : p.Preview.Summary;
+
+    void Discard(PendingMutation p)
+    {
+        if (Chat.DiscardPending(Story.Title, p.Id)) Bubbles.Add(new ChatBubble { Text = "Discarded: " + p.Preview.Summary });
+        pending = Chat.PendingChanges(Story.Title);
+    }
+
+    void Clear()
+    {
+        Bubbles.Clear();
+        Chat.ClearSession(Story.Title);
+        pending = [];
+    }
+
+    public void Dispose()
+    {
+        cts.Cancel();
+        cts.Dispose();
+        selfRef?.Dispose();
+    }
+}

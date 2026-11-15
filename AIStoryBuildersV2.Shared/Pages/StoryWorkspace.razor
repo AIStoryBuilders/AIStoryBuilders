@@ -1,0 +1,338 @@
+@page "/story/{Title}"
+@layout WorkspaceLayout
+@using AIStoryBuildersV2.Shared.Components.Workspace
+@using AIStoryBuildersV2.Shared.Components.Manuscript
+@using AIStoryBuildersV2.Shared.Components.Chat
+@using AIStoryBuildersV2.Shared.Components.Knowledge
+@using AIStoryBuildersV2.Shared.StoryChat
+@using AIStoryBuildersV2.Shared.Knowledge
+@using AIStoryBuildersV2.Shared.Stories.Storage
+@implements IAsyncDisposable
+@inject NavigationManager Nav
+@inject AIStoryBuildersService Svc
+@inject IStoryPersistence Persist
+@inject IHostCapabilities Host
+@inject DialogService Dialogs
+@inject NotificationService Notify
+@inject IFileExportService Export
+@inject LogService Log
+@inject IStoryChatService ChatService
+@inject IStoryKnowledgeBaseProvider KbProvider
+@inject ICurrentStoryKnowledgeBase CurKb
+<PageTitle>@Title · AI StoryBuilders</PageTitle>
+<ServiceEventToasts />
+
+<header class="asb-topbar asb-ws-top">
+    <img class="asb-ws-logo" src="_content/AIStoryBuildersV2.Shared/images/logo.png" alt="" />
+    <div class="asb-ws-title">
+        <b>@Title</b>
+        <span>Story workspace · AIStoryBuilders</span>
+    </div>
+    <span class="asb-sp"></span>
+    @if (story is not null)
+    {
+        <span class="asb-save asb-save-@saveState.ToString().ToLowerInvariant()" role="status">
+            <span class="mi s16" aria-hidden="true">@SaveIcon</span>@SaveText
+            @if (saveState == SaveState.Failed)
+            {
+                <RadzenButton Icon="refresh" Text="Retry" ButtonStyle="ButtonStyle.Light" Size="ButtonSize.ExtraSmall" Click="RetrySaveAsync" />
+            }
+        </span>
+    }
+    <RadzenButton Icon="close" ButtonStyle="ButtonStyle.Base" Variant="Variant.Outlined" class="asb-icon-btn"
+                  aria-label="Close workspace" title="Close workspace" Click="@(() => Nav.NavigateTo(""))" />
+</header>
+
+@if (quotaBanner)
+{
+    <div class="asb-banner asb-banner-danger" role="alert">
+        <span class="mi" aria-hidden="true">error</span>
+        <span class="grow">Browser storage is full. Your latest changes are kept in this tab but are not saved.</span>
+        <RadzenButton Text="Export Project" Icon="save_alt" ButtonStyle="ButtonStyle.Primary" Size="ButtonSize.Small" Click="ExportProjectAsync" />
+        <RadzenButton Text="Retry" Icon="refresh" ButtonStyle="ButtonStyle.Light" Size="ButtonSize.Small" Click="RetrySaveAsync" />
+    </div>
+}
+@if (elsewhereBanner)
+{
+    <div class="asb-banner asb-banner-warning" role="alert">
+        <span class="mi" aria-hidden="true">sync_problem</span>
+        <span class="grow">This story was changed in another tab</span>
+        <RadzenButton Text="Reload" Icon="sync" ButtonStyle="ButtonStyle.Primary" Size="ButtonSize.Small" Click="ReloadFromStorageAsync" />
+        <RadzenButton Text="Keep mine" ButtonStyle="ButtonStyle.Light" Size="ButtonSize.Small" Click="KeepMineAsync" />
+    </div>
+}
+
+@if (missingMessage is not null)
+{
+    <div class="asb-page"><div class="asb-wrap">
+        <p>@missingMessage</p>
+        <RadzenButton Text="Back to library" Icon="arrow_back" ButtonStyle="ButtonStyle.Primary" Click="@(() => Nav.NavigateTo(""))" />
+    </div></div>
+}
+else if (story is null)
+{
+    <RadzenProgressBar Value="100" ShowValue="false" Mode="ProgressBarMode.Indeterminate" />
+}
+else
+{
+    <nav class="asb-tabs" role="tablist" aria-label="Story workspace">
+        @foreach (var (key, label) in Tabs)
+        {
+            <button role="tab" class="asb-tab @(key == tab ? "on" : "")" aria-selected="@(key == tab)" @onclick="@(() => SelectTabAsync(key))">@label</button>
+        }
+    </nav>
+    <div class="asb-ws-body @(tab is "chapters" or "kb" ? "asb-ws-full" : "")">
+        @switch (tab)
+        {
+            case "details":
+                <div class="asb-ws-wrap"><DetailsTab Story="story" OnDeleted="OnStoryDeleted" /></div>
+                break;
+            case "timelines":
+                <div class="asb-ws-wrap"><TimelinesTab Story="story" /></div>
+                break;
+            case "locations":
+                <div class="asb-ws-wrap"><LocationsTab Story="story" /></div>
+                break;
+            case "characters":
+                <div class="asb-ws-wrap"><CharactersTab Story="story" /></div>
+                break;
+            case "chapters":
+                <ManuscriptEditor Story="story" />
+                break;
+            case "chat":
+                <div class="asb-ws-wrap asb-ws-chat"><StoryChatTab Story="story" Bubbles="chatBubbles" /></div>
+                break;
+            case "kb":
+                if (CurKb.Current is not null)
+                {
+                    <KnowledgeBaseTab @ref="kbTab" @key="CurKb.Current" StoryTitle="@story.Title" P="@PageQuery" Create="@(CreateQuery == "1")"
+                                      ExportFirst="ExportProjectAsync" />
+                }
+                break;
+        }
+    </div>
+}
+
+@code {
+    [Parameter] public string Title { get; set; } = "";
+    [SupplyParameterFromQuery(Name = "tab")] public string? TabQuery { get; set; }
+
+    /// <summary>The KB page (<c>tab=kb</c> only) and the create flag from <c>KbLinkBuilder.CreateHref</c>.</summary>
+    [SupplyParameterFromQuery(Name = "p")] public string? PageQuery { get; set; }
+    [SupplyParameterFromQuery(Name = "create")] public string? CreateQuery { get; set; }
+
+    enum SaveState { Saved, Saving, Unsaved, Failed }
+
+    /// <summary>UI spec §9.4: left to right, with Chat last (after Knowledgebase, plan Q19).</summary>
+    internal static readonly (string Key, string Label)[] Tabs =
+    [
+        ("details", "Details"), ("timelines", "Timelines"), ("locations", "Locations"), ("characters", "Characters"),
+        ("chapters", "Chapters"), ("kb", "Knowledgebase"), ("chat", "Chat"),
+    ];
+
+    Story? story;
+    string tab = "chapters";
+    string? missingMessage;
+    SaveState saveState = SaveState.Saved;
+    bool quotaBanner;
+    bool elsewhereBanner;
+    bool deleted;
+    readonly List<ChatBubble> chatBubbles = [];
+    bool kbOpen;
+    KnowledgeBaseTab? kbTab;
+    IDisposable? navigationLock;
+
+    string SaveIcon => saveState switch { SaveState.Saving => "sync", SaveState.Unsaved => "edit", SaveState.Failed => "error", _ => "check_circle" };
+    string SaveText => saveState switch { SaveState.Saving => "Saving…", SaveState.Unsaved => "Unsaved", SaveState.Failed => "Save failed", _ => "Saved" };
+
+    protected override void OnParametersSet()
+    {
+        var requested = (TabQuery ?? "").ToLowerInvariant();
+        tab = Tabs.Any(t => t.Key == requested) ? requested : "chapters";
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        Persist.Changed += OnPersistenceChanged;
+        navigationLock = Nav.RegisterLocationChangingHandler(OnLocationChangingAsync);
+        try
+        {
+            if (!StoryTitle.IsSafeExistingName(Title))
+            {
+                missingMessage = "This story doesn't exist.";
+                return;
+            }
+            var match = (await Svc.GetStorysAsync()).FirstOrDefault(s => StoryTitle.SameTitle(s.Title, Title));
+            if (match is null)
+            {
+                missingMessage = "This story doesn't exist.";
+                return;
+            }
+            await Persist.OpenAsync(match.Title);
+            CurKb.Current = await KbProvider.OpenAsync(match.Title);
+            kbOpen = true;
+            story = match;
+            Poll();
+        }
+        catch (StoryDataMissingException ex)
+        {
+            missingMessage = ex.Message;
+        }
+        catch (StorageQuotaExceededException)
+        {
+            missingMessage = "Browser storage is full. Your latest changes are kept in this tab but are not saved.";
+        }
+        catch (Exception ex)
+        {
+            missingMessage = ex.Message;
+            Log.WriteToLog(ex.Message);
+        }
+    }
+
+    /// <summary>Shows "Unsaved" while a save is pending (WASM). MAUI always shows "Saved".</summary>
+    void Poll()
+    {
+        if (story is null || !Host.IsBrowser) return;
+        if (saveState != SaveState.Failed) saveState = Persist.IsDirty(story.Title) ? SaveState.Unsaved : SaveState.Saved;
+    }
+
+    protected override void OnAfterRender(bool firstRender) => Poll();
+
+    void OnPersistenceChanged(StoryPersistenceEvent e)
+    {
+        if (story is null || !StoryTitle.SameTitle(e.Title, story.Title)) return;
+        _ = InvokeAsync(() =>
+        {
+            switch (e.Kind)
+            {
+                case StoryPersistenceEventKind.Saved:
+                    saveState = Persist.IsDirty(story.Title) ? SaveState.Unsaved : SaveState.Saved;
+                    quotaBanner = false;
+                    break;
+                case StoryPersistenceEventKind.SaveFailed:
+                    saveState = SaveState.Failed;
+                    quotaBanner = true;
+                    break;
+                case StoryPersistenceEventKind.ChangedElsewhere:
+                    elsewhereBanner = true;
+                    break;
+            }
+            StateHasChanged();
+        });
+    }
+
+    Task SelectTabAsync(string key)
+    {
+        if (key == tab) return Task.CompletedTask;
+        // The tab follows the URL, so a guard that cancels the navigation (a dirty KB page) keeps the current tab.
+        Nav.NavigateTo(StoryTitle.WorkspaceHref(Title, key), replace: true);
+        return Task.CompletedTask;
+    }
+
+    async Task RetrySaveAsync()
+    {
+        if (story is null) return;
+        saveState = SaveState.Saving;
+        try
+        {
+            await Persist.FlushAsync(story.Title);
+            saveState = SaveState.Saved;
+            quotaBanner = false;
+        }
+        catch (Exception)
+        {
+            saveState = SaveState.Failed;
+        }
+    }
+
+    async Task KeepMineAsync()
+    {
+        if (story is null) return;
+        elsewhereBanner = false;
+        Persist.MarkDirty(story.Title);
+        await RetrySaveAsync();
+    }
+
+    async Task ReloadFromStorageAsync()
+    {
+        if (story is null) return;
+        elsewhereBanner = false;
+        await Persist.ReloadAsync(story.Title);
+        Svc.MarkGraphDirty(story.Title);
+        // The KB files were replaced too: reopen it so its graph and ticks match the reloaded pages.
+        await CloseKbAsync();
+        CurKb.Current = await KbProvider.OpenAsync(story.Title);
+        kbOpen = true;
+        var current = tab;
+        Nav.NavigateTo(StoryTitle.WorkspaceHref(story.Title, current), forceLoad: false, replace: true);
+        story = (await Svc.GetStorysAsync()).FirstOrDefault(s => StoryTitle.SameTitle(s.Title, Title));
+    }
+
+    async Task ExportProjectAsync()
+    {
+        if (story is null) return;
+        try
+        {
+            using var stream = new MemoryStream(Svc.ExportProject(story));
+            if (await Export.SaveAsync($"{story.Title}_{DateTime.Now:yyyy-MM-dd_HH-mm-ss}.stybld", stream, "application/zip"))
+                Notify.Notify(NotificationSeverity.Success, "Saved", "The file was saved successfully.", 4000);
+        }
+        catch (Exception ex)
+        {
+            Notify.Notify(NotificationSeverity.Error, "Error", ex.Message, 4000);
+        }
+    }
+
+    void OnStoryDeleted() => deleted = true;
+
+    /// <summary>Leaving /story/{title}: unsaved KB pages, then flush; a failed flush asks first (UI-Behavior-Spec §9.1).</summary>
+    async ValueTask OnLocationChangingAsync(LocationChangingContext context)
+    {
+        if (story is null) return;
+        if (deleted)
+        {
+            ChatService.ClearSession(story.Title);
+            await CloseKbAsync();
+            return;
+        }
+        var target = Nav.ToBaseRelativePath(Nav.ToAbsoluteUri(context.TargetLocation).ToString());
+        var own = "story/" + Uri.EscapeDataString(story.Title);
+        if (target.Split('?')[0].Equals(own, StringComparison.OrdinalIgnoreCase) || target.Split('?')[0].Equals("story/" + story.Title, StringComparison.OrdinalIgnoreCase)) return;
+
+        // A dirty KB page asks first; Cancel keeps the workspace open (UI-Behavior-Spec §9.1 step 1).
+        if (tab == "kb" && kbTab is not null && !await kbTab.ConfirmLeaveStoryAsync(context)) return;
+
+        try
+        {
+            await Persist.FlushAsync(story.Title);
+        }
+        catch (Exception)
+        {
+            var leave = await Dialogs.Confirm("Your latest changes could not be saved to browser storage. They are kept only until this browser tab closes. Leave anyway?",
+                "Unsaved changes", new ConfirmOptions { OkButtonText = "Yes", CancelButtonText = "No" });
+            if (leave != true)
+            {
+                context.PreventNavigation();
+                return;
+            }
+        }
+        ChatService.ClearSession(story.Title);
+        await CloseKbAsync();
+    }
+
+    /// <summary>Plan §5.7: clear the accessor, then dispose the story's KB (a no-op when it is already closed).</summary>
+    async Task CloseKbAsync()
+    {
+        if (story is null || !kbOpen) return;
+        kbOpen = false;
+        CurKb.Current = null;
+        await KbProvider.CloseAsync(story.Title);
+    }
+
+    public async ValueTask DisposeAsync()
+    {
+        Persist.Changed -= OnPersistenceChanged;
+        navigationLock?.Dispose();
+        await CloseKbAsync();
+    }
+}

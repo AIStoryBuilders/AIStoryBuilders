@@ -1,0 +1,57 @@
+@* Timelines tab (UI-Behavior-Spec §11.1). *@
+@inject AIStoryBuildersService Svc
+@inject DialogService Dialogs
+@inject NotificationService Notify
+
+<div class="asb-ws-head">
+    <h3 class="asb-ws-sec">Timelines</h3>
+    <RadzenButton Text="New Timeline" Icon="add" ButtonStyle="ButtonStyle.Success" Click="@(() => OpenAsync(null))" />
+</div>
+@if (timelines.Count == 0)
+{
+    <p class="asb-note">No timelines yet. Timelines place sections, character backgrounds and location descriptions in time.</p>
+}
+@foreach (var t in timelines)
+{
+    <div class="asb-ecard">
+        <div class="asb-eline">
+            <b>@t.TimelineName</b>
+            <span class="asb-emeta">@Range(t)</span>
+        </div>
+        <RadzenButton Text="Edit" ButtonStyle="ButtonStyle.Light" Size="ButtonSize.Small" Click="@(() => OpenAsync(t))" />
+    </div>
+}
+
+@code {
+    [Parameter, EditorRequired] public Story Story { get; set; } = default!;
+
+    List<Timeline> timelines = [];
+
+    protected override void OnParametersSet() => Load();
+
+    void Load() => timelines = Svc.GetTimelines(Story);
+
+    static string Format(DateTime d) => d.ToShortDateString() + " " + d.ToShortTimeString();
+
+    static string Range(Timeline t) =>
+        t.StartDate is not { } start ? "" : t.StopDate is { } stop ? $"{Format(start)} - {Format(stop)}" : Format(start);
+
+    async Task OpenAsync(Timeline? existing)
+    {
+        var timeline = existing is null
+            ? new Timeline { Id = -1, StartDate = DateTime.Now, StopDate = null, Story = Story }
+            : new Timeline { Id = existing.Id, TimelineName = existing.TimelineName, TimelineDescription = existing.TimelineDescription,
+                             StartDate = existing.StartDate, StopDate = existing.StopDate, Story = Story };
+        try
+        {
+            await Dialogs.OpenAsync<TimelineDialog>(existing is null ? "New Timeline" : "Edit Timeline",
+                new Dictionary<string, object?> { ["Timeline"] = timeline, ["Existing"] = timelines },
+                new DialogOptions { Width = "650px", CloseDialogOnEsc = true, ShowClose = true });
+            Load();
+        }
+        catch (Exception ex)
+        {
+            Notify.Notify(NotificationSeverity.Error, "Error", ex.Message, 4000);
+        }
+    }
+}

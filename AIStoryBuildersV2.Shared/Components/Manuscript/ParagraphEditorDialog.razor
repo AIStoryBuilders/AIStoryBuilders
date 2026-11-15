@@ -1,0 +1,442 @@
+@* The paragraph editor popup (UI-Behavior-Spec §15, V1 ParagraphEdit.razor). It edits a copy; nothing is written until
+   Save, Delete or Add. Views: edit, ai, characters, location, timeline. *@
+@using AIStoryBuildersV2.Shared.AI
+@inject AIStoryBuildersService Svc
+@inject OrchestratorMethods Orch
+@inject DialogService Dialogs
+@inject NotificationService Notify
+@inject IHostCapabilities Host
+@inject LogService Log
+@inject ParagraphAiHelper Ai
+@inject BrowserInterop Browser
+
+<div class="asb-pe-head" @onkeydown="OnKeyDown">
+    @if (view != "edit")
+    {
+        <button class="asb-icon-btn-plain" aria-label="Back to editor" title="Back to editor" disabled="@busy" @onclick="@(() => view = "edit")"><span class="mi">arrow_back</span></button>
+    }
+    <div class="grow">
+        <div class="asb-eyebrow">@Eyebrow</div>
+        <div class="asb-pe-title">@HeaderTitle</div>
+    </div>
+    <button class="asb-icon-btn-plain" aria-label="Close" title="Close" disabled="@busy" @onclick="CloseAsync"><span class="mi">close</span></button>
+</div>
+
+<div class="asb-pe-body" @onkeydown="OnKeyDown">
+@switch (view)
+{
+    case "edit":
+        @if (busy)
+        {
+            <RadzenProgressBar Value="100" ShowValue="false" Mode="ProgressBarMode.Indeterminate" />
+            <p class="asb-note asb-mt">@busyText</p>
+        }
+        else
+        {
+            <div class="asb-pe-toolbar">
+                @if (Host.SupportsSpeechToText)
+                {
+                    <RadzenSpeechToTextButton Change="@(t => text = (text + " " + t).Trim())" />
+                }
+                <RadzenButton Icon="app_registration" ButtonStyle="ButtonStyle.Warning" class="asb-ai" aria-label="AI" title="AI" Click="@(() => view = "ai")" />
+                <RadzenButton Text="Characters" ButtonStyle="ButtonStyle.Light" Click="OpenCharacters" />
+                <RadzenButton Text="Location" ButtonStyle="ButtonStyle.Light" Click="OpenLocation" />
+                <RadzenButton Text="Timeline" ButtonStyle="ButtonStyle.Light" Click="OpenTimeline" />
+                @if (undoable)
+                {
+                    <RadzenButton Icon="undo" ButtonStyle="ButtonStyle.Dark" class="asb-dark" aria-label="Undo" title="Undo" Click="Undo" />
+                }
+                @if (!IsNew)
+                {
+                    <RadzenButton Icon="delete" ButtonStyle="ButtonStyle.Danger" aria-label="Delete section" title="Delete section" Click="DeleteAsync" />
+                    <RadzenButton Icon="note_add" ButtonStyle="ButtonStyle.Success" aria-label="Add section above" title="Add section above" Click="AddAboveAsync" />
+                }
+                <RadzenSplitButton Text="Save" Icon="save" ButtonStyle="ButtonStyle.Success" Click="SaveAsync" AlwaysOpenPopup="false" aria-label="More save options">
+                    <ChildContent>
+                        <RadzenSplitButtonItem Text="Autodetect Attributes" Value="Autodetect" />
+                    </ChildContent>
+                </RadzenSplitButton>
+                <RadzenButton Icon="exit_to_app" ButtonStyle="ButtonStyle.Primary" aria-label="Close editor" title="Close editor" Click="CloseAsync" />
+            </div>
+            @if (undoable)
+            {
+                <div class="asb-undo-note"><span class="mi s16" aria-hidden="true">auto_fix_high</span>AI rewrote this section. Use Undo to restore the previous text.</div>
+            }
+            <div class="asb-pe-attrs">
+                <span><b>Characters:</b> @(characters.Count == 0 ? "—" : string.Join(", ", characters))</span>
+                <span><b>Location:</b> @(string.IsNullOrEmpty(location) ? "—" : location)</span>
+                <span><b>Timeline:</b> @(string.IsNullOrEmpty(timeline) ? "—" : timeline)</span>
+            </div>
+            <RadzenTextArea Rows="12" MaxLength="5000" Placeholder="Write this paragraph..." @bind-Value="text" Style="width:100%" class="asb-para-area" id="pe-text" aria-label="Paragraph text" />
+        }
+        break;
+
+    case "ai":
+        @if (busy)
+        {
+            <RadzenProgressBar Value="100" ShowValue="false" Mode="ProgressBarMode.Indeterminate" />
+            <p class="asb-note asb-mt">Writing…</p>
+        }
+        else
+        {
+            @if (Host.SupportsSpeechToText)
+            {
+                <RadzenSpeechToTextButton Change="@(t => promptText = (promptText + " " + t).Trim())" class="asb-mb" />
+            }
+            <div class="asb-field">
+                <label for="pe-prompt">Describe paragraph or provide prompt instructions (optional):</label>
+                <RadzenTextArea id="pe-prompt" Rows="4" MaxLength="500" Placeholder="e.g. continue from Freya's threat, keep it tense" @bind-Value="promptText" Style="width:100%" />
+            </div>
+            <div class="row" style="gap:16px;align-items:flex-start">
+                <div class="asb-field" style="width:170px">
+                    <label for="pe-words">Number of words to generate:</label>
+                    <RadzenDropDown id="pe-words" TValue="string" Data="@WordCounts" @bind-Value="numberOfWords" Style="width:100%" />
+                </div>
+                <div class="asb-field grow">
+                    <label for="pe-model">AI Model:</label>
+                    <ModelPicker Id="pe-model" @bind-Value="model" />
+                    <div class="row asb-mt" title="@(kbEmpty ? "This story's knowledge base is empty" : null)">
+                        <RadzenCheckBox TValue="bool" @bind-Value="searchKb" Name="pe-kb" Disabled="kbEmpty" />
+                        <RadzenLabel Text="Search knowledgebase" Component="pe-kb" />
+                    </div>
+                    @if (kbEmpty)
+                    {
+                        <div class="kgb-help">This story's knowledge base is empty</div>
+                    }
+                </div>
+            </div>
+            <div class="asb-dialog-actions">
+                <RadzenButton Text="Generate" Icon="auto_awesome" ButtonStyle="ButtonStyle.Success" Disabled="@string.IsNullOrEmpty(model)" Click="GenerateAsync" />
+            </div>
+        }
+        break;
+
+    case "characters":
+        @if (allCharacters.Count == 0)
+        {
+            <p class="asb-note">This story has no characters yet. Add them on the Characters tab.</p>
+        }
+        else
+        {
+            <RadzenCheckBoxList TValue="string" Data="@allCharacters" @bind-Value="pendingCharacters" Orientation="Orientation.Vertical" class="asb-checklist" />
+        }
+        <div class="asb-dialog-actions">
+            <RadzenButton Text="Cancel" ButtonStyle="ButtonStyle.Light" Click="@(() => view = "edit")" />
+            <RadzenButton Text="Save" ButtonStyle="ButtonStyle.Success" Click="@(() => { characters = pendingCharacters.ToList(); view = "edit"; })" />
+        </div>
+        break;
+
+    case "location":
+        <div class="asb-field">
+            <label for="pe-loc">Location</label>
+            <RadzenDropDown id="pe-loc" TValue="string" Data="@locationOptions" @bind-Value="pendingLocation" Style="width:100%" />
+        </div>
+        <div class="asb-dialog-actions">
+            <RadzenButton Text="Cancel" ButtonStyle="ButtonStyle.Light" Click="@(() => view = "edit")" />
+            <RadzenButton Text="Save" ButtonStyle="ButtonStyle.Success" Click="@(() => { location = pendingLocation == None ? "" : pendingLocation; view = "edit"; })" />
+        </div>
+        break;
+
+    case "timeline":
+        <div class="asb-field">
+            <label for="pe-tl">Timeline</label>
+            <RadzenDropDown id="pe-tl" TValue="string" Data="@timelineOptions" @bind-Value="pendingTimeline" Style="width:100%" />
+        </div>
+        <div class="asb-dialog-actions">
+            <RadzenButton Text="Cancel" ButtonStyle="ButtonStyle.Light" Click="@(() => view = "edit")" />
+            <RadzenButton Text="Save" ButtonStyle="ButtonStyle.Success" Click="@(() => { timeline = pendingTimeline == None ? "" : pendingTimeline; view = "edit"; })" />
+        </div>
+        break;
+}
+</div>
+
+@code {
+    [Parameter, EditorRequired] public Chapter Chapter { get; set; } = default!;
+    [Parameter, EditorRequired] public Paragraph Paragraph { get; set; } = default!;
+    [Parameter, EditorRequired] public Story Story { get; set; } = default!;
+
+    /// <summary>What the Manuscript Editor selects after the popup closes.</summary>
+    public sealed record Outcome(int SelectSequence);
+
+    const string None = "(none)";
+    static readonly string[] WordCounts = ["10", "20", "50", "100", "200", "300", "500", "800", "1000"];
+
+    string view = "edit";
+    bool busy;
+    string busyText = "";
+
+    // The working copy.
+    string text = "";
+    List<string> characters = [];
+    string location = "";
+    string timeline = "";
+    string originalSignature = "";
+
+    bool undoable;
+    string undoCache = "";
+
+    string promptText = "";
+    string numberOfWords = "200";
+    string? model;
+    bool searchKb;
+    bool kbEmpty = true;
+
+    List<Character> storyCharacters = [];
+    List<string> allCharacters = [];
+    IEnumerable<string> pendingCharacters = [];
+    List<string> locationOptions = [];
+    string pendingLocation = None;
+    List<string> timelineOptions = [];
+    string pendingTimeline = None;
+
+    bool IsNew => Paragraph.Id == -1;
+
+    string Eyebrow => view switch { "edit" => "Paragraph editor", "ai" => "Generate with AI", _ => "Paragraph attribute" };
+
+    string HeaderTitle => view switch
+    {
+        "ai" => "AI Prompt Instructions",
+        "characters" => "Select Characters",
+        "location" => "Select Location",
+        "timeline" => "Select Timeline",
+        _ => IsNew ? "New Section" : $"Section {Paragraph.Sequence}",
+    };
+
+    string Signature => text + "\u0001" + string.Join(",", characters) + "\u0001" + location + "\u0001" + timeline;
+
+    protected override async Task OnInitializedAsync()
+    {
+        text = Svc.RemoveParagraphIndenting(Paragraph).ParagraphContent ?? "";
+        characters = (Paragraph.Characters ?? []).Select(c => c.CharacterName).Where(n => !string.IsNullOrEmpty(n)).ToList();
+        location = Paragraph.Location?.LocationName ?? "";
+        timeline = Paragraph.Timeline?.TimelineName ?? "";
+        originalSignature = Signature;
+        numberOfWords = SetNumberOfWords(text);
+
+        storyCharacters = Svc.GetCharacters(Story);
+        allCharacters = storyCharacters.Select(c => c.CharacterName).OrderBy(n => n, StringComparer.OrdinalIgnoreCase).ToList();
+        locationOptions = [None, .. Svc.GetLocations(Story).Select(l => l.LocationName).OrderBy(n => n, StringComparer.OrdinalIgnoreCase)];
+        timelineOptions = [None, .. Svc.GetTimelines(Story).Select(t => t.TimelineName).OrderBy(n => n, StringComparer.OrdinalIgnoreCase)];
+
+        (kbEmpty, searchKb) = await Ai.KnowledgeBaseDefaultAsync(Story.Title);
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        // Start in the text, so typing and Esc work at once (the editor opens with AutoFocusFirstElement off).
+        if (!firstRender) return;
+        try { await Browser.FocusAsync("#pe-text"); }
+        catch (Microsoft.JSInterop.JSException) { }
+    }
+
+    /// <summary>V1's SetNumberOfWords.</summary>
+    static string SetNumberOfWords(string content)
+    {
+        var words = content.Split([' ', '\n', '\r', '\t'], StringSplitOptions.RemoveEmptyEntries).Length;
+        return words switch { < 10 => "200", < 20 => "20", < 50 => "50", < 100 => "100", < 200 => "200", < 300 => "300", < 500 => "500", < 800 => "800", _ => "1000" };
+    }
+
+    void OpenCharacters()
+    {
+        pendingCharacters = characters.Where(allCharacters.Contains).ToList();
+        view = "characters";
+    }
+
+    void OpenLocation()
+    {
+        pendingLocation = locationOptions.Contains(location) && location != "" ? location : None;
+        view = "location";
+    }
+
+    void OpenTimeline()
+    {
+        pendingTimeline = timelineOptions.Contains(timeline) && timeline != "" ? timeline : None;
+        view = "timeline";
+    }
+
+    void Undo()
+    {
+        text = undoCache;
+        undoable = false;
+    }
+
+    Paragraph Working() => new()
+    {
+        Id = Paragraph.Id,
+        Sequence = Paragraph.Sequence,
+        ParagraphContent = text,
+        Chapter = Chapter,
+        Characters = characters.Select(n => new Character { CharacterName = n }).ToList(),
+        Location = storyLocation(location),
+        Timeline = new Timeline { TimelineName = timeline },
+    };
+
+    Location storyLocation(string name) =>
+        Svc.GetLocations(Story).FirstOrDefault(l => l.LocationName == name) is { } found ? found : new Location { LocationName = name };
+
+    void Fail(Exception ex)
+    {
+        Notify.Notify(NotificationSeverity.Error, "Error", ex.Message, 4000);
+        Log.WriteToLog(ex.Message);
+    }
+
+    async Task GenerateAsync()
+    {
+        busy = true;
+        try
+        {
+            var paragraph = Working();
+            var prompt = new AIPrompt { AIPromptText = promptText, NumberOfWords = numberOfWords, ModelId = model, SearchKnowledgeBase = searchKb && !kbEmpty };
+            // An empty KB forces the box off; that is not the user's choice (D16).
+            if (!kbEmpty) Ai.RememberKnowledgeBaseChoice(Story.Title, searchKb);
+            var result = await Ai.GenerateAsync(Story, Chapter, paragraph, storyCharacters, prompt, warning =>
+                Notify.Notify(NotificationSeverity.Warning, "Knowledge base", warning, 6000));
+            undoCache = text;
+            undoable = true;
+            text = result;
+            view = "edit";
+        }
+        catch (Exception ex)
+        {
+            Fail(ex);
+            view = "edit";
+        }
+        finally
+        {
+            busy = false;
+        }
+    }
+
+    async Task SaveAsync(RadzenSplitButtonItem? item)
+    {
+        if (string.IsNullOrWhiteSpace(text))
+        {
+            Notify.Notify(NotificationSeverity.Error, "Error", "Paragraph content is required", 4000);
+            return;
+        }
+        busy = true;
+        busyText = "";
+        try
+        {
+            var paragraph = Working();
+            if (item?.Value == "Autodetect") await AutodetectAsync(paragraph);
+            paragraph.Location ??= new Location { LocationName = "" };
+            paragraph.Timeline ??= new Timeline { TimelineName = "" };
+            await Svc.UpdateParagraph(Chapter, paragraph);
+            Dialogs.Close(new Outcome(paragraph.Sequence));
+        }
+        catch (Exception ex)
+        {
+            Fail(ex);
+            busy = false;
+        }
+    }
+
+    /// <summary>V1's Autodetect Attributes (UI-Behavior-Spec §15.6).</summary>
+    async Task AutodetectAsync(Paragraph paragraph)
+    {
+        Notify.Notify(NotificationSeverity.Success, "Info", "Calling AI to detect Attributes...", 2000);
+        var found = await Orch.DetectCharacters(paragraph);
+        var all = new List<SimpleCharacterSelector>();
+
+        var newOnes = found.Where(x => !storyCharacters.Any(y => y.CharacterName == x.CharacterName)).ToList();
+        if (newOnes.Count > 0)
+        {
+            Notify.Notify(NotificationSeverity.Success, "Info", "Detecting attributes on new characters…", 2000);
+            all.AddRange(await Orch.DetectCharacterAttributes(paragraph, newOnes, "New Character") ?? []);
+        }
+
+        var existing = storyCharacters.Where(x => found.Any(y => y.CharacterName == x.CharacterName)).ToList();
+        if (existing.Count > 0)
+        {
+            Notify.Notify(NotificationSeverity.Success, "Info", "Detecting attributes on existing characters…", 2000);
+            var simplified = Svc.SimplifyCharacter(existing, paragraph);
+            all.AddRange(await Orch.DetectCharacterAttributes(paragraph, simplified, "Existing Character") ?? []);
+        }
+
+        if (all.Count > 0)
+        {
+            var picked = await Dialogs.OpenAsync<CharacterAttributesDialog>("Select Character Attributes",
+                new Dictionary<string, object?> { ["Items"] = all }, new DialogOptions { Width = "500px", Height = "360px", ShowClose = true });
+            if (picked is List<SimpleCharacterSelector> selected)
+            {
+                foreach (var parts in selected.Select(s => s.CharacterValue.Split('|')).Where(p => p.Length >= 4))
+                {
+                    var name = parts[0].Replace("|", "").Replace("[", "").Replace("]", "");
+                    if (parts[1] == "New Character" && parts[2] == "" && storyCharacters.All(c => c.CharacterName != name))
+                    {
+                        paragraph.Characters.Add(new Character { CharacterName = name });
+                        storyCharacters.Add(new Character { CharacterName = name, CharacterBackground = [] });
+                    }
+                }
+                foreach (var parts in selected.Select(s => s.CharacterValue.Split('|')).Where(p => p.Length >= 4 && p[2] != ""))
+                {
+                    if (storyCharacters.FirstOrDefault(c => c.CharacterName == parts[0]) is { } character)
+                        character.CharacterBackground.Add(new CharacterBackground { Type = parts[2], Description = parts[3], Character = character });
+                }
+                foreach (var character in storyCharacters.Where(c => paragraph.Characters.Any(p => p.CharacterName == c.CharacterName)))
+                {
+                    character.Story = Story;
+                    await Svc.AddUpdateCharacterAsync(character, character.CharacterName);
+                }
+            }
+        }
+
+        foreach (var character in storyCharacters.Where(c => paragraph.Characters.All(p => p.CharacterName != c.CharacterName)))
+        {
+            if ((paragraph.ParagraphContent ?? "").Contains(character.CharacterName))
+            {
+                paragraph.Characters.Add(new Character { CharacterName = character.CharacterName });
+                Notify.Notify(NotificationSeverity.Success, "Info", $"Adding {character.CharacterName}", 2000);
+            }
+        }
+        characters = paragraph.Characters.Select(c => c.CharacterName).ToList();
+    }
+
+    async Task DeleteAsync()
+    {
+        if (await Dialogs.Confirm("Are you sure?", "Delete Section", new ConfirmOptions { OkButtonText = "Yes", CancelButtonText = "No" }) != true) return;
+        busy = true;
+        try
+        {
+            Svc.DeleteParagraph(Chapter, Paragraph);
+            Dialogs.Close(new Outcome(Math.Max(1, Paragraph.Sequence - 1)));
+        }
+        catch (Exception ex)
+        {
+            Fail(ex);
+            busy = false;
+        }
+    }
+
+    async Task AddAboveAsync()
+    {
+        if (await Dialogs.Confirm("Are you sure?", "Add Section above this Section", new ConfirmOptions { OkButtonText = "Yes", CancelButtonText = "No" }) != true) return;
+        busy = true;
+        try
+        {
+            Svc.AddParagraph(Chapter, Working());
+            Dialogs.Close(new Outcome(Paragraph.Sequence));
+        }
+        catch (Exception ex)
+        {
+            Fail(ex);
+            busy = false;
+        }
+    }
+
+    async Task CloseAsync()
+    {
+        if (busy) return;
+        if (Signature != originalSignature &&
+            await Dialogs.Confirm("Discard your changes to this section?", "Unsaved changes", new ConfirmOptions { OkButtonText = "Yes", CancelButtonText = "No" }) != true)
+            return;
+        Dialogs.Close(null);
+    }
+
+    async Task OnKeyDown(KeyboardEventArgs e)
+    {
+        if (e.Key == "Escape" && view == "edit") await CloseAsync();
+        else if (e.Key == "Escape" && !busy) view = "edit";
+    }
+}

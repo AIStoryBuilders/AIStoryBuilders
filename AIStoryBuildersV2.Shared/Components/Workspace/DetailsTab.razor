@@ -1,0 +1,129 @@
+@* Details tab (UI-Behavior-Spec §10, V1 StoryEdit.razor:40-111). *@
+@using AIStoryBuildersV2.Shared.Knowledge
+@inject AIStoryBuildersService Svc
+@inject DialogService Dialogs
+@inject NotificationService Notify
+@inject IFileExportService Export
+@inject NavigationManager Nav
+@inject LogService Log
+
+<h3 class="asb-ws-sec">Story details</h3>
+<div class="asb-field">
+    <label>Story Title:</label>
+    <div class="asb-ro">@Story.Title</div>
+</div>
+<div class="asb-field">
+    <label for="d-style">Style:</label>
+    <RadzenDropDown id="d-style" TValue="string" Data="@Styles" @bind-Value="Story.Style" Style="width:100%" Disabled="busy" />
+</div>
+<div class="asb-field">
+    <label for="d-syn">Synopsis:</label>
+    <RadzenTextArea id="d-syn" Rows="5" MaxLength="1000" @bind-Value="Story.Synopsis" Style="width:100%" Disabled="busy" />
+</div>
+<RadzenPanel AllowCollapse="true" Collapsed="true" class="asb-collapse">
+    <HeaderTemplate><span class="asb-collapse-h">System Message</span></HeaderTemplate>
+    <ChildContent>
+        <RadzenTextArea Rows="5" MaxLength="1000" @bind-Value="Story.Theme" Style="width:100%" Disabled="busy" aria-label="System Message" />
+    </ChildContent>
+</RadzenPanel>
+<RadzenPanel AllowCollapse="true" Collapsed="true" class="asb-collapse">
+    <HeaderTemplate><span class="asb-collapse-h">World Facts</span></HeaderTemplate>
+    <ChildContent>
+        <RadzenTextArea Rows="8" MaxLength="2000" @bind-Value="Story.WorldFacts" Style="width:100%" Disabled="busy" aria-label="World Facts"
+                        Placeholder="Enter persistent world-building facts, one per line (e.g., Magic is illegal in the Northern Kingdom)" />
+    </ChildContent>
+</RadzenPanel>
+
+<div class="asb-actions asb-mt">
+    <RadzenButton Text="Save" Icon="save" ButtonStyle="ButtonStyle.Success" Disabled="busy" Click="SaveAsync" />
+    <RadzenButton Text="Save Word Doc" Icon="print" ButtonStyle="ButtonStyle.Primary" Disabled="busy" Click="WordAsync" />
+    <RadzenButton Text="Export Project" Icon="save_alt" ButtonStyle="ButtonStyle.Primary" Disabled="busy" Click="ExportAsync" />
+    <RadzenButton Text="Delete" Icon="delete" ButtonStyle="ButtonStyle.Danger" Disabled="busy" Click="DeleteAsync" />
+    <RadzenButton Text="Re-load Story" Icon="sync" ButtonStyle="ButtonStyle.Warning" Disabled="busy" Click="ReloadAsync" />
+</div>
+
+@code {
+    [Parameter, EditorRequired] public Story Story { get; set; } = default!;
+    [Parameter] public EventCallback OnDeleted { get; set; }
+
+    /// <summary>V1's style list and order.</summary>
+    public static readonly string[] Styles = ["Drama", "Sci-Fi", "Romance", "Comedy", "Fantasy", "Mystery", "Thriller", "Children", "Young Adult", "Action", "Crime", "Dystopian", "Horror"];
+
+    bool busy;
+
+    protected override void OnParametersSet()
+    {
+        if (string.IsNullOrEmpty(Story.Style)) Story.Style = "Drama";
+    }
+
+    void Fail(Exception ex)
+    {
+        if (ex is StorageQuotaExceededException)
+        {
+            // The workspace banner offers Retry and Export Project.
+            Notify.Notify(NotificationSeverity.Error, "Browser storage is full", "Your latest changes are kept in this tab but are not saved.", 6000);
+            Log.WriteToLog(ex.Message);
+            return;
+        }
+        Notify.Notify(NotificationSeverity.Error, "Error", ex.Message, 4000);
+        Log.WriteToLog(ex.Message);
+    }
+
+    async Task RunAsync(Func<Task> action)
+    {
+        busy = true;
+        try { await action(); }
+        catch (Exception ex) { Fail(ex); }
+        finally { busy = false; }
+    }
+
+    Task SaveAsync() => RunAsync(async () =>
+    {
+        await Svc.UpdateStoryAsync(Story);
+        Notify.Notify(NotificationSeverity.Success, "Story", "Updated!", 2000);
+    });
+
+    Task WordAsync() => RunAsync(async () =>
+    {
+        using var stream = new MemoryStream(Svc.ExportWordDocument(Story));
+        if (await Export.SaveAsync($"{Story.Title}_{DateTime.Now:yyyy-MM-dd_HH-mm-ss}.docx", stream,
+                "application/vnd.openxmlformats-officedocument.wordprocessingml.document"))
+            Notify.Notify(NotificationSeverity.Success, "Saved", "The file was saved successfully.", 4000);
+    });
+
+    Task ExportAsync() => RunAsync(async () =>
+    {
+        Notify.Notify(NotificationSeverity.Info, "Exporting", "Story...", 2000);
+        using var stream = new MemoryStream(Svc.ExportProject(Story));
+        if (await Export.SaveAsync($"{Story.Title}_{DateTime.Now:yyyy-MM-dd_HH-mm-ss}.stybld", stream, "application/zip"))
+            Notify.Notify(NotificationSeverity.Success, "Saved", "The file was saved successfully.", 4000);
+    });
+
+    async Task DeleteAsync()
+    {
+        if (await Dialogs.Confirm("Are you sure?", "Delete Story", new ConfirmOptions { OkButtonText = "Yes", CancelButtonText = "No" }) != true) return;
+        await RunAsync(async () =>
+        {
+            await Svc.DeleteStoryAsync(Story.Title);
+            await OnDeleted.InvokeAsync();
+            Notify.Notify(NotificationSeverity.Success, "Deleted", $"{Story.Title} was deleted.", 4000);
+            Nav.NavigateTo("");
+        });
+    }
+
+    async Task ReloadAsync()
+    {
+        if (await Dialogs.Confirm("This will regenerate all vector embeddings and rebuild the Knowledge Graph. Continue?", "Re-load Story",
+                new ConfirmOptions { OkButtonText = "Yes", CancelButtonText = "No" }) != true) return;
+        busy = true;
+        try
+        {
+            await Dialogs.OpenAsync<ReloadProgressDialog>("Re-load Story", new Dictionary<string, object?> { ["Story"] = Story },
+                new DialogOptions { Width = "440px", ShowClose = false, CloseDialogOnEsc = false, CloseDialogOnOverlayClick = false });
+        }
+        finally
+        {
+            busy = false;
+        }
+    }
+}

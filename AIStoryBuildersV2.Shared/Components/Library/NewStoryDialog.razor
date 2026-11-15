@@ -1,0 +1,78 @@
+@* New Story dialog (UI-Behavior-Spec §3). Validates, then closes with the story; the Library runs the AI generation. *@
+@inject DialogService Dialogs
+@inject NotificationService Notify
+@inject AIStoryBuildersService Svc
+@inject IHostCapabilities Host
+
+<div class="asb-eyebrow">Create</div>
+
+<div class="asb-field">
+    <label for="ns-title">Story Title:</label>
+    <RadzenTextBox id="ns-title" MaxLength="20" Placeholder="Up to 20 characters" @bind-Value="title" />
+</div>
+@if (Host.SupportsSpeechToText)
+{
+    <RadzenSpeechToTextButton Change="@(text => synopsis = (synopsis + " " + text).Trim())" class="asb-mb" />
+}
+<div class="asb-field">
+    <label for="ns-syn">Short Story Synopsis:</label>
+    <RadzenTextArea id="ns-syn" Rows="6" MaxLength="1000" Placeholder="Describe the story in a few sentences..." @bind-Value="synopsis" Style="width:100%" />
+</div>
+<div class="row" style="gap:16px;align-items:flex-start">
+    <div class="asb-field" style="width:120px">
+        <label for="ns-chaps">Chapters:</label>
+        <RadzenDropDown id="ns-chaps" TValue="string" Data="@chapterCounts" @bind-Value="chapters" Style="width:100%" />
+    </div>
+    <div class="asb-field grow">
+        <label for="ns-model">AI Model:</label>
+        <ModelPicker Id="ns-model" @bind-Value="model" />
+    </div>
+</div>
+<div class="asb-dialog-actions">
+    <RadzenButton Text="Create Story" Icon="add" ButtonStyle="ButtonStyle.Success" Disabled="@string.IsNullOrEmpty(model)" Click="CreateAsync" />
+</div>
+
+@code {
+    /// <summary>V1's default system message for new stories (V1 Index.razor:169).</summary>
+    public const string DefaultSystemMessage = "You are a software program that creates prose for novels. Use the following style sheet: Foreshadowing: Do not have any foreshadowing as to events that have not yet happened. Third-person Limited: The narrative is primarily from the limited perspective of specific characters, offering insights into their thoughts and feelings. The point of view may switch between characters but stays closely aligned with one at a time.";
+
+    readonly string[] chapterCounts = ["1", "2", "3"];
+    string? title;
+    string? synopsis;
+    string chapters = "3";
+    string? model;
+
+    void Error(string detail) => Notify.Notify(NotificationSeverity.Error, "Error", detail, 4000);
+
+    async Task CreateAsync()
+    {
+        if (string.IsNullOrEmpty(title))
+        {
+            Error("Story Title is required");
+            return;
+        }
+        if (StoryTitle.Validate(title) is { } invalid)
+        {
+            Error(invalid);
+            return;
+        }
+        var clean = AI.OrchestratorMethods.TrimInnerSpaces(title);
+        if ((await Svc.GetStorysAsync()).Any(s => StoryTitle.SameTitle(s.Title, clean)))
+        {
+            Error("Story name already exists");
+            return;
+        }
+
+        Dialogs.Close(new Story
+        {
+            Id = -1,
+            Title = clean,
+            Synopsis = synopsis ?? "",
+            ChapterCount = chapters,
+            ModelId = model,
+            Style = "",
+            Theme = DefaultSystemMessage,
+            WorldFacts = "",
+        });
+    }
+}

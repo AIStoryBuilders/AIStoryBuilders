@@ -1,0 +1,40 @@
+<Project Sdk="Microsoft.NET.Sdk.BlazorWebAssembly">
+
+  <PropertyGroup>
+    <TargetFramework>net11.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <OverrideHtmlAssetPlaceholders>true</OverrideHtmlAssetPlaceholders>
+    <!-- Keep real framework error text. Trimming would otherwise show resource keys such as Arg_NullReferenceException in toasts and the log. -->
+    <UseSystemResourceKeys>false</UseSystemResourceKeys>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly" Version="11.0.0" />
+    <PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly.DevServer" Version="11.0.0" PrivateAssets="all" />
+    <PackageReference Include="Blazored.LocalStorage" Version="4.5.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\AIStoryBuildersV2.Shared\AIStoryBuildersV2.Shared.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- R11/R14: libraries that rely on reflection are kept whole when trimming (checked by the T18 published smoke test). -->
+    <TrimmerRootAssembly Include="YamlDotNet" />
+    <TrimmerRootAssembly Include="Microsoft.Extensions.AI" />
+    <TrimmerRootAssembly Include="Microsoft.Extensions.AI.Abstractions" />
+    <TrimmerRootAssembly Include="Newtonsoft.Json" />
+    <TrimmerRootAssembly Include="Xceed.Document.NET" />
+    <TrimmerRootAssembly Include="Xceed.Words.NET" />
+    <TrimmerRootAssembly Include="Xceed.Drawing.NET" />
+    <TrimmerRootAssembly Include="UglyToad.PdfPig" />
+    <TrimmerRootAssembly Include="OpenAI" />
+  </ItemGroup>
+
+  <!-- IIS / Azure App Service settings: a web.config in the project replaces the SDK's generated one, but is not published by default (same as Online). -->
+  <Target Name="CopyWebConfigToPublish" AfterTargets="Publish">
+    <Copy SourceFiles="$(MSBuildProjectDirectory)\web.config" DestinationFolder="$(PublishDir)" />
+  </Target>
+
+</Project>

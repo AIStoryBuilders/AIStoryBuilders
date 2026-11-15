@@ -1,0 +1,46 @@
+@* Shows the services' progress messages as Info toasts (UI-Behavior-Spec §0.3, V1 Index.razor:437-461). *@
+@using AIStoryBuildersV2.Shared.AI
+@implements IDisposable
+@inject AIStoryBuildersService Svc
+@inject OrchestratorMethods Orch
+@inject NotificationService Notify
+
+@code {
+    // Orchestrator messages still on screen, so they can be closed when their step ends. Touched only on the renderer.
+    readonly Dictionary<OrchestratorMethods.ReadTextEventArgs, NotificationMessage> _open = new();
+
+    protected override void OnInitialized()
+    {
+        Svc.TextEvent += OnText;
+        Orch.ReadTextEvent += OnReadText;
+        Orch.ReadTextEnded += OnReadTextEnded;
+    }
+
+    void OnText(object? sender, AIStoryBuildersService.TextEventArgs e) =>
+        _ = InvokeAsync(() => Notify.Notify(Message(e.Message, e.DisplayLength)));
+
+    void OnReadText(object? sender, OrchestratorMethods.ReadTextEventArgs e) =>
+        _ = InvokeAsync(() =>
+        {
+            var message = Message(e.Message, e.DisplayLength);
+            _open[e] = message;
+            Notify.Notify(message);
+        });
+
+    // The step is over: close its message now instead of waiting out its display time.
+    void OnReadTextEnded(object? sender, OrchestratorMethods.ReadTextEventArgs e) =>
+        _ = InvokeAsync(() =>
+        {
+            if (_open.Remove(e, out var message)) Notify.Messages.Remove(message);
+        });
+
+    static NotificationMessage Message(string text, int seconds) =>
+        new() { Severity = NotificationSeverity.Info, Summary = "", Detail = text, Duration = seconds * 1000 };
+
+    public void Dispose()
+    {
+        Svc.TextEvent -= OnText;
+        Orch.ReadTextEvent -= OnReadText;
+        Orch.ReadTextEnded -= OnReadTextEnded;
+    }
+}

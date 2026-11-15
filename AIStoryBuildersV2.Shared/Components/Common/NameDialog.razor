@@ -1,0 +1,74 @@
+@using AIStoryBuildersV2.Shared.Knowledge
+@inject DialogService Dialogs
+
+<RadzenTemplateForm TItem="NameModel" Data="@model" Submit="@Submit">
+    <div style="display:flex;flex-direction:column;gap:6px">
+        <label class="kgb-lbl" for="kgb-name">@Label</label>
+        <RadzenTextBox id="kgb-name" Name="Name" Value="@model.Name" @oninput="@OnInput"
+                       Style="width:100%" aria-invalid="@(error is not null ? "true" : "false")" aria-describedby="kgb-name-help" autofocus />
+        @if (error is not null)
+        {
+            <div class="kgb-err" id="kgb-name-help" role="alert"><span class="mi s16" aria-hidden="true">error</span>@error</div>
+        }
+        else if (!string.IsNullOrEmpty(Help))
+        {
+            <div class="kgb-help" id="kgb-name-help"><span class="mi s16" aria-hidden="true">info</span>@Help</div>
+        }
+        <div class="kgb-help">@model.Name.Length / @MaxLength</div>
+    </div>
+    <div class="row" style="justify-content:flex-end;margin-top:16px">
+        <RadzenButton Text="Cancel" Variant="Variant.Outlined" ButtonStyle="ButtonStyle.Base" Click="@(() => Dialogs.Close(null))" />
+        <RadzenButton ButtonType="ButtonType.Submit" Text="@OkText" ButtonStyle="ButtonStyle.Primary" Disabled="@(error is not null || string.IsNullOrWhiteSpace(model.Name))" />
+    </div>
+</RadzenTemplateForm>
+
+@code {
+    public sealed class NameModel { public string Name { get; set; } = ""; }
+
+    [Parameter] public string Label { get; set; } = "Name";
+    [Parameter] public string? Initial { get; set; }
+    [Parameter] public string OkText { get; set; } = "Create";
+    [Parameter] public string? Help { get; set; }
+    [Parameter] public bool IsPage { get; set; }
+
+    /// <summary>Existing sibling names (with .md for pages), compared case-insensitively.</summary>
+    [Parameter] public IReadOnlyCollection<string> Siblings { get; set; } = [];
+
+    /// <summary>The current name when renaming; matching it isn't a duplicate.</summary>
+    [Parameter] public string? Unchanged { get; set; }
+    [Parameter] public int MaxLength { get; set; } = 120;
+
+    readonly NameModel model = new();
+    string? error;
+
+    protected override void OnInitialized()
+    {
+        model.Name = Initial ?? "";
+        if (model.Name.Length > 0) Validate();
+    }
+
+    void OnInput(ChangeEventArgs e)
+    {
+        model.Name = e.Value?.ToString() ?? "";
+        Validate();
+    }
+
+    void Validate()
+    {
+        var name = model.Name.Trim();
+        if (name.Length == 0) { error = null; return; }
+        if (name.Contains('/') || name.Contains('\\')) { error = "Names can't contain '/' or '\\'."; return; }
+        var file = IsPage && !name.EndsWith(".md", StringComparison.OrdinalIgnoreCase) ? name + ".md" : name;
+        error = KnowledgePath.ValidateSegment(model.Name.Length > name.Length && model.Name.EndsWith(' ') ? model.Name : file);
+        if (error is null && name.Length > MaxLength) error = $"The name is longer than {MaxLength} characters.";
+        if (error is null && !string.Equals(file, Unchanged, StringComparison.OrdinalIgnoreCase)
+            && Siblings.Contains(file, StringComparer.OrdinalIgnoreCase))
+            error = $"'{name}' already exists in this folder.";
+    }
+
+    void Submit(NameModel m)
+    {
+        Validate();
+        if (error is null && !string.IsNullOrWhiteSpace(model.Name)) Dialogs.Close(model.Name.Trim());
+    }
+}

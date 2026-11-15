@@ -1,0 +1,54 @@
+@* Character background (UI-Behavior-Spec §13.3). Returns the edited entry; Id 0 means "delete". *@
+@inject AIStoryBuildersService Svc
+@inject DialogService Dialogs
+@inject NotificationService Notify
+
+<div class="asb-field">
+    <label for="cb-desc">Description:</label>
+    <RadzenTextArea id="cb-desc" Rows="2" MaxLength="100" @bind-Value="Background.Description" Style="width:100%" />
+</div>
+<div class="asb-field">
+    <label for="cb-tl">Timeline:</label>
+    <RadzenDropDown id="cb-tl" TValue="string" Data="@timelines" @bind-Value="selected" Style="width:100%" />
+</div>
+<div class="asb-dialog-actions">
+    @if (Background.Id > 0)
+    {
+        <RadzenButton Text="Delete" Icon="delete" ButtonStyle="ButtonStyle.Danger" Click="DeleteAsync" />
+    }
+    <RadzenButton Text="Save" Icon="save" ButtonStyle="ButtonStyle.Success" Click="Save" />
+</div>
+
+@code {
+    [Parameter, EditorRequired] public CharacterBackground Background { get; set; } = default!;
+    [Parameter, EditorRequired] public Story Story { get; set; } = default!;
+
+    List<string> timelines = [];
+    string selected = "";
+
+    protected override void OnInitialized()
+    {
+        timelines = [""];
+        timelines.AddRange(Svc.GetTimelines(Story).Select(t => t.TimelineName));
+        selected = Background.Timeline?.TimelineName ?? "";
+    }
+
+    void Save()
+    {
+        if (string.IsNullOrWhiteSpace(Background.Description))
+        {
+            Notify.Notify(NotificationSeverity.Error, "Error", "Description is required", 4000);
+            return;
+        }
+        Background.Description = Background.Description.Replace("|", "");
+        Background.Timeline = string.IsNullOrEmpty(selected) ? null : new Timeline { TimelineName = selected };
+        Dialogs.Close(Background);
+    }
+
+    async Task DeleteAsync()
+    {
+        if (await Dialogs.Confirm("Are you sure?", "Delete Background", new ConfirmOptions { OkButtonText = "Yes", CancelButtonText = "No" }) != true) return;
+        Background.Id = 0;
+        Dialogs.Close(Background);
+    }
+}

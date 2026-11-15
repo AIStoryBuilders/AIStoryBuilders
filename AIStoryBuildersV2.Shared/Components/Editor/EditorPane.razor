@@ -1,0 +1,482 @@
+@implements IAsyncDisposable
+@inject DialogService Dialogs
+@inject NotificationService Notify
+@inject BrowserInterop Browser
+@inject IHostCapabilities Host
+@inject ICurrentStoryKnowledgeBase CurKb
+
+<section class="kgb-pane" aria-label="Editor">
+    @if (Path is null && KbEmpty)
+    {
+        <div class="kgb-empty">
+            <div class="kgb-eic"><span class="mi s40" aria-hidden="true">menu_book</span></div>
+            <div style="font-weight:500;font-size:15px;color:var(--tx)">This story's knowledge base is empty</div>
+            <div class="sm t2" style="max-width:420px;text-align:center">Pages you add here are for reference. They are separate from the story's characters, locations and timelines.</div>
+            <div class="row">
+                <RadzenButton Text="Create first page" Icon="note_add" ButtonStyle="ButtonStyle.Primary" Click="@(() => OnCreatePage.InvokeAsync(""))" />
+            </div>
+        </div>
+    }
+    else if (Path is null)
+    {
+        <div class="kgb-empty">
+            <div class="kgb-eic"><span class="mi s40" aria-hidden="true">description</span></div>
+            <div style="font-weight:500;font-size:15px;color:var(--tx)">Select a page or create one</div>
+            <div class="row">
+                <RadzenButton Text="New page" Icon="note_add" ButtonStyle="ButtonStyle.Primary" Click="@(() => OnCreatePage.InvokeAsync(""))" />
+            </div>
+            <div class="kgb-sct">
+                <span class="kbd">Ctrl+S</span><span>Save</span>
+                <span class="kbd">F2</span><span>Rename in the tree</span>
+                <span class="kbd">Del</span><span>Delete in the tree</span>
+            </div>
+        </div>
+    }
+    else if (loading)
+    {
+        <div class="kgb-eh"><div class="kgb-sk" style="width:180px;height:16px"></div></div>
+        <div style="padding:16px;display:flex;flex-direction:column;gap:12px" aria-busy="true">
+            <div class="kgb-sk" style="width:100%;height:60px"></div>
+            @for (var i = 0; i < 8; i++) { <div class="kgb-sk" style="width:@(50 + (i * 17) % 45)%"></div> }
+        </div>
+    }
+    else
+    {
+        <div class="kgb-eh">
+            <div class="grow" style="display:flex;flex-direction:column;min-width:0">
+                <div class="row" style="gap:6px;min-width:0">
+                    <h1 class="kgb-etitle" style="margin:0">@Title</h1>
+                    @if (IsDirty) { <span class="dot" title="Unsaved changes"></span><span class="sr-only">Unsaved changes</span> }
+                    @if (yamlError is not null)
+                    {
+                        <span class="bdg b-wa" title="@yamlError"><span class="mi" aria-hidden="true">warning</span>Invalid YAML</span>
+                    }
+                </div>
+                <div class="kgb-crumb" title="@Path">@Crumb</div>
+            </div>
+            <RadzenSelectBar TValue="ViewMode" Value="@mode" ValueChanged="@SetModeAsync" Size="ButtonSize.Small" aria-label="Editor mode">
+                <Items>
+                    <RadzenSelectBarItem Text="Design" Value="ViewMode.Design" Icon="edit_note" />
+                    <RadzenSelectBarItem Text="Source" Value="ViewMode.Source" Icon="code" />
+                    <RadzenSelectBarItem Text="Preview" Value="ViewMode.Preview" Icon="visibility" />
+                </Items>
+            </RadzenSelectBar>
+            <RadzenButton Text="Revert" Icon="undo" Variant="Variant.Outlined" ButtonStyle="ButtonStyle.Base" Size="ButtonSize.Small" Disabled="@(!IsDirty || notFound)" Click="@RevertAsync" />
+            <RadzenButton Text="Save" Icon="save" ButtonStyle="ButtonStyle.Primary" Size="ButtonSize.Small" Disabled="@(saving || (!IsDirty && !notFound))" Click="@(() => SaveAsync())" title="Save (Ctrl+S)" />
+        </div>
+
+        <div class="kgb-editor-body">
+            @if (notFound)
+            {
+                <div class="kgb-callout wa" role="alert" style="margin-top:10px">
+                    <span class="mi" aria-hidden="true">warning</span>
+                    <div class="grow">This page no longer exists. Your text is still here; save it as a new page to keep it.</div>
+                    <RadzenButton Text="Save as new page" Size="ButtonSize.Small" ButtonStyle="ButtonStyle.Primary" Click="@SaveAsNewAsync" />
+                    <RadzenButton Text="Close" Size="ButtonSize.Small" Variant="Variant.Outlined" ButtonStyle="ButtonStyle.Base" Click="@CloseAsync" />
+                </div>
+            }
+            else if (changedElsewhere)
+            {
+                <div class="kgb-callout in" role="status" style="margin-top:10px">
+                    <span class="mi" aria-hidden="true">sync</span>
+                    <div class="grow">This page changed @(Host.IsBrowser ? "" : "elsewhere ")while you were editing. Saving will ask what to keep.</div>
+                </div>
+            }
+
+            @if (mode != ViewMode.Preview)
+            {
+                <div class="kgb-propbox">
+                    <button class="kgb-prophd" @onclick="@(() => propsOpen = !propsOpen)" aria-expanded="@(propsOpen ? "true" : "false")">
+                        <span class="mi s16" aria-hidden="true">@(propsOpen ? "expand_more" : "chevron_right")</span>
+                        Properties
+                        @if (yaml is null) { <span class="xs t3">(none)</span> }
+                    </button>
+                    @if (propsOpen)
+                    {
+                        <div style="padding:0 8px 8px">
+                            <RadzenTextArea Value="@(yaml ?? "")" @oninput="@OnYamlInput" Rows="@Math.Max(3, (yaml ?? "").Split('\n').Length + 1)"
+                                            class="kgb-yaml" aria-label="Front-matter YAML" spellcheck="false" Placeholder="title: My page" />
+                            @if (yamlError is not null)
+                            {
+                                <div class="kgb-err"><span class="mi s16" aria-hidden="true">warning</span>@yamlError. Saving is still allowed; the graph ignores these properties.</div>
+                            }
+                        </div>
+                    }
+                </div>
+            }
+
+            @switch (mode)
+            {
+                case ViewMode.Design:
+                    <div class="kgb-md">
+                        <RadzenMarkdownEditor @key="@editorKey" Value="@editorValue" ValueChanged="@OnBodyChanged" Immediate="true" Style="height:100%;min-height:360px" />
+                    </div>
+                    break;
+                case ViewMode.Source:
+                    <RadzenTextArea Value="@body" @oninput="@OnSourceInput" class="kgb-source" Rows="22" spellcheck="false" aria-label="Markdown source" />
+                    break;
+                default:
+                    <div class="kgb-preview">@((MarkupString)PreviewHtml())</div>
+                    break;
+            }
+
+            @if (!notFound)
+            {
+                <LinksPanel Path="@Path" OnCreate="@(target => OnCreatePage.InvokeAsync(target))" OnShowInGraph="@(p => OnShowInGraph.InvokeAsync(p))" />
+            }
+        </div>
+    }
+</section>
+
+@code {
+    /// <summary>The open story's KB (D13), captured on first use so disposal still reaches it after the workspace clears it.</summary>
+    IStoryKnowledgeBase? kb;
+    IStoryKnowledgeBase Kb => kb ??= CurKb.Current ?? throw new InvalidOperationException("No story knowledge base is open.");
+    IKnowledgeWorkspace Workspace => Kb.Workspace;
+    IKnowledgeGraphIndex Graph => Kb.Graph;
+    WorkspaceState State => Kb.State;
+
+    public enum ViewMode { Design, Source, Preview }
+
+    /// <summary>
+    /// The default editing mode (D1). The T3 check showed Radzen 12.1.9 keeps [[links]] and code spans in Design mode;
+    /// the only loss was the final newline, which <see cref="OnBodyChanged"/> restores. Source stays one click away (R1).
+    /// </summary>
+
+    [Parameter] public string? Path { get; set; }
+    [Parameter] public EventCallback<string> OnCreatePage { get; set; }
+    [Parameter] public EventCallback<string?> OnNavigate { get; set; }
+    [Parameter] public EventCallback<string> OnShowInGraph { get; set; }
+
+    /// <summary>The story's KB has no pages: the empty state offers "Create first page" (plan §5.6).</summary>
+    [Parameter] public bool KbEmpty { get; set; }
+
+    string? loadedPath;
+    long ticks;
+    string original = "";
+    string? yaml;
+    string body = "";
+    string? yamlError;
+    string? frontTitle;
+    ViewMode mode = ViewMode.Design;   // per instance (plan §5.7); KGB kept a static default
+    bool loading;
+    bool saving;
+    bool notFound;
+    bool changedElsewhere;
+    bool propsOpen = true;
+    int editorKey;
+    // What the Markdown editor was created with. It changes only with editorKey: passing the live body back would differ
+    // from the editor's own value (we restore the final newline) and make it reset its content and caret.
+    string editorValue = "";
+    DotNetObjectReference<EditorPane>? self;
+
+    string Compose() => FrontMatter.Join(yaml, mode == ViewMode.Design ? EditorSanitizer.UnescapeWikiLinks(body) : body);
+
+    public bool IsDirty => loadedPath is not null && Compose() != original;
+
+    string Title => frontTitle ?? MarkdownPageParser.DefaultTitle(Path ?? "");
+
+    string Crumb => string.Join(" › ", (Path ?? "").Split('/'));
+
+    protected override void OnInitialized()
+    {
+        Workspace.Changed += OnWorkspaceChanged;
+        State.SaveCurrentAsync = () => SaveAsync();
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            self = DotNetObjectReference.Create(this);
+            try { await Browser.RegisterShortcutsAsync(self); }
+            catch (JSException) { }
+            catch (InvalidOperationException) { }
+        }
+    }
+
+    protected override async Task OnParametersSetAsync()
+    {
+        if (Path == loadedPath) return;
+        if (Path is null)
+        {
+            Clear();
+            return;
+        }
+        await LoadAsync(Path);
+    }
+
+    void Clear()
+    {
+        if (loadedPath is not null) State.SetUnsaved(loadedPath, false);
+        loadedPath = null;
+        notFound = false;
+        changedElsewhere = false;
+        _ = Browser.SetUnsavedAsync(State.HasUnsaved).AsTask().ContinueWith(_ => { });
+    }
+
+    async Task LoadAsync(string path)
+    {
+        if (loadedPath is not null && loadedPath != path) State.SetUnsaved(loadedPath, false);
+        loading = true;
+        notFound = false;
+        changedElsewhere = false;
+        try
+        {
+            var page = await Workspace.ReadPageAsync(path);
+            Apply(page);
+        }
+        catch (KnowledgeNotFoundException)
+        {
+            loadedPath = path;
+            original = "";
+            yaml = null;
+            body = "";
+            notFound = true;
+            Notify.Notify(NotificationSeverity.Warning, "Page not found", $"{path} doesn't exist.", TimeSpan.FromSeconds(6));
+        }
+        catch (KnowledgeException ex)
+        {
+            loadedPath = path;
+            PageCommands.ShowError(Notify, ex);
+        }
+        finally
+        {
+            loading = false;
+        }
+        UpdateUnsaved();
+    }
+
+    void Apply(PageContent page)
+    {
+        loadedPath = page.Path;
+        ticks = page.ModifiedTicks;
+        original = page.Markdown;
+        (yaml, body) = FrontMatter.Split(page.Markdown);
+        ParseYaml();
+        ResetEditor();
+        changedElsewhere = false;
+    }
+
+    void ResetEditor()
+    {
+        editorValue = body;
+        editorKey++;
+    }
+
+    void ParseYaml()
+    {
+        var data = FrontMatter.Parse(yaml, out yamlError);
+        frontTitle = data.Title;
+    }
+
+    void OnYamlInput(ChangeEventArgs e)
+    {
+        var text = (e.Value?.ToString() ?? "").Replace("\r\n", "\n").TrimEnd('\n');
+        yaml = text.Length == 0 && FrontMatter.Split(original).Yaml is null ? null : text;
+        ParseYaml();
+        UpdateUnsaved();
+    }
+
+    void OnSourceInput(ChangeEventArgs e)
+    {
+        body = (e.Value?.ToString() ?? "").Replace("\r\n", "\n");
+        UpdateUnsaved();
+    }
+
+    void OnBodyChanged(string value)
+    {
+        value ??= "";
+        // The Markdown editor drops or adds final newlines; keep the file's ending as it was (one newline or none).
+        var originalBody = FrontMatter.Split(original).Body;
+        value = value.TrimEnd('\n');
+        if (originalBody.EndsWith('\n')) value += "\n";
+        body = value;
+        UpdateUnsaved();
+    }
+
+    async Task SetModeAsync(ViewMode next)
+    {
+        if (mode == ViewMode.Design) body = EditorSanitizer.UnescapeWikiLinks(body);
+        mode = next;
+        ResetEditor();
+        await Task.CompletedTask;
+    }
+
+    void UpdateUnsaved()
+    {
+        if (loadedPath is null) return;
+        State.SetUnsaved(loadedPath, IsDirty);
+        _ = Browser.SetUnsavedAsync(State.HasUnsaved).AsTask().ContinueWith(_ => { });
+    }
+
+    [JSInvokable]
+    public async Task OnShortcut(string name)
+    {
+        if (name == "save") await InvokeAsync(async () => { await SaveAsync(); StateHasChanged(); });
+    }
+
+    /// <summary>Saves the page. Returns true when saved (or nothing to save).</summary>
+    public async Task<bool> SaveAsync(long? overrideTicks = null)
+    {
+        if (loadedPath is null || saving) return true;
+        if (notFound) { await SaveAsNewAsync(); return false; }
+        if (!IsDirty && overrideTicks is null) return true;
+
+        saving = true;
+        var markdown = Compose();
+        try
+        {
+            var result = await Workspace.SavePageAsync(loadedPath, markdown, overrideTicks ?? ticks);
+            switch (result.Status)
+            {
+                case SaveStatus.Saved or SaveStatus.Created:
+                    ticks = result.ModifiedTicks;
+                    original = markdown;
+                    if (mode == ViewMode.Design) body = FrontMatter.Split(markdown).Body;
+                    changedElsewhere = false;
+                    UpdateUnsaved();
+                    Notify.Notify(NotificationSeverity.Success, "Saved", "", TimeSpan.FromSeconds(2));
+                    return true;
+                case SaveStatus.Conflict:
+                    saving = false;
+                    return await ResolveConflictAsync(result.ModifiedTicks);
+                default:
+                    Notify.Notify(NotificationSeverity.Warning, "Not saved", result.Message ?? "", TimeSpan.FromSeconds(6));
+                    return false;
+            }
+        }
+        catch (KnowledgeNotFoundException)
+        {
+            notFound = true;
+            return false;
+        }
+        catch (KnowledgeException ex)
+        {
+            PageCommands.ShowError(Notify, ex);
+            return false;
+        }
+        finally
+        {
+            saving = false;
+            StateHasChanged();
+        }
+    }
+
+    async Task<bool> ResolveConflictAsync(long currentTicks)
+    {
+        if (!await Workspace.ExistsAsync(loadedPath!))
+        {
+            notFound = true;
+            return false;
+        }
+        switch (await Dialogs.AskConflictAsync(loadedPath!, Host.IsBrowser))
+        {
+            case ConflictChoice.Overwrite:
+                var latest = await Workspace.ReadPageAsync(loadedPath!);
+                return await SaveAsync(latest.ModifiedTicks);
+            case ConflictChoice.Reload:
+                Apply(await Workspace.ReadPageAsync(loadedPath!));
+                UpdateUnsaved();
+                return true;
+            default:
+                return false;
+        }
+    }
+
+    async Task RevertAsync()
+    {
+        if (loadedPath is null) return;
+        try
+        {
+            Apply(await Workspace.ReadPageAsync(loadedPath));
+            UpdateUnsaved();
+        }
+        catch (KnowledgeNotFoundException) { notFound = true; }
+    }
+
+    /// <summary>Drops unsaved edits (used by the unsaved-changes prompt).</summary>
+    public void Discard()
+    {
+        if (loadedPath is null) return;
+        (yaml, body) = FrontMatter.Split(original);
+        ParseYaml();
+        ResetEditor();
+        UpdateUnsaved();
+    }
+
+    async Task SaveAsNewAsync()
+    {
+        var folder = LinkResolver.FolderOf(loadedPath ?? "");
+        var name = MarkdownPageParser.DefaultTitle(loadedPath ?? "");
+        var path = await PageCommands.CreatePageAsync(Dialogs, Workspace, Notify, folder, name, Compose());
+        if (path is null) return;
+        State.SetUnsaved(loadedPath!, false);
+        // Saved back to the same path: the URL doesn't change, so nothing would reload the editor.
+        if (string.Equals(path, Path, StringComparison.OrdinalIgnoreCase))
+        {
+            await LoadAsync(path);
+            return;
+        }
+        loadedPath = null;
+        await OnNavigate.InvokeAsync(path);
+    }
+
+    async Task CloseAsync()
+    {
+        if (loadedPath is not null) State.SetUnsaved(loadedPath, false);
+        loadedPath = null;
+        notFound = false;
+        await OnNavigate.InvokeAsync(null);
+    }
+
+    string PreviewHtml()
+    {
+        var snapshot = Graph.Snapshot;
+        var source = loadedPath ?? "";
+        return SafeMarkdown.ForPreview(Compose(), Kb.Links,
+            target => LinkResolver.ResolveWiki(snapshot.Directory, source, target)?.Path,
+            url => LinkResolver.ResolveMarkdown(snapshot.Directory, source, url),
+            source);
+    }
+
+    void OnWorkspaceChanged(KnowledgeChange change) => _ = InvokeAsync(async () =>
+    {
+        if (loadedPath is null) return;
+        // A rename or move rewrites links in other pages and raises one change for all of them, so this page may have changed.
+        var relocated = change.Kind is ChangeKind.Renamed or ChangeKind.Moved;
+        if (relocated && change.OldPath is not null
+            && (string.Equals(change.OldPath, loadedPath, StringComparison.OrdinalIgnoreCase) || loadedPath.StartsWith(change.OldPath + "/", StringComparison.OrdinalIgnoreCase)))
+            return; // This page moved itself: the explorer navigates to the new path.
+
+        var affects = relocated
+            || string.Equals(change.Path, loadedPath, StringComparison.OrdinalIgnoreCase)
+            || change.Kind == ChangeKind.Reloaded
+            || (change.Kind == ChangeKind.Deleted && loadedPath.StartsWith(change.Path + "/", StringComparison.OrdinalIgnoreCase));
+        if (!affects) { StateHasChanged(); return; }
+
+        PageContent page;
+        try { page = await Workspace.ReadPageAsync(loadedPath); }
+        catch (KnowledgeNotFoundException)
+        {
+            notFound = true;
+            StateHasChanged();
+            return;
+        }
+        if (page.ModifiedTicks == ticks) return;
+        if (IsDirty) changedElsewhere = true;
+        else Apply(page);
+        StateHasChanged();
+    });
+
+    public async ValueTask DisposeAsync()
+    {
+        Workspace.Changed -= OnWorkspaceChanged;
+        if (State.SaveCurrentAsync is not null) State.SaveCurrentAsync = null;
+        // Ctrl+S has one global target; leave none behind for a disposed editor.
+        try { await Browser.RegisterShortcutsAsync<EditorPane>(null); }
+        catch (JSDisconnectedException) { }
+        catch (JSException) { }
+        self?.Dispose();
+    }
+}

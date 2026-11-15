@@ -1,0 +1,291 @@
+@* The Chapters tab: chapter outline, the manuscript paper and the paragraph editor (UI-Behavior-Spec §14, ManuscriptEditor.dc.html). *@
+@inject AIStoryBuildersService Svc
+@inject DialogService Dialogs
+@inject NotificationService Notify
+@inject BrowserInterop Interop
+@inject LogService Log
+
+<div class="asb-work">
+    <aside class="asb-outline" aria-label="Chapter outline">
+        <div class="asb-o-head"><b>Chapter outline</b><span class="asb-o-auto"><span class="mi s14" aria-hidden="true">auto_awesome</span>Auto-detected</span></div>
+        <div class="asb-o-select">
+            <label for="o-chap">Chapters</label>
+            <RadzenDropDown id="o-chap" TValue="int" Data="@chapters.Select(c => new ChapterOption(c.Sequence, DropdownText(c)))" TextProperty="Text" ValueProperty="Sequence"
+                            Value="@(selected?.Sequence ?? 0)" ValueChanged="@((int s) => SelectChapterAsync(s))" Disabled="busy" Style="width:100%" />
+        </div>
+        @if (selected is not null)
+        {
+            <div class="asb-o-banner">
+                @(paragraphs.Count == 0
+                    ? "No paragraphs detected in this chapter yet. Add one to begin."
+                    : $"This chapter breaks into {paragraphs.Count} paragraph(s). Select one to open the paragraph tools.")
+            </div>
+            <div class="asb-tree">
+                <div class="asb-node asb-n-chap @(selectedSequence == 0 ? "sel" : "")">
+                    <button class="asb-lbl" @onclick="SelectHeaderAsync"><span class="mi s16" aria-hidden="true">menu_book</span><span class="asb-ntxt">@DropdownText(selected)</span></button>
+                </div>
+                @if (paragraphs.Count == 0)
+                {
+                    <div class="asb-o-empty">No paragraphs yet in this chapter.</div>
+                }
+                @foreach (var p in paragraphs)
+                {
+                    <div class="asb-node asb-n-para @(selectedSequence == p.Sequence ? "sel" : "")">
+                        <button class="asb-lbl" @onclick="@(() => SelectSectionAsync(p.Sequence, scroll: true))">
+                            <span class="asb-pmark">§</span><span class="asb-ntxt">Section @p.Sequence · @FirstWords(p.ParagraphContent)</span>
+                        </button>
+                        <button class="asb-mng" aria-label="Edit this paragraph" title="Edit this paragraph" @onclick="@(() => EditAsync(p))"><span class="mi s16">edit</span></button>
+                    </div>
+                }
+            </div>
+        }
+    </aside>
+
+    <section class="asb-doc">
+        <div class="asb-paper">
+            @if (loading)
+            {
+                <RadzenProgressBar Value="100" ShowValue="false" Mode="ProgressBarMode.Indeterminate" />
+            }
+            else if (selected is null)
+            {
+                <div class="asb-empty-chap">
+                    <p>This story has no chapters yet.</p>
+                    <RadzenButton Text="New Chapter" Icon="add" ButtonStyle="ButtonStyle.Success" Click="NewChapterAsync" />
+                </div>
+            }
+            else
+            {
+                <div class="asb-chap-head" id="asb-chap-head">
+                    <div class="asb-cnum">@selected.ChapterName</div>
+                    <h2>@ChapterTitle(selected)</h2>
+                    <div class="asb-chap-tools">
+                        <RadzenButton Text="New Chapter" Icon="add" ButtonStyle="ButtonStyle.Success" Size="ButtonSize.Small" Disabled="busy" Click="NewChapterAsync" />
+                        <RadzenButton Text="Save" Icon="save" ButtonStyle="ButtonStyle.Success" Size="ButtonSize.Small" Disabled="busy" Click="SaveChapterAsync" />
+                        <RadzenButton Icon="note_add" ButtonStyle="ButtonStyle.Success" Size="ButtonSize.Small" Disabled="busy" Click="InsertChapterAsync"
+                                      title="Insert chapter before" aria-label="Insert chapter before" />
+                        @if (chapters.Count > 1)
+                        {
+                            <RadzenButton Text="Delete" Icon="delete" ButtonStyle="ButtonStyle.Danger" Size="ButtonSize.Small" Disabled="busy" Click="DeleteChapterAsync" />
+                        }
+                    </div>
+                    <label class="asb-syn-l" for="chap-syn">Synopsis</label>
+                    <RadzenTextArea id="chap-syn" class="asb-syn" MaxLength="1000" Rows="2" Placeholder="Short chapter synopsis..." @bind-Value="selected.Synopsis" />
+                </div>
+
+                @if (busy)
+                {
+                    <RadzenProgressBar Value="100" ShowValue="false" Mode="ProgressBarMode.Indeterminate" />
+                }
+                @if (paragraphs.Count == 0)
+                {
+                    <div class="asb-empty-chap">
+                        <p>This chapter has no paragraphs yet.</p>
+                        <RadzenButton Text="Add first paragraph" Icon="add" ButtonStyle="ButtonStyle.Success" Click="AddFirstAsync" />
+                    </div>
+                }
+                @foreach (var p in paragraphs)
+                {
+                    <div id="@($"asb-sec-{p.Sequence}")" class="asb-para @(selectedSequence == p.Sequence ? "sel" : "")"
+                         @onclick="@(() => SelectSectionAsync(p.Sequence, scroll: false))" @ondblclick="@(() => EditAsync(p))">
+                        <span class="asb-para-badge">Section @p.Sequence</span>
+                        @if (selectedSequence == p.Sequence)
+                        {
+                            <span class="asb-stool">
+                                <button class="asb-edit-btn" @onclick="@(() => EditAsync(p))" @onclick:stopPropagation="true"><span class="mi s16" aria-hidden="true">edit</span>Edit section</button>
+                            </span>
+                        }
+                        <p>@p.ParagraphContent</p>
+                    </div>
+                }
+                @if (paragraphs.Count > 0)
+                {
+                    <div class="asb-add-end">
+                        <RadzenButton Text="Add section" Icon="add" ButtonStyle="ButtonStyle.Light" Size="ButtonSize.Small" Click="AddAtEndAsync" />
+                    </div>
+                }
+            }
+        </div>
+    </section>
+</div>
+
+@code {
+    [Parameter, EditorRequired] public Story Story { get; set; } = default!;
+
+    List<Chapter> chapters = [];
+    List<Paragraph> paragraphs = [];
+    Chapter? selected;
+    int selectedSequence;
+    bool loading = true;
+    bool busy;
+
+    protected override async Task OnInitializedAsync() => await LoadChaptersAsync(null);
+
+    /// <summary>V1's LoadChapters: keeps the current chapter when it still exists.</summary>
+    async Task LoadChaptersAsync(int? select)
+    {
+        loading = true;
+        try
+        {
+            chapters = Svc.GetChapters(Story);
+            var target = select ?? selected?.Sequence;
+            selected = chapters.FirstOrDefault(c => c.Sequence == target) ?? chapters.FirstOrDefault();
+            LoadParagraphs();
+        }
+        catch (Exception ex)
+        {
+            Fail(ex);
+        }
+        finally
+        {
+            loading = false;
+        }
+        await Task.CompletedTask;
+    }
+
+    void LoadParagraphs()
+    {
+        paragraphs = selected is null ? [] : Svc.GetParagraphs(selected);
+        if (selected is not null) selected.Paragraph = paragraphs;
+        if (paragraphs.All(p => p.Sequence != selectedSequence)) selectedSequence = paragraphs.FirstOrDefault()?.Sequence ?? 0;
+    }
+
+    void Fail(Exception ex)
+    {
+        Notify.Notify(NotificationSeverity.Error, "Error", ex.Message, 4000);
+        Log.WriteToLog(ex.Message);
+    }
+
+    static string ChapterTitle(Chapter c) => ChapterDisplay.Title(c);
+
+    record ChapterOption(int Sequence, string Text);
+
+    static string DropdownText(Chapter c) => ChapterDisplay.DropdownText(c);
+
+    static string FirstWords(string? text)
+    {
+        var words = (text ?? "").Split([' ', '\n', '\r', '\t'], StringSplitOptions.RemoveEmptyEntries);
+        return words.Length == 0 ? "(empty)" : string.Join(" ", words.Take(6)) + (words.Length > 6 ? "…" : "");
+    }
+
+    async Task SelectChapterAsync(int sequence)
+    {
+        selected = chapters.FirstOrDefault(c => c.Sequence == sequence);
+        selectedSequence = 0;
+        LoadParagraphs();
+        await SelectHeaderAsync();
+    }
+
+    async Task SelectHeaderAsync()
+    {
+        selectedSequence = 0;
+        try { await Interop.ScrollIntoViewAsync("#asb-chap-head"); } catch (Exception) { }
+    }
+
+    async Task SelectSectionAsync(int sequence, bool scroll)
+    {
+        selectedSequence = sequence;
+        if (scroll)
+        {
+            try { await Interop.ScrollIntoViewAsync($"#asb-sec-{sequence}", "nearest"); } catch (Exception) { }
+        }
+    }
+
+    async Task NewChapterAsync()
+    {
+        var number = chapters.Count + 1;
+        var chapter = new Chapter { ChapterName = $"Chapter {number}", Sequence = number, Synopsis = "", Story = Story };
+        var result = await Dialogs.OpenAsync<NewChapterDialog>($"Chapter {number}", new Dictionary<string, object?> { ["Chapter"] = chapter },
+            new DialogOptions { Width = "650px", CloseDialogOnEsc = true, ShowClose = true });
+        if (result is not Chapter created) return;
+        busy = true;
+        try
+        {
+            await Svc.AddChapterAsync(created, $"Chapter{number}");
+            await LoadChaptersAsync(number);
+        }
+        catch (Exception ex) { Fail(ex); }
+        finally { busy = false; }
+    }
+
+    async Task SaveChapterAsync()
+    {
+        if (selected is null) return;
+        busy = true;
+        try
+        {
+            selected.Story = Story;
+            await Svc.UpdateChapterAsync(selected);
+            Notify.Notify(NotificationSeverity.Success, "Update", "Saved", 2000);
+        }
+        catch (Exception ex) { Fail(ex); }
+        finally { busy = false; }
+    }
+
+    async Task InsertChapterAsync()
+    {
+        if (selected is null) return;
+        if (await Dialogs.Confirm("Are you sure?", "Add new Chapter before this Chapter", new ConfirmOptions { OkButtonText = "Yes", CancelButtonText = "No" }) != true) return;
+        busy = true;
+        try
+        {
+            var sequence = selected.Sequence;
+            selected.Story = Story;
+            Svc.RestructureChapters(selected, RestructureType.Add);
+            await Svc.InsertChapterAsync(new Chapter { ChapterName = $"Chapter{sequence}", Sequence = sequence, Synopsis = "New Chapter", Story = Story });
+            await LoadChaptersAsync(sequence);
+            Notify.Notify(NotificationSeverity.Success, "New Chapter", "Created", 2000);
+        }
+        catch (Exception ex) { Fail(ex); }
+        finally { busy = false; }
+    }
+
+    async Task DeleteChapterAsync()
+    {
+        if (selected is null) return;
+        if (await Dialogs.Confirm("Are you sure?", $"Delete {selected.ChapterName}?", new ConfirmOptions { OkButtonText = "Yes", CancelButtonText = "No" }) != true) return;
+        busy = true;
+        try
+        {
+            selected.Story = Story;
+            Svc.DeleteChapter(selected);
+            Svc.RestructureChapters(selected, RestructureType.Delete);
+            selected = null;
+            await LoadChaptersAsync(1);
+        }
+        catch (Exception ex) { Fail(ex); }
+        finally { busy = false; }
+    }
+
+    Task AddFirstAsync() => EditAsync(new Paragraph
+    {
+        Id = -1, Sequence = 1, ParagraphContent = "", Characters = [], Location = new Location { LocationName = "" }, Timeline = new Timeline { TimelineName = "" },
+    });
+
+    Task AddAtEndAsync()
+    {
+        var last = paragraphs.Last();
+        return EditAsync(new Paragraph
+        {
+            Id = -1, Sequence = last.Sequence + 1, ParagraphContent = "",
+            Characters = last.Characters.Select(c => new Character { CharacterName = c.CharacterName }).ToList(),
+            Location = new Location { LocationName = last.Location?.LocationName ?? "" },
+            Timeline = new Timeline { TimelineName = last.Timeline?.TimelineName ?? "" },
+        });
+    }
+
+    async Task EditAsync(Paragraph paragraph)
+    {
+        if (selected is null) return;
+        selected.Story = Story;
+        var result = await Dialogs.OpenAsync<ParagraphEditorDialog>(paragraph.Id == -1 ? "New Section" : $"Section {paragraph.Sequence}",
+            new Dictionary<string, object?> { ["Chapter"] = selected, ["Paragraph"] = paragraph, ["Story"] = Story },
+            new DialogOptions { Width = "760px", CloseDialogOnEsc = false, ShowClose = false, ShowTitle = false, AutoFocusFirstElement = false });
+        if (result is ParagraphEditorDialog.Outcome outcome)
+        {
+            LoadParagraphs();
+            selectedSequence = outcome.SelectSequence;
+            StateHasChanged();
+        }
+    }
+}

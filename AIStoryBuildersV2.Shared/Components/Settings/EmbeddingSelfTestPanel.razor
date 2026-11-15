@@ -1,0 +1,47 @@
+@* DEBUG only (plan §10, UI-Behavior-Spec §6.4): embeds the reference sentences and lists the cosine against V1's model. *@
+@using AIStoryBuildersV2.Shared.AI
+@using Microsoft.Extensions.AI
+@inject IEmbeddingGenerator<string, Embedding<float>> Embeddings
+
+@if (_references is not null)
+{
+    <div class="asb-panel">
+        <RadzenButton ButtonStyle="ButtonStyle.Light" Icon="science" Text="Embedding self-test" Click="RunAsync"
+                      IsBusy="_busy" BusyText="Loading the embedding model…" />
+        @if (_error is not null)
+        {
+            <div class="asb-note asb-err">@_error</div>
+        }
+        @foreach (var r in _results)
+        {
+            <div class="asb-note">@(r.Passed ? "Pass" : "FAIL") · @r.Cosine.ToString("0.0000") · “@r.Text”</div>
+        }
+    </div>
+}
+
+@code {
+    List<EmbeddingSelfTest.Reference>? _references;
+    List<EmbeddingSelfTest.Result> _results = [];
+    bool _busy;
+    string? _error;
+
+    protected override void OnInitialized() => _references = EmbeddingSelfTest.LoadEmbeddedReferences();
+
+    async Task RunAsync()
+    {
+        _busy = true;
+        _error = null;
+        try
+        {
+            _results = await EmbeddingSelfTest.RunAsync(Embeddings, _references!);
+        }
+        catch (Exception ex)
+        {
+            _error = ex.Message;
+        }
+        finally
+        {
+            _busy = false;
+        }
+    }
+}

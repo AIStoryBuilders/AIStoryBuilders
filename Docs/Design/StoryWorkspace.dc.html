@@ -1,0 +1,1351 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Story Workspace — Forgetting Baldur</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Newsreader:ital,wght@0,400;0,500;0,600;1,400&display=swap" rel="stylesheet">
+<style>
+  body { margin: 0; }
+  * { box-sizing: border-box; }
+  a { color: var(--accent); }
+
+  .topbar { flex: 0 0 auto; height: 60px; display: flex; align-items: center; gap: 12px;
+    padding: 0 20px; background: var(--panel); border-bottom: 1px solid var(--line); }
+  .brand { display: flex; align-items: center; gap: 10px; min-width: 0; }
+  .brand img { width: 32px; height: auto; display: block; flex: 0 0 auto; }
+  .ttl { display: flex; flex-direction: column; line-height: 1.12; min-width: 0; }
+  .ttl b { font-size: 15px; font-weight: 700; letter-spacing: -0.015em; white-space: nowrap; color: var(--ink); }
+  .ttl span { font-size: 11px; color: var(--muted); white-space: nowrap; }
+  .sp { flex: 1; }
+  .save { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; color: #216A47; font-weight: 500; }
+  .close-x { width: 34px; height: 34px; border: 1px solid var(--line); border-radius: 8px; background: #fff;
+    display: flex; align-items: center; justify-content: center; cursor: pointer; color: var(--ink); }
+  .close-x:hover { background: #f6f5fb; }
+
+  /* Radzen-style buttons */
+  .rz { height: 36px; padding: 0 15px; border-radius: 8px; border: 1px solid transparent; font: inherit;
+    font-size: 13px; font-weight: 600; display: inline-flex; align-items: center; gap: 8px; cursor: pointer; color:#fff; }
+  .rz:hover { filter: brightness(1.06); }
+  .rz-sm { height: 30px; padding: 0 12px; font-size: 12.5px; }
+  .rz-icon { width: 38px; padding: 0; justify-content: center; }
+  .rz-icon.rz-sm { width: 32px; }
+  .rz-light { background: #ECEBF0; color: #26222F; border-color: #ddd9e4; }
+  .rz-ai { background: #B45309; }
+  .rz-dark { background: #2C2A36; }
+  .rz-danger { background: #BE123C; }
+  .rz-success { background: #1F7A46; }
+  .rz-primary { background: var(--accent); }
+  .rz-warning { background: #B7791F; }
+  .rz-secondary { background: #51515f; }
+
+  /* tabs */
+  .tabs { flex: 0 0 auto; display: flex; gap: 2px; padding: 0 18px; background: var(--panel);
+    border-bottom: 1px solid var(--line); overflow-x: auto; }
+  .tab { position: relative; height: 46px; padding: 0 16px; border: none; background: none; font: inherit;
+    font-size: 13.5px; font-weight: 600; color: var(--muted); cursor: pointer; white-space: nowrap; }
+  .tab:hover { color: var(--ink); }
+  .tab.on { color: var(--accent); }
+  .tab.on::after { content: ''; position: absolute; left: 10px; right: 10px; bottom: -1px; height: 2.5px;
+    background: var(--accent); border-radius: 3px 3px 0 0; }
+
+  .page { flex: 1; min-height: 0; overflow-y: auto; padding: 0; }
+  .wrap { max-width: 860px; margin: 0 auto; padding: 26px 28px 70px; }
+  h3.sec { font-size: 18px; font-weight: 700; margin: 0 0 16px; color: var(--ink); letter-spacing: -0.01em; }
+
+  .field { display: flex; flex-direction: column; gap: 6px; margin-bottom: 15px; }
+  .field label { font-size: 12.5px; font-weight: 600; color: var(--ink); }
+  .ro { font-family: 'Newsreader', serif; font-size: 20px; font-weight: 600; color: var(--ink); padding: 2px 0; }
+  .field input, .field select, .field textarea { font: inherit; font-size: 13.5px; padding: 10px 12px;
+    border: 1px solid var(--line); border-radius: 9px; background: #fff; color: var(--ink); width: 100%; }
+  .field input:focus, .field select:focus, .field textarea:focus { outline: none; border-color: var(--accent);
+    box-shadow: 0 0 0 3px var(--accent-soft); }
+  .field textarea { resize: vertical; min-height: 84px; line-height: 1.55; }
+
+  .collapse { border: 1px solid var(--line); border-radius: 11px; margin-bottom: 12px; overflow: hidden; background:#fff; }
+  .collapse > button { width: 100%; display: flex; align-items: center; gap: 10px; background: #faf9fe; border: none;
+    font: inherit; font-size: 13.5px; font-weight: 600; color: var(--ink); padding: 13px 15px; cursor: pointer; }
+  .collapse > button:hover { background: #f4f2fb; }
+  .collapse .chev { transition: transform .15s; color: var(--muted); }
+  .collapse .cbody { padding: 14px 15px; border-top: 1px solid var(--line); }
+  .btn-row { display: flex; flex-wrap: wrap; gap: 9px; margin-top: 20px; }
+
+  /* entity list cards */
+  .ecard { display: flex; align-items: center; gap: 14px; background: #fff; border: 1px solid var(--line);
+    border-radius: 12px; padding: 12px 15px; margin-bottom: 10px; }
+  .ecard:hover { border-color: var(--accent-line); }
+  .emeta { font-size: 11.5px; color: var(--muted); }
+  .eline { flex: 1; min-width: 0; }
+  .eline b { font-family: 'Newsreader', serif; font-size: 17px; font-weight: 600; color: var(--ink); display:block; line-height:1.2; }
+  .avatar { width: 38px; height: 38px; border-radius: 50%; flex: 0 0 auto; display: flex; align-items: center;
+    justify-content: center; color: #fff; font-weight: 700; font-size: 14px; background: var(--accent); }
+
+  /* ---------- EDITOR (Chapters tab) ---------- */
+  .work { display: flex; flex-wrap: wrap; height: calc(100vh - 107px); min-height: 0; }
+  .doc { order: 2; flex: 999 1 480px; min-width: 0; overflow-y: auto; padding: 30px 22px 120px;
+    display: flex; justify-content: center; }
+  .paper { width: 100%; max-width: 720px; background: var(--paper); border: 1px solid var(--line);
+    border-radius: 14px; padding: 40px 54px 80px;
+    box-shadow: 0 1px 2px rgba(20,18,30,.04), 0 24px 50px -34px rgba(20,18,30,.28); }
+  .chap-head { border-bottom: 1px solid var(--line); padding-bottom: 20px; margin-bottom: 22px; }
+  .chap-head .cnum { font-family: 'Inter', sans-serif; text-transform: uppercase; letter-spacing: .24em;
+    font-size: 11px; color: var(--accent); font-weight: 600; }
+  .chap-head h2 { font-family: 'Newsreader', serif; font-weight: 500; font-size: 30px; margin: 5px 0 16px;
+    line-height: 1.12; color: var(--ink); letter-spacing: -0.01em; }
+  .chap-tools { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 16px; }
+  .syn-l { font-family: 'Inter', sans-serif; font-size: 11px; font-weight: 700; text-transform: uppercase;
+    letter-spacing: .12em; color: var(--muted); display: block; margin-bottom: 6px; }
+  .syn { font-family: 'Inter', sans-serif; font-size: 13px; width: 100%; min-height: 46px; resize: vertical;
+    border: 1px solid var(--line); border-radius: 9px; padding: 9px 11px; color: var(--ink); line-height: 1.5; }
+  .syn:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft); }
+  .para { position: relative; margin: 2px 0; padding: 10px 14px; border-radius: 10px; border: 1px solid transparent;
+    cursor: pointer; font-family: 'Newsreader', Georgia, serif; }
+  .para:hover { background: #faf8ff; }
+  .para.sel { background: #fff; border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft); }
+  .para p { font-size: 17px; line-height: 1.65; margin: 0; color: #272333; }
+  .para-badge { position: absolute; top: -9px; left: 12px; font-family: 'Inter', sans-serif; font-size: 10px;
+    font-weight: 700; text-transform: uppercase; letter-spacing: .08em; color: var(--accent);
+    background: #fff; border: 1px solid var(--accent-line); border-radius: 999px; padding: 1px 8px; display: none; }
+  .para:hover .para-badge, .para.sel .para-badge { display: inline-block; }
+  .stool { position: absolute; top: 8px; right: 8px; }
+  .edit-btn { height: 30px; padding: 0 12px; border-radius: 8px; border: 1px solid var(--accent); background: var(--accent);
+    color: #fff; font-family: 'Inter', sans-serif; font-size: 12px; font-weight: 600; display: inline-flex;
+    align-items: center; gap: 6px; cursor: pointer; box-shadow: 0 3px 10px rgba(91,79,214,.3); }
+  .edit-btn:hover { filter: brightness(1.07); }
+  .empty-chap { font-family: 'Inter', sans-serif; border: 1px dashed var(--accent-line); border-radius: 12px;
+    padding: 28px; text-align: center; color: var(--muted); background: #fcfbff; }
+  .empty-chap p { margin: 0 0 14px; font-size: 13.5px; }
+
+  .outline { order: 1; flex: 1 1 300px; min-width: 272px; max-width: 360px; overflow-y: auto;
+    border-right: 1px solid var(--line); background: var(--panel); padding: 18px 12px 120px; }
+  .o-head { display: flex; align-items: center; justify-content: space-between; padding: 0 6px; }
+  .o-head b { font-size: 13px; font-weight: 600; }
+  .o-auto { font-size: 11px; color: var(--accent); display: inline-flex; align-items: center; gap: 5px; font-weight: 600; }
+  .o-select { margin: 12px 6px 12px; }
+  .o-select label { display: block; font-size: 10.5px; font-weight: 700; color: var(--muted);
+    text-transform: uppercase; letter-spacing: .14em; margin-bottom: 6px; }
+  .o-select select { width: 100%; font: inherit; font-size: 13px; font-weight: 600; color: var(--ink);
+    padding: 10px 11px; border: 1px solid var(--line); border-radius: 9px; background: #fff; cursor: pointer; }
+  .o-select select:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft); }
+  .o-banner { font-size: 11.5px; color: #4b4659; background: var(--accent-soft); border-radius: 9px;
+    padding: 9px 11px; margin: 0 6px 14px; line-height: 1.45; }
+  .tree { display: flex; flex-direction: column; gap: 1px; }
+  .node { display: flex; align-items: center; gap: 4px; border-radius: 8px; }
+  .node .lbl { flex: 1; min-width: 0; text-align: left; background: none; border: none; font: inherit;
+    color: var(--ink); cursor: pointer; padding: 8px 9px; border-radius: 8px; display: flex; align-items: center; gap: 8px; }
+  .node .lbl .ntxt { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .node:hover .lbl { background: #f3f1fa; }
+  .node.sel .lbl { background: var(--accent-soft); color: var(--accent); }
+  .n-chap { margin: 2px 0 6px; }
+  .n-chap .lbl { font-weight: 600; font-size: 13px; }
+  .n-para { margin-left: 8px; }
+  .n-para .lbl { font-size: 12.5px; color: #4a4656; }
+  .node.sel.n-para .lbl { color: var(--accent); font-weight: 600; }
+  .pmark { flex: 0 0 auto; width: 16px; text-align: center; color: var(--accent); font-weight: 700; opacity: .7; }
+  .mng { width: 27px; height: 27px; border-radius: 7px; border: 1px solid transparent; background: none;
+    display: flex; align-items: center; justify-content: center; cursor: pointer; color: var(--muted); flex: 0 0 auto; }
+  .node:hover .mng, .node.sel .mng { border-color: var(--line); background: #fff; }
+  .mng:hover { color: var(--accent); border-color: var(--accent-line); }
+  .o-empty { font-size: 12px; color: var(--muted); padding: 8px 10px; font-style: italic; }
+
+  /* chat */
+  .chat { border: 1px solid var(--line); border-radius: 14px; overflow: hidden; background: #fff; display: flex; flex-direction: column; }
+  .chat-head { display: flex; align-items: center; gap: 10px; padding: 12px 15px; border-bottom: 1px solid var(--line); background:#faf9fe; }
+  .chat-head b { font-size: 13.5px; font-weight: 700; color: var(--ink); }
+  .chat-head select { font: inherit; font-size: 12.5px; padding: 6px 9px; border: 1px solid var(--line); border-radius: 7px; background:#fff; }
+  .chat-body { padding: 16px; display: flex; flex-direction: column; gap: 12px; min-height: 300px; background:
+    linear-gradient(0deg, #fbfaff, #fff); }
+  .bubble { max-width: 78%; padding: 10px 13px; border-radius: 13px; font-size: 13.5px; line-height: 1.5; }
+  .bubble small { display: block; font-size: 10.5px; font-weight: 700; text-transform: uppercase; letter-spacing: .08em; opacity: .7; margin-bottom: 3px; }
+  .b-user { align-self: flex-end; background: var(--accent); color: #fff; border-bottom-right-radius: 4px; }
+  .b-ai { align-self: flex-start; background: #f2f0fa; color: var(--ink); border: 1px solid var(--line); border-bottom-left-radius: 4px; }
+  .chat-input { display: flex; gap: 8px; padding: 12px; border-top: 1px solid var(--line); }
+  .chat-input textarea { flex: 1; font: inherit; font-size: 13.5px; padding: 10px 12px; border: 1px solid var(--line);
+    border-radius: 9px; resize: none; min-height: 48px; }
+
+  /* dialog (shared) */
+  .backdrop { position: fixed; inset: 0; background: rgba(22,19,34,.44); display: flex; align-items: center;
+    justify-content: center; padding: 22px; z-index: 60; }
+  .modal { width: 100%; max-width: 620px; max-height: 90vh; overflow: auto; background: #fff; border-radius: 16px;
+    box-shadow: 0 32px 90px -22px rgba(20,18,30,.5); display: flex; flex-direction: column; }
+  .m-head { padding: 16px 20px; display: flex; align-items: center; gap: 10px; border-bottom: 1px solid var(--line); }
+  .m-kind { font-size: 10.5px; text-transform: uppercase; letter-spacing: .15em; color: var(--accent); font-weight: 700; }
+  .m-title { font-size: 17px; font-weight: 600; margin: 2px 0 0; color: var(--ink); }
+  .m-back { width: 32px; height: 32px; border: 1px solid var(--line); border-radius: 8px; background: #fff;
+    display: flex; align-items: center; justify-content: center; cursor: pointer; color: var(--ink); flex: 0 0 auto; }
+  .m-back:hover { background: #f6f5fb; }
+  .icon-btn { width: 34px; height: 34px; border: 1px solid var(--line); border-radius: 8px; background: #fff;
+    display: flex; align-items: center; justify-content: center; cursor: pointer; color: var(--ink); }
+  .icon-btn:hover { background: #f6f5fb; }
+  .m-body { padding: 18px 20px 20px; }
+  .m-actions { display: flex; gap: 8px; justify-content: flex-end; margin-top: 18px; }
+  .subcard { border: 1px solid var(--line); border-radius: 10px; padding: 10px 12px; margin-bottom: 8px; font-size: 13px; }
+  .subcard .st { font-size: 11px; color: var(--accent); font-weight: 600; }
+
+  /* paragraph-editor popup toolbar */
+  .rz-tool { height: 34px; padding: 0 12px; border-radius: 7px; border: 1px solid transparent; font: inherit;
+    font-size: 12.5px; font-weight: 600; display: inline-flex; align-items: center; gap: 7px; cursor: pointer; color:#fff; }
+  .rz-tool:hover { filter: brightness(1.06); }
+  .rz-tool.tl-icon { width: 36px; padding: 0; justify-content: center; }
+  .rz-tool.rz-light { background: #ECEBF0; color: #26222F; border-color: #ddd9e4; }
+  .rz-tool.rz-ai { background: #B45309; }
+  .rz-tool.rz-dark { background: #2C2A36; }
+  .rz-tool.rz-danger { background: #BE123C; }
+  .rz-tool.rz-success { background: #1F7A46; }
+  .rz-tool.rz-primary { background: var(--accent); }
+  .toolbar { display: flex; flex-wrap: wrap; gap: 7px; align-items: center; margin-bottom: 14px; position: relative; }
+  .split { display: inline-flex; position: relative; }
+  .split .main { border-top-right-radius: 0; border-bottom-right-radius: 0; }
+  .split .tog { width: 30px; padding: 0; justify-content: center; border-top-left-radius: 0; border-bottom-left-radius: 0;
+    border-left: 1px solid rgba(255,255,255,.35); }
+  .save-menu { position: absolute; top: 40px; right: 0; background: #fff; border: 1px solid var(--line);
+    border-radius: 9px; box-shadow: 0 16px 40px -14px rgba(20,18,30,.4); padding: 5px; z-index: 5; min-width: 190px; }
+  .save-menu button { width: 100%; text-align: left; background: none; border: none; font: inherit; font-size: 13px;
+    padding: 9px 11px; border-radius: 7px; cursor: pointer; color: var(--ink); }
+  .save-menu button:hover { background: var(--accent-soft); color: var(--accent); }
+  .para-area { width: 100%; min-height: 240px; font-family: 'Inter', sans-serif; font-size: 14px; line-height: 1.6;
+    border: 1px solid var(--line); border-radius: 10px; padding: 12px 14px; color: var(--ink); resize: vertical; }
+  .para-area:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft); }
+  .undo-note { font-size: 12.5px; color: #8A5A00; background: #F8EFD6; border-radius: 9px; padding: 9px 12px;
+    margin-bottom: 12px; display: flex; align-items: center; gap: 8px; }
+  .mic-row { margin-bottom: 12px; }
+  .checklist { border: 1px solid var(--line); border-radius: 10px; padding: 6px; max-height: 220px; overflow: auto; }
+  .checkrow { display: flex; align-items: center; gap: 10px; padding: 9px 10px; border-radius: 8px; font-size: 13px; }
+  .checkrow:hover { background: #f6f5fb; }
+  .checkrow input { width: 16px; height: 16px; accent-color: var(--accent); }
+
+  /* ---------- Knowledgebase tab (KnowledgeGraphBuilder) ---------- */
+  .kb { height: calc(100vh - 107px); display: flex; flex-direction: column; min-height: 0; }
+  .kb-bar { flex: 0 0 auto; display: flex; align-items: center; gap: 12px; padding: 10px 16px;
+    border-bottom: 1px solid var(--line); background: var(--panel); }
+  .seg { display: inline-flex; border: 1px solid var(--line); border-radius: 9px; overflow: hidden; background: #fff; }
+  .seg button { border: none; background: #fff; font: inherit; font-size: 12.5px; font-weight: 600; color: var(--muted);
+    padding: 7px 13px; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; }
+  .seg button + button { border-left: 1px solid var(--line); }
+  .seg button.on { background: var(--accent-soft); color: var(--accent); }
+  .seg.sm button { padding: 6px 11px; font-size: 12px; }
+  .kb-stat { font-size: 11.5px; color: var(--muted); }
+
+  .kb-main { flex: 1; min-height: 0; display: flex; }
+  .kb-explorer { flex: 0 0 262px; border-right: 1px solid var(--line); background: var(--panel);
+    display: flex; flex-direction: column; min-height: 0; }
+  .kb-ph { display: flex; align-items: center; gap: 2px; padding: 10px 8px 8px 14px; }
+  .kb-pt { flex: 1; font-size: 12.5px; font-weight: 700; color: var(--ink); }
+  .kb-ib { width: 28px; height: 28px; border: none; background: none; border-radius: 7px; color: var(--muted);
+    cursor: pointer; display: flex; align-items: center; justify-content: center; }
+  .kb-ib:hover { background: #f1eff8; color: var(--accent); }
+  .kb-search { padding: 0 10px 10px; }
+  .kb-search input { width: 100%; font: inherit; font-size: 12.5px; padding: 8px 10px; border: 1px solid var(--line); border-radius: 8px; }
+  .kb-search input:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft); }
+  .kb-tree { flex: 1; overflow-y: auto; padding: 2px 6px 16px; display: flex; flex-direction: column; gap: 1px; }
+  .kb-row { display: flex; align-items: center; gap: 8px; width: 100%; text-align: left; border: none; background: none;
+    font: inherit; font-size: 12.5px; color: var(--ink); padding: 7px 9px; border-radius: 7px; cursor: pointer; }
+  .kb-row:hover { background: #f3f1fa; }
+  .kb-row.sel { background: var(--accent-soft); color: var(--accent); font-weight: 600; }
+  .kb-row.folder { font-weight: 600; }
+  .kb-ic { flex: 0 0 auto; display: flex; color: var(--muted); }
+  .kb-row.sel .kb-ic { color: var(--accent); }
+  .kb-lbl { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+  .kb-editor { flex: 1; min-width: 0; display: flex; flex-direction: column; min-height: 0; background: var(--paper); }
+  .kb-eh { flex: 0 0 auto; display: flex; align-items: center; gap: 12px; padding: 13px 20px;
+    border-bottom: 1px solid var(--line); background: var(--panel); }
+  .kb-et { flex: 1; min-width: 0; }
+  .kb-et h1 { margin: 0; font-family: 'Newsreader', serif; font-size: 22px; font-weight: 600; color: var(--ink); line-height: 1.1; }
+  .kb-crumb { font-size: 11px; color: var(--muted); margin-top: 2px; }
+  .kb-ebody { flex: 1; overflow-y: auto; padding: 26px 32px 60px; }
+  .kb-para { font-family: 'Newsreader', serif; font-size: 16px; line-height: 1.7; color: #2a2636; max-width: 620px; margin: 0 0 16px; }
+  .wl { color: var(--accent); text-decoration: none; border-bottom: 1px solid var(--accent-line); cursor: pointer; font-weight: 500; }
+  .wl:hover { background: var(--accent-soft); }
+  .wu { color: #9A6A11; text-decoration: none; border-bottom: 1px dashed #dcb36a; cursor: help; }
+  .kb-src { font-family: ui-monospace, Menlo, Consolas, monospace; font-size: 12.5px; line-height: 1.6; color: #33303d;
+    background: #faf9fe; border: 1px solid var(--line); border-radius: 10px; padding: 16px 18px; white-space: pre-wrap; max-width: 680px; }
+
+  .kb-links { flex: 0 0 232px; border-left: 1px solid var(--line); background: var(--panel);
+    display: flex; flex-direction: column; min-height: 0; }
+  .kb-lph { display: flex; align-items: center; gap: 7px; padding: 12px 14px; border-bottom: 1px solid var(--line);
+    font-size: 12.5px; font-weight: 700; color: var(--ink); }
+  .kb-lph .grow { flex: 1; }
+  .kb-lpg { font-size: 11px; color: var(--accent); font-weight: 600; display: inline-flex; align-items: center; gap: 4px; cursor: pointer; }
+  .kb-lpc { flex: 1; overflow-y: auto; padding: 12px 14px; display: flex; flex-direction: column; gap: 16px; }
+  .kb-lh { font-size: 12px; font-weight: 600; color: var(--muted); margin-bottom: 7px; display: flex; align-items: center; gap: 7px; }
+  .kb-cnt { font-size: 10.5px; font-weight: 700; color: var(--accent); background: var(--accent-soft); border-radius: 999px; padding: 1px 7px; }
+  .kb-li { display: flex; align-items: center; gap: 6px; padding: 4px 0; font-size: 12.5px; color: #4a4656; }
+  .kb-li .wl, .kb-li .wu { flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; border-bottom: none; }
+  .kb-li .kb-ic { color: var(--muted); }
+  .kb-ln { font-family: ui-monospace, monospace; font-size: 10px; color: var(--muted); flex: 0 0 auto; }
+
+  .kb-graph { flex: 1; min-height: 0; display: flex; flex-direction: column; }
+  .kb-gbar { flex: 0 0 auto; display: flex; align-items: center; gap: 14px; padding: 10px 16px;
+    border-bottom: 1px solid var(--line); background: var(--panel); flex-wrap: wrap; }
+  .kb-switch { display: flex; align-items: center; gap: 7px; font-size: 12px; color: var(--muted); }
+  .sw { width: 32px; height: 18px; border-radius: 999px; background: var(--accent); position: relative; flex: 0 0 auto; }
+  .sw::after { content: ''; position: absolute; top: 2px; right: 2px; width: 14px; height: 14px; border-radius: 50%; background: #fff; }
+  .kb-find { font: inherit; font-size: 12.5px; padding: 7px 10px; border: 1px solid var(--line); border-radius: 8px; width: 160px; }
+  .kb-find:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft); }
+  .kb-gwrap { flex: 1; min-height: 0; position: relative; display: flex;
+    background: radial-gradient(circle at 50% 42%, #fbfaff, #eeecf6); }
+  .kb-gsvg { width: 100%; height: 100%; display: block; }
+  .kb-gedge { stroke: #c9c4dc; stroke-width: 1.5; }
+  .kb-gedge.missing { stroke: #ded8ea; stroke-dasharray: 4 4; }
+  .kb-gnode { cursor: pointer; }
+  .kb-gnode circle { stroke: #fff; stroke-width: 2.5; }
+  .kb-gnode text { font-family: 'Inter', sans-serif; font-size: 11px; font-weight: 600; fill: #3a3646; text-anchor: middle; }
+  .kb-gnode.g-char circle { fill: var(--accent); }
+  .kb-gnode.g-loc circle { fill: #1F7A6E; }
+  .kb-gnode.g-time circle { fill: #B7791F; }
+  .kb-gnode.missing circle { fill: #fff; stroke: #bdb7cc; stroke-dasharray: 3 3; }
+  .kb-gnode.missing text { fill: #8a8597; }
+  .kb-gnode.center circle { stroke: var(--accent); stroke-width: 4.5; }
+  .kb-gnode.selected circle { stroke: #1c1a27; stroke-width: 4; }
+  .kb-gnode:hover circle { filter: brightness(1.08); }
+  .kb-glegend { position: absolute; left: 14px; bottom: 14px; display: flex; gap: 14px; font-size: 11px; color: #4a4656;
+    background: rgba(255,255,255,.82); border: 1px solid var(--line); border-radius: 9px; padding: 7px 11px; }
+  .kb-glegend span { display: inline-flex; align-items: center; gap: 5px; }
+  .kb-dotc { width: 10px; height: 10px; border-radius: 50%; }
+  .kb-gpanel { position: absolute; top: 14px; right: 14px; width: 226px; background: #fff; border: 1px solid var(--line);
+    border-radius: 12px; box-shadow: 0 16px 40px -18px rgba(20,18,30,.4); padding: 14px; }
+  .kb-gph { display: flex; align-items: center; gap: 7px; }
+  .kb-gph b { flex: 1; min-width: 0; font-size: 14px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .kb-gpath { font-family: ui-monospace, monospace; font-size: 10.5px; color: var(--muted); margin: 6px 0 12px; }
+  .kb-gpa { display: flex; gap: 7px; }
+
+  @media (max-width: 880px) {
+    .topbar { padding: 0 14px; }
+    .wrap { padding: 20px 14px 60px; }
+    .work { height: auto; display: block; }
+    .doc { height: auto; overflow: visible; padding: 20px 14px 50px; }
+    .paper { padding: 28px 20px 46px; }
+    .outline { max-width: none; height: auto; overflow: visible; border-right: none; border-bottom: 1px solid var(--line); }
+    .btn-row .rz { flex: 1 1 auto; justify-content: center; }
+    .kb, .kb-graph { height: auto; }
+    .kb-main { display: block; }
+    .kb-explorer, .kb-links { flex-basis: auto; max-width: none; border-right: none; border-left: none; border-bottom: 1px solid var(--line); }
+    .kb-tree { max-height: 220px; }
+    .kb-gwrap { min-height: 360px; }
+  }
+</style>
+</helmet>
+
+<div class="app" style="--accent: {{accent}}; --accent-soft: #efecfb; --accent-line: #ddd6f6; --ink: #1c1a27; --muted: #6b6676; --paper: #fffdf9; --bg: #edebf2; --panel: #ffffff; --line: #e4e1ec; min-height: 100vh; display: flex; flex-direction: column; background: var(--bg); color: var(--ink); font-family: 'Inter', system-ui, sans-serif;">
+
+  <header class="topbar">
+    <div class="brand">
+      <img src="data:image/png;base64,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" alt="AIStoryBuilders logo" />
+      <span class="ttl"><b>Forgetting Baldur</b><span>Story workspace · AIStoryBuilders</span></span>
+    </div>
+    <span class="sp"></span>
+    <span class="save">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg>
+      Saved
+    </span>
+    <button class="close-x" aria-label="Close workspace">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg>
+    </button>
+  </header>
+
+  <nav class="tabs" aria-label="Story sections">
+    <button class="{{tDetails}}" onClick="{{goDetails}}">Details</button>
+    <button class="{{tTimelines}}" onClick="{{goTimelines}}">Timelines</button>
+    <button class="{{tLocations}}" onClick="{{goLocations}}">Locations</button>
+    <button class="{{tCharacters}}" onClick="{{goCharacters}}">Characters</button>
+    <button class="{{tChapters}}" onClick="{{goChapters}}">Chapters</button>
+    <button class="{{tChat}}" onClick="{{goChat}}">Chat</button>
+    <button class="{{tKnow}}" onClick="{{goKnow}}">Knowledgebase</button>
+  </nav>
+
+  <main class="page">
+
+    <!-- Details / Timelines / Locations / Characters / Chat render in a centered column -->
+    <sc-if value="{{inWrap}}" hint-placeholder-val="{{false}}">
+      <div class="wrap">
+
+        <!-- DETAILS -->
+        <sc-if value="{{isDetails}}" hint-placeholder-val="{{false}}">
+          <div>
+            <div class="field"><label>Story Title:</label><div class="ro">Forgetting Baldur</div></div>
+            <div class="field">
+              <label for="d-style">Style:</label>
+              <select id="d-style"><option>Fantasy</option><option>Drama</option><option>Sci-Fi</option><option>Romance</option><option>Mystery</option><option>Thriller</option><option>Horror</option></select>
+            </div>
+            <div class="field">
+              <label for="d-syn">Synopsis:</label>
+              <textarea id="d-syn" rows="5" maxlength="1000" defaultValue="After a battle on the ridge, Balt burns his own memories to keep his father alive — and Freya counts the beads she has left. A story about what love costs when the price is paid in forgetting."></textarea>
+            </div>
+            <div class="collapse">
+              <button onClick="{{toggleSys}}">
+                <svg class="chev" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="{{sysChev}}"><path d="M9 6l6 6-6 6"/></svg>
+                System Message
+              </button>
+              <sc-if value="{{sysOpen}}" hint-placeholder-val="{{false}}">
+                <div class="cbody">
+                  <div class="field" style="margin:0;">
+                    <textarea rows="5" maxlength="1000" defaultValue="You are a software program that creates prose for novels. Use the following style sheet: Foreshadowing: Do not have any foreshadowing as to events that have not yet happened. Third-person Limited: The narrative is primarily from the limited perspective of specific characters."></textarea>
+                  </div>
+                </div>
+              </sc-if>
+            </div>
+            <div class="collapse">
+              <button onClick="{{toggleWorld}}">
+                <svg class="chev" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="{{worldChev}}"><path d="M9 6l6 6-6 6"/></svg>
+                World Facts
+              </button>
+              <sc-if value="{{worldOpen}}" hint-placeholder-val="{{false}}">
+                <div class="cbody">
+                  <div class="field" style="margin:0;">
+                    <textarea rows="6" maxlength="2000" placeholder="Enter persistent world-building facts, one per line (e.g., Magic is illegal in the Northern Kingdom)" defaultValue="Memories can be burned for magical energy; each burn leaves a permanent hole in the mind.
+Enough holes and a person turns Husk.
+Freya's necklace beads each hold enough energy for one powerful spell."></textarea>
+                  </div>
+                </div>
+              </sc-if>
+            </div>
+            <div class="btn-row">
+              <button class="rz rz-success">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 3h11l3 3v15H5z"/><path d="M8 3v5h7V3"/><rect x="8" y="13" width="8" height="5"/></svg>
+                Save
+              </button>
+              <button class="rz rz-primary">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9V3h12v6"/><rect x="6" y="13" width="12" height="8"/><path d="M6 17H3v-5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v5h-3"/></svg>
+                Save Word Doc
+              </button>
+              <button class="rz rz-primary">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v12"/><path d="m8 11 4 4 4-4"/><path d="M5 21h14"/></svg>
+                Export Project
+              </button>
+              <button class="rz rz-danger">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 7h16"/><path d="M9 7V5h6v2"/><path d="M6 7l1 13h10l1-13"/></svg>
+                Delete
+              </button>
+              <button class="rz rz-warning">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 2v6h6"/><path d="M3.5 13a9 9 0 1 0 2.2-9.3L3 8"/></svg>
+                Re-load Story
+              </button>
+            </div>
+          </div>
+        </sc-if>
+
+        <!-- TIMELINES -->
+        <sc-if value="{{isTimelines}}" hint-placeholder-val="{{false}}">
+          <div>
+            <button class="rz rz-success" onClick="{{newTime}}">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>
+              New Timeline
+            </button>
+            <div style="height:16px"></div>
+            <sc-for list="{{timelines}}" as="t" hint-placeholder-count="4">
+              <div class="ecard">
+                <button class="rz rz-light rz-sm" onClick="{{editTime}}">Edit</button>
+                <div class="eline"><b>{{t.name}}</b><span class="emeta">{{t.range}}</span></div>
+              </div>
+            </sc-for>
+          </div>
+        </sc-if>
+
+        <!-- LOCATIONS -->
+        <sc-if value="{{isLocations}}" hint-placeholder-val="{{false}}">
+          <div>
+            <button class="rz rz-success" onClick="{{newLoc}}">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>
+              New Location
+            </button>
+            <div style="height:16px"></div>
+            <sc-for list="{{locations}}" as="l" hint-placeholder-count="4">
+              <div class="ecard">
+                <button class="rz rz-light rz-sm" onClick="{{editLoc}}">Edit</button>
+                <div class="eline"><b>{{l.name}}</b><span class="emeta">{{l.meta}}</span></div>
+              </div>
+            </sc-for>
+          </div>
+        </sc-if>
+
+        <!-- CHARACTERS -->
+        <sc-if value="{{isCharacters}}" hint-placeholder-val="{{false}}">
+          <div>
+            <button class="rz rz-success" onClick="{{newChar}}">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>
+              New Character
+            </button>
+            <div style="height:16px"></div>
+            <sc-for list="{{characters}}" as="c" hint-placeholder-count="5">
+              <div class="ecard">
+                <button class="rz rz-light rz-sm" onClick="{{editChar}}">Edit</button>
+                <span class="avatar" aria-hidden="true">{{c.initial}}</span>
+                <div class="eline"><b>{{c.name}}</b><span class="emeta">{{c.meta}}</span></div>
+              </div>
+            </sc-for>
+          </div>
+        </sc-if>
+
+        <!-- CHAT -->
+        <sc-if value="{{isChat}}" hint-placeholder-val="{{false}}">
+          <div class="chat">
+            <div class="chat-head">
+              <span style="display:inline-flex;align-items:center;gap:8px;color:var(--accent);">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+              </span>
+              <b>Story Chat Assistant</b>
+              <select><option>gpt-4o</option><option>gpt-4o-mini</option><option>o1-preview</option></select>
+              <span style="flex:1"></span>
+              <button class="icon-btn" aria-label="Clear conversation"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 2v6h6"/><path d="M3.5 13a9 9 0 1 0 2.2-9.3L3 8"/></svg></button>
+            </div>
+            <div class="chat-body">
+              <div class="bubble b-user"><small>You</small>Are there any orphaned characters?</div>
+              <div class="bubble b-ai"><small>AI</small>Every character appears in at least one scene. "The Stranger" is the most loosely connected — he's only referenced in Chapter 1, Section 9, with no timeline or location attached yet.</div>
+              <div class="bubble b-user"><small>You</small>Tell me about Freya's arc.</div>
+              <div class="bubble b-ai"><small>AI</small>Freya begins guarded and suspicious (Ch.1), accuses Balt of theft, then softens. Her necklace beads are the running measure of what she's sacrificed — track them as a motif.</div>
+            </div>
+            <div class="chat-input">
+              <textarea rows="2" placeholder="Ask about your story..."></textarea>
+              <button class="rz rz-primary" style="align-self:stretch;">Send</button>
+            </div>
+          </div>
+        </sc-if>
+
+      </div>
+    </sc-if>
+
+    <!-- CHAPTERS = the Story Editor (single page) -->
+    <sc-if value="{{isChapters}}" hint-placeholder-val="{{true}}">
+      <div class="work">
+        <aside class="outline">
+          <div class="o-head">
+            <b>Chapter outline</b>
+            <span class="o-auto">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 2.6l2.1 6.4 6.4 2.1-6.4 2.1L12 19.6l-2.1-6.4L3.5 11l6.4-2z"/></svg>
+              Auto-detected
+            </span>
+          </div>
+          <div class="o-select">
+            <label for="chap-pick">Chapters</label>
+            <select id="chap-pick" value="{{chapId}}" onChange="{{setChap}}">
+              <sc-for list="{{chapterOptions}}" as="o" hint-placeholder-count="6">
+                <option value="{{o.id}}">{{o.label}}</option>
+              </sc-for>
+            </select>
+          </div>
+          <div class="o-banner">{{detectBanner}}</div>
+          <nav class="tree" aria-label="Paragraphs in this chapter">
+            <div class="node n-chap">
+              <button class="lbl" onClick="{{selectChapTop}}"><span class="ntxt">{{chapNavTitle}}</span></button>
+            </div>
+            <sc-for list="{{navParas}}" as="n" hint-placeholder-count="5">
+              <div class="{{n.cls}}">
+                <button class="lbl" onClick="{{n.select}}">
+                  <span class="pmark" aria-hidden="true">¶</span>
+                  <span class="ntxt">{{n.title}}</span>
+                </button>
+                <button class="mng" aria-label="Edit this paragraph" onClick="{{n.manage}}">
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><circle cx="5" cy="12" r="1.7"/><circle cx="12" cy="12" r="1.7"/><circle cx="19" cy="12" r="1.7"/></svg>
+                </button>
+              </div>
+            </sc-for>
+            <sc-if value="{{noParas}}" hint-placeholder-val="{{false}}">
+              <div class="o-empty">No paragraphs yet in this chapter.</div>
+            </sc-if>
+          </nav>
+        </aside>
+
+        <main class="doc">
+          <article class="paper">
+            <header class="chap-head" id="doc-{{chapId}}">
+              <div class="cnum">{{chapKicker}}</div>
+              <h2>{{chapTitle}}</h2>
+              <div class="chap-tools">
+                <button class="rz rz-success rz-sm">New Chapter</button>
+                <button class="rz rz-success rz-sm">Save</button>
+                <button class="rz rz-success rz-sm rz-icon" aria-label="Add chapter">
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"/><path d="M14 3v6h6"/><path d="M12 12v6M9 15h6"/></svg>
+                </button>
+                <button class="rz rz-danger rz-sm">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 7h16"/><path d="M9 7V5h6v2"/><path d="M6 7l1 13h10l1-13"/></svg>
+                  Delete
+                </button>
+              </div>
+              <label class="syn-l" for="chap-syn">Synopsis</label>
+              <textarea id="chap-syn" class="syn" defaultValue="{{chapSynopsis}}" placeholder="Short chapter synopsis..."></textarea>
+            </header>
+
+            <sc-for list="{{docParas}}" as="b" hint-placeholder-count="5">
+              <section class="{{b.wrapCls}}" id="doc-{{b.id}}" onClick="{{b.select}}">
+                <span class="para-badge">{{b.label}}</span>
+                <sc-if value="{{b.isSel}}" hint-placeholder-val="{{false}}">
+                  <div class="stool">
+                    <button class="edit-btn" onClick="{{b.edit}}">
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z"/></svg>
+                      Edit section
+                    </button>
+                  </div>
+                </sc-if>
+                <p>{{b.content}}</p>
+              </section>
+            </sc-for>
+
+            <sc-if value="{{noParas}}" hint-placeholder-val="{{false}}">
+              <div class="empty-chap">
+                <p>This chapter has no paragraphs yet.</p>
+                <button class="rz rz-success" onClick="{{addFirst}}" style="margin:0 auto;">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"/><path d="M14 3v6h6"/><path d="M12 12v6M9 15h6"/></svg>
+                  Add first paragraph
+                </button>
+              </div>
+            </sc-if>
+          </article>
+        </main>
+      </div>
+    </sc-if>
+
+    <!-- KNOWLEDGEBASE = Knowledge Graph Builder (Explorer · Editor · Links · Graph) -->
+    <sc-if value="{{isKnowledge}}" hint-placeholder-val="{{false}}">
+      <div class="kb">
+        <div class="kb-bar">
+          <div class="seg">
+            <button class="{{kb.segPages}}" onClick="{{kb.toPages}}">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/></svg>
+              Pages
+            </button>
+            <button class="{{kb.segGraph}}" onClick="{{kb.toGraph}}">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="6" cy="6" r="2.4"/><circle cx="18" cy="7" r="2.4"/><circle cx="13" cy="17" r="2.4"/><path d="M8 7l7.5 1M16.5 9l-3 6M8 8l4 8"/></svg>
+              Graph
+            </button>
+          </div>
+          <span style="flex:1"></span>
+          <span class="kb-stat">{{kb.stat}}</span>
+        </div>
+
+        <!-- PAGES view -->
+        <sc-if value="{{kb.isPages}}" hint-placeholder-val="{{true}}">
+          <div class="kb-main">
+            <aside class="kb-explorer" aria-label="Explorer">
+              <div class="kb-ph">
+                <span class="kb-pt">Explorer</span>
+                <button class="kb-ib" aria-label="New page"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"/><path d="M14 3v6h6"/><path d="M12 12v6M9 15h6"/></svg></button>
+                <button class="kb-ib" aria-label="New folder"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><path d="M12 11v4M10 13h4"/></svg></button>
+                <button class="kb-ib" aria-label="Refresh"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 2v6h6"/><path d="M3.5 13a9 9 0 1 0 2.2-9.3L3 8"/></svg></button>
+                <button class="kb-ib" aria-label="Collapse all"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 4l4-2 4 2M8 20l4 2 4-2M4 9l-2 3 2 3M20 9l2 3-2 3"/></svg></button>
+              </div>
+              <div class="kb-search"><input type="search" placeholder="Search pages" aria-label="Search pages" /></div>
+              <nav class="kb-tree" aria-label="Pages and folders">
+                <sc-for list="{{kb.tree}}" as="r" hint-placeholder-count="12">
+                  <button class="{{r.cls}}" style="{{r.pad}}" onClick="{{r.open}}">
+                    <span class="kb-ic">
+                      <sc-if value="{{r.isFolder}}" hint-placeholder-val="{{false}}"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg></sc-if>
+                      <sc-if value="{{r.isPage}}" hint-placeholder-val="{{true}}"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/></svg></sc-if>
+                    </span>
+                    <span class="kb-lbl">{{r.label}}</span>
+                  </button>
+                </sc-for>
+              </nav>
+            </aside>
+
+            <main class="kb-editor" aria-label="Editor">
+              <div class="kb-eh">
+                <div class="kb-et">
+                  <h1>{{kb.cur.title}}</h1>
+                  <div class="kb-crumb">{{kb.cur.crumb}}</div>
+                </div>
+                <div class="seg sm" role="group" aria-label="Editor mode">
+                  <button class="{{kb.mDesign}}" onClick="{{kb.toDesign}}">Design</button>
+                  <button class="{{kb.mSource}}" onClick="{{kb.toSource}}">Source</button>
+                  <button class="{{kb.mPreview}}" onClick="{{kb.toPreview}}">Preview</button>
+                </div>
+                <button class="rz rz-light rz-sm">Revert</button>
+                <button class="rz rz-primary rz-sm">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 3h11l3 3v15H5z"/><path d="M8 3v5h7V3"/><rect x="8" y="13" width="8" height="5"/></svg>
+                  Save
+                </button>
+              </div>
+              <div class="kb-ebody">
+                <sc-if value="{{kb.isSource}}" hint-placeholder-val="{{false}}">
+                  <pre class="kb-src">{{kb.cur.source}}</pre>
+                </sc-if>
+                <sc-if value="{{kb.isRendered}}" hint-placeholder-val="{{true}}">
+                  <sc-for list="{{kb.cur.body}}" as="par" hint-placeholder-count="2">
+                    <p class="kb-para"><sc-for list="{{par.segs}}" as="s" hint-placeholder-count="4"><sc-if value="{{s.plain}}" hint-placeholder-val="{{true}}">{{s.t}}</sc-if><sc-if value="{{s.link}}" hint-placeholder-val="{{false}}"><a class="wl" onClick="{{s.go}}">{{s.t}}</a></sc-if><sc-if value="{{s.unres}}" hint-placeholder-val="{{false}}"><a class="wu" title="No page named this yet">{{s.t}}</a></sc-if></sc-for></p>
+                  </sc-for>
+                </sc-if>
+              </div>
+            </main>
+
+            <aside class="kb-links" aria-label="Links">
+              <div class="kb-lph">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="6" cy="6" r="2.2"/><circle cx="18" cy="7" r="2.2"/><circle cx="13" cy="17" r="2.2"/><path d="M8 7l8 .8M16.5 9l-3 6M8 8l4.5 8"/></svg>
+                <span class="grow">Links</span>
+                <span class="kb-lpg" onClick="{{kb.toGraph}}">
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="6" cy="7" r="2"/><circle cx="18" cy="6" r="2"/><circle cx="12" cy="17" r="2"/></svg>
+                  Show in graph
+                </span>
+              </div>
+              <div class="kb-lpc">
+                <div>
+                  <div class="kb-lh">Outgoing <span class="kb-cnt">{{kb.outN}}</span></div>
+                  <sc-for list="{{kb.out}}" as="l" hint-placeholder-count="4">
+                    <div class="kb-li"><span class="kb-ic"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7M8 7h9v9"/></svg></span><a class="wl" onClick="{{l.go}}">{{l.label}}</a></div>
+                  </sc-for>
+                  <sc-if value="{{kb.noOut}}" hint-placeholder-val="{{false}}"><div class="kb-crumb">No links to other pages.</div></sc-if>
+                </div>
+                <div>
+                  <div class="kb-lh">Backlinks <span class="kb-cnt">{{kb.backN}}</span></div>
+                  <sc-for list="{{kb.back}}" as="l" hint-placeholder-count="2">
+                    <div class="kb-li"><span class="kb-ic"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 10 5 14l4 4"/><path d="M5 14h9a5 5 0 0 0 5-5V5"/></svg></span><a class="wl" onClick="{{l.go}}">{{l.label}}</a><span class="kb-ln">L{{l.line}}</span></div>
+                  </sc-for>
+                  <sc-if value="{{kb.noBack}}" hint-placeholder-val="{{true}}"><div class="kb-crumb">No pages link here yet.</div></sc-if>
+                </div>
+                <div>
+                  <div class="kb-lh">Unresolved <span class="kb-cnt">{{kb.unresN}}</span></div>
+                  <sc-for list="{{kb.unres}}" as="l" hint-placeholder-count="1">
+                    <div class="kb-li"><span class="wu"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="vertical-align:-1px;margin-right:3px"><path d="M9 17H7A5 5 0 0 1 7 7h2M15 7h2a5 5 0 0 1 0 10h-2M8 12h8"/></svg>{{l.label}}</span><button class="rz rz-light rz-sm">Create</button></div>
+                  </sc-for>
+                  <sc-if value="{{kb.noUnres}}" hint-placeholder-val="{{false}}"><div class="kb-crumb">Every link resolves.</div></sc-if>
+                </div>
+              </div>
+            </aside>
+          </div>
+        </sc-if>
+
+        <!-- GRAPH view -->
+        <sc-if value="{{kb.isGraph}}" hint-placeholder-val="{{false}}">
+          <div class="kb-graph">
+            <div class="kb-gbar">
+              <div class="seg sm">
+                <button class="on">Whole graph</button>
+                <button>Around page</button>
+              </div>
+              <div class="kb-switch"><span class="sw" role="img" aria-label="Missing pages on"></span><span>Missing pages</span></div>
+              <input class="kb-find" type="search" placeholder="Find a node" aria-label="Find a node" />
+              <span style="flex:1"></span>
+              <span class="kb-stat">{{kb.graphStat}}</span>
+            </div>
+            <div class="kb-gwrap">
+              <svg class="kb-gsvg" viewBox="0 0 900 520" role="img" aria-label="Knowledge graph of the story">
+                <g>
+                  <sc-for list="{{kb.edges}}" as="e" hint-placeholder-count="10">
+                    <line class="{{e.cls}}" x1="{{e.x1}}" y1="{{e.y1}}" x2="{{e.x2}}" y2="{{e.y2}}" />
+                  </sc-for>
+                  <sc-for list="{{kb.nodes}}" as="nd" hint-placeholder-count="11">
+                    <g class="{{nd.cls}}" transform="{{nd.tf}}" onClick="{{nd.pick}}" role="button" aria-label="{{nd.label}}">
+                      <circle r="{{nd.r}}" />
+                      <text y="{{nd.ty}}">{{nd.label}}</text>
+                    </g>
+                  </sc-for>
+                </g>
+              </svg>
+              <div class="kb-glegend">
+                <span><span class="kb-dotc" style="background:var(--accent)"></span>Characters</span>
+                <span><span class="kb-dotc" style="background:#1F7A6E"></span>Locations</span>
+                <span><span class="kb-dotc" style="background:#B7791F"></span>Timelines</span>
+                <span><span class="kb-dotc" style="background:#fff;border:1px dashed #bdb7cc"></span>Missing</span>
+              </div>
+              <sc-if value="{{kb.nodePanel}}" hint-placeholder-val="{{false}}">
+                <aside class="kb-gpanel" aria-label="Selected node">
+                  <div class="kb-gph">
+                    <span class="kb-ic"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/></svg></span>
+                    <b>{{kb.node.label}}</b>
+                    <button class="kb-ib" aria-label="Close" onClick="{{kb.closeNode}}"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg></button>
+                  </div>
+                  <div class="kb-gpath">{{kb.node.path}}</div>
+                  <div class="kb-gpa">
+                    <button class="rz rz-primary rz-sm">Open</button>
+                    <button class="rz rz-light rz-sm">Show around</button>
+                  </div>
+                </aside>
+              </sc-if>
+            </div>
+          </div>
+        </sc-if>
+
+      </div>
+    </sc-if>
+
+  </main>
+
+  <!-- ENTITY DIALOG (character / location / timeline) -->
+  <sc-if value="{{dlgOpen}}" hint-placeholder-val="{{false}}">
+    <div class="backdrop" onClick="{{closeDlg}}">
+      <div class="modal" onClick="{{stop}}" role="dialog" aria-modal="true" aria-label="{{dlgTitle}}">
+        <div class="m-head">
+          <div><div class="m-kind">{{dlgKind}}</div><div class="m-title">{{dlgTitle}}</div></div>
+          <span style="flex:1"></span>
+          <button class="icon-btn" aria-label="Close" onClick="{{closeDlg}}">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg>
+          </button>
+        </div>
+        <sc-if value="{{dlgChar}}" hint-placeholder-val="{{false}}">
+          <div class="m-body">
+            <div class="field"><label for="c-name">Character Name:</label><input id="c-name" defaultValue="Freya" /></div>
+            <div style="display:flex; gap:10px; align-items:flex-end; margin-bottom:14px;">
+              <div class="field" style="margin:0; flex:1;">
+                <label for="c-bgtype">Background Type:</label>
+                <select id="c-bgtype"><option>Appearance</option><option>Personality</option><option>Backstory</option><option>Relationships</option><option>Goals</option></select>
+              </div>
+              <button class="rz rz-secondary">Add Background</button>
+            </div>
+            <div class="subcard"><div class="st">Appearance</div>Sharp-eyed, wears a beaded necklace she guards closely.</div>
+            <div class="subcard"><div class="st">Backstory · The Battle</div>Daughter of Father; blames herself for what the ridge cost them.</div>
+            <div class="m-actions">
+              <button class="rz rz-success">Save</button>
+              <button class="rz rz-danger">Delete</button>
+            </div>
+          </div>
+        </sc-if>
+        <sc-if value="{{dlgLoc}}" hint-placeholder-val="{{false}}">
+          <div class="m-body">
+            <button class="rz rz-success rz-sm" style="margin-bottom:14px;">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>
+              New Description
+            </button>
+            <div class="field"><label for="l-name">Location Name:</label><input id="l-name" maxlength="100" defaultValue="The Ridge Above the Ravine" /></div>
+            <div class="subcard"><div class="st">Present Day</div>Wind-scoured rock where the battle ended; scorch marks still mark the stone.</div>
+            <div class="m-actions">
+              <button class="rz rz-success">Save</button>
+              <button class="rz rz-danger">Delete</button>
+            </div>
+          </div>
+        </sc-if>
+        <sc-if value="{{dlgTime}}" hint-placeholder-val="{{false}}">
+          <div class="m-body">
+            <div class="field"><label for="t-name">Timeline Name:</label><input id="t-name" defaultValue="The Battle" /></div>
+            <div style="display:flex; gap:12px;">
+              <div class="field" style="flex:1;"><label for="t-start">Start Date:</label><input id="t-start" type="datetime-local" defaultValue="2026-11-04T06:00" /></div>
+              <div class="field" style="flex:1;"><label for="t-stop">Stop Date:</label><input id="t-stop" type="datetime-local" defaultValue="2026-11-04T18:30" /></div>
+            </div>
+            <div class="m-actions">
+              <button class="rz rz-success">Save</button>
+              <button class="rz rz-danger">Delete</button>
+            </div>
+          </div>
+        </sc-if>
+      </div>
+    </div>
+  </sc-if>
+
+  <!-- PARAGRAPH EDITOR popup (from the Chapters editor) -->
+  <sc-if value="{{paraOpen}}" hint-placeholder-val="{{false}}">
+    <div class="backdrop" onClick="{{closePara}}">
+      <div class="modal" onClick="{{stop}}" role="dialog" aria-modal="true" aria-label="{{pTitle}}">
+        <div class="m-head">
+          <sc-if value="{{pShowBack}}" hint-placeholder-val="{{false}}">
+            <button class="m-back" aria-label="Back to editor" onClick="{{pBack}}">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 18l-6-6 6-6"/></svg>
+            </button>
+          </sc-if>
+          <div><div class="m-kind">{{pKind}}</div><div class="m-title">{{pTitle}}</div></div>
+          <span style="flex:1"></span>
+          <button class="icon-btn" aria-label="Close" onClick="{{closePara}}">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg>
+          </button>
+        </div>
+
+        <sc-if value="{{pEdit}}" hint-placeholder-val="{{true}}">
+          <div class="m-body">
+            <div class="toolbar">
+              <button class="rz-tool rz-light tl-icon" aria-label="Speech to text">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 2a3 3 0 0 0-3 3v6a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3z"/><path d="M5 11a7 7 0 0 0 14 0"/><line x1="12" y1="18" x2="12" y2="22"/></svg>
+              </button>
+              <button class="rz-tool rz-ai tl-icon" aria-label="AI" onClick="{{toAI}}">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="4" width="6" height="6" rx="1.3"/><rect x="14" y="4" width="6" height="6" rx="1.3"/><rect x="4" y="14" width="6" height="6" rx="1.3"/><rect x="14" y="14" width="6" height="6" rx="1.3"/></svg>
+              </button>
+              <button class="rz-tool rz-light" onClick="{{toChars}}">Characters</button>
+              <button class="rz-tool rz-light" onClick="{{toLoc}}">Location</button>
+              <button class="rz-tool rz-light" onClick="{{toTime}}">Timeline</button>
+              <sc-if value="{{undoable}}" hint-placeholder-val="{{false}}">
+                <button class="rz-tool rz-dark tl-icon" aria-label="Undo" onClick="{{doUndo}}">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 14 4 9l5-5"/><path d="M4 9h11a5 5 0 0 1 0 10h-3"/></svg>
+                </button>
+              </sc-if>
+              <button class="rz-tool rz-danger tl-icon" aria-label="Delete section">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 7h16"/><path d="M9 7V5h6v2"/><path d="M6 7l1 13h10l1-13"/></svg>
+              </button>
+              <button class="rz-tool rz-success tl-icon" aria-label="Add section above">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"/><path d="M14 3v6h6"/><path d="M12 12v6M9 15h6"/></svg>
+              </button>
+              <span class="split">
+                <button class="rz-tool rz-success main" onClick="{{doSaveClose}}">
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 3h11l3 3v15H5z"/><path d="M8 3v5h7V3"/><rect x="8" y="13" width="8" height="5"/></svg>
+                  Save
+                </button>
+                <button class="rz-tool rz-success tog" aria-label="More save options" onClick="{{toggleSaveMenu}}">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg>
+                </button>
+                <sc-if value="{{saveMenuOpen}}" hint-placeholder-val="{{false}}">
+                  <div class="save-menu"><button onClick="{{doAutodetect}}">Autodetect Attributes</button></div>
+                </sc-if>
+              </span>
+              <button class="rz-tool rz-primary tl-icon" aria-label="Close editor" onClick="{{closePara}}">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10 17l5-5-5-5"/><path d="M15 12H3"/><path d="M15 4h4a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2h-4"/></svg>
+              </button>
+            </div>
+            <sc-if value="{{undoable}}" hint-placeholder-val="{{false}}">
+              <div class="undo-note">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 2.6l2.1 6.4 6.4 2.1-6.4 2.1L12 19.6l-2.1-6.4L3.5 11l6.4-2z"/></svg>
+                <span>AI rewrote this section. Use Undo to restore the previous text.</span>
+              </div>
+            </sc-if>
+            <textarea class="para-area" defaultValue="{{paraContent}}" placeholder="Write this paragraph..."></textarea>
+          </div>
+        </sc-if>
+
+        <sc-if value="{{pAI}}" hint-placeholder-val="{{false}}">
+          <div class="m-body">
+            <div class="mic-row">
+              <button class="rz-tool rz-light tl-icon" aria-label="Speech to text">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 2a3 3 0 0 0-3 3v6a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3z"/><path d="M5 11a7 7 0 0 0 14 0"/><line x1="12" y1="18" x2="12" y2="22"/></svg>
+              </button>
+            </div>
+            <div class="field">
+              <label for="ai-prompt">Describe paragraph or provide prompt instructions (optional):</label>
+              <textarea id="ai-prompt" maxlength="500" placeholder="e.g. continue from Freya's threat, keep it tense"></textarea>
+            </div>
+            <div class="field">
+              <label for="ai-words">Number of words to generate:</label>
+              <select id="ai-words" defaultValue="200">
+                <sc-for list="{{colWords}}" as="w" hint-placeholder-count="9"><option>{{w}}</option></sc-for>
+              </select>
+            </div>
+            <div class="field">
+              <label for="ai-model">AI Model:</label>
+              <select id="ai-model">
+                <sc-for list="{{colModels}}" as="m" hint-placeholder-count="4"><option>{{m}}</option></sc-for>
+              </select>
+            </div>
+            <div class="m-actions">
+              <button class="rz rz-success" onClick="{{doGenerate}}">Save</button>
+            </div>
+          </div>
+        </sc-if>
+
+        <sc-if value="{{pChars}}" hint-placeholder-val="{{false}}">
+          <div class="m-body">
+            <div class="checklist">
+              <sc-for list="{{colCharacters}}" as="c" hint-placeholder-count="5">
+                <label class="checkrow"><input type="checkbox" defaultChecked="{{c.on}}"><span>{{c.name}}</span></label>
+              </sc-for>
+            </div>
+            <div class="m-actions">
+              <button class="rz rz-light" onClick="{{pBack}}">Cancel</button>
+              <button class="rz rz-success" onClick="{{pBack}}">Save</button>
+            </div>
+          </div>
+        </sc-if>
+
+        <sc-if value="{{pLoc}}" hint-placeholder-val="{{false}}">
+          <div class="m-body">
+            <div class="field">
+              <label for="loc-pick">Location</label>
+              <select id="loc-pick">
+                <sc-for list="{{colLocations}}" as="l" hint-placeholder-count="4"><option>{{l}}</option></sc-for>
+              </select>
+            </div>
+            <div class="m-actions">
+              <button class="rz rz-light" onClick="{{pBack}}">Cancel</button>
+              <button class="rz rz-success" onClick="{{pBack}}">Save</button>
+            </div>
+          </div>
+        </sc-if>
+
+        <sc-if value="{{pTime}}" hint-placeholder-val="{{false}}">
+          <div class="m-body">
+            <div class="field">
+              <label for="time-pick">Timeline</label>
+              <select id="time-pick">
+                <sc-for list="{{colTimelines}}" as="t" hint-placeholder-count="3"><option>{{t}}</option></sc-for>
+              </select>
+            </div>
+            <div class="m-actions">
+              <button class="rz rz-light" onClick="{{pBack}}">Cancel</button>
+              <button class="rz rz-success" onClick="{{pBack}}">Save</button>
+            </div>
+          </div>
+        </sc-if>
+
+      </div>
+    </div>
+  </sc-if>
+
+</div>
+</x-dc>
+
+<script type="text/x-dc" data-dc-script data-props='{"accent":{"editor":"color","default":"#5B4FD6","section":"Theme"},"$preview":{"width":1200,"height":860}}'>
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    this.chapters = this.build();
+    this.kb0 = this.kbData();
+    this.state = {
+      tab: 'chapters', sysOpen: false, worldOpen: false, dlg: null,
+      chapId: 'c1', selId: 'c1-p0',
+      paraOpen: false, paraId: null, paraView: 'edit', saveMenuOpen: false, undoable: false,
+      kbView: 'pages', kbSel: 'char/balt', kbMode: 'design', kbNode: 'char/balt'
+    };
+  }
+
+  build() {
+    var SHOWCASE = [
+      '"Father!"',
+      'Balt opened his eyes, groaning at the twilit sky, then rolled over to his side.',
+      "Father was still unconscious, but he breathed, rasping wetly with each breath. Body shaking, Balt forced himself to sit up and examine Father's abdomen. His left side was a mass of blood and charred flesh — but he wasn't dead, which meant Balt had repaired the worst of it. The cost, though. Balt had burned a Personal memory, and some part of himself had burned away with it.",
+      'Freya lay next to Father, muttering angrily under her breath. She clutched her necklace, fingers wrapped around a single bead.',
+      'As Balt sat up, Freya turned her head toward him and met him with an angry stare.',
+      '"Did you steal one, you brute?" she asked, her voice shaking with indignation. "Tell me before I vaporize you."',
+      '"No," Balt said, eyes wide. "Of course not."',
+      'Freya grinned, unbothered, and patted his arm. "My mistake, dear. I must have used it myself, then."',
+      'The stranger pressed the rosin into Freya’s palm as if it cost him nothing, and smiled the way men smile when they expect to be remembered.'
+    ];
+    return [
+      { id: 'c0', kicker: 'Prologue', title: "It wouldn't be a betrayal", navTitle: 'Prologue: It wouldn’t be a betrayal',
+        synopsis: 'The quiet decision that starts everything.',
+        paras: ['Before the ridge, before the Husks, there was a hand that would not stop shaking — and a choice Balt kept telling himself was not a betrayal.'] },
+      { id: 'c1', kicker: 'Chapter One', title: 'A collection of sounds', navTitle: 'Chapter 1: A collection of sounds',
+        synopsis: 'Balt wakes after the battle; Freya counts the beads on her necklace.',
+        paras: SHOWCASE },
+      { id: 'c2', kicker: 'Chapter Two', title: "He's still there, helpless", navTitle: 'Chapter 2: He’s still there, helpless…',
+        synopsis: 'Balt pays memory to keep Father breathing.',
+        paras: ['To close the wound, Balt reached inward and chose a memory to burn. He did not let himself look at which one.'] },
+      { id: 'c3', kicker: 'Chapter Three', title: 'Well-fought, Odin', navTitle: 'Chapter 3: Well-fought, Odin',
+        synopsis: 'Father wakes without knowing his daughter.',
+        paras: ['When Father finally woke, he looked at Freya with the polite, careful eyes of a man meeting his daughter for the very first time.'] },
+      { id: 'c4', kicker: 'Chapter Four', title: 'Chapter Four', navTitle: 'Chapter 4', synopsis: '', paras: [] }
+    ];
+  }
+
+  kbData() {
+    var P = function (label, to) { return { t: label, link: true, plain: false, unres: false, to: to }; };
+    var U = function (label) { return { t: label, link: false, plain: false, unres: true, to: null }; };
+    var T = function (text) { return { t: text, link: false, plain: true, unres: false, to: null }; };
+
+    var tree = [
+      { path: 'forgetting-baldur', label: 'Forgetting Baldur', type: 'page', indent: 0 },
+      { path: 'world-facts', label: 'World Facts', type: 'page', indent: 0 },
+      { path: 'Characters', label: 'Characters', type: 'folder', indent: 0 },
+      { path: 'char/balt', label: 'Balt', type: 'page', indent: 1 },
+      { path: 'char/freya', label: 'Freya', type: 'page', indent: 1 },
+      { path: 'char/father', label: 'Father', type: 'page', indent: 1 },
+      { path: 'char/stranger', label: 'The Stranger', type: 'page', indent: 1 },
+      { path: 'char/odin', label: 'Odin', type: 'page', indent: 1 },
+      { path: 'Locations', label: 'Locations', type: 'folder', indent: 0 },
+      { path: 'loc/ridge', label: 'The Ridge Above the Ravine', type: 'page', indent: 1 },
+      { path: 'loc/arlanda', label: 'Arlanda', type: 'page', indent: 1 },
+      { path: 'loc/room', label: 'The Rented Room', type: 'page', indent: 1 },
+      { path: 'Timelines', label: 'Timelines', type: 'folder', indent: 0 },
+      { path: 'time/battle', label: 'The Battle', type: 'page', indent: 1 },
+      { path: 'time/years', label: 'Years Before', type: 'page', indent: 1 }
+    ];
+
+    var pages = {
+      'forgetting-baldur': {
+        title: 'Forgetting Baldur', crumb: 'Forgetting Baldur',
+        source: '---\ntype: story\nstyle: Fantasy\n---\n\n# Forgetting Baldur\n\nAfter the battle, [[Balt]] burns his memories to keep [[Father]] alive while [[Freya]] counts her beads.',
+        body: [{ segs: [T('The story follows '), P('Balt', 'char/balt'), T(' after the battle on '), P('The Ridge Above the Ravine', 'loc/ridge'), T('. He burns his own memories to keep '), P('Father', 'char/father'), T(' alive, while '), P('Freya', 'char/freya'), T(' counts the beads she has left.')] }],
+        out: [['Balt', 'char/balt'], ['Father', 'char/father'], ['The Ridge Above the Ravine', 'loc/ridge'], ['Freya', 'char/freya']],
+        back: [], unres: []
+      },
+      'char/balt': {
+        title: 'Balt', crumb: 'Characters / Balt',
+        source: '---\ntype: character\nrole: protagonist\n---\n\n# Balt\n\nAfter the battle on [[The Ridge Above the Ravine]], Balt burns a memory to keep [[Father]] alive.\n\nHis bond with [[Freya]] is strained — she suspects he stole a bead from [[The Necklace]].',
+        body: [
+          { segs: [T('Balt is the protagonist. After the battle on '), P('The Ridge Above the Ravine', 'loc/ridge'), T(', he burns a memory to keep '), P('Father', 'char/father'), T(' alive — and some part of himself burns away with it.')] },
+          { segs: [T('His bond with '), P('Freya', 'char/freya'), T(' is strained: she suspects he stole a bead from '), U('The Necklace'), T('. He appears throughout '), P('The Battle', 'time/battle'), T('.')] }
+        ],
+        out: [['The Ridge Above the Ravine', 'loc/ridge'], ['Father', 'char/father'], ['Freya', 'char/freya'], ['The Battle', 'time/battle']],
+        back: [['Freya', 'char/freya', 12], ['Forgetting Baldur', 'forgetting-baldur', 4]],
+        unres: ['The Necklace']
+      },
+      'char/freya': {
+        title: 'Freya', crumb: 'Characters / Freya',
+        source: '---\ntype: character\n---\n\n# Freya\n\nGuarded daughter of [[Father]]. Accuses [[Balt]] of stealing a bead from [[The Necklace]].',
+        body: [{ segs: [T('Freya is the guarded daughter of '), P('Father', 'char/father'), T('. She accuses '), P('Balt', 'char/balt'), T(' of stealing a bead from '), U('The Necklace'), T(', then softens.')] }],
+        out: [['Father', 'char/father'], ['Balt', 'char/balt']],
+        back: [['Balt', 'char/balt', 18]], unres: ['The Necklace']
+      },
+      'char/father': {
+        title: 'Father', crumb: 'Characters / Father',
+        source: '---\ntype: character\n---\n\n# Father\n\nWounded on [[The Ridge Above the Ravine]]; wakes without knowing [[Freya]].',
+        body: [{ segs: [T('Wounded on '), P('The Ridge Above the Ravine', 'loc/ridge'), T(', Father is kept alive by '), P('Balt', 'char/balt'), T('. He wakes without knowing his daughter '), P('Freya', 'char/freya'), T('.')] }],
+        out: [['The Ridge Above the Ravine', 'loc/ridge'], ['Balt', 'char/balt'], ['Freya', 'char/freya']],
+        back: [['Balt', 'char/balt', 9], ['Freya', 'char/freya', 3]], unres: []
+      },
+      'loc/ridge': {
+        title: 'The Ridge Above the Ravine', crumb: 'Locations / The Ridge Above the Ravine',
+        source: '---\ntype: location\ntimeline: The Battle\n---\n\n# The Ridge Above the Ravine\n\nWind-scoured rock where [[The Battle]] ended.',
+        body: [{ segs: [T('Wind-scoured rock where '), P('The Battle', 'time/battle'), T(' ended. '), P('Balt', 'char/balt'), T(' and '), P('Father', 'char/father'), T(' were found here.')] }],
+        out: [['The Battle', 'time/battle'], ['Balt', 'char/balt'], ['Father', 'char/father']],
+        back: [['Balt', 'char/balt', 8], ['Father', 'char/father', 2], ['Forgetting Baldur', 'forgetting-baldur', 4]], unres: []
+      },
+      'time/battle': {
+        title: 'The Battle', crumb: 'Timelines / The Battle',
+        source: '---\ntype: timeline\nstart: 06:00\nstop: 18:30\n---\n\n# The Battle\n\nThe day on [[The Ridge Above the Ravine]] that opens the story.',
+        body: [{ segs: [T('The day on '), P('The Ridge Above the Ravine', 'loc/ridge'), T(' that opens the story — where '), P('Balt', 'char/balt'), T(' pays memory for '), P('Father', 'char/father'), T('.')] }],
+        out: [['The Ridge Above the Ravine', 'loc/ridge'], ['Balt', 'char/balt'], ['Father', 'char/father']],
+        back: [['Balt', 'char/balt', 15], ['The Ridge Above the Ravine', 'loc/ridge', 3]], unres: []
+      }
+    };
+
+    var gnodes = [
+      { id: 'char/balt', label: 'Balt', g: 'char', x: 450, y: 262, center: true },
+      { id: 'char/freya', label: 'Freya', g: 'char', x: 300, y: 172 },
+      { id: 'char/father', label: 'Father', g: 'char', x: 332, y: 356 },
+      { id: 'char/stranger', label: 'The Stranger', g: 'char', x: 182, y: 112 },
+      { id: 'char/odin', label: 'Odin', g: 'char', x: 652, y: 150 },
+      { id: 'loc/ridge', label: 'The Ridge', g: 'loc', x: 566, y: 336 },
+      { id: 'loc/arlanda', label: 'Arlanda', g: 'loc', x: 176, y: 300 },
+      { id: 'loc/room', label: 'The Rented Room', g: 'loc', x: 470, y: 438 },
+      { id: 'time/battle', label: 'The Battle', g: 'time', x: 656, y: 316 },
+      { id: 'time/years', label: 'Years Before', g: 'time', x: 150, y: 420 },
+      { id: 'missing/necklace', label: 'The Necklace', g: 'char', x: 206, y: 232, missing: true }
+    ];
+    var gedges = [
+      ['char/balt', 'char/freya'], ['char/balt', 'char/father'], ['char/balt', 'loc/ridge'],
+      ['char/balt', 'time/battle'], ['char/balt', 'loc/room'], ['char/freya', 'char/father'],
+      ['char/father', 'loc/ridge'], ['char/odin', 'time/battle'], ['loc/arlanda', 'time/years'],
+      ['char/freya', 'missing/necklace', true]
+    ];
+    return { tree: tree, pages: pages, gnodes: gnodes, gedges: gedges };
+  }
+
+  kbVals(st) {
+    var self = this;
+    var data = this.kb0;
+    var sel = st.kbSel || 'char/balt';
+    var openPage = function (path) { return function () { self.setState({ kbSel: path, kbMode: 'design' }); }; };
+
+    var cur = data.pages[sel];
+    if (!cur) {
+      var idx = -1, folderLabel = '', lbl = 'Page';
+      data.tree.forEach(function (r, i) { if (r.path === sel) { idx = i; lbl = r.label; } });
+      if (idx >= 0) { for (var j = idx; j >= 0; j--) { if (data.tree[j].type === 'folder') { folderLabel = data.tree[j].label; break; } } }
+      cur = {
+        title: lbl, crumb: folderLabel ? folderLabel + ' / ' + lbl : lbl,
+        source: '# ' + lbl + '\n\nPart of the knowledge graph for [[Forgetting Baldur]].',
+        body: [{ segs: [{ t: lbl + ' is part of the knowledge graph for ', plain: true }, { t: 'Forgetting Baldur', link: true, to: 'forgetting-baldur' }, { t: '. Open it to add notes and link other pages.', plain: true }] }],
+        out: [['Forgetting Baldur', 'forgetting-baldur']], back: [], unres: []
+      };
+    }
+
+    var tree = data.tree.map(function (r) {
+      return {
+        cls: 'kb-row ' + r.type + (r.path === sel ? ' sel' : ''),
+        pad: 'padding-left:' + (9 + r.indent * 16) + 'px',
+        isFolder: r.type === 'folder', isPage: r.type === 'page',
+        label: r.label,
+        open: r.type === 'page' ? openPage(r.path) : function () {}
+      };
+    });
+
+    var body = cur.body.map(function (par) {
+      return { segs: par.segs.map(function (s) {
+        return { t: s.t, link: !!s.link, plain: !!s.plain, unres: !!s.unres, go: s.to ? openPage(s.to) : function () {} };
+      }) };
+    });
+
+    var out = (cur.out || []).map(function (o) { return { label: o[0], go: openPage(o[1]) }; });
+    var back = (cur.back || []).map(function (b) { return { label: b[0], line: b[2], go: openPage(b[1]) }; });
+    var unres = (cur.unres || []).map(function (u) { return { label: u }; });
+
+    var byId = {}; data.gnodes.forEach(function (n) { byId[n.id] = n; });
+    var nodeId = st.kbNode;
+    var nodes = data.gnodes.map(function (n) {
+      var r = n.center ? 27 : (n.missing ? 15 : 20);
+      return {
+        cls: 'kb-gnode g-' + n.g + (n.missing ? ' missing' : '') + (n.center ? ' center' : '') + (nodeId === n.id ? ' selected' : ''),
+        tf: 'translate(' + n.x + ' ' + n.y + ')', r: r, ty: (r + 14), label: n.label,
+        pick: (function (id) { return function () { self.setState({ kbNode: id }); }; })(n.id)
+      };
+    });
+    var edges = data.gedges.map(function (e) {
+      var a = byId[e[0]], b = byId[e[1]];
+      return { cls: 'kb-gedge' + (e[2] ? ' missing' : ''), x1: a.x, y1: a.y, x2: b.x, y2: b.y };
+    });
+    var np = null;
+    if (nodeId && byId[nodeId]) {
+      var nn = byId[nodeId];
+      np = { label: nn.label, path: nn.missing ? 'No page yet — create it' : nn.id + '.md' };
+    }
+
+    var mode = st.kbMode || 'design';
+    var pageCount = data.tree.filter(function (r) { return r.type === 'page'; }).length;
+    var stat = pageCount + ' pages · ' + data.gedges.length + ' links';
+
+    return {
+      isPages: st.kbView !== 'graph', isGraph: st.kbView === 'graph',
+      segPages: st.kbView !== 'graph' ? 'on' : '', segGraph: st.kbView === 'graph' ? 'on' : '',
+      toPages: function () { self.setState({ kbView: 'pages' }); },
+      toGraph: function () { self.setState({ kbView: 'graph' }); },
+      stat: stat, graphStat: stat,
+      tree: tree,
+      cur: { title: cur.title, crumb: cur.crumb, source: cur.source, body: body },
+      isSource: mode === 'source', isRendered: mode !== 'source',
+      mDesign: mode === 'design' ? 'on' : '', mSource: mode === 'source' ? 'on' : '', mPreview: mode === 'preview' ? 'on' : '',
+      toDesign: function () { self.setState({ kbMode: 'design' }); },
+      toSource: function () { self.setState({ kbMode: 'source' }); },
+      toPreview: function () { self.setState({ kbMode: 'preview' }); },
+      out: out, outN: out.length, noOut: out.length === 0,
+      back: back, backN: back.length, noBack: back.length === 0,
+      unres: unres, unresN: unres.length, noUnres: unres.length === 0,
+      nodes: nodes, edges: edges, nodePanel: !!np, node: np || { label: '', path: '' },
+      closeNode: function () { self.setState({ kbNode: null }); }
+    };
+  }
+
+  snippet(text) {
+    var t = (text || '').replace(/[“”"']/g, '').trim();
+    var w = t.split(/\s+/);
+    return w.slice(0, 6).join(' ') + (w.length > 6 ? '…' : '');
+  }
+
+  renderVals() {
+    var self = this;
+    var st = this.state;
+    var t = st.tab;
+    var tc = function (name) { return 'tab' + (t === name ? ' on' : ''); };
+
+    var dlg = st.dlg;
+    var dlgTitles = { char: 'Edit Character', loc: 'Edit Location', time: 'Edit Timeline' };
+    var openDlg = function (name) { return function () { self.setState({ dlg: name }); }; };
+
+    var chapId = st.chapId || 'c1';
+    var chapterOptions = this.chapters.map(function (c) { return { id: c.id, label: c.navTitle }; });
+    var curChap = null;
+    this.chapters.forEach(function (c) { if (c.id === chapId) curChap = c; });
+    if (!curChap) { curChap = this.chapters[0]; chapId = curChap.id; }
+
+    var sections = (curChap.paras || []).map(function (text, i) {
+      return { id: chapId + '-p' + i, label: 'Section ' + (i + 1), content: text };
+    });
+
+    var setChap = function (e) {
+      var id = (e && e.target) ? e.target.value : chapId;
+      self.setState({ chapId: id, selId: id + '-p0', paraOpen: false });
+    };
+    var selectPara = function (id) {
+      self.setState({ selId: id });
+      try { requestAnimationFrame(function () { var el = document.getElementById('doc-' + id); if (el) el.scrollIntoView({ behavior: 'smooth', block: 'nearest' }); }); } catch (err) {}
+    };
+    var openEdit = function (id) {
+      self.setState({ selId: id, paraOpen: true, paraId: id, paraView: 'edit', saveMenuOpen: false, undoable: false });
+    };
+
+    var docParas = sections.map(function (s) {
+      return {
+        id: s.id, label: s.label, content: s.content, isSel: st.selId === s.id,
+        wrapCls: 'para' + (st.selId === s.id ? ' sel' : ''),
+        select: function () { selectPara(s.id); },
+        edit: function () { openEdit(s.id); }
+      };
+    });
+    var navParas = sections.map(function (s) {
+      return {
+        cls: 'node n-para' + (st.selId === s.id ? ' sel' : ''),
+        title: s.label + ' · ' + self.snippet(s.content),
+        select: function () { selectPara(s.id); },
+        manage: function () { openEdit(s.id); }
+      };
+    });
+
+    var n = sections.length;
+    var detectBanner = n > 0
+      ? 'This chapter breaks into ' + n + ' paragraph' + (n === 1 ? '' : 's') + '. Select one to open the paragraph tools.'
+      : 'No paragraphs detected in this chapter yet. Add one to begin.';
+
+    var curPara = null;
+    sections.forEach(function (s) { if (s.id === st.paraId) curPara = s; });
+    var paraContent = curPara ? curPara.content : '';
+    var secLabel = curPara ? curPara.label : 'New Section';
+    var pv = st.paraView;
+    var pTitles = { edit: secLabel, ai: 'AI Prompt Instructions', characters: 'Select Characters', location: 'Select Location', timeline: 'Select Timeline' };
+    var pKinds = { edit: 'Paragraph editor', ai: 'Generate with AI', characters: 'Paragraph attribute', location: 'Paragraph attribute', timeline: 'Paragraph attribute' };
+
+    return {
+      accent: this.props.accent || '#5B4FD6',
+
+      tDetails: tc('details'), tTimelines: tc('timelines'), tLocations: tc('locations'),
+      tCharacters: tc('characters'), tChapters: tc('chapters'), tChat: tc('chat'), tKnow: tc('knowledge'),
+      goDetails: function(){ self.setState({tab:'details'}); },
+      goTimelines: function(){ self.setState({tab:'timelines'}); },
+      goLocations: function(){ self.setState({tab:'locations'}); },
+      goCharacters: function(){ self.setState({tab:'characters'}); },
+      goChapters: function(){ self.setState({tab:'chapters'}); },
+      goChat: function(){ self.setState({tab:'chat'}); },
+      goKnow: function(){ self.setState({tab:'knowledge'}); },
+      isDetails: t==='details', isTimelines: t==='timelines', isLocations: t==='locations',
+      isCharacters: t==='characters', isChapters: t==='chapters', isChat: t==='chat',
+      isKnowledge: t==='knowledge', inWrap: (t!=='chapters' && t!=='knowledge'),
+      kb: this.kbVals(st),
+
+      sysOpen: st.sysOpen, worldOpen: st.worldOpen,
+      toggleSys: function(){ self.setState({sysOpen: !st.sysOpen}); },
+      toggleWorld: function(){ self.setState({worldOpen: !st.worldOpen}); },
+      sysChev: st.sysOpen ? 'transform:rotate(90deg)' : '',
+      worldChev: st.worldOpen ? 'transform:rotate(90deg)' : '',
+
+      dlgOpen: !!dlg, dlgChar: dlg==='char', dlgLoc: dlg==='loc', dlgTime: dlg==='time',
+      dlgTitle: dlgTitles[dlg] || '', dlgKind: 'Story element',
+      closeDlg: function(){ self.setState({dlg:null}); },
+      stop: function(e){ if(e&&e.stopPropagation) e.stopPropagation(); },
+      newChar: openDlg('char'), editChar: openDlg('char'),
+      newLoc: openDlg('loc'), editLoc: openDlg('loc'),
+      newTime: openDlg('time'), editTime: openDlg('time'),
+
+      chapId: chapId, chapterOptions: chapterOptions, setChap: setChap,
+      chapKicker: curChap.kicker, chapTitle: curChap.title, chapNavTitle: curChap.navTitle, chapSynopsis: curChap.synopsis,
+      selectChapTop: function () { selectPara(chapId); },
+      docParas: docParas, navParas: navParas, detectBanner: detectBanner, noParas: n === 0,
+      addFirst: function () { openEdit('new'); },
+
+      paraOpen: st.paraOpen,
+      closePara: function () { self.setState({ paraOpen: false, saveMenuOpen: false }); },
+      pTitle: pTitles[pv] || secLabel, pKind: pKinds[pv] || 'Paragraph editor', pShowBack: pv !== 'edit',
+      pBack: function () { self.setState({ paraView: 'edit', saveMenuOpen: false }); },
+      pEdit: pv === 'edit', pAI: pv === 'ai', pChars: pv === 'characters', pLoc: pv === 'location', pTime: pv === 'timeline',
+      paraContent: paraContent,
+      toAI: function () { self.setState({ paraView: 'ai', saveMenuOpen: false }); },
+      toChars: function () { self.setState({ paraView: 'characters', saveMenuOpen: false }); },
+      toLoc: function () { self.setState({ paraView: 'location', saveMenuOpen: false }); },
+      toTime: function () { self.setState({ paraView: 'timeline', saveMenuOpen: false }); },
+      saveMenuOpen: st.saveMenuOpen,
+      toggleSaveMenu: function (e) { if (e && e.stopPropagation) e.stopPropagation(); self.setState({ saveMenuOpen: !st.saveMenuOpen }); },
+      doAutodetect: function () { self.setState({ saveMenuOpen: false }); },
+      doSaveClose: function () { self.setState({ paraOpen: false, saveMenuOpen: false }); },
+      undoable: st.undoable,
+      doUndo: function () { self.setState({ undoable: false }); },
+      doGenerate: function () { self.setState({ paraView: 'edit', undoable: true }); },
+
+      colWords: ['10', '20', '50', '100', '200', '300', '500', '800', '1000'],
+      colModels: ['gpt-4o', 'gpt-4o-mini', 'gpt-4-turbo', 'o1-preview'],
+      colCharacters: [
+        { name: 'Balt', on: true }, { name: 'Freya', on: true }, { name: 'Father', on: true },
+        { name: 'The Stranger', on: false }, { name: 'Odin', on: false }
+      ],
+      colLocations: ['The Ridge Above the Ravine', 'Arlanda', 'The Rented Room', 'The Long Road Home', '(none)'],
+      colTimelines: ['Present Day', 'Years Before', 'The Battle', '(none)'],
+
+      characters: [
+        { name:'Balt', initial:'B', meta:'Protagonist · burns memories to heal' },
+        { name:'Freya', initial:'F', meta:'Guarded; counts her necklace beads' },
+        { name:'Father', initial:'F', meta:'Wounded; wakes without his memory' },
+        { name:'The Stranger', initial:'S', meta:'Appears once · unattached' },
+        { name:'Odin', initial:'O', meta:'Referenced · Chapter 3' }
+      ],
+      locations: [
+        { name:'The Ridge Above the Ravine', meta:'Present Day' },
+        { name:'Arlanda', meta:'Years Before' },
+        { name:'The Rented Room', meta:'Present Day' },
+        { name:'The Long Road Home', meta:'Present Day' }
+      ],
+      timelines: [
+        { name:'Present Day', range:'11/4/2026 6:00 AM' },
+        { name:'The Battle', range:'11/4/2026 6:00 AM – 6:30 PM' },
+        { name:'Years Before', range:'3/2/2019 9:00 AM' },
+        { name:'The Flashback', range:'—' }
+      ]
+    };
+  }
+}
+</script>
+</body>
+</html>

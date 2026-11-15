@@ -1,0 +1,58 @@
+@* Locations tab (UI-Behavior-Spec §12.1). *@
+@inject AIStoryBuildersService Svc
+@inject DialogService Dialogs
+@inject NotificationService Notify
+
+<div class="asb-ws-head">
+    <h3 class="asb-ws-sec">Locations</h3>
+    <RadzenButton Text="New Location" Icon="add" ButtonStyle="ButtonStyle.Success" Click="@(() => OpenAsync(null))" />
+</div>
+@if (locations.Count == 0)
+{
+    <p class="asb-note">No locations yet.</p>
+}
+@foreach (var l in locations)
+{
+    <div class="asb-ecard">
+        <div class="asb-eline">
+            <b>@l.LocationName</b>
+            <span class="asb-emeta">@Meta(l)</span>
+        </div>
+        <RadzenButton Text="Edit" ButtonStyle="ButtonStyle.Light" Size="ButtonSize.Small" Click="@(() => OpenAsync(l))" />
+    </div>
+}
+
+@code {
+    [Parameter, EditorRequired] public Story Story { get; set; } = default!;
+
+    List<Location> locations = [];
+
+    protected override void OnParametersSet() => Load();
+
+    void Load() => locations = Svc.GetLocations(Story);
+
+    static string Meta(Location l)
+    {
+        var names = (l.LocationDescription ?? []).Select(d => d.Timeline?.TimelineName).Where(n => !string.IsNullOrEmpty(n)).Distinct().ToList();
+        return names.Count == 0 ? "No timeline" : string.Join(", ", names);
+    }
+
+    async Task OpenAsync(Location? existing)
+    {
+        var location = existing is null
+            ? new Location { Id = -1, LocationName = "", LocationDescription = [], Story = Story }
+            : new Location { Id = existing.Id, LocationName = existing.LocationName, Story = Story,
+                             LocationDescription = (existing.LocationDescription ?? []).Select(d => new LocationDescription { Id = d.Id, Description = d.Description, Timeline = d.Timeline }).ToList() };
+        try
+        {
+            await Dialogs.OpenAsync<LocationDialog>(existing is null ? "New Location" : "Edit Location",
+                new Dictionary<string, object?> { ["Location"] = location },
+                new DialogOptions { Width = "650px", CloseDialogOnEsc = true, ShowClose = true });
+            Load();
+        }
+        catch (Exception ex)
+        {
+            Notify.Notify(NotificationSeverity.Error, "Error", ex.Message, 4000);
+        }
+    }
+}
