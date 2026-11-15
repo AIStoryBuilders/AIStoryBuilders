@@ -737,7 +737,7 @@ Add these to the parent plan §12 as **T19a–T19f**, after T18, in this order. 
   - *Done when:* the renderer, prompt, budget and master-story rows in §10 pass, and every existing `OrchestratorTests` and `SearchKnowledgeBaseTests` case passes unchanged.
 - [x] **T19d (LF-T4): Story Chat.** `WritingStylePrompt` and the append in `RunTurnAsync`, with tests.
   - *Done when:* the chat rows in §10 pass, and the existing `StoryChatServiceTests` and `SearchKnowledgeBaseTests` pass unchanged.
-- [ ] **T19e (LF-T5): UI.** The Details Writing voice section, the paragraph dialog note, the chat chip and the CSS. Docs: UI-Behavior-Spec §10.3, §15.2, §16 and §19, and DESIGN.md §2.
+- [x] **T19e (LF-T5): UI.** The Details Writing voice section, the paragraph dialog note, the chat chip and the CSS. Docs: UI-Behavior-Spec §10.3, §15.2, §16 and §19, and DESIGN.md §2.
   - *Done when:* both apps build, and the manual UI row in §10 passes in both apps (MAUI and WASM). The MAUI link check and a screenshot of each state need a person; if one isn't available, leave this unchecked and say so in the commit.
 - [x] **T19f (LF-T6): User-facing and remaining docs.** User-Guide text (no new image reference yet; see §8.2), README, SecurityReview, Test-Data §7 and §9, and Dev-Environment §5. Parent §12 ticks, §13 criterion 14, and §14 Q25–Q30.
   - *Done when:* `HelpMarkdownTests` passes, the guide's new subsection renders on `/help`, and the commit lists the person-only steps as not verified: the screenshot and its reference, and the live style check in Test-Data §7.
