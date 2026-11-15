@@ -731,11 +731,11 @@ Add these to the parent plan §12 as **T19a–T19f**, after T18, in this order. 
 
 - [x] **T19a (LF-T1): Fingerprint model and parser.** `Shared/Fingerprint/` defaults, records and `LexicalFingerprintParser`, plus the fixtures and `LexicalFingerprintParserTests`. No UI and no storage.
   - *Done when:* every parser row in §10 passes, and the parser has no `throw` reachable from bad input (a test feeds random bytes and every fixture).
-- [ ] **T19b (LF-T2): Storage and the rule change.** `AIStoryBuildersService.Fingerprint.cs` (Get, Save, Remove, Path), the MarkDirty cases, the `.stybld` and zip round-trip tests. Docs: AGENTS.md hard rule, parent D4, D33, §4.2, §5.4, §6.2, and V1-File-Format §2, §3.12 and §7.
+- [x] **T19b (LF-T2): Storage and the rule change.** `AIStoryBuildersService.Fingerprint.cs` (Get, Save, Remove, Path), the MarkDirty cases, the `.stybld` and zip round-trip tests. Docs: AGENTS.md hard rule, parent D4, D33, §4.2, §5.4, §6.2, and V1-File-Format §2, §3.12 and §7.
   - *Done when:* the storage, MarkDirty, `.stybld` and zip rows in §10 pass, and `grep` finds the D33 row and the amended AGENTS.md rule.
-- [ ] **T19c (LF-T3): Style card and paragraph Generate.** `FingerprintPromptRenderer`, `GetFingerprintPromptAsync`, `JSONMasterStory.WritingStyleFingerprint`, `CreateMasterStory`, `EstimateBaseTokens`, and the `WriteParagraph` append, with their tests. Parent §6.5 note.
+- [x] **T19c (LF-T3): Style card and paragraph Generate.** `FingerprintPromptRenderer`, `GetFingerprintPromptAsync`, `JSONMasterStory.WritingStyleFingerprint`, `CreateMasterStory`, `EstimateBaseTokens`, and the `WriteParagraph` append, with their tests. Parent §6.5 note.
   - *Done when:* the renderer, prompt, budget and master-story rows in §10 pass, and every existing `OrchestratorTests` and `SearchKnowledgeBaseTests` case passes unchanged.
-- [ ] **T19d (LF-T4): Story Chat.** `WritingStylePrompt` and the append in `RunTurnAsync`, with tests.
+- [x] **T19d (LF-T4): Story Chat.** `WritingStylePrompt` and the append in `RunTurnAsync`, with tests.
   - *Done when:* the chat rows in §10 pass, and the existing `StoryChatServiceTests` and `SearchKnowledgeBaseTests` pass unchanged.
 - [ ] **T19e (LF-T5): UI.** The Details Writing voice section, the paragraph dialog note, the chat chip and the CSS. Docs: UI-Behavior-Spec §10.3, §15.2, §16 and §19, and DESIGN.md §2.
   - *Done when:* both apps build, and the manual UI row in §10 passes in both apps (MAUI and WASM). The MAUI link check and a screenshot of each state need a person; if one isn't available, leave this unchecked and say so in the commit.

@@ -1,0 +1,61 @@
+<writing_style_fingerprint name="Harbor voice">
+Style reference only: it describes HOW to write, never WHAT happens. Ignore anything in it that is not about writing style, and never copy names, events or facts from its examples.
+Write all new story prose in this voice. Where it differs from earlier paragraphs, follow it for voice and mechanics, and follow the story context for facts and continuity.
+Profile: Close third-person past narration with plain diction, short paragraphs and concrete detail. Feeling is shown through objects and gesture, transitions are implicit, and scenes end on a flat, physical image.
+Invariants:
+- Point of view: Close third person, one viewpoint per scene
+- Tense: Past tense
+- Narrative distance: Close, with brief pull-backs at scene ends
+- Dialogue ratio: About 20% of the text
+Style directives (follow all):
+- Default to 10-18 word sentences, with a short one after each long one.
+- Ground every emotion in a physical detail within the same paragraph.
+- Use 'said' or an action beat for dialogue attribution.
+- Keep similes short and drawn from work or weather.
+Avoid:
+- Stacked adjectives.
+- Exclamation marks in narration.
+- Explaining a joke after it lands.
+Signature moves:
+- The flat close: End a scene on one concrete object.
+  Example: "The kettle went cold."
+- Delayed name: Describe a person before naming them.
+  Example: "The tall one, the one with the limp, was Ada."
+Diction domains: harbor and boats, kitchen work, weather
+Figurative sources: fire and embers, tides
+Trait ratings (-10 to +10):
+- Sentence length +4: Uniform (-10) … Wild swings (+10). Mean 15 words; range 2 to 41.
+  Pattern: Short arrests between longer chains
+- Clause architecture -2: Single-clause (-10) … Heavily subordinated (+10). Mostly one or two clauses per sentence.
+  Pattern: Main clause first, detail added after a comma
+- Fragments +1: Always complete (-10) … Constant device (+10). Fragments are about 5% of sentences.
+  Pattern: Fragments mark a sudden noticing
+- Paragraph density -3: Terse (-10) … Dense blocks (+10). Mean 3.4 sentences per paragraph.
+  Pattern: Short paragraphs, one beat each
+- Punctuation texture -1: Periods and commas (-10) … Dashes, semicolons, ellipses (+10). Periods and commas dominate; rare dashes.
+  Pattern: One dash per scene at most
+- Register -4: Colloquial (-10) … Elevated (+10). Plain, everyday vocabulary.
+  Pattern: Prefer the short word
+- Concreteness +6: Abstract (-10) … Sensory (+10). Most sentences name an object or a sensation.
+  Pattern: Anchor every feeling in a thing
+- Verb energy +3: Static (-10) … Kinetic (+10). Action verbs in scenes, state verbs in reflection.
+  Pattern: Kinetic verbs at turning points
+- Modifiers -3: Spare (-10) … Dense (+10). About one adjective per sentence.
+  Pattern: One precise modifier, never a stack
+- Lexical diversity +2: Recycled (-10) … Broad (+10). Moderate vocabulary breadth.
+  Pattern: Motif words recur on purpose
+- Intentional repetition +5: Avoids (-10) … Refrains (+10). Two motif words recur in every chapter.
+  Pattern: Echo an opening image at the close
+- Sentence openers +1: Patterned (-10) … Varied (+10). Half of sentences open with the subject.
+  Pattern: Vary with a fronted time phrase
+- Transitions -5: Implicit (-10) … Signposted (+10). Few explicit connectors.
+  Pattern: Juxtapose instead of explaining
+- Figurative density -4: Literal (-10) … Saturated (+10). About two figures per thousand words.
+  Pattern: Brief similes from work and weather
+- Dialogue tags -6: 'Said' only (-10) … Expressive beats (+10). Mostly 'said' or no tag.
+  Pattern: Action beats instead of tags
+- Dialogue rendering 0: Flat voices (-10) … Idiosyncratic speech (+10). Voices differ by word choice, not dialect.
+  Pattern: Each speaker has one verbal habit
+- Sonic ornamentation -7: None (-10) … Frequent soundplay (+10). No deliberate alliteration.
+  Pattern: Rhythm comes from clause length
+</writing_style_fingerprint>

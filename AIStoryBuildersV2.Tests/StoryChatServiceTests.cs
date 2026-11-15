@@ -112,6 +112,68 @@ public class StoryChatServiceTests : IDisposable
         Assert.DoesNotContain(_chat.Requests[2], m => m.Role == ChatRole.Assistant);
     }
 
+    Task SaveFingerprintAsync() => _f.Service.SaveLexicalFingerprintAsync(FixtureFactory.Title,
+        File.ReadAllBytes(FixtureFactory.SourceFixturePath("Fingerprint/valid-wrapped.json")!), "valid-wrapped.json");
+
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public async Task Without_a_fingerprint_the_prompt_and_message_are_unchanged(bool kb)
+    {
+        _chat.EnqueueText("ok");
+        await SendAsync(Create(), Ask("Write the next paragraph.", kb));
+
+        var request = _chat.Requests[0];
+        Assert.Equal(kb ? StoryChatService.SystemPrompt + StoryChatService.KnowledgeBasePrompt : StoryChatService.SystemPrompt, request[0].Text);
+        Assert.Equal("Write the next paragraph.", request[^1].Text);
+    }
+
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public async Task With_a_fingerprint_the_system_prompt_gets_only_fixed_text_and_the_user_message_gets_the_card(bool kb)
+    {
+        await SaveFingerprintAsync();
+        var card = await _f.Service.GetFingerprintPromptAsync(FixtureFactory.Title);
+        _chat.EnqueueText("ok");
+        await SendAsync(Create(), Ask("Write the next paragraph.", kb));
+
+        var request = _chat.Requests[0];
+        var expectedSystem = StoryChatService.SystemPrompt + (kb ? StoryChatService.KnowledgeBasePrompt : "") + StoryChatService.WritingStylePrompt;
+        Assert.Equal(expectedSystem, request[0].Text);
+        Assert.DoesNotContain("Harbor voice", request[0].Text);
+        Assert.Equal(card + "\n\nWrite the next paragraph.", request[^1].Text);
+        Assert.Equal(ChatRole.User, request[^1].Role);
+    }
+
+    [Fact]
+    public async Task The_card_is_sent_once_per_request_and_never_kept_in_history()
+    {
+        await SaveFingerprintAsync();
+        _chat.EnqueueText("first").EnqueueText("second");
+        var chat = Create();
+
+        await SendAsync(chat, Ask("Q1"));
+        await SendAsync(chat, Ask("Q2"));
+
+        var second = _chat.Requests[1];
+        var users = second.Where(m => m.Role == ChatRole.User).ToList();
+        Assert.Equal("Q1", users[0].Text);
+        Assert.EndsWith("\n\nQ2", users[^1].Text);
+        Assert.Single(second, m => m.Text.Contains("<writing_style_fingerprint name=", StringComparison.Ordinal));
+        Assert.Same(users[^1], second.Single(m => m.Text.Contains("<writing_style_fingerprint name=", StringComparison.Ordinal)));
+    }
+
+    [Fact]
+    public async Task An_unreadable_fingerprint_is_skipped()
+    {
+        File.WriteAllText(_f.Service.FingerprintPath(FixtureFactory.Title), "not json");
+        _chat.EnqueueText("ok");
+        await SendAsync(Create(), Ask("Hi"));
+        Assert.Equal(StoryChatService.SystemPrompt, _chat.Requests[0][0].Text);
+        Assert.Equal("Hi", _chat.Requests[0][^1].Text);
+    }
+
     [Fact]
     public async Task A_failed_turn_is_not_added_to_the_history()
     {

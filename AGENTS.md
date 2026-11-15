@@ -10,6 +10,7 @@ Blazor WebAssembly app that share one Razor class library. **Read these before w
 | [Docs/UI-Behavior-Spec.md](Docs/UI-Behavior-Spec.md) | What every button, dialog and message does |
 | [Docs/Design/DESIGN.md](Docs/Design/DESIGN.md) and `Docs/Design/*.dc.html` | Layout, tokens and styling |
 | [Docs/Test-Data.md](Docs/Test-Data.md) | Fixture story, probe fixture, KB test page and expected results |
+| [Docs/Lexical-Fingerprint-Plan.md](Docs/Lexical-Fingerprint-Plan.md) | The story's lexical fingerprint (tasks T19a–T19f): file, Details UI and prompt steering |
 | [Docs/Dev-Environment.md](Docs/Dev-Environment.md) | SDK, workloads, environment variables and how to run each app |
 
 ## How to work
@@ -43,7 +44,7 @@ dotnet test AIStoryBuildersV2.Tests/AIStoryBuildersV2.Tests.csproj
 | Rule | Why (plan ref) |
 |---|---|
 | All pages, components and app logic go in `AIStoryBuildersV2.Shared`. The MAUI and Web projects contain host services only, with no `.razor` files. | G3 |
-| **Never change V1's file formats.** The only new thing allowed inside a story folder is `{Title}/KnowledgeBase/`. Never read or write `AIStoryBuildersSettings.config` or `ModelCache/`. | D4, D7 |
+| **Never change V1's file formats.** The only new things allowed inside a story folder are `{Title}/KnowledgeBase/` and `{Title}/LexicalFingerprint.json`. Never read or write `AIStoryBuildersSettings.config` or `ModelCache/`. | D4, D7, D33 |
 | Write vectors with `CultureInfo.InvariantCulture`, and timeline dates in V1's current-culture short form | D30 |
 | Before writing story files, delete `\|` from free text and remove line breaks from every field except paragraph content. Readers skip a bad record; they never drop the whole list. | D32 |
 | Never check whether a story exists with `Directory.Exists`. Ask `IStoryLibraryStore`, because in WASM, MEMFS holds only the open story. | D5, D25 |
@@ -55,7 +56,7 @@ dotnet test AIStoryBuildersV2.Tests/AIStoryBuildersV2.Tests.csproj
 | Every AI call gets its client from `IChatClientProvider.GetClientAsync(model)`, and only verified models are offered. The one exception is the capability probe, which builds its own client from the unsaved settings (§5.9). | D9, D10 |
 | KB tools available to story AI are prefixed `kb_` and offered only when **Search knowledgebase** (paragraph AI prompt) or **Include Knowledgebase** (Story Chat) is checked, except Story Chat's `kb_delete_page` and `kb_delete_folder`, which are always offered when the KB has pages (Q21). Story Chat's page edits (`kb_create_page`, `kb_update_page`, `kb_delete_page`) and folder tools (`kb_create_folder`, `kb_rename_folder`, `kb_move_folder`, `kb_delete_folder`) only propose; nothing is written until the user clicks Apply. The paragraph retriever gets read tools only. | D14, Q19, Q20, Q21 |
 | No CDN or third-party scripts and no external fonts. Vendor everything into `wwwroot`. | D18, §9 |
-| Never put API keys, passwords, real hostnames or personal data in code, tests, logs, docs or commits | §9 |
+| Never put API keys, passwords, real hostnames or personal data in code, tests, logs, docs or commits. The one exception: code may hold public, user-clicked links and public AI-provider endpoints (for example `LexicalFingerprintDefaults.ToolUrl`), never docs. | §9, LF15 |
 | Use Radzen.Blazor components (pinned at `[12.1.9]`), Material icon names and the `--asb-*` tokens in `Shared/wwwroot/app.css` | DESIGN.md |
 | Register shared services in `Shared/Hosting/ServiceCollectionExtensions.cs`, and host services in `MauiProgram.cs` or `AIStoryBuildersV2.Web/Program.cs` | §5.3 |
 

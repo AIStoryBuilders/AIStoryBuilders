@@ -28,6 +28,8 @@ public partial class AIStoryBuildersService
         objMasterStory.StorySynopsis = objChapter.Story.Synopsis ?? "";
         objMasterStory.StoryStyle = objChapter.Story.Style ?? "";
         objMasterStory.SystemMessage = objChapter.Story.Theme ?? "";
+        // Lexical-Fingerprint-Plan LF7: the style card, or null when the story has no usable fingerprint.
+        objMasterStory.WritingStyleFingerprint = await GetFingerprintPromptAsync(objChapter.Story.Title ?? "");
 
         objMasterStory.CurrentLocation = ConvertToJSONLocation(objParagraph.Location, objParagraph);
         objMasterStory.CharacterList = ConvertToJSONCharacter(colCharacter, objParagraph);

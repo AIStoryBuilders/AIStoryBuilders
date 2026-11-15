@@ -42,10 +42,12 @@ Notation used below:
     │   └── Chapter{N}/               N = 1..C, no zero padding
     │       ├── Chapter{N}.txt        chapter synopsis + vector                   §3.9
     │       └── Paragraph{M}.txt      M = 1..P, no zero padding                   §3.10
-    └── Graph/                        derived knowledge-graph cache               §3.11
-        ├── manifest.json
-        ├── graph.json
-        └── metadata.json
+    ├── Graph/                        derived knowledge-graph cache               §3.11
+    │   ├── manifest.json
+    │   ├── graph.json
+    │   └── metadata.json
+    ├── KnowledgeBase/                V2 only: the story's KB pages (*.md); V1 ignores it
+    └── LexicalFingerprint.json       V2 only: the story's lexical fingerprint; V1 ignores it
 
 {Temp}/                               (all three are deleted after use)
 ├── _Temp/                            .stybld staging, Word export, xlsx export
@@ -589,6 +591,8 @@ Locations/{Name}.csv ...
 Chapters/Chapter{N}/Chapter{N}.txt
 Chapters/Chapter{N}/Paragraph{M}.txt ...
 Graph/manifest.json, Graph/graph.json, Graph/metadata.json    (if present)
+KnowledgeBase/**/*.md                                          (V2 only, if present)
+LexicalFingerprint.json                                        (V2 only, if present)
 ...any other file that happened to be in {Story}
 ```
 
@@ -788,6 +792,7 @@ In every cascade, "rewrite" of a paragraph means: `ReadAllLines`, drop blank lin
 18. **Embedding compatibility.** Similarity is only meaningful if V2's vectors come from the same model and pipeline: all-MiniLM-L6-v2, V1's simplified lower-case WordPiece tokenizer, mean pooling, L2 normalization, 384 dimensions. Otherwise re-embed.
 19. **Names in paragraphs are not sanitized, but file names are.** The location or character named in a paragraph can differ from the file name; for example, a name containing `?` loses that character in the file name.
 20. **Chat "update character/location" replaces the file** with a single entry, discarding the other backgrounds or descriptions. This is V1 behavior, not a format rule.
+21. **V2-only files ride along.** V1 never reads `KnowledgeBase/` or `LexicalFingerprint.json`, but its export copies every file in the story folder and its import restores every entry, and its delete removes the folder. So both survive a V2 → V1 → V2 `.stybld` round trip. V2 must keep these the only additions (AGENTS.md, D4, D33).
 
 <!-- link references (relative to Docs/) -->
 [mauiprogram]: ../../../ADefWebserver/AIStoryBuilders/MauiProgram.cs

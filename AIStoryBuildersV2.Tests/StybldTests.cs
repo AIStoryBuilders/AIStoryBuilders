@@ -71,6 +71,48 @@ public class StybldTests : IDisposable
     }
 
     [Fact]
+    public async Task Export_then_import_keeps_the_lexical_fingerprint()
+    {
+        var fingerprint = File.ReadAllBytes(FixtureFactory.SourceFixturePath("Fingerprint/valid-wrapped.json")!);
+        await _source.Service.SaveLexicalFingerprintAsync(FixtureFactory.Title, fingerprint, "valid-wrapped.json");
+        var bytes = _source.Service.ExportProject(await SourceStoryAsync());
+
+        using (var zip = new ZipArchive(new MemoryStream(bytes)))
+            Assert.Contains(zip.Entries, e => e.FullName == Shared.Fingerprint.LexicalFingerprintDefaults.FileName);
+        await _target.Service.ImportProjectAsync(bytes);
+
+        var expected = Tree(_source.StoryDir);
+        var actual = Tree(_target.StoryDir);
+        Assert.Equal(expected.Keys.Order(), actual.Keys.Order());
+        foreach (var (path, data) in expected) Assert.True(data.AsSpan().SequenceEqual(actual[path]), path);
+        var fp = await _target.Service.GetLexicalFingerprintAsync(FixtureFactory.Title);
+        Assert.Equal(Shared.Fingerprint.FingerprintStatus.Ok, fp.Status);
+        Assert.Equal("Harbor voice", fp.Name);
+    }
+
+    [Fact]
+    public async Task Importing_a_tampered_fingerprint_succeeds_and_reports_it_invalid()
+    {
+        var bytes = _source.Service.ExportProject(await SourceStoryAsync());
+        using (var buffer = new MemoryStream())
+        {
+            buffer.Write(bytes);
+            using (var zip = new ZipArchive(buffer, ZipArchiveMode.Update, leaveOpen: true))
+            {
+                using var w = new StreamWriter(zip.CreateEntry(Shared.Fingerprint.LexicalFingerprintDefaults.FileName).Open());
+                w.Write("{\"title\":\"Tampered\",\"fingerprint\":{\"invariants\":[]}}");
+            }
+            bytes = buffer.ToArray();
+        }
+
+        Assert.Equal("The project 'Forgetting Baldur' was successfully imported.", await _target.Service.ImportProjectAsync(bytes));
+        var fp = await _target.Service.GetLexicalFingerprintAsync(FixtureFactory.Title);
+        Assert.Equal(Shared.Fingerprint.FingerprintStatus.Invalid, fp.Status);
+        Assert.Equal("Tampered", fp.Name);
+        Assert.Null(await _target.Service.GetFingerprintPromptAsync(FixtureFactory.Title));
+    }
+
+    [Fact]
     public async Task The_manifest_has_v1s_version_and_world_facts_and_is_fresh()
     {
         File.WriteAllText(Path.Combine(_source.StoryDir, "Manifest.config"), "{\"Version\":\"01.00.00\",\"Title\":\"Stale\"}");

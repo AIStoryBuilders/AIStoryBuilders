@@ -70,6 +70,12 @@ public partial class OrchestratorMethods
                 ["NumberOfWords"] = paramAIPrompt.NumberOfWords.ToString()
             });
 
+        // Lexical-Fingerprint-Plan LF8: the style card goes in the user message, after the template and before any KB notes.
+        if (!string.IsNullOrWhiteSpace(objJSONMasterStory.WritingStyleFingerprint))
+        {
+            messages[^1] = new ChatMessage(ChatRole.User, messages[^1].Text + "\n" + objJSONMasterStory.WritingStyleFingerprint);
+        }
+
         // Plan §5.8: KB notes (from "Search knowledgebase") go in their own section. TrimToFit drops them first.
         if (!string.IsNullOrWhiteSpace(objJSONMasterStory.KnowledgeBaseNotes))
         {

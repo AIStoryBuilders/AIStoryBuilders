@@ -18,4 +18,7 @@ public class JSONMasterStory
 
     /// <summary>NEW in V2 (D15): cited notes from the story's knowledge base. Trimmed first by the token budget.</summary>
     public string KnowledgeBaseNotes { get; set; }
+
+    /// <summary>NEW in V2 (LF7): the story's lexical fingerprint style card, or null. Never trimmed by the token budget.</summary>
+    public string WritingStyleFingerprint { get; set; }
 }

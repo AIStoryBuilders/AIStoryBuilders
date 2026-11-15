@@ -259,6 +259,86 @@ public class OrchestratorTests : IDisposable
         Assert.False(string.IsNullOrEmpty(master.TimelineSummary));
     }
 
+    const string Card = "<writing_style_fingerprint name=\"V\">\nProfile: plain.\n</writing_style_fingerprint>";
+
+    static JSONMasterStory Small(string? card = null, string? notes = null) => new()
+    {
+        StoryTitle = "T", CharacterList = [], PreviousParagraphs = [], RelatedParagraphs = [], WorldFacts = [],
+        WritingStyleFingerprint = card!, KnowledgeBaseNotes = notes!,
+    };
+
+    static AIPrompt Go() => new() { AIPromptText = "go", NumberOfWords = "100", ModelId = "test-model" };
+
+    [Fact]
+    public async Task WriteParagraph_without_a_fingerprint_sends_the_same_prompt_as_before()
+    {
+        _chat.EnqueueText("""{"paragraph_content":"a"}""").EnqueueText("""{"paragraph_content":"b"}""");
+        await _f.Orchestrator.WriteParagraph(Small(), Go(), "test-model");
+        await _f.Orchestrator.WriteParagraph(Small(card: "  "), Go(), "test-model");
+
+        var text = _chat.Requests[0].Last().Text;
+        Assert.EndsWith("</constraints>", text.TrimEnd());
+        Assert.DoesNotContain("writing_style_fingerprint", text);
+        Assert.Equal(text, _chat.Requests[1].Last().Text);
+    }
+
+    [Fact]
+    public async Task WriteParagraph_appends_the_card_after_the_constraints_and_before_kb_notes()
+    {
+        _chat.EnqueueText("""{"paragraph_content":"a"}""").EnqueueText("""{"paragraph_content":"b"}""");
+        await _f.Orchestrator.WriteParagraph(Small(card: Card), Go(), "test-model");
+        await _f.Orchestrator.WriteParagraph(Small(card: Card, notes: "Hrafnkel forged it."), Go(), "test-model");
+
+        var withCard = _chat.Requests[0].Last().Text;
+        Assert.EndsWith("</constraints>\n" + Card, withCard);
+        Assert.DoesNotContain("writing_style_fingerprint", _chat.Requests[0][0].Text);   // never in the system message
+
+        var both = _chat.Requests[1].Last().Text;
+        var card = both.IndexOf(Card, StringComparison.Ordinal);
+        Assert.True(card > both.IndexOf("</constraints>", StringComparison.Ordinal));
+        Assert.True(card < both.IndexOf("<knowledge_base_notes>", StringComparison.Ordinal));
+    }
+
+    [Fact]
+    public void TrimToFit_keeps_the_card_and_drops_kb_notes_first()
+    {
+        var builder = new MasterStoryBuilder("gpt-3.5-turbo");
+        var bigParagraph = new JSONParagraphs { contents = string.Join(" ", Enumerable.Repeat("word", 600)), relevance_score = 1 };
+        var card = "<writing_style_fingerprint name=\"V\">\n" + new string('x', 11_900) + "\n</writing_style_fingerprint>";
+        var story = Small(card: card, notes: string.Join(" ", Enumerable.Repeat("note", 4000)));
+        story.PreviousParagraphs = Enumerable.Range(0, 20).Select(_ => bigParagraph).ToList();
+
+        var trimmed = builder.TrimToFit(story, "system", "user");
+
+        Assert.Equal(card, trimmed.WritingStyleFingerprint);
+        Assert.Null(trimmed.KnowledgeBaseNotes);
+
+        // The card counts in the fixed budget, so fewer paragraphs fit than without it.
+        var without = Small();
+        without.PreviousParagraphs = Enumerable.Range(0, 20).Select(_ => bigParagraph).ToList();
+        var kept = builder.TrimToFit(without, "system", "user").PreviousParagraphs.Count;
+        Assert.True(trimmed.PreviousParagraphs.Count < kept, $"{trimmed.PreviousParagraphs.Count} vs {kept}");
+    }
+
+    [Fact]
+    public async Task CreateMasterStory_carries_the_card_or_null()
+    {
+        var story = (await _f.Service.GetStorysAsync()).Single();
+        var chapter = new Chapter { ChapterName = "Chapter 1", Sequence = 1, Synopsis = "x", Story = story, Paragraph = [] };
+        var paragraph = _f.Service.GetParagraphs(chapter)[0];
+        var prompt = new AIPrompt { AIPromptText = "x", NumberOfWords = "10" };
+
+        Assert.Null((await _f.Service.CreateMasterStory(chapter, paragraph, [], [], prompt)).WritingStyleFingerprint);
+
+        await _f.Service.SaveLexicalFingerprintAsync(story.Title, File.ReadAllBytes(FixtureFactory.SourceFixturePath("Fingerprint/valid-wrapped.json")!), "w.json");
+        var card = (await _f.Service.CreateMasterStory(chapter, paragraph, [], [], prompt)).WritingStyleFingerprint;
+        Assert.StartsWith("<writing_style_fingerprint name=\"Harbor voice\">", card);
+        Assert.Equal(await _f.Service.GetFingerprintPromptAsync(story.Title), card);
+
+        File.WriteAllText(_f.Service.FingerprintPath(story.Title), "{ broken");
+        Assert.Null((await _f.Service.CreateMasterStory(chapter, paragraph, [], [], prompt)).WritingStyleFingerprint);
+    }
+
     [Fact]
     public void TrimToFit_drops_knowledge_base_notes_first()
     {

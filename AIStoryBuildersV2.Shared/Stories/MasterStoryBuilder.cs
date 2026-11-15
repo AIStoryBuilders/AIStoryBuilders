@@ -111,6 +111,10 @@ public class MasterStoryBuilder
             JsonConvert.SerializeObject(story.CharacterList),
             JsonConvert.SerializeObject(story.CurrentParagraph));
 
-        return TokenEstimator.EstimateTokens(fixedContent);
+        var tokens = TokenEstimator.EstimateTokens(fixedContent);
+        // LF7: the fingerprint card is fixed content. It is counted separately so a story without one estimates as before.
+        if (!string.IsNullOrEmpty(story.WritingStyleFingerprint))
+            tokens += TokenEstimator.EstimateTokens(story.WritingStyleFingerprint);
+        return tokens;
     }
 }

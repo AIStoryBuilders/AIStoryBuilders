@@ -77,6 +77,24 @@ public class ZipStoryPersistenceTests : IDisposable
     }
 
     [Fact]
+    public async Task Save_and_reopen_keeps_the_lexical_fingerprint_byte_for_byte()
+    {
+        FixtureFactory.WriteBefore(_memfs.Path);
+        File.Delete(_memfs.Combine("AIStoryBuildersStories.csv"));
+        await _library.UpsertAsync(new StoryIndexEntry("0", Title, "Fantasy", "", "", "", null));
+        var path = Path.Combine(StoryDir, Shared.Fingerprint.LexicalFingerprintDefaults.FileName);
+        var original = File.ReadAllBytes(FixtureFactory.SourceFixturePath("Fingerprint/valid-bom.json")!);
+        File.WriteAllBytes(path, original);
+        _p.MarkDirty(Title);
+        await _p.FlushAsync(Title);
+
+        Directory.Delete(StoryDir, recursive: true);
+        await _p.OpenAsync(Title);
+
+        Assert.Equal(original, File.ReadAllBytes(path));
+    }
+
+    [Fact]
     public async Task Debounce_merges_ten_mark_dirty_calls_into_one_write()
     {
         await SeedSavedStoryAsync();

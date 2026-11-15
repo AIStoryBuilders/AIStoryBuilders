@@ -49,6 +49,15 @@ public class MarkDirtyCoverageTests
             var paragraph = f.Service.GetParagraphs(chapter)[0];
             await f.Service.CreateMasterStory(chapter, paragraph, [], [], new AIPrompt { AIPromptText = "x", NumberOfWords = "10" });
         },
+
+        // Lexical-Fingerprint-Plan LF13. Remove seeds the file directly, because Save would mark the story dirty too.
+        ["SaveLexicalFingerprintAsync"] = f => f.Service.SaveLexicalFingerprintAsync(f.Story.Title,
+            File.ReadAllBytes(FixtureFactory.SourceFixturePath("Fingerprint/valid-bare.json")!), "valid-bare.json"),
+        ["RemoveLexicalFingerprintAsync"] = f =>
+        {
+            File.WriteAllText(f.Service.FingerprintPath(f.Story.Title), "{}");
+            return f.Service.RemoveLexicalFingerprintAsync(f.Story.Title);
+        },
     };
 
     static Paragraph Paragraph(int sequence) => new()
