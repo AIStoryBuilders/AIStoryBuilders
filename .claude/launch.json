@@ -6,6 +6,12 @@
       "runtimeExecutable": "dotnet",
       "runtimeArgs": ["run", "--project", "AIStoryBuildersV2.Web", "--launch-profile", "http"],
       "port": 5022
+    },
+    {
+      "name": "website",
+      "runtimeExecutable": "dotnet",
+      "runtimeArgs": ["run", "--project", "../AIStoryBuildersWebsite", "-c", "Release", "--launch-profile", "http"],
+      "port": 5291
     }
   ]
 }
