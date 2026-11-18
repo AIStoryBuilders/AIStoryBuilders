@@ -76,3 +76,34 @@ Don't modify the reference repositories.
 
 - After T0, the iOS, Android and Mac Catalyst targets build only when `-p:IncludeMobileTargets=true` is passed, and iOS and Mac Catalyst need macOS. Build the Windows TFM and the Web project on Windows.
 - .NET 11 is a release candidate here. Package versions are in plan §6.6. Don't move to newer prereleases unless a build needs it, and if you do, say why in the commit.
+
+## .NET MAUI CLI
+
+Use the .NET MAUI CLI (`maui`) for environment checks, devices and app automation. It's a .NET global tool from
+[dotnet/maui-labs](https://github.com/dotnet/maui-labs). It is experimental, so its commands can change between releases;
+check `maui --help` if a command below fails.
+
+Install or update it:
+
+```bash
+dotnet tool install -g Microsoft.Maui.Cli --prerelease
+```
+
+```bash
+dotnet tool update -g Microsoft.Maui.Cli --prerelease
+```
+
+| Task | Command |
+|---|---|
+| Check the MAUI environment (SDK, workloads) before building, and after an SDK or Visual Studio update | `maui doctor` |
+| Show the CLI version | `maui version` |
+| List devices and emulators (add `--json` for scripts) | `maui device list` |
+| Profile app startup | `maui profile startup` |
+| Inspect a running app: visual tree, screenshot, Blazor WebView | `maui devflow MAUI tree`, `maui devflow MAUI screenshot`, `maui devflow cdp` |
+
+Rules:
+
+- Build and test with the `dotnet` commands in "How to work". The MAUI CLI does not replace them.
+- Run the MAUI app with `dotnet run --project AIStoryBuildersV2 -f net11.0-windows10.0.19041.0`, not `dotnet build -t:Run`.
+- If the MAUI build fails on the environment (for example `NETSDK1147`), run `maui doctor` first, then follow Dev-Environment §2. Don't let `maui doctor` install the Tizen or mobile workloads; only `maui-windows` is needed.
+- `maui devflow` needs the `Microsoft.Maui.DevFlow.Agent` package in the app. It isn't referenced today. Don't add it without recording the decision in plan §14, and never ship it in a Release build.
