@@ -47,7 +47,7 @@ Only `maui-windows` is needed by default. The mobile targets are built only with
 | App | Command | Where it runs |
 |---|---|---|
 | WASM, without Aspire | `dotnet run --project AIStoryBuildersV2.Web --launch-profile http` | `http://localhost:5022` (`https://localhost:7213` with the `https` profile), from [launchSettings.json](../AIStoryBuildersV2.Web/Properties/launchSettings.json) |
-| MAUI, without Aspire | Visual Studio: set the startup project to `AIStoryBuildersV2` and the target to **Windows Machine**. CLI: `dotnet build AIStoryBuildersV2/AIStoryBuildersV2.csproj -f net11.0-windows10.0.19041.0 -t:Run` | A desktop window |
+| MAUI, without Aspire | Visual Studio: set the startup project to `AIStoryBuildersV2` and the target to **Windows Machine**. CLI: `dotnet run --project AIStoryBuildersV2 -f net11.0-windows10.0.19041.0` | A desktop window |
 | Both, with Aspire | `aspire run` from the repo root (it reads `aspire.config.json`), or run `AIStoryBuildersV2.AppHost` | Dashboard on the AppHost profile ports. Resources: `aistorybuildersv2-windows` (start it from the dashboard) and `web`. |
 
 Visual Studio may create `AIStoryBuildersV2/AIStoryBuildersV2.csproj.user` to remember the active debug framework (it should be `net11.0-windows10.0.19041.0`). The file is user-local and not in the repo, so don't commit it.
