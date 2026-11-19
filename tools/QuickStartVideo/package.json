@@ -7,7 +7,8 @@
     "studio": "remotion studio",
     "render": "remotion render QuickStart out/AIStoryBuilders-4.0-QuickStart.mp4 --codec h264 --crf 20",
     "render:nocaptions": "remotion render QuickStartNoCaptions out/AIStoryBuilders-4.0-QuickStart-NoCaptions.mp4 --codec h264 --crf 20",
-    "web": "node scripts/web.mjs out/AIStoryBuilders-4.0-QuickStart.mp4 out/AIStoryBuilders-4.0-QuickStart-NoCaptions.mp4"
+    "render:vertical": "remotion render QuickStartVertical out/AIStoryBuilders-4.0-QuickStart-Vertical.mp4 --codec h264 --crf 20",
+    "web":"node scripts/web.mjs out/AIStoryBuilders-4.0-QuickStart.mp4 out/AIStoryBuilders-4.0-QuickStart-NoCaptions.mp4"
   },
   "dependencies": {
     "@remotion/cli": "4.0.540",

@@ -9,6 +9,8 @@ export type Scene = {
   image?: string;
   label?: string;
   focus?: [number, number];
+  /** Centre of the square crop in the vertical layout, if it should differ from focus. */
+  vfocus?: [number, number];
   zoom?: number;
   text: string;
   caption?: string;

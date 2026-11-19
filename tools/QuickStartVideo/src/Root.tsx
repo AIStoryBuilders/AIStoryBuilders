@@ -23,5 +23,14 @@ export const RemotionRoot: React.FC = () => (
       height={HEIGHT}
       defaultProps={{ captions: false } satisfies QuickStartProps}
     />
+    <Composition
+      id="QuickStartVertical"
+      component={QuickStart}
+      durationInFrames={totalFrames()}
+      fps={FPS}
+      width={HEIGHT}
+      height={WIDTH}
+      defaultProps={{ captions: true, vertical: true } satisfies QuickStartProps}
+    />
   </>
 );
