@@ -9,6 +9,13 @@ Write your next novel faster and easier.
 * [Website](https://aistorybuilders.com/)
 * [User guide](Docs/User-Guide.md) (also shown in the app on the **Help** page)
 
+## Quick start video
+
+[![Watch the AI StoryBuilders 4.0 quick start video on YouTube](Docs/images/quick-start-video.jpg)](https://youtu.be/wq0hPcd44do)
+
+A two-minute tour of 4.0: connect an AI provider, create a story, write with AI, Story Chat, the Knowledge Base and
+Writing Voice. The video is made from the user-guide screenshots with [tools/QuickStartVideo](tools/QuickStartVideo).
+
 ## A Project of [AIStoryBuilders](https://github.com/AIStoryBuilders)
 
 * [AIStoryBuilders](https://github.com/AIStoryBuilders/AIStoryBuilders): V1, the original Windows app. V2's

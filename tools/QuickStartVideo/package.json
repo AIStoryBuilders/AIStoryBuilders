@@ -1,0 +1,23 @@
+{
+  "name": "aistorybuilders-quickstart-video",
+  "private": true,
+  "description": "AI StoryBuilders 4.0 quick start video (Remotion)",
+  "scripts": {
+    "narrate": "node scripts/narrate.mjs",
+    "studio": "remotion studio",
+    "render": "remotion render QuickStart out/AIStoryBuilders-4.0-QuickStart.mp4 --codec h264 --crf 20",
+    "render:nocaptions": "remotion render QuickStartNoCaptions out/AIStoryBuilders-4.0-QuickStart-NoCaptions.mp4 --codec h264 --crf 20",
+    "web": "node scripts/web.mjs out/AIStoryBuilders-4.0-QuickStart.mp4 out/AIStoryBuilders-4.0-QuickStart-NoCaptions.mp4"
+  },
+  "dependencies": {
+    "@remotion/cli": "4.0.540",
+    "@remotion/transitions": "4.0.540",
+    "react": "19.1.1",
+    "react-dom": "19.1.1",
+    "remotion": "4.0.540"
+  },
+  "devDependencies": {
+    "@types/react": "19.1.12",
+    "typescript": "5.9.2"
+  }
+}

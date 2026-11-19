@@ -1,0 +1,89 @@
+[
+  {
+    "id": "intro",
+    "kind": "title",
+    "title": "AI StoryBuilders 4.0",
+    "subtitle": "Quick Start",
+    "text": "This is the quick start for AI StoryBuilders 4.0. It runs as a Windows app and in your web browser, with the same screens in both."
+  },
+  {
+    "id": "settings",
+    "image": "02b-settings-providers.png",
+    "label": "Connect an AI provider",
+    "focus": [420, 330],
+    "zoom": 1.25,
+    "text": "First, open Settings and connect an AI provider: OpenAI, Azure OpenAI, Anthropic, Google AI, or Ollama. The app tests each model before you can use it."
+  },
+  {
+    "id": "new-story",
+    "image": "05-new-story-filled.png",
+    "label": "Create a story",
+    "focus": [640, 400],
+    "zoom": 1.2,
+    "text": "To start a story, click New Story. Enter a title and a short synopsis, choose how many chapters you want, and click Create Story."
+  },
+  {
+    "id": "workspace",
+    "image": "07-workspace-chapters.png",
+    "label": "The story workspace",
+    "focus": [420, 260],
+    "zoom": 1.15,
+    "text": "The AI drafts the characters, locations, timelines and chapters, and opens the story workspace. Each part of the story has its own tab."
+  },
+  {
+    "id": "characters",
+    "image": "15-characters.png",
+    "label": "Refine the details",
+    "focus": [640, 280],
+    "zoom": 1.25,
+    "text": "Click Edit next to any character, location or timeline to refine it. The AI uses these details to keep your story consistent."
+  },
+  {
+    "id": "ai-prompt",
+    "image": "24-ai-prompt.png",
+    "label": "Write with AI",
+    "focus": [640, 400],
+    "zoom": 1.2,
+    "text": "To write, open a section, describe what should happen, and click Generate."
+  },
+  {
+    "id": "ai-result",
+    "image": "26-ai-result.png",
+    "label": "Review the result",
+    "focus": [640, 420],
+    "zoom": 1.15,
+    "text": "The new text appears in the editor. If you don't like it, click Undo to get your words back."
+  },
+  {
+    "id": "chat",
+    "image": "31-chat-proposed-change.png",
+    "label": "Story Chat",
+    "focus": [560, 560],
+    "zoom": 1.25,
+    "text": "The Chat tab answers questions about your story and can propose changes, like a new character. Nothing is saved until you click Apply."
+  },
+  {
+    "id": "kb",
+    "image": "35-kb-page-design.png",
+    "label": "Knowledge Base",
+    "focus": [700, 420],
+    "zoom": 1.15,
+    "text": "The Knowledgebase tab holds your own reference notes, which the AI can search while it writes."
+  },
+  {
+    "id": "voice",
+    "image": "09b-details-writing-voice.png",
+    "label": "Your writing voice",
+    "focus": [600, 560],
+    "zoom": 1.3,
+    "text": "On the Details tab, Writing Voice lets the AI write in your own style. When you're ready, save your story as a Word document."
+  },
+  {
+    "id": "outro",
+    "kind": "title",
+    "title": "AIStoryBuilders.com",
+    "subtitle": "Write your next novel faster and easier.",
+    "text": "Get started today at AI StoryBuilders dot com.",
+    "caption": "Get started today at AIStoryBuilders.com."
+  }
+]
