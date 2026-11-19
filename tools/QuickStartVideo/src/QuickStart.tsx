@@ -14,7 +14,7 @@ import {
 } from "remotion";
 import { TransitionSeries, linearTiming } from "@remotion/transitions";
 import { fade } from "@remotion/transitions/fade";
-import { LEAD, OPENER_FRAMES, Scene, TRANSITION, audioFrames, sceneFrames, scenes } from "./timing";
+import { CLOSER_FRAMES, LEAD, OPENER_FRAMES, Scene, TRANSITION, audioFrames, sceneFrames, scenes } from "./timing";
 
 export type QuickStartProps = {
   /** Show the narration as on-screen captions (off for sites that make their own). */
@@ -37,7 +37,8 @@ const Background: React.FC = () => (
  *  proportional to its length. */
 const Caption: React.FC<{ text: string; frames: number }> = ({ text, frames }) => {
   const frame = useCurrentFrame() - LEAD;
-  const sentences = text.match(/[^.!?]+[.!?]+(\s|$)/g)?.map((s) => s.trim()) ?? [text];
+  // Split only where punctuation is followed by a space, so "AIStoryBuilders.com" stays whole.
+  const sentences = text.split(/(?<=[.!?])\s+/).filter((s) => s.length > 0);
   const total = sentences.reduce((n, s) => n + s.length, 0);
   let start = 0;
   let index = sentences.length - 1;
@@ -188,7 +189,7 @@ export const QuickStart: React.FC<QuickStartProps> = ({ captions }) => {
         <OffthreadVideo src={staticFile("opener.mp4")} />
       </TransitionSeries.Sequence>
       <TransitionSeries.Transition presentation={fade()} timing={linearTiming({ durationInFrames: TRANSITION })} />
-      {scenes.flatMap((scene, i) => {
+      {scenes.flatMap((scene) => {
         const body =
           scene.kind === "title" ? (
             <TitleScene scene={scene} captions={captions} />
@@ -204,18 +205,18 @@ export const QuickStart: React.FC<QuickStartProps> = ({ captions }) => {
           <TransitionSeries.Sequence key={scene.id} durationInFrames={sceneFrames(scene)}>
             {body}
           </TransitionSeries.Sequence>,
+          // A fade follows every scene, the last one leading into the closer.
+          <TransitionSeries.Transition
+            key={`${scene.id}-t`}
+            presentation={fade()}
+            timing={linearTiming({ durationInFrames: TRANSITION })}
+          />,
         ];
-        if (i < scenes.length - 1) {
-          items.push(
-            <TransitionSeries.Transition
-              key={`${scene.id}-t`}
-              presentation={fade()}
-              timing={linearTiming({ durationInFrames: TRANSITION })}
-            />,
-          );
-        }
         return items;
       })}
+      <TransitionSeries.Sequence durationInFrames={CLOSER_FRAMES}>
+        <OffthreadVideo src={staticFile("logo-reveal.mp4")} />
+      </TransitionSeries.Sequence>
     </TransitionSeries>
   );
 };

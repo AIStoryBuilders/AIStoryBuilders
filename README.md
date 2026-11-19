@@ -11,7 +11,7 @@ Write your next novel faster and easier.
 
 ## Quick start video
 
-[![Watch the AI StoryBuilders 4.0 quick start video on YouTube](Docs/images/quick-start-video.jpg)](https://youtu.be/wq0hPcd44do)
+[![Watch the AI StoryBuilders 4.0 quick start video on YouTube](Docs/images/quick-start-video.jpg)](https://youtu.be/g1uMZM6BLOc)
 
 A two-minute tour of 4.0: connect an AI provider, create a story, write with AI, Story Chat, the Knowledge Base and
 Writing Voice. The video is made from the user-guide screenshots with [tools/QuickStartVideo](tools/QuickStartVideo).

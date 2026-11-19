@@ -2,3 +2,5 @@ node_modules/
 out/
 # Copy of Assets/Video/AIInnovative Opener_1080p.mp4; kept out of git (8 MB)
 public/opener.mp4
+# Copy of Assets/Video/Minimal Logo Reveal_1080p.mp4; kept out of git (5 MB)
+public/logo-reveal.mp4

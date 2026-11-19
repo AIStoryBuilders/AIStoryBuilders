@@ -9,6 +9,7 @@ video. The narration is made with ElevenLabs text-to-speech.
 | `public/images/` | Copies of the screenshots from `Docs/images/user-guide/`. In `05-new-story-filled.png` an error message was painted out. |
 | `public/audio/` | Narration clips, one per scene, from `npm run narrate` |
 | `public/opener.mp4` | The 10-second opener clip. It is not in git: copy `AIInnovative Opener_1080p.mp4` from the project's video assets here before you render. |
+| `public/logo-reveal.mp4` | The 7-second closing clip. It is not in git: copy `Minimal Logo Reveal_1080p.mp4` from the project's video assets here before you render. |
 | `src/` | The compositions: `QuickStart` (with captions) and `QuickStartNoCaptions` (for sites that add their own captions) |
 
 ## Make the video

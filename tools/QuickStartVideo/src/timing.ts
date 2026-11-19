@@ -30,11 +30,17 @@ const seconds = narration as Record<string, number>;
 export const audioFrames = (id: string) => Math.ceil((seconds[id] ?? 4) * FPS);
 
 export const sceneFrames = (s: Scene) =>
-  LEAD + audioFrames(s.id) + TAIL + (s.id === "outro" ? 45 : 0);
+  LEAD + audioFrames(s.id) + TAIL + (s.id === "outro" ? 20 : 0);
 
 /** The 10-second "AIInnovative Opener" clip that plays before the intro card. */
 export const OPENER_FRAMES = 300;
 
-/** Opener plus every scene, minus the cross-fades between them. */
+/** The 7-second "Minimal Logo Reveal" clip that closes the video. */
+export const CLOSER_FRAMES = 210;
+
+/** Opener, every scene and the closer, minus the cross-fades between them. */
 export const totalFrames = () =>
-  OPENER_FRAMES + scenes.reduce((sum, s) => sum + sceneFrames(s), 0) - TRANSITION * scenes.length;
+  OPENER_FRAMES +
+  scenes.reduce((sum, s) => sum + sceneFrames(s), 0) +
+  CLOSER_FRAMES -
+  TRANSITION * (scenes.length + 1);
