@@ -26,9 +26,7 @@
     "id": "workspace",
     "image": "07-workspace-chapters.png",
     "label": "The story workspace",
-    "focus": [420, 260],
-    "vfocus": [700, 300],
-    "zoom": 1.15,
+    "focus": [420, 260],    "zoom": 1.15,
     "text": "The AI drafts the characters, locations, timelines and chapters, and opens the story workspace. Each part of the story has its own tab."
   },
   {

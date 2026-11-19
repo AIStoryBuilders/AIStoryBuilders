@@ -78,20 +78,19 @@ const Caption: React.FC<{ text: string; frames: number; vertical?: boolean }> = 
   );
 };
 
-/** The screenshot in a card. Landscape shows the whole screenshot; vertical shows a
- *  square crop centred on the scene's focus point (vfocus, if given). */
+/** Where the vertical layout puts the screenshot: the full 16:10 screenshot, full width. */
+const VERTICAL_CARD = { left: 20, top: 560, width: 1040, height: 650 };
+
+/** The whole screenshot in a card. The landscape layout slowly zooms toward the scene's
+ *  focus point; the vertical layout passes zoom 1 so nothing is cut off. */
 const ScreenshotCard: React.FC<{ scene: Scene; vertical: boolean; enter: number; zoom: number }> = ({
   scene,
   vertical,
   enter,
   zoom,
 }) => {
-  const [fx, fy] = (vertical ? scene.vfocus : undefined) ?? scene.focus ?? [SHOT_W / 2, SHOT_H / 2];
-  const card = vertical ? { left: 40, top: 360, width: 1000, height: 1000 } : { left: 288, top: 36, width: 1344, height: 840 };
-  // Vertical: scale the screenshot to the card's height and slide it so the focus point is centred.
-  const scale = card.height / SHOT_H;
-  const imgW = vertical ? SHOT_W * scale : card.width;
-  const imgLeft = vertical ? Math.min(0, Math.max(card.width - imgW, card.width / 2 - fx * scale)) : 0;
+  const [fx, fy] = scene.focus ?? [SHOT_W / 2, SHOT_H / 2];
+  const card = vertical ? VERTICAL_CARD : { left: 288, top: 36, width: 1344, height: 840 };
   return (
     <div
       style={{
@@ -108,9 +107,9 @@ const ScreenshotCard: React.FC<{ scene: Scene; vertical: boolean; enter: number;
         src={staticFile(`images/${scene.image}`)}
         style={{
           position: "absolute",
-          left: imgLeft,
+          left: 0,
           top: 0,
-          width: imgW,
+          width: card.width,
           height: card.height,
           objectFit: "cover",
           objectPosition: "top left",
@@ -131,10 +130,12 @@ const ScreenScene: React.FC<{ scene: Scene; step: number; steps: number; caption
 }) => {
   const frame = useCurrentFrame();
   const { durationInFrames, fps } = useVideoConfig();
-  const zoom = interpolate(frame, [0, durationInFrames], [1, scene.zoom ?? 1.15], {
-    easing: Easing.inOut(Easing.cubic),
-    extrapolateRight: "clamp",
-  });
+  const zoom = vertical
+    ? 1
+    : interpolate(frame, [0, durationInFrames], [1, scene.zoom ?? 1.15], {
+        easing: Easing.inOut(Easing.cubic),
+        extrapolateRight: "clamp",
+      });
   const enter = spring({ frame, fps, config: { damping: 200 }, durationInFrames: 20 });
   const label = (
     <div
@@ -160,14 +161,24 @@ const ScreenScene: React.FC<{ scene: Scene; step: number; steps: number; caption
       <Background />
       {vertical ? (
         <>
-          <div style={{ position: "absolute", left: 0, right: 0, top: 150, textAlign: "center" }}>
+          <div style={{ position: "absolute", left: 0, right: 0, top: 360, textAlign: "center" }}>
             <BrandLine />
             <div style={{ height: 40 }} />
             {label}
           </div>
           <ScreenshotCard scene={scene} vertical enter={enter} zoom={zoom} />
-          {/* Kept above the bottom ~300 px, where Shorts and Reels draw their own buttons and text. */}
-          <div style={{ position: "absolute", left: 0, right: 0, top: 1420, textAlign: "center" }}>{caption}</div>
+          {/* Kept above the bottom ~400 px, where Shorts and Reels draw their own buttons and text. */}
+          <div
+            style={{
+              position: "absolute",
+              left: 0,
+              right: 0,
+              top: VERTICAL_CARD.top + VERTICAL_CARD.height + 60,
+              textAlign: "center",
+            }}
+          >
+            {caption}
+          </div>
         </>
       ) : (
         <>
