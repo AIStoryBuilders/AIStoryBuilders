@@ -21,7 +21,7 @@ public sealed record ModelListResult(IReadOnlyList<string> Models, ModelListStat
 /// <summary>
 /// Lists models from each provider's own API, so the Settings model box can offer a dropdown. Adapted from the
 /// AspireDeployService model catalogs: Anthropic /v1/models (paged), OpenAI /v1/models (chat models only),
-/// Azure OpenAI deployments, and Ollama /api/tags. Works in the browser too; failures there are usually CORS.
+/// Azure OpenAI deployments, Ollama /api/tags, and the Blazor DataExchange gateway's {endpoint}models (D34). Works in the browser too; failures there are usually CORS.
 /// </summary>
 public static class ModelCatalog
 {
@@ -51,6 +51,7 @@ public static class ModelCatalog
                 LlmProvider.AzureOpenAI => await ListAzureAsync(http, endpoint!, key, cts.Token),
                 LlmProvider.GoogleAI => await ListGoogleAsync(http, key, cts.Token),
                 LlmProvider.Ollama => await ListOllamaAsync(http, endpoint!, cts.Token),
+                LlmProvider.DataExchange => await ListDataExchangeAsync(http, endpoint!, key, cts.Token),
                 LlmProvider.Fake => ModelListResult.Success(["fake"]),
                 _ => ModelListResult.NotConfigured("This provider has no model list. Type the model name."),
             };
@@ -171,6 +172,19 @@ public static class ModelCatalog
         using var request = new HttpRequestMessage(HttpMethod.Get, new Uri(endpoint, "/api/tags"));
         var (failure, body) = await SendAsync(http, request, ct);
         return failure ?? ModelListResult.Success(ParseOllamaTags(body!));
+    }
+
+    /// <summary>
+    /// The gateway's OpenAI-shaped list. Its ids are Anthropic, Google and OpenAI model names, so the gpt-* filter is not
+    /// applied; the gateway's order is kept.
+    /// </summary>
+    static async Task<ModelListResult> ListDataExchangeAsync(HttpClient http, Uri endpoint, string key, CancellationToken ct)
+    {
+        var baseUri = DataExchangeOptions.NormalizeBaseUrl(endpoint.ToString())!;
+        using var request = new HttpRequestMessage(HttpMethod.Get, new Uri(baseUri, "models"));
+        request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", key);
+        var (failure, body) = await SendAsync(http, request, ct);
+        return failure ?? ModelListResult.Success(ParseIds(body!));
     }
 
     static async Task<(ModelListResult? Failure, string? Body)> SendAsync(HttpClient http, HttpRequestMessage request, CancellationToken ct)

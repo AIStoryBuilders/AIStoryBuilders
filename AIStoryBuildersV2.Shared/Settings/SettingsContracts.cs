@@ -80,3 +80,12 @@ public interface IModelCapabilityProbe
 {
     Task<ModelProbeResult> ProbeAsync(LlmOptions options, CancellationToken ct);
 }
+
+/// <summary>
+/// Unsaved values that <c>LlmSettingsForm</c> starts from instead of the saved settings (D34: the DataExchange connect page
+/// hands over a redeemed key when its recommended model couldn't be saved). <see cref="ToString"/> never prints the key.
+/// </summary>
+public sealed record LlmSettingsPrefill(LlmProvider Provider, string? Model, string? Endpoint, string? ApiKey, string KeyPrefix)
+{
+    public override string ToString() => $"LlmSettingsPrefill {{ Provider = {Provider}, Model = {Model}, Endpoint = {Endpoint}, KeyPrefix = {KeyPrefix} }}";
+}

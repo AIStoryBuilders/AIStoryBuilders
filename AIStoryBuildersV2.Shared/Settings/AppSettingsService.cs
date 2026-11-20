@@ -223,7 +223,7 @@ public sealed class AppSettingsService(ISettingsStore store, IHostCapabilities h
     static string Redact(string message)
     {
         // Defensive: strip anything that looks like a key.
-        message = System.Text.RegularExpressions.Regex.Replace(message, @"(sk-[A-Za-z0-9_\-]{8,}|AIza[A-Za-z0-9_\-]{20,}|[A-Fa-f0-9]{32,})", "[redacted]");
+        message = System.Text.RegularExpressions.Regex.Replace(message, @"(sk-[A-Za-z0-9_\-]{8,}|dx_[A-Za-z0-9_\-]{8,}|AIza[A-Za-z0-9_\-]{20,}|[A-Fa-f0-9]{32,})", "[redacted]");
         return message.Length > 400 ? message[..400] + "…" : message;
     }
 }

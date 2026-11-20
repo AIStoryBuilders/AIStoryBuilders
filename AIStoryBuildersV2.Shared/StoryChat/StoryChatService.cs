@@ -382,7 +382,8 @@ public class StoryChatService(
             Temperature = 0.7f,   // TemperatureFallbackChatClient drops it for models that reject it
             Tools = tools
         };
-        var isGoogle = (await settings.GetAsync()).Provider == LlmProvider.GoogleAI;
+        var current = await settings.GetAsync();
+        var retryWithoutTools = RetriesWithoutTools(current.Provider, options.ModelId ?? current.Model);
 
         var answer = "";
         for (var round = 0; round < MaxRounds; round++)
@@ -394,7 +395,7 @@ public class StoryChatService(
             {
                 response = await client.Client.GetResponseAsync(messages, options, ct);
             }
-            catch (Exception ex) when (isGoogle && options.Tools is not null && ex is not OperationCanceledException)
+            catch (Exception ex) when (retryWithoutTools && options.Tools is not null && ex is not OperationCanceledException)
             {
                 // V1: Gemini sometimes rejects the tool schemas; answer without tools rather than fail.
                 logService.WriteToLog($"Gemini call failed with tools attached. Retrying without tools. Model={options.ModelId}. Round={round}. Error={ex.Message}");
@@ -426,6 +427,14 @@ public class StoryChatService(
         }
         return answer;
     }
+
+    /// <summary>
+    /// V1's Gemini fallback (retry the turn without tools when the call fails with tools attached) applies to Google AI and
+    /// to Gemini models reached through the Blazor DataExchange gateway (D34).
+    /// </summary>
+    internal static bool RetriesWithoutTools(LlmProvider provider, string? model) =>
+        provider == LlmProvider.GoogleAI
+        || (provider == LlmProvider.DataExchange && (model ?? "").Trim().StartsWith("gemini", StringComparison.OrdinalIgnoreCase));
 
     async Task<string> DispatchToolCallAsync(Dictionary<string, AIFunction> tools, FunctionCallContent call, string sessionId, CancellationToken ct)
     {

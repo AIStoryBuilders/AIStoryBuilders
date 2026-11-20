@@ -7,6 +7,8 @@
 @inject NotificationService Notify
 @inject IHostCapabilities Host
 @inject BrowserInterop Interop
+@inject DataExchangeOptions DataExchange
+@inject DataExchangeConnectService Connect
 
 <div class="asb-panel kgb-light">
     @if (current is null)
@@ -25,7 +27,14 @@
         {
             <div class="asb-field">
                 <label for="asb-key">API Key:</label>
-                @if (current.ApiKeyConfigured && !replacing && provider == current.Provider)
+                @if (prefilledKey is { } received && newKey == received.ApiKey)
+                {
+                    <div class="row">
+                        <span class="bdg b-su"><span class="mi" aria-hidden="true">check</span>Received from Blazor DataExchange (<span class="mono">@received.KeyPrefix…</span>), not saved yet</span>
+                        <RadzenButton Text="Replace" Size="ButtonSize.Small" ButtonStyle="ButtonStyle.Light" Click="@(() => { prefilledKey = null; newKey = ""; ScheduleModelLoad(); })" />
+                    </div>
+                }
+                else if (current.ApiKeyConfigured && !replacing && provider == current.Provider)
                 {
                     <div class="row">
                         <span class="bdg b-su"><span class="mi" aria-hidden="true">check</span>Configured</span>
@@ -65,9 +74,17 @@
         @if (LlmDefaults.RequiresEndpoint(provider))
         {
             <div class="asb-field">
-                <label for="asb-endpoint">@(provider == LlmProvider.AzureOpenAI ? "Azure OpenAI Endpoint:" : "Endpoint")</label>
-                <RadzenTextBox id="asb-endpoint" Value="@endpoint" @oninput="@(e => { endpoint = e.Value?.ToString() ?? ""; ScheduleModelLoad(); })" Style="width:100%" class="mono"
-                               Placeholder="@(provider == LlmProvider.Ollama ? "http://localhost:11434/" : "https://<resource>.openai.azure.com/")" />
+                <label for="asb-endpoint">@EndpointLabel</label>
+                @if (EndpointFromConfiguration)
+                {
+                    @* D34: this site's configuration names the gateway, so the URL is shown, not typed. *@
+                    <div id="asb-endpoint" class="mono">@endpoint</div>
+                }
+                else
+                {
+                    <RadzenTextBox id="asb-endpoint" Value="@endpoint" @oninput="@(e => { endpoint = e.Value?.ToString() ?? ""; ScheduleModelLoad(); })" Style="width:100%" class="mono"
+                                   Placeholder="@EndpointPlaceholder" />
+                }
                 @if (EndpointError is { } endpointError)
                 {
                     <div class="kgb-err">@endpointError</div>
@@ -76,6 +93,40 @@
                 {
                     <div class="kgb-help"><span class="mi s16" aria-hidden="true">info</span>The Ollama host must allow this page's origin: set OLLAMA_ORIGINS on the machine running Ollama.</div>
                 }
+            </div>
+        }
+
+        @if (provider == LlmProvider.DataExchange)
+        {
+            @* D34: the desktop app has no deep link, so a connect code copied from the exchange can be pasted here. *@
+            <div class="asb-field">
+                @if (showConnectCode)
+                {
+                    <label for="asb-dx-code">Connect code:</label>
+                    <div class="row">
+                        <RadzenTextBox id="asb-dx-code" Value="@connectCode" @oninput="@(e => { connectCode = e.Value?.ToString() ?? ""; connectError = null; })"
+                                       Style="flex:1;min-width:0" class="mono" AutoComplete="false" Placeholder="Paste the code from Blazor DataExchange" />
+                        <RadzenButton Text="Connect" Icon="link" ButtonStyle="ButtonStyle.Primary" Size="ButtonSize.Small" Click="ConnectWithCodeAsync"
+                                      IsBusy="@connecting" BusyText="Connecting…" Disabled="@(saving || testing)" />
+                        <RadzenButton Text="Cancel" Size="ButtonSize.Small" Variant="Variant.Text" Click="@(() => { showConnectCode = false; connectCode = ""; connectError = null; })" Disabled="@connecting" />
+                    </div>
+                    @if (connectError is { } ce)
+                    {
+                        <div class="kgb-err">@ce</div>
+                    }
+                    <div class="kgb-help"><span class="mi s16" aria-hidden="true">info</span>A connect code works once, for about a minute. AI StoryBuilders trades it for an API key and checks the recommended model, then saves both.</div>
+                }
+                <div class="row">
+                    @if (!showConnectCode)
+                    {
+                        <RadzenButton Text="Have a connect code?" Icon="link" ButtonStyle="ButtonStyle.Light" Size="ButtonSize.Small" Click="@(() => showConnectCode = true)" />
+                    }
+                    @if (ConsoleUrl(provider) is { } tokensUrl)
+                    {
+                        @* A target="_blank" link: a new tab in the browser, the system browser on MAUI (as the fingerprint tool link). *@
+                        <RadzenLink Path="@tokensUrl" Target="_blank" rel="noopener noreferrer" Icon="open_in_new" Text="Get a token" />
+                    }
+                </div>
             </div>
         }
 
@@ -132,7 +183,7 @@
 
         <div class="kgb-callout ne" style="margin-top:12px">
             <span class="mi" aria-hidden="true">privacy_tip</span>
-            <div>Page text the assistant reads is sent to the selected provider. Ollama keeps everything on the machine that runs it.</div>
+            <div>Page text the assistant reads is sent to the selected provider. @(provider == LlmProvider.DataExchange ? "Blazor DataExchange passes it on to the model's own provider (OpenAI, Anthropic or Google). " : "")Ollama keeps everything on the machine that runs it.</div>
         </div>
 
         <div class="row" style="justify-content:flex-end;margin-top:14px">
@@ -145,6 +196,12 @@
 @code {
     /// <summary>Raised after a successful save (the first-run redirect returns to the Library).</summary>
     [Parameter] public EventCallback Saved { get; set; }
+
+    /// <summary>
+    /// Unsaved values to start from instead of the saved settings: the DataExchange connect page passes the redeemed key
+    /// and gateway URL when the recommended model couldn't be saved, so the user can pick another model (D34).
+    /// </summary>
+    [Parameter] public LlmSettingsPrefill? Prefill { get; set; }
 
     sealed record Option(string Text, LlmProvider Value);
 
@@ -168,6 +225,11 @@
     bool typeModel;
     CancellationTokenSource? modelLoad;
     Timer? debounce;
+    LlmSettingsPrefill? prefilledKey;
+    bool showConnectCode;
+    string connectCode = "";
+    string? connectError;
+    bool connecting;
 
     IEnumerable<string> ModelOptions =>
         string.IsNullOrWhiteSpace(model) || models.Contains(model) ? models : models.Prepend(model);
@@ -181,10 +243,28 @@
         LlmProvider.AzureOpenAI => "Azure OpenAI Model Deployment Name:",
         LlmProvider.Anthropic => "Anthropic Model:",
         LlmProvider.GoogleAI => "Google AI Model:",
+        LlmProvider.DataExchange => "Blazor DataExchange Model:",
         _ => "Default AI Model:",
     };
 
-    bool ShowGetKey => LlmDefaults.RequiresKey(provider) && !KeyAvailable;
+    string EndpointLabel => provider switch
+    {
+        LlmProvider.AzureOpenAI => "Azure OpenAI Endpoint:",
+        LlmProvider.DataExchange => "Blazor DataExchange Gateway URL:",
+        _ => "Endpoint",
+    };
+
+    string EndpointPlaceholder => provider switch
+    {
+        LlmProvider.Ollama => "http://localhost:11434/",
+        LlmProvider.DataExchange => "https://<gateway-host>/v1/",
+        _ => "https://<resource>.openai.azure.com/",
+    };
+
+    /// <summary>DataExchange's gateway URL is read-only when the host's configuration names one (D34).</summary>
+    bool EndpointFromConfiguration => provider == LlmProvider.DataExchange && DataExchange.BaseUri is not null && !string.IsNullOrWhiteSpace(endpoint);
+
+    bool ShowGetKey => LlmDefaults.RequiresKey(provider) && provider != LlmProvider.DataExchange && !KeyAvailable && ConsoleUrl(provider) is not null;
 
     string GetKeyText => provider switch
     {
@@ -194,8 +274,10 @@
         _ => "A Google AI API Key is required (Click here to get one)",
     };
 
-    static string ConsoleUrl(LlmProvider p) => p switch
+    /// <summary>Where to get a key; null hides the button. DataExchange's comes from the host's configuration (D34).</summary>
+    string? ConsoleUrl(LlmProvider p) => p switch
     {
+        LlmProvider.DataExchange => DataExchange.TokensUrl,
         LlmProvider.OpenAI => "https://platform.openai.com/api-keys",
         LlmProvider.AzureOpenAI => "https://portal.azure.com/",
         LlmProvider.Anthropic => "https://console.anthropic.com/settings/keys",
@@ -207,6 +289,7 @@
         get
         {
             if (!LlmDefaults.RequiresKey(provider)) return null;
+            // Only OpenAI keys have a fixed prefix to check; DataExchange keys start with dx_, the others vary.
             if (provider == LlmProvider.OpenAI && newKey.Length > 0 && !newKey.Trim().StartsWith("sk-", StringComparison.Ordinal))
                 return "Invalid API Key - must start with: sk-";
             return showValidation && !KeyAvailable ? "Enter an API key." : null;
@@ -228,6 +311,17 @@
     {
         Settings.Changed += OnChanged;
         await LoadAsync();
+        if (Prefill is { } prefill)
+        {
+            provider = prefill.Provider;
+            model = prefill.Model ?? "";
+            endpoint = prefill.Endpoint ?? "";
+            if (!string.IsNullOrWhiteSpace(prefill.ApiKey))
+            {
+                newKey = prefill.ApiKey.Trim();
+                prefilledKey = prefill with { ApiKey = newKey };
+            }
+        }
         _ = LoadModelsAsync();
     }
 
@@ -281,6 +375,7 @@
         provider = current.Provider;
         model = current.Model;
         endpoint = current.Endpoint ?? "";
+        if (provider == LlmProvider.DataExchange && endpoint.Length == 0) endpoint = DataExchange.BaseUri?.ToString() ?? "";
     }
 
     void OnChanged() => _ = InvokeAsync(async () =>
@@ -294,8 +389,18 @@
     {
         if (value == provider) return;
         model = value == current?.Provider ? current.Model : LlmDefaults.DefaultModel(value);
+        // D34: the gateway URL comes from the saved settings or the host's configuration, and doesn't carry over to
+        // Azure or Ollama.
+        if (value == LlmProvider.DataExchange)
+            endpoint = value == current?.Provider && !string.IsNullOrWhiteSpace(current.Endpoint) ? current.Endpoint : DataExchange.BaseUri?.ToString() ?? "";
+        else if (provider == LlmProvider.DataExchange)
+            endpoint = value == current?.Provider ? current.Endpoint ?? "" : "";
         provider = value;
         newKey = "";   // a key typed for another provider must never be saved for this one
+        prefilledKey = null;
+        showConnectCode = false;
+        connectCode = "";
+        connectError = null;
         replacing = false;
         error = null;
         testResult = null;
@@ -333,6 +438,7 @@
             }
 
             newKey = "";
+            prefilledKey = null;
             replacing = false;
             showValidation = false;
             current = await Settings.GetAsync();
@@ -358,6 +464,64 @@
         }
     }
 
+    /// <summary>Redeems a pasted connect code at the gateway URL shown above (D34), the same flow as /connect/dataexchange.</summary>
+    async Task ConnectWithCodeAsync()
+    {
+        connectError = null;
+        error = null;
+        testResult = null;
+        var code = DataExchangeConnectService.NormalizePastedCode(connectCode);
+        if (code is null) { connectError = "Paste the connect code first."; return; }
+        if (DataExchangeOptions.NormalizeBaseUrl(endpoint) is null)
+        {
+            showValidation = true;
+            connectError = "Enter the gateway URL first.";
+            return;
+        }
+
+        connecting = true;
+        try
+        {
+            // Not cancellable: once the code is sent the key exists, so the save should finish.
+            var r = await Connect.ConnectAsync(code, CancellationToken.None, endpoint);
+            if (r.Redeemed is not null || r.Status == DataExchangeConnectStatus.InvalidCode) connectCode = "";
+            switch (r.Status)
+            {
+                case DataExchangeConnectStatus.Connected:
+                    newKey = "";
+                    prefilledKey = null;
+                    replacing = false;
+                    showConnectCode = false;
+                    showValidation = false;
+                    await LoadAsync();
+                    Notify.Notify(NotificationSeverity.Success, "Connected", r.Message, 4000);
+                    _ = LoadModelsAsync();
+                    await Saved.InvokeAsync();
+                    break;
+
+                case DataExchangeConnectStatus.NeedsModel when r.Redeemed is { } redeemed:
+                    // Keep the new key in the form (unsaved) so the user can pick another model and Save.
+                    endpoint = redeemed.BaseUrl.ToString();
+                    newKey = redeemed.ApiKey;
+                    prefilledKey = new LlmSettingsPrefill(LlmProvider.DataExchange, redeemed.RecommendedModel, endpoint, redeemed.ApiKey, redeemed.KeyPrefix);
+                    model = redeemed.RecommendedModel ?? "";
+                    replacing = false;
+                    showConnectCode = false;
+                    error = r.Message + " The key isn't saved until you click Save.";
+                    _ = LoadModelsAsync();
+                    break;
+
+                default:
+                    connectError = r.Message;
+                    break;
+            }
+        }
+        finally
+        {
+            connecting = false;
+        }
+    }
+
     async Task ClearKeyAsync()
     {
         await Settings.ClearApiKeyAsync();
@@ -369,7 +533,8 @@
 
     async Task OpenConsoleAsync()
     {
-        try { await Interop.OpenUrlAsync(ConsoleUrl(provider)); }
+        if (ConsoleUrl(provider) is not { } url) return;
+        try { await Interop.OpenUrlAsync(url); }
         catch (Exception ex) { Notify.Notify(NotificationSeverity.Error, "Error", ex.Message, 4000); }
     }
 

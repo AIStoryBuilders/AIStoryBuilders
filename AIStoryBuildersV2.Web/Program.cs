@@ -1,6 +1,7 @@
 using AIStoryBuildersV2.Shared;
 using AIStoryBuildersV2.Shared.Hosting;
 using AIStoryBuildersV2.Shared.Knowledge.Persistence;
+using AIStoryBuildersV2.Shared.Llm;
 using AIStoryBuildersV2.Shared.Services;
 using AIStoryBuildersV2.Shared.Settings;
 using AIStoryBuildersV2.Shared.Stories;
@@ -35,6 +36,9 @@ builder.Services.AddSingleton<IAppDataStore, LocalStorageAppDataStore>();
 builder.Services.AddSingleton<IEmbeddingGenerator<string, Embedding<float>>, BrowserEmbeddingGenerator>();
 builder.Services.AddSingleton<ISettingsStore, BrowserSettingsStore>();
 builder.Services.AddSingleton<IUpdateCheck, OnlineUpdateCheck>();
+// D34: the Blazor DataExchange gateway differs per environment, so it comes from wwwroot/appsettings.json and
+// appsettings.{Environment}.json, which the WebAssembly host loads at startup.
+builder.Services.AddSingleton(DataExchangeOptions.From(key => builder.Configuration[key]));
 builder.Services.AddAIStoryBuildersV2Shared();
 
 var host = builder.Build();

@@ -23,9 +23,10 @@ public static class ChatOptionsFactory
         if (modelId != null)
             options.ModelId = modelId;
 
-        // OpenAI and Azure OpenAI support response_format natively
+        // OpenAI and Azure OpenAI support response_format natively; the Blazor DataExchange gateway accepts it for every
+        // model and translates it for Anthropic and Gemini (D34).
         // D31: switch on the provider instead of V1's AIType strings.
-        if (provider is LlmProvider.OpenAI or LlmProvider.AzureOpenAI)
+        if (provider is LlmProvider.OpenAI or LlmProvider.AzureOpenAI or LlmProvider.DataExchange)
         {
             options.ResponseFormat = ChatResponseFormat.Json;
         }

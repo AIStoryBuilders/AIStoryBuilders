@@ -2,6 +2,7 @@ using AIStoryBuildersV2.Embeddings.Onnx;
 using AIStoryBuildersV2.Services;
 using AIStoryBuildersV2.Shared.Hosting;
 using AIStoryBuildersV2.Shared.Knowledge;
+using AIStoryBuildersV2.Shared.Llm;
 using AIStoryBuildersV2.Shared.Settings;
 using AIStoryBuildersV2.Shared.Stories;
 using AIStoryBuildersV2.Shared.Stories.Storage;
@@ -42,6 +43,18 @@ public static class MauiProgram
         builder.Services.AddSingleton<IEmbeddingGenerator<string, Embedding<float>>>(new LocalEmbeddingGenerator());
         builder.Services.AddSingleton<ISettingsStore, MauiSettingsStore>();
         builder.Services.AddSingleton<IFileDeleter, RecycleBinFileDeleter>();
+        // D34: the Blazor DataExchange gateway. MauiAppBuilder.Configuration has no settings file, so its values (if a
+        // source is ever added) win over these defaults: DEBUG points at the local gateway and exchange; Release is
+        // empty, so the user types the gateway URL in Settings. No connect link reaches the desktop app; the user
+        // pastes a token or a connect code in Settings instead.
+#if DEBUG
+        const string DataExchangeBaseUrl = "https://localhost:7084/v1/";
+        const string DataExchangeExchangeUrl = "https://localhost:7220/";
+#else
+        const string DataExchangeBaseUrl = "";
+        const string DataExchangeExchangeUrl = "";
+#endif
+        builder.Services.AddSingleton(DataExchangeOptions.From(key => builder.Configuration[key], DataExchangeBaseUrl, DataExchangeExchangeUrl));
         builder.Services.AddAIStoryBuildersV2Shared();
 
 #if DEBUG

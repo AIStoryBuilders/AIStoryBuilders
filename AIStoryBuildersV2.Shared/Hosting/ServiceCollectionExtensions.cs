@@ -42,6 +42,11 @@ public static class ServiceCollectionExtensions
         services.AddSingleton<IAppSettingsService>(sp => sp.GetRequiredService<AppSettingsService>());
         services.AddSingleton<IChatClientProvider>(sp => sp.GetRequiredService<AppSettingsService>());
 
+        // Blazor DataExchange (D34). The Web host binds DataExchangeOptions from configuration; the empty default means
+        // "not configured", so the user types the gateway URL in Settings.
+        services.TryAddSingleton(new DataExchangeOptions());
+        services.AddSingleton<DataExchangeConnectService>();
+
         // Story graph (D17, D26) and manuscript import.
         services.AddSingleton<IGraphQueryService, GraphQueryService>();
         services.AddSingleton<IGraphMutationService, GraphMutationService>();

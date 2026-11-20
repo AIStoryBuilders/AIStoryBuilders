@@ -1,0 +1,156 @@
+@page "/connect/dataexchange"
+@* D34, UI-Behavior-Spec §6.5: Blazor DataExchange sends the browser here with #code=<one-time code>. The code is read from
+   the fragment, removed from the address bar, redeemed for an API key, and saved with the recommended model (which runs
+   the capability probe). The key is never shown or logged; only its prefix is. *@
+@using AIStoryBuildersV2.Shared.Llm
+@using AIStoryBuildersV2.Shared.Settings
+@implements IDisposable
+@inject NavigationManager Nav
+@inject DataExchangeConnectService Connect
+@inject DataExchangeOptions DataExchange
+@inject NotificationService Notify
+<PageTitle>Connect Blazor DataExchange · AI StoryBuilders</PageTitle>
+
+<h3 class="asb-sec">Connect Blazor DataExchange</h3>
+<p class="asb-sub">Use your Blazor DataExchange credits to write with AI StoryBuilders.</p>
+
+@if (result is null)
+{
+    <div class="asb-panel kgb-light" role="status">
+        <div class="row">
+            <RadzenProgressBarCircular ShowValue="false" Mode="ProgressBarMode.Indeterminate" Size="ProgressBarCircularSize.Small" />
+            <span>Connecting to Blazor DataExchange and checking the model. This can take a minute…</span>
+        </div>
+    </div>
+}
+else if (result.Status == DataExchangeConnectStatus.Connected)
+{
+    <div class="kgb-callout su" role="status">
+        <span class="mi" aria-hidden="true">check_circle</span>
+        <div>
+            <b>Connected.</b> @result.Message
+            @if (result.Redeemed?.CreditsAvailable is { } credits)
+            {
+                <span> You have @credits.ToString("0.##") credits.</span>
+            }
+            <span> Taking you to your library…</span>
+        </div>
+    </div>
+    <div class="row" style="margin-top:14px">
+        <RadzenButton Text="Open the Library" Icon="auto_stories" ButtonStyle="ButtonStyle.Primary" Click="GoHome" />
+    </div>
+}
+else if (result.Status == DataExchangeConnectStatus.NeedsModel && prefill is not null)
+{
+    <div class="kgb-callout wa" role="status" style="margin-bottom:14px">
+        <span class="mi" aria-hidden="true">tune</span>
+        <div>@result.Message The key isn't saved until you click <b>Save</b>, so stay on this page until then.</div>
+    </div>
+    <LlmSettingsForm Prefill="prefill" Saved="OnSaved" />
+}
+else
+{
+    <div class="kgb-callout da" role="alert">
+        <span class="mi" aria-hidden="true">@ErrorIcon</span>
+        <div>@result.Message</div>
+    </div>
+    <div class="row" style="margin-top:14px">
+        @if (ShowExchangeLink)
+        {
+            <RadzenButton Text="Back to Blazor DataExchange" Icon="arrow_back" ButtonStyle="ButtonStyle.Primary" Click="OpenExchange" />
+        }
+        @if (result.Status is DataExchangeConnectStatus.Unreachable or DataExchangeConnectStatus.Failed && code is not null && !retried)
+        {
+            <RadzenButton Text="Try again" Icon="refresh" ButtonStyle="ButtonStyle.Light" Click="RetryAsync" />
+        }
+        <RadzenButton Text="Open Settings" Icon="settings" ButtonStyle="ButtonStyle.Light" Click="@(() => Nav.NavigateTo("settings"))" />
+    </div>
+}
+
+@code {
+    static readonly TimeSpan HomeDelay = TimeSpan.FromSeconds(2);
+
+    DataExchangeConnectResult? result;
+    LlmSettingsPrefill? prefill;
+    string? code;
+    bool started;
+    bool retried;
+    readonly CancellationTokenSource leaving = new();
+
+    string ErrorIcon => result?.Status switch
+    {
+        DataExchangeConnectStatus.InvalidCode => "link_off",
+        DataExchangeConnectStatus.AccountDisabled => "block",
+        DataExchangeConnectStatus.TokenLimit => "key_off",
+        DataExchangeConnectStatus.NotConfigured => "settings",
+        DataExchangeConnectStatus.Unreachable => "cloud_off",
+        _ => "error",
+    };
+
+    bool ShowExchangeLink => DataExchange.TokensUrl is not null
+        && result?.Status is DataExchangeConnectStatus.InvalidCode or DataExchangeConnectStatus.TokenLimit or DataExchangeConnectStatus.AccountDisabled;
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (!firstRender || started) return;
+        started = true;
+
+        // NavigationManager.Uri is location.href, fragment included. Take the code, then drop it from the address bar and
+        // the history entry before anything else happens.
+        var uri = Nav.Uri;
+        code = DataExchangeConnectService.ReadCodeFromFragment(uri);
+        if (uri.Contains('#')) Nav.NavigateTo(DataExchangeConnectService.RoutePath, replace: true);
+
+        await RunAsync();
+    }
+
+    async Task RunAsync()
+    {
+        result = null;
+        StateHasChanged();
+        // Not cancelled when the user leaves: once the code is sent the key exists, so the save should still finish.
+        result = await Connect.ConnectAsync(code, CancellationToken.None);
+        if (result is { Status: DataExchangeConnectStatus.NeedsModel, Redeemed: { } r })
+            prefill = new LlmSettingsPrefill(LlmProvider.DataExchange, r.RecommendedModel, r.BaseUrl.ToString(), r.ApiKey, r.KeyPrefix);
+        // A redeemed code is used up; only the key (held in prefill) remains.
+        if (result.Redeemed is not null) code = null;
+        StateHasChanged();
+
+        if (result.Status == DataExchangeConnectStatus.Connected)
+        {
+            try { await Task.Delay(HomeDelay, leaving.Token); }
+            catch (OperationCanceledException) { return; }
+            GoHome();
+        }
+    }
+
+    async Task RetryAsync()
+    {
+        retried = true;
+        await RunAsync();
+    }
+
+    void OnSaved()
+    {
+        prefill = null;
+        Notify.Notify(NotificationSeverity.Success, "Connected", "Blazor DataExchange is ready to use.", 4000);
+        GoHome();
+    }
+
+    void GoHome()
+    {
+        if (!leaving.IsCancellationRequested) Nav.NavigateTo("");
+    }
+
+    /// <summary>Back to the exchange's token list in this tab, where "Use in AIStoryBuilders" makes a new code.</summary>
+    void OpenExchange()
+    {
+        if (DataExchange.TokensUrl is { } url) Nav.NavigateTo(url);
+    }
+
+    public void Dispose()
+    {
+        leaving.Cancel();
+        leaving.Dispose();
+    }
+}
