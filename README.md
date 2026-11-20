@@ -150,6 +150,21 @@ In the browser, each provider must allow cross-origin requests:
 - **Ollama**: start it with `OLLAMA_ORIGINS` set to the site's origin.
 - **Google AI** and the others work from the browser with a normal key; the connect step of the probe reports
   any CORS failure.
+- **Blazor DataExchange**: the gateway must list the site's origin in its allowed CORS origins.
+
+## Blazor DataExchange
+
+Blazor DataExchange is an OpenAI-compatible gateway that sells prepaid credits for OpenAI, Anthropic and Google
+models. Its **Use in AIStoryBuilders** button sends the browser to `<aistorybuilders-origin>/connect/dataexchange#code=…`,
+which redeems the one-time code for a `dx_` key and saves the settings. The gateway's address differs per environment,
+so it is configuration, not code:
+
+| Host | Where it is set |
+|---|---|
+| Browser app | `wwwroot/appsettings.json` (`DataExchange:BaseUrl`, ending in `/v1/`, and `DataExchange:ExchangeUrl`, the exchange's home page). Both are empty in the repo; set them in the published `appsettings.json` (or add an `appsettings.Production.json`). `appsettings.Development.json` points at a local gateway. |
+| Windows app | DEBUG builds point at the local gateway; Release builds are empty, so the user enters the gateway URL in Settings and pastes a token or a connect code. |
+
+With `BaseUrl` empty, `/connect/dataexchange` explains that this copy isn't set up for the exchange.
 
 ## Publishing the browser app
 

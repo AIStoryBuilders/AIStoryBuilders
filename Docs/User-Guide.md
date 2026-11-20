@@ -15,7 +15,7 @@ You need:
 
 | What | Details |
 |---|---|
-| An AI provider | An account and API key with **OpenAI**, **Azure OpenAI**, **Anthropic** or **Google AI**. Or a computer that runs **Ollama**, which needs no key. |
+| An AI provider | An account with **Blazor DataExchange** (prepaid credits for OpenAI, Anthropic and Google models through one key), or an account and API key with **OpenAI**, **Azure OpenAI**, **Anthropic** or **Google AI**. Or a computer that runs **Ollama**, which needs no key. |
 | A capable model | The app tests each model before you can use it. The model must be able to call tools and return structured answers. Small or older models may fail the test. |
 | For Azure OpenAI | Your endpoint URL (`https://<resource>.openai.azure.com/`) and your model deployment name. |
 | For Ollama | The endpoint URL of the computer running Ollama (`http://<ollama-host>:11434/`). |
@@ -25,7 +25,7 @@ You need:
 
 There are no user accounts, sign-in or roles. Everyone who opens the app on a computer or browser sees the same stories and settings.
 
-> **Note:** Text that the AI reads is sent to the provider you choose. Ollama keeps everything on the computer that runs it. Embeddings (used to search your story) are always made on your own computer.
+> **Note:** Text that the AI reads is sent to the provider you choose. Blazor DataExchange passes it on to the model's own provider. Ollama keeps everything on the computer that runs it. Embeddings (used to search your story) are always made on your own computer.
 >
 > When it starts, the browser version asks the AI StoryBuilders website whether an update is available. It sends only the app's version and a random ID for that browser, never your stories or your key.
 
@@ -66,6 +66,24 @@ Do this first. Until a model is verified, you can't create or write stories. The
 **What you should see:** a **Settings saved** message, then **Model verified**. **API Key:** shows **Configured**, and the model appears under **Verified models** marked **Default**. On your first visit, the app then takes you to the story library.
 
 ![Settings after the key is saved and the model is verified](images/user-guide/02-settings-saved.png)
+
+### Connect with Blazor DataExchange
+
+Blazor DataExchange sells prepaid credits that work with OpenAI, Anthropic and Google models through one API key.
+
+**Browser version, one click:** sign in to Blazor DataExchange and click **Use in AIStoryBuilders**. The exchange opens AI StoryBuilders on its **Connect Blazor DataExchange** page, which gets a key, tests the recommended model and saves both.
+
+**What you should see:** **Connected.** and the number of credits you have. After a moment the app opens your story library.
+
+If the recommended model doesn't pass the test, the page shows the Settings form with your new key already in it (marked **Received from Blazor DataExchange … not saved yet**). Pick another model and click **Save** before you leave the page.
+
+**Windows version, or without the button:**
+
+1. In **Settings**, pick **Blazor DataExchange** in **AI Provider:**. The gateway URL is usually filled in for you. If the box is empty, enter the address your exchange gives you (`https://<gateway-host>/v1/`).
+2. Either paste an API token from the exchange in **API Key:** (tokens start with `dx_`; click **Get a token** to open the exchange's token list), then pick a model and click **Save**.
+3. Or click **Have a connect code?**, paste a connect code from the exchange and click **Connect**. A code works once, for about a minute.
+
+If a connect link has expired, go back to the exchange and click **Use in AIStoryBuilders** again.
 
 ### Manage verified models
 
@@ -518,6 +536,9 @@ Most problems show a message in the top-right corner, like this one:
 | "`<model>` did not pass the `<stage>` check: `<message>` Nothing was saved." | The model failed the app's test. It couldn't connect, call a tool, or read a small story graph correctly. | Check the key and endpoint. If the stage is "tool call" or "knowledge graph", pick a larger, newer model. |
 | "The provider rejected the API key (`<code>`). Check the key in Settings." | The key is wrong, expired or has no credit. | Click **Replace** and paste a valid key. |
 | "The browser blocked the request to `<host>`, or it couldn't be reached." | Browser version only. The provider doesn't allow requests from this web page, or the host is down. | For Ollama, set `OLLAMA_ORIGINS` to the app's address on the computer running Ollama. For Azure OpenAI, allow the app's address in the resource's CORS settings. |
+| "This connect link has expired or was already used. …" | A Blazor DataExchange connect code works once, for about a minute. | Go back to Blazor DataExchange and click **Use in AIStoryBuilders** again, or copy a new connect code. |
+| "Your Blazor DataExchange account has too many API tokens. …" | The exchange limits how many tokens an account can have. | Revoke a token you don't use on the exchange, then connect again. |
+| "The browser couldn't reach Blazor DataExchange at `<host>`. …" | The exchange is down, or it doesn't allow requests from this web page. | Try again later. If it keeps happening, ask the exchange's operator to allow the app's address. |
 | "Model '`<model>`' has not passed the capability check. Verify it in Settings." | The model you picked was removed from **Verified models**, or you changed provider. | Add the model again under **Verified models**, or pick another model. |
 | "Add an API key in Settings" | The key was cleared. | Enter a key in **Settings** and click **Save**. |
 | "AI provider authentication failed: `<message>`" | The provider refused the key during an AI task. | Check or replace the key in **Settings**. |

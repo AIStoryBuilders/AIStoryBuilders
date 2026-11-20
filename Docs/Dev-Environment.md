@@ -50,6 +50,8 @@ Only `maui-windows` is needed by default. The mobile targets are built only with
 | MAUI, without Aspire | Visual Studio: set the startup project to `AIStoryBuildersV2` and the target to **Windows Machine**. CLI: `dotnet run --project AIStoryBuildersV2 -f net11.0-windows10.0.19041.0` | A desktop window |
 | Both, with Aspire | `aspire run` from the repo root (it reads `aspire.config.json`), or run `AIStoryBuildersV2.AppHost` | Dashboard on the AppHost profile ports. Resources: `aistorybuildersv2-windows` (start it from the dashboard) and `web`. |
 
+**Blazor DataExchange (plan D34).** In Development the WASM app reads `wwwroot/appsettings.Development.json`, which points `DataExchange:BaseUrl` at a local gateway (`https://localhost:7084/v1/`) and `DataExchange:ExchangeUrl` at the local exchange web app (`https://localhost:7220/`). DEBUG builds of the MAUI app use the same two values (`MauiProgram.cs`); Release builds leave them empty. Start the exchange's AppHost first, and make sure its `Cors:AllowedOrigins` lists the WASM app's origin (for example `http://localhost:5022`).
+
 Visual Studio may create `AIStoryBuildersV2/AIStoryBuildersV2.csproj.user` to remember the active debug framework (it should be `net11.0-windows10.0.19041.0`). The file is user-local and not in the repo, so don't commit it.
 
 ## 4. Publishing and serving the WASM app
@@ -63,6 +65,8 @@ Serve `AIStoryBuildersV2.Web/bin/Release/net11.0/publish/wwwroot` from any stati
 - fall back to `index.html` for unknown paths
 - serve `.wasm` as `application/wasm`, and serve `.onnx` and `.dat` as `application/octet-stream`
 - keep the `<base href>` correct when the app runs under a sub-path. Test this once with a sub-path, because D18 depends on it.
+
+Before serving, set `DataExchange:BaseUrl` (`https://<gateway-host>/v1/`) and `DataExchange:ExchangeUrl` (`https://<exchange-origin>/`) in `wwwroot/appsettings.json`, or leave them empty to turn off the one-click connect (D34). The WASM host loads `appsettings.json` and `appsettings.{Environment}.json` at startup; a published app's environment is `Production`. `web.config` serves `appsettings.json` with `Cache-Control: no-cache`.
 
 ## 4a. Building the Microsoft Store package
 
@@ -89,6 +93,7 @@ An agent can't complete these on its own. Leave them unchecked and report them (
 | T9a, T10a, T18 | V1 coexistence | Open a V2-edited story in V1 and the reverse, and import V2's `.stybld` into V1 |
 | T11, T15 | Visual match | Compare with the artboards at 1440 px |
 | T12b | Speech-to-text in WebView2 | Try the microphone button in the MAUI app |
+| T20 | Blazor DataExchange end to end | With the exchange running locally (§3): in the WASM app, click **Use in AIStoryBuilders** on the exchange and check that `/connect/dataexchange` drops the code from the address bar, connects, and opens the Library; then generate a paragraph and use Story Chat with a Gemini, a Claude and a GPT model. In the MAUI app (DEBUG), pick **Blazor DataExchange**, paste a `dx_` token, load the model list, Save (probe), and check **Get a token** opens the system browser; then try **Have a connect code?** with a code copied from the exchange. |
 | T19e | Writing voice link | **Done (2026-11-15).** The owner clicked **Get your lexical fingerprint** in the MAUI app and it opened in the system browser. The rest of the MAUI pass was done the same day: upload, refusal of a bad file, replace with confirm, remove with confirm, the Invalid card and chip, the paragraph dialog note, Delete removing the file, and the `09b-details-writing-voice.png` screenshot. |
 | T19e | V1 round trip | **Done (2026-11-15)** with V1 03.62.00 built unpackaged from commit `4fd86d8` (the last V1 commit in this repo): V2 exported a story with a fingerprint, V1 imported it, opened it and exported it again, and V2 imported V1's export and showed the fingerprint on **Writing voice**. `LexicalFingerprint.json` had the same SHA-256 at every step, and V1's Delete removed it with the story. To repeat: `git archive 4fd86d8` into an empty folder, then `dotnet build AIStoryBuilders.csproj -f net10.0-windows10.0.22621.0 -p:WindowsPackageType=None -p:WindowsAppSDKSelfContained=true` and run `AIStoryBuilders.exe` from `bin`. |
 | T19f | Live style check | **Done (2026-11-15), pass.** See [Test-Data.md](Test-Data.md) §7, rows "T19 voice". |
@@ -100,10 +105,10 @@ Live tests are skipped unless these are set. Never commit values.
 
 | Variable | Example value | Used by |
 |---|---|---|
-| `ASB_LIVE_PROVIDER` | `Anthropic`, `OpenAI`, `AzureOpenAI`, `GoogleAI` or `Ollama` | T7b, T16 integration tests |
+| `ASB_LIVE_PROVIDER` | `Anthropic`, `OpenAI`, `AzureOpenAI`, `GoogleAI`, `Ollama` or `DataExchange` | T7b, T16 integration tests |
 | `ASB_LIVE_KEY` | `<api-key>` | same |
 | `ASB_LIVE_MODEL` | `<model-id>` (must be one that passes the probe) | same |
-| `ASB_LIVE_ENDPOINT` | `https://<resource>.openai.azure.com/` or `http://<ollama-host>:11434/` | Azure and Ollama only |
+| `ASB_LIVE_ENDPOINT` | `https://<resource>.openai.azure.com/`, `http://<ollama-host>:11434/` or `https://<gateway-host>/v1/` | Azure, Ollama and DataExchange only |
 | `ASB_FINGERPRINT_SAMPLE` | `C:\path\to\my-fingerprint.json` (a real file from the fingerprint tool; never commit it) | `RealFingerprintSampleTests` (T19): parses, saves and renders it, and prints the style card to the test output |
 
 One more variable is not a live test. It rewrites committed test fixtures, so review the diff before committing:
@@ -128,6 +133,7 @@ $env:ASB_LIVE_PROVIDER = 'Anthropic'; $env:ASB_LIVE_KEY = '<api-key>'; $env:ASB_
 | Azure OpenAI | The resource must allow the app's origin in CORS **(assumed; verify in T6)** |
 | Google AI | The key goes in a header (D8). CORS is verified in T6. |
 | Ollama | Start Ollama with `OLLAMA_ORIGINS` set to the app's origin, for example `http://localhost:5022` |
+| Blazor DataExchange | The gateway's `Cors:AllowedOrigins` must list the app's origin. `connect/redeem` needs no key; the other calls send `Authorization: Bearer dx_…`. |
 
 ## 8. Where data lives during development
 

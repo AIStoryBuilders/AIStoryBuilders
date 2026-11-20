@@ -51,6 +51,7 @@
 | `/` | Library | D20 |
 | `/logs`, `/settings` | Logs, Settings (`/utility` was removed with fine-tuning, D23) | D20 |
 | `/help` | Help: the user guide (§7a) **(new, Plan Q18)** | — |
+| `/connect/dataexchange#code=<one-time code>` | Connect Blazor DataExchange (§6.5) **(new, Plan D34)**. The code is in the fragment, never the query; the page removes it from the address bar at once. | D34 |
 | `/story/{title}?tab=<tab>&p=<kbPath>` | Story Workspace. `title` is `Uri.EscapeDataString`. | D20, D29 |
 
 `tab` values, in tab order (§9.4): `details`, `timelines`, `locations`, `characters`, `chapters`, `kb` (D13) and `chat`. The `tab` query parameter itself is **(new)**. A missing or unknown `tab` means `chapters` (Plan §5.6). Changing tabs updates the URL with `replace: true` **(new)**. `p` is read only when `tab=kb`. `&create=1` (from `KbLinkBuilder.CreateHref`) creates the page instead of opening it (§17.5).
@@ -176,15 +177,16 @@ Layout: Library artboard Settings view. Header "Settings" **(design)**, sub "Con
 
 | Field | Control | Shown when | Default | Validation (inline, under the field, `kgb-err` style) |
 |---|---|---|---|---|
-| "AI Provider:" | `RadzenDropDown<LlmProvider>`: OpenAI, Azure OpenAI, Anthropic, Google AI, Ollama (Fake in DEBUG) | always | saved, else Anthropic (Plan §6.3) | — |
-| "API Key:" | `RadzenPassword`, placeholder "Paste the key" **(KGB)**. When a key is saved: badge "Configured" **(KGB)** + **Replace** + **Clear key**. When none: badge "Not set" **(KGB)**. | provider needs a key (`LlmDefaults.RequiresKey`) | empty | Missing on Save: "Enter an API key." **(new)**. OpenAI key that does not start with `sk-`: "Invalid API Key - must start with: sk-" (V1 toast text, shown inline) |
-| Endpoint | `RadzenTextBox`, placeholder from KGB (`LlmSettingsForm.razor:58`). Label "Azure OpenAI Endpoint:" for Azure, "Endpoint" **(KGB)** for Ollama. | Azure OpenAI, Ollama (`LlmDefaults.RequiresEndpoint`) | empty | Missing: "Enter the endpoint URL." **(new)**. Not an absolute http(s) URL: "Enter a full URL that starts with https:// or http://." **(new)** |
-| Model label | V1 labels: "Azure OpenAI Model Deployment Name:", "Anthropic Model:", "Google AI Model:", otherwise "Default AI Model:" | always | the saved model, or `LlmDefaults.DefaultModel(provider)` | Empty: "Pick or type a model name." **(new)** |
+| "AI Provider:" | `RadzenDropDown<LlmProvider>`: Blazor DataExchange **(new, Plan D34)**, OpenAI, Azure OpenAI, Anthropic, Google AI, Ollama (Fake in DEBUG) | always | saved, else Anthropic (Plan §6.3) | — |
+| "API Key:" | `RadzenPassword`, placeholder "Paste the key" **(KGB)**. When a key is saved: badge "Configured" **(KGB)** + **Replace** + **Clear key**. When none: badge "Not set" **(KGB)**. When a DataExchange key was redeemed but not saved (§6.5): badge "Received from Blazor DataExchange (`dx_XXXXXXXX…`), not saved yet" + **Replace** **(new)**; the key itself is never shown. | provider needs a key (`LlmDefaults.RequiresKey`) | empty | Missing on Save: "Enter an API key." **(new)**. OpenAI key that does not start with `sk-`: "Invalid API Key - must start with: sk-" (V1 toast text, shown inline). Blazor DataExchange keys start with `dx_` and are not prefix-checked. |
+| Endpoint | `RadzenTextBox`, placeholder from KGB (`LlmSettingsForm.razor:58`). Label "Azure OpenAI Endpoint:" for Azure, "Endpoint" **(KGB)** for Ollama, "Blazor DataExchange Gateway URL:" (placeholder `https://<gateway-host>/v1/`) for DataExchange **(new)**. For DataExchange, when the host's `DataExchangeOptions.BaseUrl` is set, the box is replaced by the URL as read-only text and is filled from it on choosing the provider (Plan D34). | Azure OpenAI, Ollama, Blazor DataExchange (`LlmDefaults.RequiresEndpoint`) | empty; DataExchange: the configured gateway URL | Missing: "Enter the endpoint URL." **(new)**. Not an absolute http(s) URL: "Enter a full URL that starts with https:// or http://." **(new)** |
+| Connect code **(new, Plan D34)** | **Have a connect code?** (Light, `link`) opens a `RadzenTextBox` "Connect code:" (placeholder "Paste the code from Blazor DataExchange") with **Connect** (Primary, `link`, `BusyText="Connecting…"`) and **Cancel**. A pasted connect link (`…#code=…`) is reduced to its code. Help: "A connect code works once, for about a minute. AI StoryBuilders trades it for an API key and checks the recommended model, then saves both." | Blazor DataExchange | — | No code: "Paste the connect code first." No valid gateway URL: "Enter the gateway URL first." Gateway errors: the §6.5 messages, inline. |
+| Model label | V1 labels: "Azure OpenAI Model Deployment Name:", "Anthropic Model:", "Google AI Model:", "Blazor DataExchange Model:" **(new)**, otherwise "Default AI Model:" | always | the saved model, or `LlmDefaults.DefaultModel(provider)` (empty for DataExchange) | Empty: "Pick or type a model name." **(new)** |
 | Model | KGB: a filterable dropdown when the list loaded, otherwise a text box. The link "Type a name instead" / "Pick from the list" **(KGB)** switches. Help line: "{n} models available." / "{n} deployments available." / "Loading models…" / "{status} Type the name instead." **(KGB)** | always | — | — |
 | Ollama CORS note | Help text **(KGB)**: "The Ollama host must allow this page's origin: set OLLAMA_ORIGINS on the machine running Ollama." | Ollama and `Host.IsBrowser` | — | — |
 | Key storage note | KGB help text, browser version or MAUI version, quoted exactly from `LlmSettingsForm.razor:86-93` (it names `LlmDefaults.HostFor`) | key field shown | — | — |
 | Embeddings note | "Embeddings are handled locally (no cloud embedding calls needed)." (V1, small text) | always | — | — |
-| Privacy note | KGB callout **(KGB)**: "Page text the assistant reads is sent to the selected provider. Ollama keeps everything on the machine that runs it." | always | — | — |
+| Privacy note | KGB callout **(KGB)**: "Page text the assistant reads is sent to the selected provider. Ollama keeps everything on the machine that runs it." For DataExchange it adds **(new)**: "Blazor DataExchange passes it on to the model's own provider (OpenAI, Anthropic or Google)." | always | — | — |
 
 Removed: V1's Azure **Api Version** (Plan D8) and Organization (D31).
 
@@ -192,7 +194,9 @@ Removed: V1's Azure **Api Version** (Plan D8) and Organization (D31).
 
 | Control | Style/icon | Enabled when | Action | Confirm | Success | Failure |
 |---|---|---|---|---|---|---|
-| Get an API key | Secondary · — . Text per provider, from V1: "An OpenAI API Key is required (Click here to get one)", "An Azure OpenAI API Key is required (Click here to get one)", "An Anthropic API Key is required (Click here to get one)", "A Google AI API Key is required (Click here to get one)" | shown when the provider needs a key and none is saved or typed (Plan §5.6, Q9) | `JSRuntime.InvokeVoidAsync("open", "<provider console URL>")` (a constant per provider; MAUI opens the system browser) | — | — | — |
+| Get an API key | Secondary · — . Text per provider, from V1: "An OpenAI API Key is required (Click here to get one)", "An Azure OpenAI API Key is required (Click here to get one)", "An Anthropic API Key is required (Click here to get one)", "A Google AI API Key is required (Click here to get one)" | shown when the provider needs a key and none is saved or typed (Plan §5.6, Q9); not for DataExchange | `JSRuntime.InvokeVoidAsync("open", "<provider console URL>")` (a constant per provider; MAUI opens the system browser) | — | — | — |
+| Get a token **(new, Plan D34)** | `RadzenLink` · `open_in_new`, `target="_blank"` | Blazor DataExchange, and the host's `DataExchangeOptions.ExchangeUrl` is set (hidden otherwise) | Opens `{ExchangeUrl}#tokens`: a new tab in the browser, the system browser on MAUI (like the §10.3 fingerprint tool link) | — | — | — |
+| Connect (connect code) **(new, Plan D34)** | see §6.1 | a code is typed, not busy | `DataExchangeConnectService.ConnectAsync(code, endpoint)`: the §6.5 redeem and save, at the gateway URL shown in the form | — | Saved: `Success · "Connected" / "Connected to Blazor DataExchange with {model}." · 4 s`, the form reloads and `Saved` is raised. Model failed or none recommended: the key stays in the form unsaved (badge above), the model box is filled with the recommended model, and a danger callout says "{§6.5 message} The key isn't saved until you click Save." | The §6.5 message under the box |
 | Refresh models | Light (KGB: Text/Base) · `refresh`, title "Refresh models from API" (V1), `IsBusy` while loading | not loading | `Settings.ListModelsAsync(provider, endpoint, newKey, refresh: true)`. Typing the key or endpoint reloads it after 750 ms (KGB). | — | `Success · "Models Refreshed" / "Found {n} available models." · 3 s` (V1) | No key typed or saved: `Warning · "API Key Required" / "Enter an API key first to fetch available models." · 3 s` (V1). Error: `Error · "Refresh Failed" / "Could not fetch models: {message}" · 4 s` (V1), and the list empties so the text box shows. |
 | Replace | Light (KGB: Outlined Base) · — | key configured | Shows the key input; **Cancel** **(KGB)** hides it again | — | — | — |
 | Clear key | Danger (Text) · — | key configured | `Settings.ClearApiKeyAsync()` | — (KGB has none) | `Info · "API key cleared" · 3 s` **(KGB)**. Reload the model list. | Global |
@@ -222,6 +226,32 @@ Plan §5.6, §5.9, D9, D23. Title "Verified models" **(plan)**. Sub "Only these 
 | Loading | Skeleton rows (KGB `kgb-sk`) |
 
 The list is `AppSettings.VerifiedModels` (already filtered to this provider and host, Plan §6.3).
+
+### 6.5 Connect Blazor DataExchange (`/connect/dataexchange`, `ConnectDataExchange`) **(new, Plan D34)**
+
+Blazor DataExchange's **Use in AIStoryBuilders** button sends the browser to `<aistorybuilders-origin>/connect/dataexchange#code=<one-time code>`. Header "Connect Blazor DataExchange", sub "Use your Blazor DataExchange credits to write with AI StoryBuilders."
+
+On the first render the page reads `code` from `NavigationManager.Uri` (which is `location.href`, fragment included), then calls `NavigateTo("connect/dataexchange", replace: true)` so the code leaves the address bar and the history entry. It then runs `DataExchangeConnectService.ConnectAsync(code)`:
+
+1. `POST {DataExchange:BaseUrl}connect/redeem` with `{"code":"…","client":"AIStoryBuilders"}`, once, no retries, 30 s timeout.
+2. The response's `base_url` is authoritative for the saved endpoint (the configured one is the fallback).
+3. `IAppSettingsService.SaveAsync(DataExchange, recommended_model, base_url, api_key)`, which runs the capability probe (§6.2 Save).
+
+The key is never shown or logged; the log gets "Connected to Blazor DataExchange ({host}) with key {key_prefix}… and model {model}."
+
+| State | Shows |
+|---|---|
+| Working | Panel with a small circular progress bar: "Connecting to Blazor DataExchange and checking the model. This can take a minute…" |
+| Connected | Success callout "**Connected.** Connected to Blazor DataExchange with {model}. You have {n} credits. Taking you to your library…" and **Open the Library** (Primary, `auto_stories`). After 2 s the page goes to `/`. |
+| Model needed (no `recommended_model`, the probe failed, or browser storage is full) | Warning callout "{message} The key isn't saved until you click **Save**, so stay on this page until then." Below it, `LlmSettingsForm` with `Prefill` = provider Blazor DataExchange, the gateway URL, the redeemed key (unsaved, badge §6.1) and the recommended model. A successful Save shows `Success · "Connected" / "Blazor DataExchange is ready to use." · 4 s` and goes to `/`. |
+| Invalid or expired code (`invalid_or_expired_code`, or no code in the link) | Danger callout, `link_off`: "This connect link has expired or was already used. Go back to Blazor DataExchange and click "Use in AIStoryBuilders" again." **Back to Blazor DataExchange** (Primary, `arrow_back`, to `{ExchangeUrl}#tokens`, shown when configured) and **Open Settings**. |
+| Account disabled (`account_disabled`) | Danger, `block`: "Your Blazor DataExchange account is disabled. Contact the exchange's support." + the same buttons |
+| Token limit (`token_limit_reached`) | Danger, `key_off`: "Your Blazor DataExchange account has too many API tokens. Revoke one you don't use on the exchange, then try again." + the same buttons |
+| Not configured (`DataExchange:BaseUrl` empty) | Danger, `settings`: "This copy of AI StoryBuilders isn't set up to connect to Blazor DataExchange. Choose Blazor DataExchange in Settings and enter the gateway URL and an API key instead." + **Open Settings** |
+| Network or CORS failure | Danger, `cloud_off`: "The browser couldn't reach Blazor DataExchange at {host}. It may be down, or it doesn't allow requests from this page (CORS)." (timeout: "…didn't answer in time. Try again in a moment.") + **Try again** (once, while the code is unused) + **Open Settings** |
+| Other gateway error | Danger, `error`: "Blazor DataExchange answered HTTP {status}: {message}" + **Try again** + **Open Settings** |
+
+The MAUI app has no deep link to this page; its users paste a token or a connect code in Settings (§6.1).
 
 ### 6.4 Storage usage panel (WASM only, `StorageUsagePanel`)
 
